@@ -50,7 +50,7 @@
   (set-text-component about-editor #f #t)
   (set-text about-editor 
             "HypeDyn hypertext fiction editor 
-Version 2.1.5 rev 1331, 21 November 2011\n
+Version 2.1.6 rev 5, 27 November 2011\n
 Copyright (C) 2008-2011 National University of Singapore and
 Singapore-MIT GAMBIT Game Lab c/o Media Development Authority
 of Singapore\n
@@ -85,12 +85,12 @@ The following libraries are bundled with the software:
 AppleJavaExtensions\n
 Credits\n
 Programming:
-Ruchi Bajoria, Zeng Qiang, Alex Mitchell, and
-Chuah Teong Leong\n
+Ruchi Bajoria, Chuah Teong Leong, Alex Mitchell and
+Zeng Qiang, Alex Mitchell\n
 Testing:
 Ruchi Bajoria, Zeng Qiang, Alex Mitchell,
-Kevin McGee, Kow Wei Man, and students of
-NM2217 and NM3222.\n
+Kevin McGee, Kow Wei Man, Tim Merritt, Lim Teng Chek,
+Lim Teng Howe, Shane Hua, and students of NM2217 and NM3222.\n
 This work was funded in part under a Singapore Ministry of 
 Education Academic Research Fund Faculty Research Committee 
 (Tier 1) research grant, \"Understanding Interactivity: 

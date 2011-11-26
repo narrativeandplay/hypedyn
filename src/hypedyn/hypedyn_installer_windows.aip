@@ -4,11 +4,12 @@
     <ROW Property="ALLUSERS" Value="2"/>
     <ROW Property="ARPCOMMENTS" Value="This installer database contains the logic and data required to install [|ProductName]." ValueLocId="*"/>
     <ROW Property="ARPPRODUCTICON" Value="hypedyn.exe" Type="8"/>
-    <ROW Property="Manufacturer" Value="National University of Singapore" ValueLocId="*"/>
-    <ROW Property="ProductCode" Value="1033:{1FE5AD13-1321-403F-849A-288F5D657A76} " Type="16"/>
+    <ROW Property="ARPURLINFOABOUT" Value="http://www.partechgroup.org/hypedyn"/>
+    <ROW Property="Manufacturer" Value="NUS" ValueLocId="*"/>
+    <ROW Property="ProductCode" Value="1033:{C633BA07-1F74-4CFE-AB15-C50BA7CBAF3D} " Type="16"/>
     <ROW Property="ProductLanguage" Value="1033"/>
     <ROW Property="ProductName" Value="HypeDyn" ValueLocId="*"/>
-    <ROW Property="ProductVersion" Value="2.1.5"/>
+    <ROW Property="ProductVersion" Value="2.1.6"/>
     <ROW Property="SecureCustomProperties" Value="OLDPRODUCTS;AI_NEWERPRODUCTFOUND"/>
     <ROW Property="UpgradeCode" Value="{4A49B042-B355-40B9-8DA5-F9E45E2ED511}"/>
   </COMPONENT>
@@ -46,7 +47,7 @@
     <ROW File="LRRH.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH.dyn" Attributes="0" SourcePath="bin\hypedyn-windows\examples\LRRH.dyn" SelfReg="false" NextFile="LRRH2.dyn"/>
     <ROW File="LRRH2.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH2.dyn" Attributes="0" SourcePath="bin\hypedyn-windows\examples\LRRH2.dyn" SelfReg="false" NextFile="LRRH3.dyn"/>
     <ROW File="LRRH3.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH3.dyn" Attributes="0" SourcePath="bin\hypedyn-windows\examples\LRRH3.dyn" SelfReg="false" NextFile="hypedyn_tutorial_1.pdf"/>
-    <ROW File="LRRH4.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH4.dyn" Attributes="0" SourcePath="bin\hypedyn-windows\examples\LRRH4.dyn" SelfReg="false"/>
+    <ROW File="LRRH4.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH4.dyn" Attributes="0" SourcePath="bin\hypedyn-windows\examples\LRRH4.dyn" SelfReg="false" NextFile="kawa_applet.jar"/>
     <ROW File="htapplet.html" Component_="hypedyn.jar_1" FileName="htappl~1.htm|htapplet.html" Attributes="0" SourcePath="bin\hypedyn-windows\lib\export\htapplet.html" SelfReg="false" NextFile="htapplet.jar"/>
     <ROW File="htapplet.jar" Component_="hypedyn.jar_1" FileName="htapplet.jar" Attributes="0" SourcePath="bin\hypedyn-windows\lib\export\htapplet.jar" SelfReg="false" NextFile="hypedyn_tutorial_3.pdf"/>
     <ROW File="hypedyn.exe" Component_="hypedyn.exe" FileName="hypedyn.exe" Attributes="0" SourcePath="bin\hypedyn-windows\hypedyn.exe" SelfReg="false" NextFile="LRRH.dyn"/>
@@ -60,6 +61,7 @@
     <ROW File="hypedyn_tutorial_3.pdf" Component_="hypedyn_tutorial_3.pdf" FileName="hypedy~3.pdf|hypedyn-tutorial-3.pdf" Attributes="0" SourcePath="bin\hypedyn-windows\tutorials\hypedyn-tutorial-3.pdf" SelfReg="false" NextFile="LRRH4.dyn"/>
     <ROW File="kawa.jar" Component_="hypedyn.jar" FileName="kawa.jar" Attributes="0" SourcePath="bin\hypedyn-windows\lib\kawa.jar" SelfReg="false" NextFile="AppleJavaExtensions.jar"/>
     <ROW File="kawa.jar_1" Component_="hypedyn.jar_1" FileName="kawa.jar" Attributes="0" SourcePath="bin\hypedyn-windows\lib\export\kawa.jar" SelfReg="false" NextFile="AppleJavaExtensions.jar_1"/>
+    <ROW File="kawa_applet.jar" Component_="hypedyn.jar_1" FileName="kawa-a~1.jar|kawa-applet.jar" Attributes="0" SourcePath="bin\hypedyn-windows\lib\export\kawa-applet.jar" SelfReg="false"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.BuildComponent">
     <ROW BuildKey="DefaultBuild" BuildName="DefaultBuild" BuildOrder="1" BuildType="0" PackageFolder="." Languages="en" InstallationType="4"/>
