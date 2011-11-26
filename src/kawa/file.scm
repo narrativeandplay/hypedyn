@@ -111,7 +111,14 @@
                               filterlist)
                          result))
                       ((get-description) :: <java.lang.String>
-                       "*.dyn")
+                       (let ((the-string ""))
+                         (map (lambda (this-entry)
+                                (set! the-string (string-append the-string
+                                                                " "
+                                                                "*"
+                                                                this-entry)))
+                              filterlist)
+                         (invoke the-string 'to-string)))
                       )))
         ;)
     
@@ -183,8 +190,16 @@
                              (set! result (or result (string-ends-with? name this-entry))))
                            filterlist)
                       result)))
-                  ((get-description) :: <java.lang.String>
-                   "*.dyn")
+                      ((get-description) :: <java.lang.String>
+                       (let ((the-string ""))
+                         (map (lambda (this-entry)
+                                (display this-entry) (newline)
+                                (set! the-string (string-append the-string
+                                                                " "
+                                                                "*"
+                                                                this-entry)))
+                              filterlist)
+                         (invoke the-string 'to-string)))
                   )))
     
     ; show the dialog

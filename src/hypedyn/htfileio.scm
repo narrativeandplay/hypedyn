@@ -239,7 +239,7 @@
 (define (doexport-text)
   (easy-try-catch
    (lambda ()
-      (let ((exportfilename (get-safe-new-filename (get-last-saved-dir) #f (list ".txt"))))
+      (let ((exportfilename (get-safe-new-filename (get-last-saved-dir) #f (list ".txt") "txt")))
         (if (not (eq? #f exportfilename))
             (begin
               (if (file-exists? exportfilename)
