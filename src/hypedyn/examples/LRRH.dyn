@@ -1,0 +1,20 @@
+(begin (make-hypertext (quote htfe) 2.1) (set-card-shark! (quote #f))
+(create-node "start"
+"This is the story of a little girl named Little Red Riding Hood, which she was called because of the red hood that she often wore.\n\nOne day she was walking through the forest."
+334 61 false false 2) (create-node "end" "*** The End ***\n\nback to start" 332
+302 false false 3) (create-node "forest"
+"In the forest, Red came across a young man with a nasty smile.\n\n\"Where are you going, little girl?\" he asked.\n\n\"I'm off to see my sick granny,\" she said.\n\nWell, you can probably guess what happened next."
+245 189 false false 4) (create-node "Hood details"
+"Her hood was a magic garment, given to her by her grandmother. It could kill anyone who tried to harm the wearer.\n\nBut not immediately. And in a most painful manner.\n\nMeanwhile, in the forest..."
+99 119 false false 144) (begin (create-link "to forest" 2 4 168 174 true false
+false -1 "" false 145) (begin (create-typed-rule "to forest" (quote link)
+(quote and) 145 146))) (begin (create-link "to the end" 4 3 198 202 true false
+false -1 "" false 147) (begin (create-typed-rule "to the end" (quote link)
+(quote and) 147 148))) (begin (create-link "restart" 3 2 25 30 true false false
+-1 "" false 149) (begin (create-typed-rule "restart" (quote link) (quote and)
+149 150))) (begin (create-link "more about the hood" 2 144 101 109 true false
+false -1 "" false 151) (begin (create-typed-rule "more about the hood" (quote
+link) (quote and) 151 152) (create-typed-condition "more about the hood" 0 3 1
+152 153))) (begin (create-link "continue" 144 4 185 191 true false false -1 ""
+false 154) (begin (create-typed-rule "continue" (quote link) (quote and) 154
+155))) (set-start-node! 2))

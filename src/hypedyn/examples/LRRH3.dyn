@@ -1,0 +1,65 @@
+(begin (make-hypertext (quote htfe) 2.1) (set-card-shark! (quote #f))
+(create-node "end 2"
+"Frustrated, the wolf snuck off to try his luck at the mall instead.\n\n*** The End ***"
+383 286 false false 66) (create-node "start"
+"This is the story of a naive street-smart girl named Little Red Riding Hood, which she was called because of the red hood that she often wore.\n\nOne day she was walking through the forest."
+296 53 false false 2) (create-node "end 1"
+"Quickly the wolf ran ahead to Grandma's house, swallowed Grandma whole, and disguised himself as the poor old lady. When Red arrived, he finished her off too. Yum!\n\n*** The End ***"
+219 286 false false 3) (create-node "forest"
+"In the forest, Red came across a young man with a nasty smile.\n\n\"Where are you going, little girl?\" he asked.\n\n\"I'm off to see my sick granny,\" she said.\n\nWell, you can probably guess what happened next."
+297 165 false false 4) (create-node "Red is naive" "Red is naive.\n\nback" 536
+47 false false 32) (create-node "Red is street-smart"
+"Red is street-smart.\n\nback" 546 227 false false 33) (create-node
+"Red's character" "Is Red naive or street-smart?" 538 130 false false 34)
+(create-node "summary"
+"Red is a naive street-smart little girl.\nShe told the wolf where she is going.\nShe refused to speak to the wolf.\nThe wolf had a tasty meal.\nThe wolf gave up in frustration."
+74 55 true false 49) (begin (create-link "Next" 2 4 180 186 true false false -1
+"" false 7) (begin (create-typed-rule "Next" (quote link) (quote or) 7 155)
+(create-typed-condition "Next" 0 33 1 155 157) (create-typed-condition "Next" 0
+32 1 155 156))) (begin (create-link "to the end" 4 3 198 202 true true false 66
+"" false 144) (begin (create-typed-rule "to the end" (quote link) (quote and)
+144 152) (create-typed-condition "to the end" 0 32 1 152 154)
+(create-typed-condition "to the end" 0 33 0 152 153))) (begin (create-link
+"naive" 2 -1 23 29 false false true -1 "" false 85) (begin (create-typed-rule
+"naive" (quote link) (quote and) 85 86) (create-typed-condition "naive" 0 32 1
+86 88) (create-typed-condition "naive" 0 34 1 86 87))) (begin (create-link
+"street-smart" 2 -1 29 42 false false true -1 "" false 89) (begin
+(create-typed-rule "street-smart" (quote link) (quote and) 89 90)
+(create-typed-condition "street-smart" 0 33 1 90 92) (create-typed-condition
+"street-smart" 0 34 1 90 91))) (begin (create-link "street-smart" 49 -1 15 28
+false false true -1 "" false 95) (begin (create-typed-rule "street-smart"
+(quote link) (quote and) 95 129) (create-typed-condition "street-smart" 0 33 1
+129 131) (create-typed-condition "street-smart" 0 34 1 129 130))) (begin
+(create-link "naive" 34 32 7 12 true false false -1 "" false 35) (begin
+(create-typed-rule "naive" (quote link) (quote and) 35 58)
+(create-typed-condition "naive" 0 33 0 58 60) (create-typed-condition "naive" 0
+32 0 58 59))) (begin (create-link "forest1" 49 -1 41 79 false false true -1 ""
+false 102) (begin (create-typed-rule "forest1" (quote link) (quote and) 102
+132) (create-typed-condition "forest1" 0 4 1 132 134) (create-typed-condition
+"forest1" 0 32 1 132 133))) (begin (create-link "street-smart" 34 33 16 28 true
+false false -1 "" false 40) (begin (create-typed-rule "street-smart" (quote
+link) (quote and) 40 55) (create-typed-condition "street-smart" 0 33 0 55 57)
+(create-typed-condition "street-smart" 0 32 0 55 56))) (begin (create-link
+"forest2" 49 -1 79 113 false false true -1 "" false 105) (begin
+(create-typed-rule "forest2" (quote link) (quote and) 105 135)
+(create-typed-condition "forest2" 0 4 1 135 137) (create-typed-condition
+"forest2" 0 33 1 135 136))) (begin (create-link "choose" 2 34 53 75 true false
+false -1 "" false 42) (begin (create-typed-rule "choose" (quote link) (quote
+and) 42 43) (create-typed-condition "choose" 0 34 0 43 44))) (begin
+(create-link "end1" 49 -1 113 140 false false true -1 "" false 108) (begin
+(create-typed-rule "end1" (quote link) (quote and) 108 138)
+(create-typed-condition "end1" 0 3 1 138 140) (create-typed-condition "end1" 0
+32 1 138 139))) (begin (create-link "back" 33 2 22 26 true false false -1 ""
+false 45) (begin (create-typed-rule "back" (quote link) (quote and) 45 46)))
+(begin (create-link "end2" 49 -1 140 172 false false true -1 "" false 111)
+(begin (create-typed-rule "end2" (quote link) (quote and) 111 141)
+(create-typed-condition "end2" 0 66 1 141 143) (create-typed-condition "end2" 0
+33 1 141 142))) (begin (create-link "back" 32 2 15 19 true false false -1 ""
+false 47) (begin (create-typed-rule "back" (quote link) (quote and) 47 48)))
+(begin (create-link "naive" 49 -1 9 15 false false true -1 "" false 50) (begin
+(create-typed-rule "naive" (quote link) (quote and) 50 126)
+(create-typed-condition "naive" 0 34 1 126 128) (create-typed-condition "naive"
+0 32 1 126 127))) (begin (create-link "response" 4 -1 111 143 false false true
+-1 "\"I'm not supposed to talk to strangers,\"" false 61) (begin
+(create-typed-rule "response" (quote link) (quote and) 61 158)
+(create-typed-condition "response" 0 33 0 158 159))) (set-start-node! 2))

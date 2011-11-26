@@ -1,0 +1,322 @@
+<?xml version="1.0"?>
+<!-- A build file for use by Ant to build HypeDyn. -->
+<!-- Based on Kawa's ant file -->
+<!-- Requires Ant 1.6.3 -->
+<project name="HypeDyn" default="all" basedir=".">
+  <description>
+    HypeDyn
+  </description>
+  
+  <property name="version.release" value="2.4.1"/>
+  <property name="version.local" value=""/>
+  <property name="version" value="${version.release}${version.local}"/>
+  
+  <!-- value="/usr/local/share/java/"/ -->
+  <property name="kawa.dir"      value="C:/kawa/"/>
+
+  <property name="src.dir"      value="${basedir}"/>
+  <property name="build.dir"    value="${basedir}/build"/>
+  <property name="dist.dir"     value="${basedir}/bin"/>
+  <property name="launcher.dir" value="${basedir}/launchers" />
+
+  <property name="editor-mainclass" value="runhypedyn.scm"/>
+  <property name="reader-mainclass" value="htreader.scm"/>
+  <property name="applet-mainclass" value="htapplet.scm"/>
+
+  <property name="base.kawa.jar" value="kawa.jar"/>
+  <property name="base.hypedyn.jar" value="hypedyn.jar"/>
+  <property name="base.htapplet.jar" value="htapplet.jar"/>
+  <property name="base.htreader.jar" value="reader.jar"/>
+  
+  <property name="build.hypedyn.jar"    value="${build.dir}/${base.hypedyn.jar}"/>
+  <property name="build.htreader.jar"    value="${build.dir}/${base.htreader.jar}"/>
+  <property name="build.htapplet.jar"    value="${build.dir}/${base.htapplet.jar}"/>
+  <property name="build.kawa.jar"    value="${kawa.dir}/${base.kawa.jar}"/>
+  
+  <condition property="macosx"> <os family="mac" />    </condition>
+  <condition property="windows"><os family="windows" /></condition>
+  <condition property="linux">  <os family="unix" />   </condition>
+
+  <!-- build files, to be cleaned -->
+  <fileset id="build.classes" dir="${build.dir}">
+     <include name="*.class"/>
+  </fileset>
+  
+  <!-- targets -->
+  
+  <!-- top most parent task -->
+  <target name="all" depends="init, build, dist" />
+  
+   <!-- build -->
+   <target name="build" depends="build-reader, build-editor, build-applet" />
+   
+   <!-- only one of the 3 dependencies fire determined by the os -->
+   <target name="build-editor" depends="build-editor-windows, build-editor-linux, build-editor-macosx" />
+   <target name="build-reader" depends="build-reader-windows, build-reader-linux, build-reader-macosx"/>
+   <target name="build-applet" depends="build-applet-windows, build-applet-linux, build-applet-macosx" />
+
+  <!-- dist -->
+  <target name="dist" depends="dist-editor, dist-reader, dist-applet" />
+  <target name="dist-editor" depends="dist-editor-windows, dist-editor-linux, dist-editor-macosx, dist-common-windows" />
+  <target name="dist-reader" depends="dist-reader-windows, dist-reader-linux, dist-reader-macosx, dist-common-windows"/>
+  <target name="dist-applet" depends="dist-applet-windows, dist-applet-linux, dist-applet-macosx, dist-common-windows" />
+   
+   <!-- windows -->
+  <target name="build-editor-windows" depends="clean-build" if="windows">
+    <java failonerror="true"
+	    classname="kawa.repl"
+        classpath="${build.kawa.jar};../../lib/AppleJavaExtensions.jar">
+      <arg line="-d ${build.dir} --warn-invoke-unknown-method --warn-undefined-variable --main -C ${editor-mainclass}"/>
+    </java>
+	<!-- put into jar file -->
+	<jar jarfile="${build.hypedyn.jar}"
+    	 basedir="${build.dir}"
+		 excludes="${base.hypedyn.jar}"
+    	 manifest="${src.dir}/Manifest/Manifest.editor"/>
+  </target>
+ 
+ <target name="dist-common-windows" >
+    <!-- copy the help file -->
+  	<copy file="${src.dir}/hypedyn.txt" todir="${dist.editor.package.javadir}"/>
+
+  	<!-- copy the examples and tutorials -->
+  	<copy todir="${dist.editor.package.javadir}/examples">
+  		<fileset dir="${src.dir}/examples"/>
+  	</copy>
+  	<copy todir="${dist.editor.package.javadir}/tutorials">
+  		<fileset file="${src.dir}/../../doc/*.pdf"/>
+  	</copy>
+ </target>
+ 
+  <target name="dist-editor-windows" if="windows">
+	<!-- path for editor -->
+	<property name="src.editor.package"  value="${src.dir}/HypeDyn_package.app"/>
+	<!--	<property name="dist.editor.package"    value="${dist.dir}/HypeDyn.test"/> -->
+
+	<!-- this is the only thing that changed between os -->
+	<property name="dist.editor.package" value="${dist.dir}/HypeDyn.win" />
+	
+    <property name="dist.editor.package.javadir" value="${dist.editor.package}/Java" />
+	
+    <!-- copy the mac bundle skeleton -->
+  	<!--
+	<copy todir="${dist.editor.package}">
+  		<fileset dir="${src.editor.package}"/>
+  	</copy>
+  	-->
+	
+	<copy file="${launcher.dir}/hypedyn.exe" todir="${dist.editor.package}" />
+	
+  	<!-- copy the jar files to the mac bundle -->
+  	<copy file="${build.hypedyn.jar}" todir="${dist.editor.package.javadir}"/>
+  	<copy file="${build.kawa.jar}" todir="${dist.editor.package.javadir}"/>
+
+  	
+  </target>
+  
+  <target name="build-reader-windows" depends="clean-build"  if="windows" >
+    <java failonerror="true"
+	    classname="kawa.repl"
+        classpath="${build.kawa.jar};../../lib/AppleJavaExtensions.jar">
+      <arg line="-d ${build.dir} --warn-invoke-unknown-method --warn-undefined-variable --main -C ${reader-mainclass}"/>
+    </java>
+	<!-- put into jar file -->
+	<jar jarfile="${build.htreader.jar}"
+    	 basedir="${build.dir}"
+		 excludes="${base.htreader.jar}"
+    	 manifest="${src.dir}/Manifest/Manifest.reader"/>
+		 
+  </target>
+  
+  
+  <target name="dist-reader-windows" if="windows" >
+    <copy file="${build.htreader.jar}" todir="${dist.editor.package.javadir}"/>
+	<copy file="${launcher.dir}/reader.exe" todir="${dist.editor.package}" />
+  </target>
+  
+  <target name="build-applet-windows" depends="" if="windows">
+    <java failonerror="true"
+	    classname="kawa.repl"
+        classpath="${build.kawa.jar};../../lib/AppleJavaExtensions.jar">
+      <arg line="-d ${build.dir} --warn-invoke-unknown-method --warn-undefined-variable --applet -C ${applet-mainclass}"/>
+    </java>
+	
+	<!-- put into jar file -->
+	<jar jarfile="${build.htapplet.jar}"
+    	 basedir="${build.dir}"
+		 excludes="${base.htapplet.jar}"
+    	 manifest="${src.dir}/Manifest/Manifest.applet"/>
+  </target>
+  
+  <target name="dist-applet-windows" depends="" if="windows">
+    <copy file="${build.htapplet.jar}" todir="${dist.editor.package.javadir}" />
+	<copy file="${src.dir}/htapplet.html" todir="${dist.editor.package.javadir}" />
+	<copy file="${src.dir}/story.dyn" todir="${dist.editor.package.javadir}" />
+  </target>
+  
+  <!-- linux -->
+  <target name="build-editor-linux" depends="" if="linux" />
+  <target name="build-reader-linux" depends="" if="linux" />
+  <target name="build-applet-linux" depends="" if="linux" />
+  
+  <target name="dist-editor-linux" depends="" if="linux" />
+  <target name="dist-reader-linux" depends="" if="linux" />
+  <target name="dist-applet-linux" depends="" if="linux" />
+  
+  <!-- macosx -->
+  <target name="build-editor-macosx" depends="" if="macosx" />
+  <target name="build-reader-macosx" depends="" if="macosx" />
+  <target name="build-applet-macosx" depends="" if="macosx" />
+  
+  <target name="dist-editor-macosx" depends="" if="macosx" />
+  <target name="dist-reader-macosx" depends="" if="macosx" />
+  <target name="dist-applet-macosx" depends="" if="macosx" />
+  
+  <target name="init">
+  
+  <!-- determine settings here (to be added) -->
+
+  <!-- show user the settings -->
+    <echo>
+        version=${version}
+    	build.hypedyn.jar=${build.hypedyn.jar}
+        build.dir=${build.dir}
+    </echo>
+  	
+  <!-- set up directory structure -->
+    <mkdir dir="${build.dir}"/>
+    <mkdir dir="${dist.dir}"/>
+  </target>
+  
+
+  
+  <!-- platform independent copying for editor -->
+  <target name="dist-editor-old">
+  
+   <!-- path for editor -->
+	<property name="src.editor.package"  value="${src.dir}/HypeDyn_package.app"/>
+	<!--	<property name="dist.editor.package"    value="${dist.dir}/HypeDyn.test"/> -->
+ 
+
+    <condition property="dist.editor.package" value="${dist.dir}/HypeDyn.mac">
+      <os family="mac" /> </condition>
+    <condition property="dist.editor.package" value="${dist.dir}/HypeDyn.win">
+      <os family="windows" /> </condition>
+    <condition property="dist.editor.package" value="${dist.dir}/HypeDyn.linux">
+      <os family="unix" /> </condition>
+
+    <property name="dist.editor.package.javadir"    value="${dist.editor.package}/Contents/Resources/Java"/>
+	
+    <!-- copy the mac bundle skeleton -->
+  	<copy todir="${dist.editor.package}">
+  		<fileset dir="${src.editor.package}"/>
+  	</copy>
+  	
+  	<!-- copy the jar files to the mac bundle -->
+  	<copy file="${build.hypedyn.jar}" todir="${dist.editor.package.javadir}"/>
+  	<copy file="${build.kawa.jar}" todir="${dist.editor.package.javadir}"/>
+  	
+  	<!-- copy the help file -->
+  	<copy file="${src.dir}/hypedyn.txt" todir="${dist.editor.package.javadir}"/>
+
+  	<!-- copy the examples and tutorials -->
+  	<copy todir="${dist.editor.package.javadir}/examples">
+  		<fileset dir="${src.dir}/examples"/>
+  	</copy>
+  	<copy todir="${dist.editor.package.javadir}/tutorials">
+  		<fileset file="${src.dir}/../../doc/*.pdf"/>
+  	</copy>
+  </target>
+  
+
+
+  
+
+  <!-- clean -->
+	
+  <target name="clean-build">
+    <delete>
+       <fileset refid="build.classes"/>
+    </delete>
+    <delete dir="${build.dir}"/>
+  </target>
+
+  <target name="clean-dist">
+    <delete dir="${dist.dir}"/>
+  </target>
+
+  <target name="clean" depends="clean-build,clean-dist"/>
+
+  
+  
+  
+  
+  <!-- old code -->
+  
+  
+  <!-- compile the scheme classes -->
+  <target name="scm-classes">
+    <java failonerror="true"
+	    classname="kawa.repl"
+        classpath="${build.kawa.jar};../../lib/AppleJavaExtensions.jar">
+      <arg line="-d ${build.dir} --warn-invoke-unknown-method --warn-undefined-variable --main -C ${editor-mainclass}"/>
+    </java>
+  </target>
+ <!-- stricter:     -d ${build.dir} -warn-undefined-variable -warn-unknown-member -warn-as-error -main -C runhypedyn.scm -->
+  
+    <target name="dist-old">
+	
+	<!-- path for reader -->
+	<property name="src.reader.package"  value="${src.dir}/HypeDyn_package.app"/>
+  
+    <condition property="dist.reader.package" value="${dist.dir}/HypeDyn.mac">
+      <os family="mac" /> </condition>
+    <condition property="dist.reader.package" value="${dist.dir}/HypeDyn.win">
+      <os family="windows" /> </condition>
+    <condition property="dist.reader.package" value="${dist.dir}/HypeDyn.linux">
+      <os family="unix" /> </condition>
+			 
+    <property name="dist.reader.package.javadir"    value="${dist.reader.package}/Contents/Resources/Java"/>
+	
+	<!-- path for applet -->
+	<property name="src.applet.package"  value="${src.dir}/HypeDyn_package.app"/>
+  
+    <condition property="dist.applet.package" value="${dist.dir}/HypeDyn.mac">
+      <os family="mac" /> </condition>
+    <condition property="dist.applet.package" value="${dist.dir}/HypeDyn.win">
+      <os family="windows" /> </condition>
+    <condition property="dist.applet.package" value="${dist.dir}/HypeDyn.linux">
+      <os family="unix" /> </condition>
+			 
+    <property name="dist.applet.package.javadir"    value="${dist.applet.package}/Contents/Resources/Java"/>
+	
+  
+    <!-- create the jar file -->
+    <jar jarfile="${build.hypedyn.jar}"
+    	 basedir="${build.dir}"
+		 excludes="hypedyn.jar"
+    	 manifest="${src.dir}/Manifest.txt"/>
+  	
+  	<!-- copy the mac bundle skeleton -->
+  	<copy todir="${dist.editor.package}">
+  		<fileset dir="${src.editor.package}"/>
+  	</copy>
+  	
+  	<!-- copy the jar files to the mac bundle -->
+  	<copy file="${build.hypedyn.jar}" todir="${dist.editor.package.javadir}"/>
+  	<copy file="${build.kawa.jar}" todir="${dist.editor.package.javadir}"/>
+  	
+  	<!-- copy the help file -->
+  	<copy file="${src.dir}/hypedyn.txt" todir="${dist.editor.package.javadir}"/>
+
+  	<!-- copy the examples and tutorials -->
+  	<copy todir="${dist.editor.package.javadir}/examples">
+  		<fileset dir="${src.dir}/examples"/>
+  	</copy>
+  	<copy todir="${dist.editor.package.javadir}/tutorials">
+  		<fileset file="${src.dir}/../../doc/*.pdf"/>
+  	</copy>
+
+  </target>
+	
+</project>

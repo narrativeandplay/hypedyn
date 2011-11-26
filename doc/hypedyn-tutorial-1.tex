@@ -1,0 +1,511 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+\begin{document}
+
+\title{The HypeDyn Hypertext Fiction Editor\\Tutorial 1: Nodes, Links and Rules}
+% \author{Alex Mitchell}
+\date{}
+
+\onecolumn
+\maketitle
+
+\tableofcontents
+
+
+\section{Introduction}
+In this tutorial, we will build a basic interactive story in the HypeDyn
+hypertext fiction editor. HypeDyn is a tool which lets you create ``hypertext'',
+a form of writing which usually consists of:
+
+\begin{itemize}
+  \item A collection of text fragments or ``nodes'', containing some text, which
+  are normally displayed one at a time in a hypertext reader;
+  \item ``links'' between these nodes, which provide a connection from one node,
+  or more commonly from a section of text in one node, to another node. A reader
+  is usually able to ``follow'' a link to its destination node by, for example,
+  clicking on the link; 
+  \item ``rules'' which can be attached to a link, which determine whether or
+  not the link can be followed, usually based on some conditions.
+\end{itemize}
+
+In this tutorial, we will be creating a simple hypertext \textit{fiction}.
+Hypertext fiction usually consists of a story told in hypertext. Most well-known
+examples of hypertext fiction let the reader explore through a set of text
+fragments, encouraging them to discover different paths through the story. These
+alternate paths sometimes uncover new information which the reader didn't
+previously know, thereby altering their perception of the story.
+
+Our example, ``Little Red Riding Hood'', involves the reader exploring several
+paths through a story. The main path tells a simplified version of the
+traditional folk tale, about a little girl with a red hood who meets a wolf on
+the way to visit her Grandmother. An addtional side path, which can only be accessed once
+the reader has visited the last node in the main path, reveals some additional
+background information about Red's hood.
+
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=10cm]{images/hypedyn-tutorial-1-figure-1}
+  \caption{\textit{The completed ``Little Red Riding Hood'' story.}}
+\end{figure} 
+
+The nodes and links in the final story are shown in Figure 1. Although this is
+a very simple story, it will involve most of the basic functionality of HypeDyn.
+
+\textit{Note:  HypeDyn is a work-in-progress, so there are some features that are still
+not completed, and there may be bugs. If you encounter any errors, please
+report them as bugs on our Launchpad site: \url{https://launchpad.net/hypedyn}.}
+
+\section{Getting started}
+
+First, open HypeDyn by double-clicking on the file \textbf{HypeDyn.exe} (in
+Windows) or \textbf{HypeDyn.app} (in MacOS).
+
+Save your file by choosing Save from the File menu. Make sure that you give the
+file a \textbf{.dyn} extension.
+
+\section{Creating a text node}
+
+The first thing we need to do is to start creating some text nodes. We'll begin
+by creating the starting node, which represents the first fragment in the story.
+In this node, we will introduce the main character, Red, and the initial action of
+the story, the fact that she is walking through the forest.
+ 
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=10cm]{images/hypedyn-tutorial-1-figure-2}
+  \caption{\textit{The main HypeDyn interface}}
+\end{figure} 
+
+The main HypeDyn interface consists of the Toolbar (A), the Node list (B), and
+the Map view (C), as shown in Figure 2. The Toolbar contains the functions that
+we will use to create and edit our text nodes. The Node list contains a list of
+the nodes in your story. The Map view displays the nodes and links.
+
+\begin{enumerate}
+  \item To create a new text node, click on the New node button. A new text node
+  will be created, and you will be asked to give it a title. Name the new text
+  node ``Start'', and click Ok, as shown in Figure 3.  
+\end{enumerate}
+
+ 
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=4cm]{images/hypedyn-tutorial-1-figure-3}
+  \caption{\textit{Creating a new text node}}
+\end{figure} 
+
+Text nodes are the basic building blocks of hypertexts created with HypeDyn.
+Each text node has: 
+\begin{enumerate}
+  \item A title to identify the node
+  \item Some text content.
+\end{enumerate}
+
+Once you've created a text node, you should see the node represented in both
+the node list and the Map view (see Figure 4). You can select the node by
+clicking on its title in the node list. 
+ 
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=7cm]{images/hypedyn-tutorial-1-figure-4}
+  \caption{\textit{Our first node showing in the Node list and Map view}}
+\end{figure} 
+
+You can also drag the node around in the Map view by selecting node dragging
+it. Once we have created several nodes and links between them, it can be useful
+to position them in the Map view so that we can easily see the relationship
+between them. However, the position of the nodes in the Map view does
+not change their behaviour in any way.
+
+\section{Adding text to a node}
+
+Now that we have our first text node, we need to go in and enter some text.
+
+\begin{enumerate}
+  \item Choose the title of our node, start, in the node list, and then click
+  on the Edit node button in the Toolbar. This will open the editing view for
+  the node, as shown in Figure 5. 
+  
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=9cm]{images/hypedyn-tutorial-1-figure-5}
+  \caption{\textit{The editing view of a text node}}
+\end{figure} 
+
+The Editing view lets you enter the text for a node. It also lets you add, edit
+and delete links, and test your story by using the read button to read from the
+current node. The Editing view consists of the Toolbar (A), the Link list (B),
+and the Content editor (C).
+
+Note that the name of the node that you are currently editing is shown in the
+title bar of the Editing view.
+
+\item Now enter the text for the first fragment of our story in the Content
+editor:
+
+\begin{quotation}
+This is the story of a girl named Little Red Riding Hood, which she was called
+because of the red hood that she often wore.
+
+One day she was walking through the forest.
+\end{quotation}
+
+\item We want this node to be the start of our story, so click on the Set start
+node button to set this node as the start node. Every story must have a start node.
+\item Once you've finished entering this text, close the editing view by
+clicking on the close button. This will take you back to the Map view.
+\end{enumerate}
+
+\section{Creating links between nodes}
+
+We will now create several other nodes, to represent other fragments of our
+hypertext story, and we'll create links between them.
+
+\subsection{Creating the other nodes}
+
+\begin{enumerate}
+  \item Create another text node, and name it ``forest''.
+  \item Enter the following text in the node:
+
+\begin{quotation}
+In the forest, Red came across a young man with a nasty smile.
+
+"Where are you going, little girl?" he asked.
+
+"I'm off to see my sick granny," she said.
+
+Well, you can probably guess what happened next.
+\end{quotation}
+
+This node represents the main conflict of the story.
+
+\item Create a third node, and name it ``end''.
+\item Enter the following text in the node:
+
+\begin{quotation}
+*** The End ***
+
+back to start
+\end{quotation}
+
+This node represents the end of our story.
+\end{enumerate}
+
+Now you should have three nodes: ``start'', ``forest'', and ``end'', as in Figure 6.
+
+ 
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=7cm]{images/hypedyn-tutorial-1-figure-6}
+  \caption{\textit{Three text nodes}}
+\end{figure} 
+
+\subsection{Creating a link}
+
+Now we want the user to be able to move from one text node to another, as they
+make decisions about how to read the story. To do this, we need to create links
+between the nodes.
+
+Links in HypeDyn can be attached to a specific piece of text. In our story, we
+want the user to be able to click on ``forest'' in the ``start'' node to jump
+to the ``forest'' node. This lets the user progress through the main story path.
+
+\begin{enumerate}
+  \item Select the ``start'' node in the Node list, and then click on the Edit
+  node button.
+  \item Now select the word ``forest''. We'll attach our link here.
+  \item Click on the New link button in the Editing view. A New link dialogue
+  box will appear, as shown in Figure 7. 
+
+ 
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=4cm]{images/hypedyn-tutorial-1-figure-7}
+  \caption{\textit{Creating a link}}
+\end{figure} 
+
+\item Give the link a name, such as ``Next'', and click OK.
+\item You will now see the ``Edit link'' dialogue (see Figure 8). This is where
+we can specify the destination of the link. The ``Edit link'' dialogue consists
+% NM2217 version:
+% of two sections: the \textit{rule}, listing a series of conditions which
+% specify when the link can be followed, and a \textit{THEN} section, which is the set of
+% actions that are performed when the rule is satisfied. We will return to the
+% \textit{rule} below.
+% full version:
+of three sections: the \textit{rule}, listing a series of conditions which
+specify when the link can be followed, a \textit{THEN} section, which is the set of
+actions that are performed when the rule is satisfied, and an \textit{ELSE} section,
+which is a set of actions that are performed when the rule is \textit{not}
+satisfied. In this tutorial, we will not be dealing with the \textit{ELSE}
+section. For details on the \textit{ELSE} section, see tutorial 2. We will
+return to the \textit{rule} below.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=6cm]{images/hypedyn-tutorial-1-figure-8}
+  \caption{\textit{The link from the ``start'' to the ``forest''}}
+\end{figure} 
+
+\item Check the checkbox to the left of ``follow link to'' in the
+\textit{THEN} section, and use the pull-down menu to choose the ``forest'' node.
+This will create a link from the text ``forest'' in the ``start'' node to the
+``forest'' text node.
+\item Now click OK. 
+\end{enumerate}
+
+We have now created a link from the ``start'' node to the ``forest''. You
+should be able to see this link in the Link list at the top of the Editing
+view, and in the Map view, as shown in Figure 9.
+  
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=9cm]{images/hypedyn-tutorial-1-figure-9}
+  \caption{\textit{The link from the ``start'' to the ``forest''}}
+\end{figure} 
+
+Notice that links show up as bold, underlined text in the content of the text node.
+
+\subsection{Testing the link}
+
+Now that we've created the link, we need to test that it works.
+
+To switch from editing to reading the text nodes, we need to use the Read node
+button in Toolbar in the Map view.
+
+\begin{enumerate}
+  \item Close the ``start'' node if its still open.
+  \item Make sure the ``start'' node is selected in the Node list.
+  \item Now click on the Read node button. The Reader window will open, showing
+  the contents of the text node. You are now ``reading'' the story, instead of
+  editing it, as shown in Figure 10.
+
+ 
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=9cm]{images/hypedyn-tutorial-1-figure-10}
+  \caption{\textit{Reading a text node}}
+\end{figure} 
+
+In the Reader, you can click on links, and you'll be taken to the text node
+that the link leads to.
+
+\item Click on the word ``forest'' to follow the link.
+\item The Reader will change to show the contents of the ``forest'' node.
+\end{enumerate}
+
+We now have links between nodes, the main functionality of a hypertext document.
+
+% this should be fixed now
+% \textit{Note: For now, be careful not to give two links the same names, even if they
+% are in different nodes. There used to be a bug in HypeDyn which makes it
+% difficult to delete links with the same name. I think this has been fixed, but
+% its better to be safe than sorry\ldots}
+
+\section{Creating more links}
+
+Now that we have one link from the ``start'' to the ``forest'', we should link
+in our third node, ``end''. This will allow the user to move forward along the
+main story path from the ``forest'' node to the ``end'' node, the end of the story.
+
+\begin{enumerate}
+\item Open the ``forest'' text node.
+\item Select the word ``next''.
+\item Click on the New link button.
+\item Name this link ``to the end''.
+\item Now select the ``end'' node in the pull-down menu.
+\item Click on the Ok button.
+
+You now have a link to the ``end'' text node. Test this out by opening the
+Reader with the ``forest'' node selected. You should be able to move to the
+``end'' node. 
+
+ 
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=6cm]{images/hypedyn-tutorial-1-figure-11}
+  \caption{\textit{Three nodes with a loop back to the start}}
+\end{figure} 
+
+Now we'll create one more link, this time from the ``end'' node back to the
+``start'', so that the reader can re-read our story if they want.
+
+\item Open the ``end'' node.
+\item Select the words ``back to start''.
+\item Click on the New link button.
+\item Name this link ``restart''.
+\item Now select the ``start'' node from the pull-down menu.
+\end{enumerate}
+
+We now have a loop back to the start. At this point, your Map view should look
+as shown in Figure 11.
+
+\section{Creating rules}
+
+The next thing we want to do is create a rule. This is a link that can only be
+followed if a certain condition, such as the user having visited a specific
+node, is satisfied.
+
+We will create a node, named ``Hood details'', which can be reached after the
+reader has read the entire story. This node will reveal additional information
+that will (hopefully) change the reader's experience of the story, as the reader
+will now know that there is something unusual, and perhaps slightly sinister,
+about Red's hood.
+
+To do this, we will use a feature in HypeDyn called a ``rule'' to only allow the
+reader to see the ``Hood details'' node after they have seen the ``end'' node.
+This allows us, as the author of the story, to ensure that the reader has gone
+through the main story path at least once. We want the reader to experience the
+original story before seeing the new information, so that the new information
+can more effectively impact their previous mental model of the events of the
+story.
+
+\subsection{Creating the node}
+
+First we'll create a new node to contain the information about the hood.
+
+\begin{enumerate}
+  \item Create a new node, and name it ``Hood details''.
+  \item Enter the following text in the text node:
+
+\begin{quotation}
+Her hood was a magic garment, given to her by her grandmother.
+It could kill anyone who tried to harm the wearer.
+
+But not immediately. And in a most painful manner.
+
+Meanwhile, in the forest...
+\end{quotation}
+
+\item Next, select the word ``forest'' in the text you just entered (in the 
+``Hood details'' node). Create a link from this word to the ``forest'' node.
+Name this link ``continue''. 
+
+This link leads the reader back to the main story path, thus allowing the
+reader to continue reading the story after having read the additional details in
+this node.
+\item Now create a link from the ``start'' node to the ``Hood details'' node.
+Edit the ``start'' node and select the text ``red hood''. Create a link from
+this text to the ``Hood details'' node, and name the link ``more about the hood''.
+\end{enumerate}
+
+At this point, you should have the nodes as shown in Figure 12.
+
+ 
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=7cm]{images/hypedyn-tutorial-1-figure-12}
+  \caption{\textit{Setting up the ``Hood details'' node}}
+\end{figure} 
+
+\subsection{Creating the rule}
+
+Now we want to make it so that the reader can only follow the ``more about the
+hood'' link if they've already read the ``end'' node. To do this, we need to
+create a rule on the link between the ``start'' node and the ``Hood details'' node.
+
+\begin{enumerate}
+  \item Open the ``start'' text node, and select the link ``More about the hood''.
+  \item Now click on the Edit link button. The Edit link dialog box will
+  appear.
+
+The Edit link dialog box lets us create Conditions which must be true for the
+link to be followed. If there are multiple conditions, then you can choose
+whether the link is followed when All or when Any of the conditions are true,
+by using the Any/All pull-down menu. For now, leave this pull-down menu at the
+default, All.
+
+\item Click on the Add condition button. This will create a new condition which
+must be satisfied for the link to be followed, as shown in Figure 13.
+ 
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=7cm]{images/hypedyn-tutorial-1-figure-13}
+  \caption{\textit{Adding a condition}}
+\end{figure} 
+
+\item We want the link to ``Hood details'' only to be followed if the reader has
+gone through the entire story at least once. This means they have to have
+visited the ``end'' node. Use the pull-down menus so that our condtion reads
+``Node end Visited''. (Your condition should look like Figure 14.) Then
+click Ok.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=7cm]{images/hypedyn-tutorial-1-figure-14}
+  \caption{\textit{Condition for the ``Hood details''}}
+\end{figure} 
+
+\item Close the ``start'' text node.
+\end{enumerate}
+
+Note that the check-box beside the condition is used to select the condition if you
+want to delete it. Clicking on ``Delete selected'' will delete any selected
+conditions. Only select a condition if you want to delete it.
+
+
+\subsection{Testing the rule}
+
+Now we will test out the rule.
+
+\begin{enumerate}
+  \item Select the ``start'' node in the Node list, and click on the Read node button.
+  \item You should see that the text ``red hood'' is bold, but not underlined.
+  This indicates a link which cannot currently be followed, as shown in Figure 15.
+
+ 
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=7cm]{images/hypedyn-tutorial-1-figure-15}
+  \caption{\textit{Start node with a link that cannot be followed}}
+\end{figure} 
+
+\item Now read through the story once, by clicking on ``forest'' in the
+``start'' node, and then ``next'' in the ``forest'' node.
+\item Finally, read back to the start by clicking on the ``back to start'' link
+in the ``end'' node.
+\item This time, you should see that the ``red hood'' text is a normal,
+followable link. Click on the link to go to the ``Hood details'' node.
+
+If you want to read the story again as if you've never read it, you need to
+clear the Reader's history of which nodes have been visited.
+
+\item In the Reader, click on the Restart. The Reader will go to the node which
+we set as the start node, ``start'', and will clear its history.
+\item You should now see that the ``red hood'' text is once again an
+unfollowable link.
+\end{enumerate}
+
+We have now created a simple story, with links and rules.
+
+\section{Reading the story}
+
+Once you have created and saved your story, you can use the stand-alone reader,
+\textbf{HypeDynReader.exe} (on Windows) or \textbf{HypeDynReader.app} (on
+MacOS) to read the story, by running the stand-alone reader and then opening the
+story. This is exactly the same as the Reader window in the editor.
+
+\section{Conclusion}
+
+In this tutorial, we have created a simple hypertext fiction. Our story has a
+main path, which tells a simplified version of the traditional folk tale
+``Little Red Riding Hood''. Our story also has an alternative side path, which
+gives the reader more information about Red's hood. This alternative side path
+can only be read once the reader has visited the ``end'' node at the end of the
+main story path. Although this is a simple story, it demonstrates all the
+capabilities of HypeDyn, capabilities which are sufficient to create a more
+complex hypertext fiction.
+
+% \section{Final notes}
+
+% As mentioned above, the HypeDyn hypertext editor is still a work-in-progress.
+% Please let me know if you encounter any problems. Also, please post your
+% questions about using the tool to the IVLE forum.
+
+Please see tutorial 2 for more advanced features: alternate links, conditional
+text, and anywhere nodes.
+
+\end{document}

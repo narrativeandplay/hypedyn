@@ -1,0 +1,128 @@
+#
+# build hypedyn
+#
+
+# clear everything
+rm -rf bin
+mkdir bin
+rm -rf build
+mkdir build
+
+#
+# build the editor
+#
+
+# build the directory structure
+mkdir bin/hypedyn-linux
+mkdir bin/hypedyn-linux/lib
+
+# compile
+java -cp $CLASSPATH:/usr/local/share/java/kawa.jar:.:../../lib/AppleJavaExtensions.jar kawa.repl -d build --warn-invoke-unknown-method --warn-undefined-variable --main -C runhypedyn.scm
+cd build
+cp ../Manifest.txt .
+jar -cmf Manifest.txt hypedyn.jar ./ 
+cd ..
+
+# copy the jar files
+cp build/hypedyn.jar bin/hypedyn-linux/lib
+cp /usr/local/share/java/kawa.jar bin/hypedyn-linux/lib/kawa.jar
+cp ../../lib/AppleJavaExtensions.jar bin/hypedyn-linux/lib
+
+# copy the shell script
+cp hypedyn bin/hypedyn-linux
+
+# copy the help file
+cp hypedyn.txt bin/hypedyn-linux/hypedyn.txt
+
+# copy the examples and tutorials
+mkdir bin/hypedyn-linux/examples
+cp examples/*.dyn bin/hypedyn-linux/examples
+mkdir bin/hypedyn-linux/tutorials
+cp ../../doc/*.pdf bin/hypedyn-linux/tutorials
+
+#
+# build the reader
+#
+
+# build the directory structure
+mkdir bin/hypedyn-reader-linux
+mkdir bin/hypedyn-reader-linux/lib
+
+# compile
+rm -rf build/*
+java -cp $CLASSPATH:/usr/local/share/java/kawa.jar:.:../../lib/AppleJavaExtensions.jar kawa.repl -d build --warn-invoke-unknown-method --warn-undefined-variable --main -C htreader.scm
+cd build
+cp ../Manifest-htreader.txt ./Manifest.txt
+jar -cmf Manifest.txt hypedyn-reader.jar ./ 
+cd ..
+
+# copy the jar files
+cp build/hypedyn-reader.jar bin/hypedyn-reader-linux/lib
+cp /usr/local/share/java/kawa.jar bin/hypedyn-reader-linux/lib/kawa.jar
+cp ../../lib/AppleJavaExtensions.jar bin/hypedyn-reader-linux/lib
+
+# copy the shell script
+cp hypedyn-reader bin/hypedyn-reader-linux
+
+#
+# build the applet reader
+#
+
+# build the directory structure
+mkdir bin/hypedyn-reader-applet
+
+# compile
+rm -rf build/*
+java -cp $CLASSPATH:/usr/local/share/java/kawa.jar:.:../../lib/AppleJavaExtensions.jar kawa.repl -d build --warn-invoke-unknown-method --warn-undefined-variable --applet -C htapplet.scm
+cd build
+cp ../Manifest.txt .
+jar -cmf Manifest.txt htapplet.jar ./
+cd ..
+
+# copy the jar files; note that we need to use our custom kawa jar file here
+cp build/htapplet.jar bin/hypedyn-reader-applet
+cp ../../lib/kawa-applet.jar bin/hypedyn-reader-applet/kawa-applet.jar
+cp ../../lib/AppleJavaExtensions.jar bin/hypedyn-reader-applet/AppleJavaExtensions.jar
+
+# copy the html file
+cp htapplet.html bin/hypedyn-reader-applet/htapplet.html
+
+#
+# assemble the export folder
+# 
+
+# build the export folder
+mkdir bin/hypedyn-linux/lib/export
+
+# copy in the common jar files
+cp bin/hypedyn-linux/lib/*.jar bin/hypedyn-linux/lib/export
+cp bin/hypedyn-reader-linux/lib/hypedyn-reader.jar bin/hypedyn-linux/lib/export
+
+# copy in the windows files
+cp hypedyn-reader-standalone.exe bin/hypedyn-linux/lib/export/hypedyn-reader.exe
+
+# copy in the linux files
+cp hypedyn-reader-standalone bin/hypedyn-linux/lib/export/hypedyn-reader
+
+# copy in the macos bundle skeleton
+cp -r HypeDynReader-standalone_package.app bin/hypedyn-linux/lib/export/HypeDynReader.app
+
+# copy in the applet files
+cp bin/hypedyn-reader-applet/htapplet.html bin/hypedyn-linux/lib/export
+cp bin/hypedyn-reader-applet/htapplet.jar bin/hypedyn-linux/lib/export
+cp bin/hypedyn-reader-applet/kawa-applet.jar bin/hypedyn-linux/lib/export
+
+#
+# copy lib dir to source folder for testing purposes
+#
+rm -rf lib
+cp -r bin/hypedyn-linux/lib lib
+cp bin/hypedyn-reader-linux/lib/hypedyn-reader.jar lib/hypedyn-reader.jar
+
+#
+# cleanup
+#
+
+rm -rf build
+
+# done

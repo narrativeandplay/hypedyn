@@ -1,0 +1,34 @@
+<launch4jConfig>
+  <dontWrapJar>true</dontWrapJar>
+  <headerType>gui</headerType>
+  <jar>Java\reader.jar</jar>
+  <outfile>reader.exe</outfile>
+  <errTitle></errTitle>
+  <cmdLine></cmdLine>
+  <chdir>.</chdir>
+  <priority>normal</priority>
+  <downloadUrl>http://java.com/download</downloadUrl>
+  <supportUrl></supportUrl>
+  <customProcName>false</customProcName>
+  <stayAlive>false</stayAlive>
+  <manifest></manifest>
+  <icon>hypedyn.ico</icon>
+  <jre>
+    <path>path</path>
+    <minVersion>1.6.0</minVersion>
+    <maxVersion></maxVersion>
+    <jdkPreference>preferJre</jdkPreference>
+  </jre>
+  <versionInfo>
+    <fileVersion>2.1.5.0</fileVersion>
+    <txtFileVersion>2.1.5 beta rev 1331 21 November 2010</txtFileVersion>
+    <fileDescription>HypeDyn version 2.1.5 beta</fileDescription>
+    <copyright>2008-2011 National University of Singapore and Singapore-MIT GAMBIT Game Lab c/o Media Development Authority of Singapore</copyright>
+    <productVersion>2.1.5.0</productVersion>
+    <txtProductVersion>2.1.5 beta rev 1331 21 November 2010</txtProductVersion>
+    <productName>HypeDyn</productName>
+    <companyName>National University of Singapore</companyName>
+    <internalName>HypeDyn</internalName>
+    <originalFilename>HypeDyn.exe</originalFilename>
+  </versionInfo>
+</launch4jConfig>

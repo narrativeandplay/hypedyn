@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<DOCUMENT Type="Advanced Installer" CreateVersion="7.2" version="8.3" Modules="freeware" RootPath="." Language="en" Id="{444A7B1E-FE11-4894-B116-12A004422260}">
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiPropsComponent">
+    <ROW Property="ALLUSERS" Value="2"/>
+    <ROW Property="ARPCOMMENTS" Value="This installer database contains the logic and data required to install [|ProductName]." ValueLocId="*"/>
+    <ROW Property="ARPPRODUCTICON" Value="hypedyn.exe" Type="8"/>
+    <ROW Property="Manufacturer" Value="National University of Singapore" ValueLocId="*"/>
+    <ROW Property="ProductCode" Value="1033:{1FE5AD13-1321-403F-849A-288F5D657A76} " Type="16"/>
+    <ROW Property="ProductLanguage" Value="1033"/>
+    <ROW Property="ProductName" Value="HypeDyn" ValueLocId="*"/>
+    <ROW Property="ProductVersion" Value="2.1.5"/>
+    <ROW Property="SecureCustomProperties" Value="OLDPRODUCTS;AI_NEWERPRODUCTFOUND"/>
+    <ROW Property="UpgradeCode" Value="{4A49B042-B355-40B9-8DA5-F9E45E2ED511}"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiDirsComponent">
+    <ROW Directory="APPDIR" Directory_Parent="TARGETDIR" DefaultDir="APPDIR:." IsPseudoRoot="1"/>
+    <ROW Directory="DesktopFolder" Directory_Parent="TARGETDIR" DefaultDir="Deskto~1|DesktopFolder" IsPseudoRoot="1"/>
+    <ROW Directory="HypeDyn_DIR" Directory_Parent="ProgramMenuFolder" DefaultDir="HypeDyn"/>
+    <ROW Directory="ProgramMenuFolder" Directory_Parent="TARGETDIR" DefaultDir="Progra~1|ProgramMenuFolder" IsPseudoRoot="1"/>
+    <ROW Directory="SHORTCUTDIR" Directory_Parent="TARGETDIR" DefaultDir="SHORTC~1|SHORTCUTDIR" IsPseudoRoot="1"/>
+    <ROW Directory="TARGETDIR" DefaultDir="SourceDir"/>
+    <ROW Directory="examples_DIR" Directory_Parent="APPDIR" DefaultDir="examples"/>
+    <ROW Directory="export_DIR" Directory_Parent="lib_DIR" DefaultDir="export"/>
+    <ROW Directory="lib_DIR" Directory_Parent="APPDIR" DefaultDir="lib"/>
+    <ROW Directory="tutorials_DIR" Directory_Parent="APPDIR" DefaultDir="tutori~1|tutorials"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiCompsComponent">
+    <ROW Component="HypeDyn" ComponentId="{779F6BA5-4498-478E-B6EC-BB66948261B1}" Directory_="HypeDyn_DIR" Attributes="0"/>
+    <ROW Component="SHORTCUTDIR" ComponentId="{7C14D11E-7F0B-401E-9890-6AFEE198C659}" Directory_="SHORTCUTDIR" Attributes="0"/>
+    <ROW Component="hypedyn.exe" ComponentId="{EA8E8F65-628E-45CE-A889-FF8169A62565}" Directory_="APPDIR" Attributes="0" KeyPath="hypedyn.exe"/>
+    <ROW Component="hypedyn.jar" ComponentId="{C1C4CFD5-09FC-42B4-B14F-C44ADEE5DB97}" Directory_="lib_DIR" Attributes="0" KeyPath="hypedyn.jar" Type="0"/>
+    <ROW Component="hypedyn.jar_1" ComponentId="{3E75FAAB-1FCD-4C54-A7ED-CEE304E567B8}" Directory_="export_DIR" Attributes="0" KeyPath="hypedyn.jar_1" Type="0"/>
+    <ROW Component="hypedyn_reader.exe" ComponentId="{A6FB4096-7E2F-41E5-8151-BF35476F62E0}" Directory_="export_DIR" Attributes="0" KeyPath="hypedyn_reader.exe"/>
+    <ROW Component="hypedyn_tutorial_1.pdf" ComponentId="{23381E5A-D90D-479F-A217-D33CE5B8C8E8}" Directory_="tutorials_DIR" Attributes="0" KeyPath="hypedyn_tutorial_1.pdf" Type="0"/>
+    <ROW Component="hypedyn_tutorial_2.pdf" ComponentId="{A926DE32-5C61-4B7C-B748-39E4D1358AD7}" Directory_="tutorials_DIR" Attributes="0" KeyPath="hypedyn_tutorial_2.pdf"/>
+    <ROW Component="hypedyn_tutorial_3.pdf" ComponentId="{7E04E3DA-30AD-4E87-99C9-4953880F7AB4}" Directory_="tutorials_DIR" Attributes="0" KeyPath="hypedyn_tutorial_3.pdf"/>
+    <ROW Component="rashomon_alt_anywhere.dyn" ComponentId="{923C0FF9-CD25-4241-9778-F1E3A6F343BE}" Directory_="examples_DIR" Attributes="0" KeyPath="LRRH.dyn" Type="0"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiFeatsComponent">
+    <ROW Feature="MainFeature" Title="MainFeature" Description="Description" Display="1" Level="1" Directory_="APPDIR" Attributes="0" Components="HypeDyn SHORTCUTDIR hypedyn.exe hypedyn.jar hypedyn.jar_1 hypedyn_reader.exe hypedyn_tutorial_1.pdf hypedyn_tutorial_2.pdf hypedyn_tutorial_3.pdf rashomon_alt_anywhere.dyn"/>
+    <ATTRIBUTE name="CurrentFeature" value="MainFeature"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiFilesComponent">
+    <ROW File="AppleJavaExtensions.jar" Component_="hypedyn.jar" FileName="AppleJ~1.jar|AppleJavaExtensions.jar" Attributes="0" SourcePath="bin\hypedyn-windows\lib\AppleJavaExtensions.jar" SelfReg="false" NextFile="hypedyn.jar_1"/>
+    <ROW File="AppleJavaExtensions.jar_1" Component_="hypedyn.jar_1" FileName="AppleJ~1.jar|AppleJavaExtensions.jar" Attributes="0" SourcePath="bin\hypedyn-windows\lib\export\AppleJavaExtensions.jar" SelfReg="false" NextFile="hypedyn_reader.exe"/>
+    <ROW File="LRRH.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH.dyn" Attributes="0" SourcePath="bin\hypedyn-windows\examples\LRRH.dyn" SelfReg="false" NextFile="LRRH2.dyn"/>
+    <ROW File="LRRH2.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH2.dyn" Attributes="0" SourcePath="bin\hypedyn-windows\examples\LRRH2.dyn" SelfReg="false" NextFile="LRRH3.dyn"/>
+    <ROW File="LRRH3.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH3.dyn" Attributes="0" SourcePath="bin\hypedyn-windows\examples\LRRH3.dyn" SelfReg="false" NextFile="hypedyn_tutorial_1.pdf"/>
+    <ROW File="LRRH4.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH4.dyn" Attributes="0" SourcePath="bin\hypedyn-windows\examples\LRRH4.dyn" SelfReg="false"/>
+    <ROW File="htapplet.html" Component_="hypedyn.jar_1" FileName="htappl~1.htm|htapplet.html" Attributes="0" SourcePath="bin\hypedyn-windows\lib\export\htapplet.html" SelfReg="false" NextFile="htapplet.jar"/>
+    <ROW File="htapplet.jar" Component_="hypedyn.jar_1" FileName="htapplet.jar" Attributes="0" SourcePath="bin\hypedyn-windows\lib\export\htapplet.jar" SelfReg="false" NextFile="hypedyn_tutorial_3.pdf"/>
+    <ROW File="hypedyn.exe" Component_="hypedyn.exe" FileName="hypedyn.exe" Attributes="0" SourcePath="bin\hypedyn-windows\hypedyn.exe" SelfReg="false" NextFile="LRRH.dyn"/>
+    <ROW File="hypedyn.jar" Component_="hypedyn.jar" FileName="hypedyn.jar" Attributes="0" SourcePath="bin\hypedyn-windows\lib\hypedyn.jar" SelfReg="false" NextFile="kawa.jar"/>
+    <ROW File="hypedyn.jar_1" Component_="hypedyn.jar_1" FileName="hypedyn.jar" Attributes="0" SourcePath="bin\hypedyn-windows\lib\export\hypedyn.jar" SelfReg="false" NextFile="kawa.jar_1"/>
+    <ROW File="hypedyn_reader" Component_="hypedyn.jar_1" FileName="hypedy~1|hypedyn-reader" Attributes="0" SourcePath="bin\hypedyn-windows\lib\export\hypedyn-reader" SelfReg="false" NextFile="htapplet.html"/>
+    <ROW File="hypedyn_reader.exe" Component_="hypedyn_reader.exe" FileName="hypedy~1.exe|hypedyn-reader.exe" Attributes="0" SourcePath="bin\hypedyn-windows\lib\export\hypedyn-reader.exe" SelfReg="false" NextFile="hypedyn_reader.jar"/>
+    <ROW File="hypedyn_reader.jar" Component_="hypedyn.jar_1" FileName="hypedy~1.jar|hypedyn-reader.jar" Attributes="0" SourcePath="bin\hypedyn-windows\lib\export\hypedyn-reader.jar" SelfReg="false" NextFile="hypedyn_reader"/>
+    <ROW File="hypedyn_tutorial_1.pdf" Component_="hypedyn_tutorial_1.pdf" FileName="hypedy~1.pdf|hypedyn-tutorial-1.pdf" Attributes="0" SourcePath="bin\hypedyn-windows\tutorials\hypedyn-tutorial-1.pdf" SelfReg="false" NextFile="hypedyn_tutorial_2.pdf"/>
+    <ROW File="hypedyn_tutorial_2.pdf" Component_="hypedyn_tutorial_2.pdf" FileName="hypedy~2.pdf|hypedyn-tutorial-2.pdf" Attributes="0" SourcePath="bin\hypedyn-windows\tutorials\hypedyn-tutorial-2.pdf" SelfReg="false" NextFile="hypedyn.jar"/>
+    <ROW File="hypedyn_tutorial_3.pdf" Component_="hypedyn_tutorial_3.pdf" FileName="hypedy~3.pdf|hypedyn-tutorial-3.pdf" Attributes="0" SourcePath="bin\hypedyn-windows\tutorials\hypedyn-tutorial-3.pdf" SelfReg="false" NextFile="LRRH4.dyn"/>
+    <ROW File="kawa.jar" Component_="hypedyn.jar" FileName="kawa.jar" Attributes="0" SourcePath="bin\hypedyn-windows\lib\kawa.jar" SelfReg="false" NextFile="AppleJavaExtensions.jar"/>
+    <ROW File="kawa.jar_1" Component_="hypedyn.jar_1" FileName="kawa.jar" Attributes="0" SourcePath="bin\hypedyn-windows\lib\export\kawa.jar" SelfReg="false" NextFile="AppleJavaExtensions.jar_1"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.BuildComponent">
+    <ROW BuildKey="DefaultBuild" BuildName="DefaultBuild" BuildOrder="1" BuildType="0" PackageFolder="." Languages="en" InstallationType="4"/>
+    <ATTRIBUTE name="CurrentBuild" value="DefaultBuild"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.DictionaryComponent">
+    <ROW Path="&lt;AI_DICTS&gt;ui.ail"/>
+    <ROW Path="&lt;AI_DICTS&gt;ui_en.ail"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.FragmentComponent">
+    <ROW Fragment="CommonUI.aip" Path="&lt;AI_FRAGS&gt;CommonUI.aip"/>
+    <ROW Fragment="FolderDlg.aip" Path="&lt;AI_THEMES&gt;classic\fragments\FolderDlg.aip"/>
+    <ROW Fragment="SequenceDialogs.aip" Path="&lt;AI_THEMES&gt;classic\fragments\SequenceDialogs.aip"/>
+    <ROW Fragment="Sequences.aip" Path="&lt;AI_FRAGS&gt;Sequences.aip"/>
+    <ROW Fragment="StaticUIStrings.aip" Path="&lt;AI_FRAGS&gt;StaticUIStrings.aip"/>
+    <ROW Fragment="UI.aip" Path="&lt;AI_THEMES&gt;classic\fragments\UI.aip"/>
+    <ROW Fragment="Validation.aip" Path="&lt;AI_FRAGS&gt;Validation.aip"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiBinaryComponent">
+    <ROW Name="aicustact.dll" SourcePath="&lt;AI_CUSTACTS&gt;aicustact.dll"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiControlComponent">
+    <ATTRIBUTE name="FixedSizeBitmaps" value="0"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiControlEventComponent">
+    <ROW Dialog_="FolderDlg" Control_="Back" Event="NewDialog" Argument="WelcomeDlg" Condition="AI_INSTALL" Ordering="1"/>
+    <ROW Dialog_="WelcomeDlg" Control_="Next" Event="NewDialog" Argument="FolderDlg" Condition="AI_INSTALL" Ordering="1"/>
+    <ROW Dialog_="VerifyReadyDlg" Control_="Back" Event="NewDialog" Argument="FolderDlg" Condition="AI_INSTALL" Ordering="1"/>
+    <ROW Dialog_="FolderDlg" Control_="Next" Event="NewDialog" Argument="VerifyReadyDlg" Condition="AI_INSTALL" Ordering="3"/>
+    <ROW Dialog_="MaintenanceTypeDlg" Control_="Back" Event="NewDialog" Argument="MaintenanceWelcomeDlg" Condition="AI_MAINT" Ordering="1"/>
+    <ROW Dialog_="MaintenanceWelcomeDlg" Control_="Next" Event="NewDialog" Argument="MaintenanceTypeDlg" Condition="AI_MAINT" Ordering="2"/>
+    <ROW Dialog_="VerifyReadyDlg" Control_="Back" Event="NewDialog" Argument="PatchWelcomeDlg" Condition="AI_PATCH" Ordering="1"/>
+    <ROW Dialog_="PatchWelcomeDlg" Control_="Next" Event="NewDialog" Argument="VerifyReadyDlg" Condition="AI_PATCH" Ordering="3"/>
+    <ROW Dialog_="CustomizeDlg" Control_="Back" Event="NewDialog" Argument="MaintenanceTypeDlg" Condition="AI_MAINT" Ordering="1"/>
+    <ROW Dialog_="CustomizeDlg" Control_="Next" Event="NewDialog" Argument="VerifyReadyDlg" Condition="AI_MAINT" Ordering="1"/>
+    <ROW Dialog_="MaintenanceTypeDlg" Control_="ChangeButton" Event="NewDialog" Argument="CustomizeDlg" Condition="AI_MAINT" Ordering="301"/>
+    <ROW Dialog_="ResumeDlg" Control_="Install" Event="EndDialog" Argument="Return" Condition="AI_RESUME" Ordering="299"/>
+    <ROW Dialog_="VerifyReadyDlg" Control_="Install" Event="EndDialog" Argument="Return" Condition="AI_MAINT" Ordering="197"/>
+    <ROW Dialog_="VerifyReadyDlg" Control_="Install" Event="EndDialog" Argument="Return" Condition="AI_PATCH" Ordering="198"/>
+    <ROW Dialog_="VerifyReadyDlg" Control_="Install" Event="EndDialog" Argument="Return" Condition="AI_INSTALL" Ordering="199"/>
+    <ROW Dialog_="VerifyReadyDlg" Control_="Back" Event="NewDialog" Argument="CustomizeDlg" Condition="AI_MAINT" Ordering="201"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiCreateFolderComponent">
+    <ROW Directory_="SHORTCUTDIR" Component_="SHORTCUTDIR"/>
+    <ROW Directory_="HypeDyn_DIR" Component_="HypeDyn"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiCustActComponent">
+    <ROW Action="AI_DOWNGRADE" Type="19" Target="4010"/>
+    <ROW Action="AI_PREPARE_UPGRADE" Type="65" Source="aicustact.dll" Target="PrepareUpgrade"/>
+    <ROW Action="AI_RESTORE_LOCATION" Type="65" Source="aicustact.dll" Target="RestoreLocation"/>
+    <ROW Action="AI_ResolveKnownFolders" Type="1" Source="aicustact.dll" Target="AI_ResolveKnownFolders"/>
+    <ROW Action="AI_STORE_LOCATION" Type="51" Source="ARPINSTALLLOCATION" Target="[APPDIR]"/>
+    <ROW Action="SET_APPDIR" Type="307" Source="APPDIR" Target="[ProgramFilesFolder][Manufacturer]\[ProductName]" MultiBuildTarget="DefaultBuild:[ProgramFilesFolder][ProductName]"/>
+    <ROW Action="SET_SHORTCUTDIR" Type="307" Source="SHORTCUTDIR" Target="[ProgramMenuFolder][ProductName]" MultiBuildTarget="DefaultBuild:[DesktopFolder]"/>
+    <ROW Action="SET_TARGETDIR_TO_APPDIR" Type="51" Source="TARGETDIR" Target="[APPDIR]"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiIconsComponent">
+    <ROW Name="hypedyn.exe" SourcePath="hypedyn.ico" Index="0"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiInstExSeqComponent">
+    <ROW Action="AI_DOWNGRADE" Condition="AI_NEWERPRODUCTFOUND AND (UILevel &lt;&gt; 5)" Sequence="201"/>
+    <ROW Action="AI_RESTORE_LOCATION" Condition="APPDIR=&quot;&quot;" Sequence="749"/>
+    <ROW Action="AI_STORE_LOCATION" Condition="Not Installed" Sequence="1501"/>
+    <ROW Action="AI_PREPARE_UPGRADE" Condition="AI_UPGRADE=&quot;No&quot; AND (Not Installed)" Sequence="1399"/>
+    <ROW Action="AI_ResolveKnownFolders" Sequence="51"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiInstallUISequenceComponent">
+    <ROW Action="AI_RESTORE_LOCATION" Condition="APPDIR=&quot;&quot;" Sequence="749"/>
+    <ROW Action="AI_ResolveKnownFolders" Sequence="51"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiShortsComponent">
+    <ROW Shortcut="HypeDyn" Directory_="SHORTCUTDIR" Name="HypeDyn" Component_="hypedyn.exe" Target="[#hypedyn.exe]" Hotkey="0" IconIndex="0" ShowCmd="1" WkDir="APPDIR"/>
+    <ROW Shortcut="HypeDyn_1" Directory_="DesktopFolder" Name="HypeDyn" Component_="hypedyn.exe" Target="[#hypedyn.exe]" Hotkey="0" Icon_="hypedyn.exe" IconIndex="0" ShowCmd="1" WkDir="APPDIR"/>
+    <ROW Shortcut="HypeDyn_2" Directory_="HypeDyn_DIR" Name="HypeDyn" Component_="hypedyn.exe" Target="[#hypedyn.exe]" Hotkey="0" Icon_="hypedyn.exe" IconIndex="0" ShowCmd="1" WkDir="APPDIR"/>
+    <ROW Shortcut="hypedyn_tutorial_1.pdf" Directory_="HypeDyn_DIR" Name="hypedy~1.pdf|hypedyn-tutorial-1.pdf" Component_="hypedyn_tutorial_1.pdf" Target="[#hypedyn_tutorial_1.pdf]" Hotkey="0" IconIndex="0" ShowCmd="1" WkDir="tutorials_DIR"/>
+    <ROW Shortcut="hypedyn_tutorial_2.pdf" Directory_="HypeDyn_DIR" Name="hypedy~2.pdf|hypedyn-tutorial-2.pdf" Component_="hypedyn_tutorial_2.pdf" Target="[#hypedyn_tutorial_2.pdf]" Hotkey="0" IconIndex="0" ShowCmd="1" WkDir="tutorials_DIR"/>
+    <ROW Shortcut="hypedyn_tutorial_3.pdf" Directory_="HypeDyn_DIR" Name="hypedy~3.pdf|hypedyn-tutorial-3.pdf" Component_="hypedyn_tutorial_3.pdf" Target="[#hypedyn_tutorial_3.pdf]" Hotkey="0" IconIndex="0" ShowCmd="1" WkDir="tutorials_DIR"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiThemeComponent">
+    <ATTRIBUTE name="UsedTheme" value="classic"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiUpgradeComponent">
+    <ROW UpgradeCode="[|UpgradeCode]" VersionMax="[|ProductVersion]" Attributes="1025" ActionProperty="OLDPRODUCTS"/>
+    <ROW UpgradeCode="[|UpgradeCode]" VersionMin="[|ProductVersion]" Attributes="2" ActionProperty="AI_NEWERPRODUCTFOUND"/>
+  </COMPONENT>
+</DOCUMENT>
