@@ -146,7 +146,7 @@
 (define (close-hteditor-subwindows)
   ; need to close node editor and any other dialogs if necessary
   (close-nodeeditor)
-  (close-nodereader)
+  (nodereader-close)
   (close-inspectors))
 
 (define (start-hteditor)
