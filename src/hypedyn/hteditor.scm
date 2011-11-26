@@ -264,8 +264,10 @@
 ;    (set! undo-action (make-undo-action undo-manager))
 ;    (set! redo-action (make-redo-action undo-manager))
     (init-undo-system)
-    (add-menu-action m-edit undo-action)
-    (add-menu-action m-edit redo-action)
+    (if (is-undo-enabled?)
+        (begin
+          (add-menu-action m-edit undo-action)
+          (add-menu-action m-edit redo-action)))
 ;    (set-associated-redoaction! undo-action redo-action)
 ;    (set-associated-undoaction! redo-action undo-action)
 

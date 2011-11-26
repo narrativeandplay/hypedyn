@@ -353,8 +353,10 @@
 ;  (set! redo-action (make-redo-action undo-manager))
 ;  (set-associated-redoaction! undo-action redo-action)
 ;  (set-associated-undoaction! redo-action undo-action)
-  (add-menu-action m-edit1 undo-action)
-  (add-menu-action m-edit1 redo-action)
+  (if (is-undo-enabled?)
+      (begin
+        (add-menu-action m-edit1 undo-action)
+        (add-menu-action m-edit1 redo-action)))
   
   ;; Add a horizontal panel to the frame, with centering, to hold toolbar buttons
   (set! nodeeditor-toolbar-panel (make-toolbar "Toolbar"))

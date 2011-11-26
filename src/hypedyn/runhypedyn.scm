@@ -40,6 +40,8 @@
          (set-normal-version!))
         ((equal? "-sculptural" arg)
          (set-sculptural-version!))
+        ((equal? "-undo" arg)
+         (set-undo-enabled! #t))
         ((equal? "-full" arg)
          (set-full-version!))))
      command-line-arguments))

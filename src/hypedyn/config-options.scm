@@ -21,7 +21,8 @@
 ;
 ;; TODO: break this into editor config and reader config
 
-(module-export is-basic-mode? set-basic-mode!
+(module-export set-undo-enabled! is-undo-enabled?
+               is-basic-mode? set-basic-mode!
                card-shark? set-card-shark! reset-card-shark
                sculptural? set-sculptural!
                disable-back-button? set-disable-back-button! reset-back-button
@@ -35,6 +36,13 @@
                snap-to-grid? set-snap-to-grid!
                user-study? set-user-study!
                set-basic-version! set-normal-version! set-sculptural-version! set-full-version!)
+
+; enable/disable undo
+(define-private undo-enabled #f)
+(define (is-undo-enabled?)
+  undo-enabled)
+(define (set-undo-enabled! in-flag)
+  (set! undo-enabled in-flag))
 
 ; basic version?
 (define-private basic-mode #f)
