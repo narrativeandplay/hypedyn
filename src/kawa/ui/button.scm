@@ -25,8 +25,14 @@
 ;; 
 
 ;make a button
-(define (make-button title :: <java.lang.String>)
-  (<javax.swing.JButton> title))
+(define (make-button title :: <java.lang.String> 
+                     #!optional action <javax.swing.AbstractButton>
+                     )
+  (define this-button (<javax.swing.JButton> title))
+  (if action
+      (invoke this-button 'set-action action))
+  this-button
+  )
 
 ;set button properties
 ;@param: button, enabled(boolean)

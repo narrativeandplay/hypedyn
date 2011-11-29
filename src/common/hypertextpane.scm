@@ -25,7 +25,7 @@
   (require "../kawa/ui/events.scm")
   (require "../kawa/ui/text.scm")
   (require "../kawa/ui/cursor.scm")
-  (require "../kawa/ui/splitpane.scm")
+  ;(require "../kawa/ui/splitpane.scm")
   (require "../kawa/ui/undo.scm")
   (require "../kawa/graphics-kawa.scm") ; for open-image-file
   (require "objects.scm")
@@ -59,24 +59,19 @@
                             nodelist-name)
   (let* ((named-obj (new-make-named-object "hpane"))
          (this-obj (new-object named-obj))
-         ;; UI elements
+         ;; === UI elements ===
          (the-editor #f)
          (the-doc #f)
-
-         ;; flags
+         ;; === flags ===
          (dirty #f)
          (track-dirty #f)
          (track-links #f)
-
-         ;; data
+         ;; === data ===
          (the-nodeID #f)
-
          ;; mouseover callback
          (mouseover-callback #f)
-
          ;; dirty display update callback: used to indicate that text has changed
          (update-dirty-callback #f)
-
          ;; last mouse event, hack for user study to trigger tooltipmanager to show tooltip
          (lastmousemove #f)
 
@@ -87,19 +82,19 @@
          (redo-action #f)
          (re-edit-node-callback #f)
 
-         ;;        ;; compound action tracking
-         ;;        ( (list))
+         ;; compound action tracking
+         ;; ( (list))
          )
     
     ; initialize the hypertexteditor
     (define (init)
-      ; build the ui
-      (buildui))
+      (display "before buildui ")(newline)
+      (buildui)
+      (display "after buildui ")(newline)
+      )
 
     ; build the UI
     (define (buildui)
-      ;; add a splitpanel for link list and text editor
-
       ; make text editor for content
       (set! the-editor (make-textpane-with-background-image))
       (add-caretlistener the-editor
@@ -108,25 +103,19 @@
                             (make-documentlistener document-insert-handler
                                                    document-remove-handler
                                                    document-changed-handler))
-      (add-documentfilter the-editor
-                          (make-documentfilter document-filter-insert-string-handler
-                                               (lambda (fb offset len)
-                                                 (document-filter-remove-handler fb 
-                                                                                 offset 
-                                                                                 len))
-                                               (lambda (fb offset len string attr)
-                                                 (document-filter-replace-handler fb 
-                                                                                  offset 
-                                                                                  len 
-                                                                                  string 
-                                                                                  attr))))
+      ;; have to set document filter to the document
+      (define doc-filter 
+        (make-documentfilter document-filter-insert-string-handler
+                             document-filter-remove-handler
+                             document-filter-replace-handler))
+      (display "before adding doc filter ")(newline)
+      (add-documentfilter the-editor doc-filter)
+      (display "after adding doc filter ")(newline)
       (add-keylistener the-editor (make-keylistener key-press-handler
                                                     key-type-handler
                                                     key-release-handler))
-
       ; get the doc for editor
-      (set! the-doc
-            (get-textpane-doc the-editor))
+      (set! the-doc (get-textpane-doc the-editor))
 
       ; set size for editor - don't hard-code this in the long term
       (set-component-preferred-size the-editor w h)
@@ -194,7 +183,6 @@
       (clear-dirty!))
         
     ;; links in editor text
-    ;; 
     
     ; clickback for links
     (define (clickback this-linkID)
@@ -217,12 +205,12 @@
         ;; 0 < start-index < doc-len
         ;; len <= doc-len 
         (set-text-style the-doc 
-                        style-link ;;DEBUG was style-link
+                        style-link
                         start-index
                         len
                         #t)
 
-        ; and set clickback ;;DEBUG! (commented out)
+        ; and set clickback
         (let ((link-attribute-set (make-attribute-set)))
           (set-attribute-linkAction link-attribute-set
                                     (lambda ()
@@ -232,12 +220,10 @@
                           link-attribute-set
                           start-index
                           len
-                          #f)
-          )
-        )
+                          #f)))
+      
       ;; set back original value
-      (set-track-undoable-edits! original-track-undoable-edits)
-      )
+      (set-track-undoable-edits! original-track-undoable-edits))
     
     ; remove a link (underline) from the editor
     (define (removelink thislink)
@@ -256,17 +242,8 @@
                                      ) ;:: <javax.swing.text.AttributeSet>
           (let ((charElement :: <javax.swing.text.Element>
                              (invoke in-doc 'getCharacterElement pos)))
-            (define gotten-attr (invoke charElement 'getAttributes))
-;;            (display "doh ")(display (invoke charElement 'getStartOffset))(newline)
-;;            (display "doh2 ")(display (invoke charElement 'getEndOffset))(newline)
-;;            (display "doh3 ")(display (invoke charElement 'getAttributes))(newline)
-;;            (display "isequal style-link? ")(display (invoke gotten-attr 'isEqual style-link))(newline)
-;;            (display "isequal style-nolink? ")(display (invoke gotten-attr 'isEqual style-nolink))(newline)
-;;            (display "name ")(display (invoke charElement 'getName))(newline)
-            ))
+            (define gotten-attr (invoke charElement 'getAttributes))))
         
-;        (display "removelink start index STYLE ")(display (get-attributes-pos2 the-doc start-index))(newline)
-;        (display "removelink END index STYLE ")(display (get-attributes-pos2 the-doc (+ start-index len)))(newline)
         (get-attributes-pos2 the-doc start-index)
         (get-attributes-pos2 the-doc (+ start-index len))
         
@@ -643,18 +620,15 @@
     (define (key-release-handler e)
       'ok)
 
-    ;
-    ; define document filter handlers
-    ;
-
+    ;;=============================
+    ;; Document filter handlers
+    ;;=============================
     ; note: these are called BEFORE the document is changed, and its safe to
     ; use the filter bypass to make changes to the document
 
     ; handle insert string
     (define (document-filter-insert-string-handler fb offset string attr)
-      ;(format #t "document-filter-insert-string-handler~%~!")
-      (display "INSERT FILTER ")(newline)
-      (display "inside insert filter ")(display (list offset string))(newline)
+      (display "INSERT FILTER ")(display (list offset string))(newline)(newline)
       (set! replace-event #f)
       ; start compound event
       
@@ -664,9 +638,7 @@
     ; handle remove
     ; note: extra parameter (callback) is added when doc filter is created
     (define (document-filter-remove-handler fb offset len)
-      ;(format #t "document-filter-remove-handler~%~!")
-      (display "REMOVE FILTER ")(newline)
-      (display "inside remove filter ")(display (list offset len))(newline)
+      (display "REMOVE FILTER ")(display (list offset len))(newline)
       ; start compound event
       (start-compound-undoable-event "Typing(remove)")
       (set! replace-event #f)
@@ -689,15 +661,16 @@
 
 ;      ; recalculate link positions
       (after-delete offset len)
-      
-      (display "after after-delete")(newline)
       #t)
 
     ; handle replace (called when we do inserts or replaces operations)
     ; note: extra parameter (callback) is added when doc filter is created
     (define (document-filter-replace-handler fb offset len string attr)
       ;(format #t "document-filter-replace-handler~%~!")
-      (display "REPLACE FILTER ")(newline)
+      (display "REPLACE FILTER ")(display (list offset len string))(newline)
+      (display "txt len b4 inserting ")(display (string-length (invoke (as <javax.swing.JTextPane> the-editor) 'get-text)))(newline)
+      (display "content b4 insert ")(display (invoke (as <javax.swing.JTextPane> the-editor) 'get-text))(newline)
+      (display "doc ")(display (invoke the-editor 'get-document))(newline)
 ;      (display "string leng ")(display (string-length string))(newline)
 ;      (display "newline? ")(display (equal? string "\n"))(newline)
 ;      (display "return? ")(display (equal? string "\r"))(newline)
@@ -718,10 +691,6 @@
       (set! replace-event #t) ;; hack to get replace to work properly
       (after-delete offset len)
       
-;      ;; debug
-;      (display "inside replace filter ")(display (list offset len string))(newline)
-;      (display "txt len b4 inserting ")(display (string-length (invoke the-editor 'get-text)))(newline)
-      
       ; handle formatting ourselves: (bolding and unlining of link text)
       ; if its the END of a link, or (its a LINK and it isn't the START of a link), use the
       ; formatting from the previous position, otherwise use no formatting
@@ -738,11 +707,10 @@
                              (not (start-of-link? offset))))
                         (not (= offset 0)))
                    (filter-bypass-replace fb offset len string
-                                         (get-attributes-pos the-doc (- offset 1))
+                                         ;(get-attributes-pos the-doc (- offset 1))
+                                         (get-attributes-pos the-doc offset)
                                          ))
-                  (else (filter-bypass-replace fb offset len string style-nolink))
-                  )
-            )
+                  (else (filter-bypass-replace fb offset len string style-nolink))))
           ;; insert
           (begin
             (display "filter bypass inserting ")(newline)
@@ -752,22 +720,17 @@
                              (not (start-of-link? offset))))
                         (not (= offset 0)))
                    (filter-bypass-insert fb offset string
-                                         (get-attributes-pos the-doc (- offset 1))
+                                         ;(get-attributes-pos the-doc (- offset 1))
+                                         (get-attributes-pos the-doc offset)
                                          ))
-                  (else (filter-bypass-insert fb offset string style-nolink))
-                  )
-                ))
-      ;(display "txt len aft inserting ")(display (string-length (invoke the-editor 'get-text)))(newline)
+                  (else (filter-bypass-insert fb offset string style-nolink)))))
+      (display "txt len aft inserting ")(display (string-length (invoke the-editor 'get-text)))(newline)
+      (display "content aft insert ")(display (invoke (as <javax.swing.JTextPane> the-editor) 'get-text))(newline)
       #f)
 
-    ;; for debug
-    (define (print-update-level txt)
-      (display (string-append txt " "))
-      (display (compoundundomanager-updatelevel undo-manager))
-      (newline)
-      )
-    
-    ; define document listeners
+    ;; =========================
+    ;;  Document listeners
+    ;; =========================
     ; note: DON'T make changes to the document from these handlers!
 
     ; handle insert
@@ -781,7 +744,7 @@
         (display "  change-length ")(display change-length)(newline)
         (display "  change-offset ")(display change-offset)(newline)
         
-        (define content (invoke the-editor 'get-text))
+        (define content (invoke (as <javax.swing.JTextPane> the-editor) 'get-text))
         (define new-str-frag (substring content
                                         change-offset (+ change-offset change-length)))
         
@@ -804,14 +767,10 @@
 ;                    )
 ;                  )
 ;              ))
-
-        
-        (after-insert change-offset change-length (undoable-edit? e))
-        )
+        (after-insert change-offset change-length (undoable-edit? e)))
 
       ; end compound event
-      (finalize-compound-undoable-event e "Typing(insert)" #t)
-      )
+      (finalize-compound-undoable-event e "Typing(insert)" #t))
 
     ;; fix for replace events
     ;; problem is as follows
@@ -822,7 +781,7 @@
     ;; calls start-compound-undoable-event once
     ;; in insert-handler and remove-handler both calls end-compound-undoable-event
     ;; means when replace event occurs we start once and end twice
-    ;; to prevent that we flag a replace-event when replace-filter is called and stop 
+    ;; to prevent that we flag replace-event when replace-filter is called and stop 
     ;; remove-handler from doing end-compound-undoable-event (done in finalize-compound-undoable-event)
     (define replace-event #f)
     
@@ -830,13 +789,14 @@
     (define (document-remove-handler e)
       ;(format #t "document-remove-handler~%~!")
       (display "HANDLER REMOVE ")(newline)
-      (display "content len ")(display (string-length (invoke the-editor 'get-text)))(newline)
+      (display "content ")(display (invoke (as <javax.swing.JTextPane> the-editor) 'get-text))(newline)
+      (display "content len ")(display (string-length (invoke (as <javax.swing.JTextPane> the-editor) 'get-text)))(newline)
+      
       ; end compound event
       ;; if replace-event, means that remove-handler was invoked by replace filter 
       ;; dont end compound 
       ;; third arg to finalize-compound-undable-event determines whether it ends compound 
-      (finalize-compound-undoable-event e "Typing(remove)" (not replace-event))
-      )
+      (finalize-compound-undoable-event e "Typing(remove)" (not replace-event)))
     
     ; handle style change
     (define (document-changed-handler e)
@@ -844,10 +804,7 @@
       (display "CHANGED HANDLER ")(newline)
       
       ; end compound event
-      (finalize-compound-undoable-event e "CHANGED" #t)
-;      (end-compound-undoable-event "changed debug ")
-;      (print-update-level "changed handler after debug test ")
-      )
+      (finalize-compound-undoable-event e "CHANGED" #t))
 
     ;
     ; called by document and caret handlers
@@ -903,9 +860,7 @@
                                     ;(display "[after-insert redo] adjust links delete ")(newline)
                                     ;(display "args ")(display (list start len #f 0))(newline)
                                     (adjust-links-insert start len #f 0))))
-            ;(display "here goes ")(display insert-undoable-edit)(newline)
             (compoundundomanager-postedit undo-manager insert-undoable-edit)
-            ;(display "after insert here2 ")(newline)
 
             ; and actually do it
             (adjust-links-insert start len #f len))))
@@ -1005,12 +960,10 @@
                                                                   (if (= (get-text-length the-doc) 0)
                                                                       (begin
                                                                         (set! track-undoable-edits #f)
-                                                                        
                                                                         (set-text-style the-doc style-nolink 0 1 #t) ;; correct one
                                                                         (set! track-undoable-edits #t)
                                                                         ))
                                                                   ))))
-            
             )))
     
     ; tell the undo manager to end a compound undoable event
@@ -1029,8 +982,7 @@
                                )
                              (lambda ()
                                (format #t "compound-undoable-edit end of redo~%~!")))))
-      (compoundundomanager-endupdate undo-manager undo-action redo-action)
-      )
+      (compoundundomanager-endupdate undo-manager undo-action redo-action))
     
     ;; called by document-insert-handler, document-remove-handler, document-change-handler
     ;; to finalize and add compound typing undoable event
@@ -1065,171 +1017,82 @@
             (re-edit-node-callback in-nodeID))))
     
     ; message handling                  
-;    (lambda (message)
-;      (cond ((eq? message 'init)
-;             (lambda (self)
-;               (init)))
     (obj-put this-obj 'init
-             (lambda (self) (init)))
-;            ((eq? message 'dirty?)
-;             (lambda (self)
-;               (dirty?)))
+             (lambda (self) 
+               (display "init in htpane")(newline)
+               (init)))
     (obj-put this-obj 'dirty?
              (lambda (self) (dirty?)))
-;            ((eq? message 'set-dirty!)
-;             (lambda (self)
-;               (set-dirty!)))
     (obj-put this-obj 'set-dirty!
              (lambda (self) (set-dirty!)))
-               
-;            ((eq? message 'clear-dirty!)
-;             (lambda (self)
-;               (clear-dirty!)))
     (obj-put this-obj 'clear-dirty!
              (lambda (self) (clear-dirty!)))
-               
-;            ((eq? message 'set-track-links!)
-;             (lambda (self m)
-;               (set-track-links! m)))
     (obj-put this-obj 'set-track-links!
              (lambda (self m) (set-track-links! m)))
-;            ((eq? message 'getselstart)
-;             (lambda (self)
-;               (getselstart)))
     (obj-put this-obj 'getselstart
              (lambda (self) (getselstart)))
-;            ((eq? message 'getselend)
-;             (lambda (self)
-;               (getselend)))
     (obj-put this-obj 'getselend
              (lambda (self) (getselend)))
-;            ((eq? message 'gettext)
-;             (lambda (self)
-;               (gettext)))
     (obj-put this-obj 'gettext
              (lambda (self) (gettext)))
-;            ((eq? message 'getselectedtext)
-;             (lambda (self)
-;               (getselectedtext)))
     (obj-put this-obj 'getselectedtext
              (lambda (self) (getselectedtext)))
-;            ((eq? message 'gettextsection)
-;             (lambda (self in-start in-end)
-;               (gettextsection in-start in-end)))
     (obj-put this-obj 'gettextsection
              (lambda (self in-start in-end)
                (gettextsection in-start in-end)))
-;            ((eq? message 'settext)
-;             (lambda (self in-text)
-;               (settext in-text)))
     (obj-put this-obj 'settext
              (lambda (self in-text)
                (settext in-text)))
-;            ((eq? message 'setselection)
-;             (lambda (self in-selstart in-selend)
-;               (setselection in-selstart in-selend)))
     (obj-put this-obj 'setselection
              (lambda (self in-selstart in-selend)
                (setselection in-selstart in-selend)))
-;            ((eq? message 'setlinks)
-;             (lambda (self in-linklist)
-;               (setlinks in-linklist)))
     (obj-put this-obj 'setlinks
              (lambda (self in-linklist)
                (setlinks in-linklist)))
-;            ((eq? message 'addlink)
-;             (lambda (self in-link)
-;               (addlink in-link)))
     (obj-put this-obj 'addlink
              (lambda (self in-link)
                (addlink in-link)))
-;            ((eq? message 'removelink)
-;             (lambda (self in-link)
-;               (removelink in-link)))
     (obj-put this-obj 'removelink
              (lambda (self in-link)
                (removelink in-link)))
-;            ((eq? message 'renamelink)
-;             (lambda (self in-linkID in-newname)
-;               (renamelink in-linkID in-newname)))
     (obj-put this-obj 'renamelink
              (lambda (self in-linkID in-newname)
                (renamelink in-linkID in-newname)))
-;            ((eq? message 'getcomponent)
-;             (lambda (self)
-;               the-editor))
     (obj-put this-obj 'getcomponent
              (lambda (self) the-editor))
-;            ((eq? message 'getdocument)
-;             (lambda (self)
-;               the-doc))
     (obj-put this-obj 'getdocument
              (lambda (self) the-doc))
-;            ((eq? message 'set-nodeID!)
-;             (lambda (self in-nodeID)
-;               (set-nodeID! in-nodeID)))
     (obj-put this-obj 'set-nodeID!
              (lambda (self in-nodeID)
                (set-nodeID! in-nodeID)))
-;            ((eq? message 'get-nodeID)
-;             (lambda (self)
-;               the-nodeID))
     (obj-put this-obj 'get-nodeID
              (lambda (self)
                the-nodeID))
-;            ((eq? message 'set-node!)
-;             (lambda (self in-node)
-;               (set-node! in-node)))
     (obj-put this-obj 'set-node!
              (lambda (self in-node)
                (set-node! in-node)))
-;            ((eq? message 'clear-content!)
-;             (lambda (self)
-;               (clear-content!)))
     (obj-put this-obj 'clear-content!
              (lambda (self) (clear-content!)))
-;            ((eq? message 'set-mouseover-callback!)
-;             (lambda (self in-mouseover-callback)
-;               (set-mouseover-callback! in-mouseover-callback)))
     (obj-put this-obj 'set-mouseover-callback!
              (lambda (self in-mouseover-callback)
                (set-mouseover-callback! in-mouseover-callback)))
-;            ((eq? message 'set-update-dirty-callback)
-;             (lambda (self in-update-dirty-callback)
-;               (set-update-dirty-callback! in-update-dirty-callback)))
     (obj-put this-obj 'set-update-dirty-callback
              (lambda (self in-update-dirty-callback)
                (set-update-dirty-callback! in-update-dirty-callback)))
-;            ((eq? message 'get-lastmousemove)
-;             (lambda (self)
-;               lastmousemove))
     (obj-put this-obj 'get-lastmousemove
              (lambda (self) lastmousemove))
-;            ((eq? message 'set-background-color)
-;             (lambda (self in-color)
-;               (set-editor-background-color in-color)))
     (obj-put this-obj 'set-background-color
              (lambda (self in-color)
                (set-editor-background-color in-color)))
-;            ((eq? message 'set-background-image)
-;             (lambda (self in-filename)
-;               (set-editor-background-image in-filename)))
     (obj-put this-obj 'set-background-image
              (lambda (self in-filename)
                (set-editor-background-image in-filename)))
-;            ((eq? message 'set-undo-manager!)
-;             (lambda (self in-undo-manager in-undo-action in-redo-action in-re-edit-node-callback)
-;               (set-undo-manager! in-undo-manager in-undo-action in-redo-action in-re-edit-node-callback)))
     (obj-put this-obj 'set-undo-manager!
              (lambda (self in-undo-manager in-undo-action in-redo-action in-re-edit-node-callback)
                (set-undo-manager! in-undo-manager in-undo-action in-redo-action in-re-edit-node-callback)))
-;            ((eq? message 'clear-background-image)
-;             (lambda (self)
-;               (clear-editor-background-image)))
     (obj-put this-obj 'clear-background-image
              (lambda (self)
                (clear-editor-background-image)))
-;            (else (get-method named-obj message))))
     this-obj))
 
 ; read-only hypertextpane
@@ -1273,14 +1136,12 @@
             (if (not (check-cursor-type nodereader-text 'default))
                 (set-cursor-type nodereader-text 'default)))))
     
-    ; message handling                  
-;    (lambda (message)
-;      (cond ((eq? message 'init)
-;             (lambda (self)
-;               (init)))
-;            (else (get-method htpane-obj message))))
+    ;; message handling
     (obj-put this-obj 'init
-             (lambda (self) (init)))
+             (lambda (self) 
+               (display "init in read only htpane ")(newline)
+               (init)))
+    
     this-obj))
 
 

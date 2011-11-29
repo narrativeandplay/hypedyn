@@ -544,47 +544,6 @@
   ;(define newlink-name (make-input-dialogbox-check-empty nodeeditor-frame "" "Link name" "New link"))
   (define newlink-name (make-input-dialogbox-custom nodeeditor-frame "" "New link" "Link name"))
   
-  ;; cancel return #!null (dont do anything if null)
-  (if (not (is-null? newlink-name))
-      (create-newlink newlink-name))
-  
-  (define (create-newlink newlink-name)
-    (if (not (equal? newlink-name ""))
-        ; create the link
-        (let ((new-fromnode (get-edited-nodeID))
-              (new-startindex (ask node-editor 'getselstart))
-              (new-endindex (ask node-editor 'getselend))
-              (new-tonode -1))
-          ; create the link
-          (let ((newlink-ID (create-link
-                             newlink-name
-                             new-fromnode new-tonode
-                             new-startindex new-endindex
-                             #f #f #f -1 ""
-                             '() ; don't display the link yet, as we don't know destination
-                             )))
-
-            ; add link
-            (ask node-editor 'addlink (get 'links newlink-ID))
-
-            ; add to link list
-            (ask link-list 'add-link newlink-ID newlink-name)
-            (ask link-list 'select-link newlink-ID)
-            
-            ; disable new link button and menu item (until selection changes)
-            (enable-newlink-button #f)
-
-            ; update main window label to show file is dirty
-            (update-dirty-state)
-
-            (compoundundomanager-beginupdate undo-manager)
-            (newlink-undoable-postedit newlink-name newlink-ID)
-            
-            ; show edit link dialogue
-            (doeditlink newlink-ID (get-edited-nodeID) update-link-display-callback (get-link-text newlink-ID))
-            
-            ))))
-  
   (define (newlink-undoable-postedit newlink-name newlink-ID)
     (compoundundomanager-beginupdate undo-manager)
     (define thelink (get 'links newlink-ID))
@@ -624,6 +583,50 @@
     ;; hack to save content of node everytime link is created
     (nodeeditor-save)
     )
+  
+  (define (create-newlink newlink-name)
+    (if (not (equal? newlink-name ""))
+        ; create the link
+        (let ((new-fromnode (get-edited-nodeID))
+              (new-startindex (ask node-editor 'getselstart))
+              (new-endindex (ask node-editor 'getselend))
+              (new-tonode -1))
+          ; create the link
+          (let ((newlink-ID (create-link
+                             newlink-name
+                             new-fromnode new-tonode
+                             new-startindex new-endindex
+                             #f #f #f -1 ""
+                             '() ; don't display the link yet, as we don't know destination
+                             )))
+
+            ; add link
+            (ask node-editor 'addlink (get 'links newlink-ID))
+
+            ; add to link list
+            (ask link-list 'add-link newlink-ID newlink-name)
+            (ask link-list 'select-link newlink-ID)
+            
+            ; disable new link button and menu item (until selection changes)
+            (enable-newlink-button #f)
+
+            ; update main window label to show file is dirty
+            (update-dirty-state)
+
+            (compoundundomanager-beginupdate undo-manager)
+            (newlink-undoable-postedit newlink-name newlink-ID)
+            
+            ; show edit link dialogue
+            (doeditlink newlink-ID (get-edited-nodeID) update-link-display-callback (get-link-text newlink-ID))
+            
+            ))))
+  
+  ;; cancel return #!null (dont do anything if null)
+  (if (and (procedure? create-newlink)
+           (not (is-null? newlink-name)))
+      (create-newlink newlink-name))
+  
+  
   )
 
 ; delete a link

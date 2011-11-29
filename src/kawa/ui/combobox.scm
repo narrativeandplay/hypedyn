@@ -177,7 +177,7 @@
                            in-item :: <object>)
   (invoke in-combo 'addItem 
           (begin
-            (define-simple-class myObject (java.lang.Object)
+            (define-class myObject (java.lang.Object)
               ((toString) :: <java.lang.String>
                in-item))
             (make myObject))))
@@ -203,7 +203,7 @@
                                      in-data :: <object>)
   (invoke in-combo 'addItem
           (begin
-            (define-simple-class myObject (java.lang.Object)
+            (define-class myObject (java.lang.Object)
               ((toString) :: <java.lang.String>
                in-item))
             (make myObject))
@@ -216,7 +216,7 @@
                                            in-index :: <int>)
   (invoke in-combo 'insertItemAt
           (begin
-            (define-simple-class myObject2 (java.lang.Object)
+            (define-class myObject2 (java.lang.Object)
               ((toString) :: <java.lang.String>
                in-item))
             (make myObject2))

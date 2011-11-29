@@ -295,8 +295,6 @@
 ; save arbitrary sexpr to file
 (define (save-sexpr-to-file filename lst-expr)
   (write-sexpr-file filename lst-expr))
-;(display "loaded fileio.scm")(newline)
-
 
 ;;
 ;; utilities

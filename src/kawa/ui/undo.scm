@@ -29,6 +29,8 @@
                ;add-undoable-edit save-point-offset save-point-newedit save-point-undo save-point-redo 
                save-point-reset
                save-point-tracking-init
+               
+               <compoundundomanager> ;; export our own simple class
                )
 
 ;;
@@ -107,8 +109,8 @@
   (display (invoke in-edit 'getPresentationName))
   (display "'")(newline)
   
-  (display "update levels open ")
-  (display (compoundundomanager-updatelevel in-undo-manager))(newline) 
+;  (display "update levels open ")
+;  (display (compoundundomanager-updatelevel in-undo-manager))(newline) 
   
   (save-point-newedit in-undo-manager)
   (invoke in-undo-manager 'postEdit in-edit)

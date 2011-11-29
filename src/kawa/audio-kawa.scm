@@ -123,6 +123,9 @@
   (and return-is supported?)
   )
 
+(define (get-audio-input-stream audio-file :: <java.io.File>)
+  (invoke-static <javax.sound.sampled.AudioSystem> 'get-audio-input-stream audio-file))
+
 ; play an audio file
 ; note: this loads the entire file, which causes memory errors for
 ; very large files, may want to provide streaming as well
@@ -131,7 +134,7 @@
   (try-catch
       (begin
         ;; assume its an audio file
-        (define ais (invoke-static <javax.sound.sampled.AudioSystem> 'get-audio-input-stream audio-file))
+        (define ais (get-audio-input-stream audio-file))
         (define audio-format (invoke (as <javax.sound.sampled.AudioInputStream> ais) 'get-format))
         (define dataline-info (<javax.sound.sampled.DataLine$Info>
                                <javax.sound.sampled.SourceDataLine> audio-format))

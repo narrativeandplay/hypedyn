@@ -270,12 +270,14 @@
               string :: <java.lang.String>
               attr :: <javax.swing.text.AttributeSet>) :: <void>
      (if (replace-callback fb offset len string attr)
-         (invoke-special <javax.swing.text.DocumentFilter> (this) 'replace fb offset len string attr)))))
+         (invoke-special <javax.swing.text.DocumentFilter> (this) 'replace fb offset len string attr)))
+    ))
 
 ;add a document filter to a text component
 (define (add-documentfilter the-textcomponent :: <javax.swing.text.JTextComponent>
                             the-filter :: <javax.swing.text.DocumentFilter>)
   (let ((the-doc :: <javax.swing.text.AbstractDocument> (invoke the-textcomponent 'getDocument)))
+    (display "the doc in add document filter ")(display the-doc)(newline)
     (invoke the-doc 'set-document-filter the-filter)))
 
 ; call insert on document filter's filter bypass
