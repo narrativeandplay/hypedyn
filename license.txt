@@ -1,7 +1,7 @@
 License for the HypeDyn project - http://www.partechgroup.org/hypedyn
 
-Copyright (C) 2008-2011 National University of Singapore and
-Singapore-MIT GAMBIT Game Lab c/o Media Development Authority of Singapore
+Copyright (C) 2008-2011
+National University of Singapore
 
 HypeDyn is distributed under the GNU GPL v 2. 
 The full license text is included at the end of this file.

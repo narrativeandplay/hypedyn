@@ -1,7 +1,7 @@
 ;; Part of the HypeDyn project - http://www.partechgroup.org/hypedyn
 ;; 
-;; Copyright (C) 2008-2011 National University of Singapore and
-;; Singapore-MIT GAMBIT Game Lab c/o Media Development Authority of Singapore
+;; Copyright (C) 2008-2011
+;; National University of Singapore
 ;;
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -51,9 +51,8 @@
   (set-text about-editor 
             "HypeDyn hypertext fiction editor 
 Version 2.1.6 rev 5, 27 November 2011\n
-Copyright (C) 2008-2011 National University of Singapore and
-Singapore-MIT GAMBIT Game Lab c/o Media Development Authority
-of Singapore\n
+Copyright (C) 2008-2011
+National Univeristy of Singapore\n
 This program is free software; you can redistribute it and/or 
 modify it under the terms of the GNU General Public License as 
 published by the Free Software Foundation; either version 2 of 
