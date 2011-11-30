@@ -80,5 +80,3 @@
     (if (and help-editor (check-file-exists file))
         (let ((str (get-file-data file)))
           (set-text help-editor str)))))
-
-(display "loaded help-window.scm")(newline)

@@ -235,9 +235,7 @@
 ; set whether a dialog is resizable
 (define (set-dialog-resizable dialog :: <javax.swing.JDialog>
                               in-flag :: <boolean>)
-  (display "setting resizeable ")(display in-flag)(newline)
-  (invoke (as <java.awt.Dialog> dialog) 'setResizable in-flag)
-  )
+  (invoke (as <java.awt.Dialog> dialog) 'setResizable in-flag))
 
 ;dispose a dialog
 (define (dispose-dialog dlg :: <javax.swing.JDialog>)

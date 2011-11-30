@@ -320,7 +320,7 @@
 ; the type passed in here should be the symbol used to store the 
 ; objects in the data table in objects.scm
 (define (register-as-inspectable object-type)
-  (format #t "register-as-inspectable ~a~%~!" object-type)
+  ;(format #t "register-as-inspectable ~a~%~!" object-type)
   (put 'inspectable-objects object-type (symbol->string object-type)))
 
 ; get list of inspectable objects

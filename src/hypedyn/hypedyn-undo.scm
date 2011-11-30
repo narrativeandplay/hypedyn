@@ -49,7 +49,7 @@
   (set! undo-manager (make-compoundundomanager))
   (set! undo-action (make-undo-action undo-manager))
   (set! redo-action (make-redo-action undo-manager))
-  (invoke undo-manager 'set-undo-redo-actions undo-action redo-action)
+  (invoke (as <compoundundomanager> undo-manager) 'set-undo-redo-actions undo-action redo-action)
   (set-associated-redoaction! undo-action redo-action)
   (set-associated-undoaction! redo-action undo-action)
   

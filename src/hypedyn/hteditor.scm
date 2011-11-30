@@ -432,7 +432,6 @@
         (add-splitpane-component f-panel lists-panel-upper #t))
         
     ; make a list for nodes
-    (display "ask n-list to init ")(newline)
     (ask n-list 'init)
     (add-component lists-panel-upper (ask n-list 'get-component))
 
@@ -949,9 +948,7 @@
 
     ; initialize
     (define (init)
-      (display "init in make node list view ")(newline)
       (ask parent-obj 'init)
-      (display "after asking make obj listview to init")(newline)
       (if (procedure? onmouse-callback)
           (add-mouselistener (ask parent-obj 'get-list)
                              (make-mouselistener onmouse-callback))))
@@ -989,7 +986,6 @@
 ;               (init)))
     (obj-put this-obj 'init
              (lambda (self)
-               (display "node list view init ")(newline)
                (init)))
 ;            ((eq? message 'populate-nodes-list)
 ;             (lambda (self)
@@ -1302,8 +1298,6 @@
 
     ; initialize
     (define (init)
-      (display "init in factlist ")(newline)
-      ;(display "parent-obj ")(display parent-obj)(newline)
       (ask parent-obj 'init)
       (if (procedure? onmouse-callback)
           (add-mouselistener (ask parent-obj 'get-list)
@@ -1766,5 +1760,3 @@
       (let ((new-nodeID (create-node "Start" "" 80 45 #f #f)))
         (set-start-node! new-nodeID)
         (populate-display))))
-
-(display "loaded hteditor.scm")(newline)

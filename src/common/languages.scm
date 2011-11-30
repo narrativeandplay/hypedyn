@@ -140,4 +140,3 @@
 ;;                file-list))
 ;;          ;(format #t "lang-nfo: ~a~%~!" language-info)
 ;;          language-info)
-(display "loaded languages.scm")(newline)

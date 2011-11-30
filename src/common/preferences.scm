@@ -54,13 +54,7 @@
 
 ; create preferences table to store app-specific prefs
 (define (init-prefs)
-  (display "init pref ")(newline)
   (set! pref-table (make-table))
-;  (let ((get-list-proc (pref-table 'extract-subtable-proc))
-;        (get-pref-proc (pref-table 'lookup-proc))
-;        (put-pref-proc (pref-table 'insert-proc!))
-;        (del-pref-proc (pref-table 'delete-proc!)))
-
   
   ;; retrieving the procedure defined inside pref-table obj
   (define get-list-proc (obj-get pref-table 'get-list))
@@ -68,14 +62,6 @@
   (define put-pref-proc (obj-get pref-table 'put))
   (define del-pref-proc (obj-get pref-table 'del))
   
-;  (set! get-pref-list (lambda ()
-;                        (get-list-proc 'prefs)))
-;  (set! get-pref (lambda (in-pref-id)
-;                   (get-pref-proc 'prefs in-pref-id)))
-;  (set! put-pref! (lambda (in-pref-id in-pref)
-;                    (put-pref-proc 'prefs in-pref-id in-pref)))
-;  (set! del-pref! (lambda (in-pref-id)
-;                    (del-pref-proc 'prefs in-pref-id)))
   ;; only change is that i have to pass the pref-table to the self arg because the proc were 
   ;; originally meant for doing ask
   (set! get-pref-list (lambda ()
@@ -85,8 +71,7 @@
   (set! put-pref! (lambda (in-pref-id in-pref)
                     (put-pref-proc pref-table 'prefs in-pref-id in-pref)))
   (set! del-pref! (lambda (in-pref-id)
-                    (del-pref-proc pref-table 'prefs in-pref-id)))
-  )
+                    (del-pref-proc pref-table 'prefs in-pref-id))))
 
 ; get preferences
 (define (getprefs)
@@ -107,8 +92,7 @@
                                (this-entry-data (cdr this-entry)))
                            (put-pref! this-entry-id this-entry-data)))
                        the-prefs))
-              (close-input-port input-port)
-              (display "loaded pref file.\n"))
+              (close-input-port input-port))
             (display "no prefs file.\n")))
     (ex <java.lang.Throwable>
         (begin

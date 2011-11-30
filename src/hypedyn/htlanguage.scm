@@ -134,4 +134,3 @@
   (display "make-hypertext: ")(display in-filetype)(display ",")(display in-fileversion)(newline))
 
 ; end of primitives
-(display "loaded htlanguage.scm") (newline) 
