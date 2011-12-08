@@ -463,7 +463,7 @@
                             (ask node-editor 'getcomponent)) #f)
   
   ;; tl's addition DEBUG (try to make sure that default document style is set to style-nolink)
-  (ask node-editor 'clear-content!)
+  ;(ask node-editor 'clear-content!)
   
   ; tell the editor about our undo manager
   (ask node-editor 'set-undo-manager! undo-manager undo-action redo-action nodeeditor-edit)
@@ -572,6 +572,13 @@
             
             (lambda () ;;redo
               (display "[REDO add new link]")(newline)
+              (display " newlink-ID from-nodeID to-nodeID to-alt-nodeID 
+                         name usedest usealtdest
+                         #t update-node-style-callback ")(newline)
+              (display (list newlink-ID from-nodeID to-nodeID to-alt-nodeID 
+                         name usedest usealtdest
+                         #t update-node-style-callback))(newline)
+              
                ; restore the link
               (delete-link-undo redo-sexpr
                                 newlink-ID thelink from-nodeID to-nodeID to-alt-nodeID
@@ -654,19 +661,22 @@
                  (usealtdest (ask thelink 'use-alt-destination)))
             
             (display "[redo sexpr created] ")(display redo-sexpr)(newline) 
+            
+            
+            
             (define (delete-link-and-update-node-graph)
                ; delete the link - not sure about del-in-nodeeditor?
                 (delete-link-action linkID thelink from-nodeID to-nodeID to-alt-nodeID
                                     name usedest usealtdest
                                     del-in-nodeeditor node-graph update-node-style-callback)
-                (display "!! after delete-link-action ")(newline)
+                ;(display "!! after delete-link-action ")(newline)
                 ;; draw the line in node-graph
                 (if usedest
                     (ask node-graph 'del-line (number->string linkID) from-nodeID to-nodeID))
-                (display "after usedest del line ")(newline)
+                ;(display "after usedest del line ")(newline)
                 (if usealtdest
                     (ask node-graph 'del-line (string-append "~" (number->string linkID)) from-nodeID to-alt-nodeID))
-                (display "!!!!!!!! after redo delete link ")(newline)
+                ;(display "!!!!!!!! after redo delete link ")(newline)
               )
             
             (compoundundomanager-postedit
@@ -675,7 +685,15 @@
               "Delete Link"
               ; undo
               (lambda ()
+                (display "[restoring link] ")(newline)
+                (display "del-in-nodeeditor ")(display del-in-nodeeditor)(newline)
                 ; restore the link
+                (display (list linkID from-nodeID to-nodeID to-alt-nodeID name usedest usealtdest
+                               del-in-nodeeditor))
+                (display " linkID thelink from-nodeID to-nodeID to-alt-nodeID
+                                  name usedest usealtdest
+                                  del-in-nodeeditor")(newline)
+                
                 (delete-link-undo redo-sexpr
                                   linkID thelink from-nodeID to-nodeID to-alt-nodeID
                                   name usedest usealtdest
@@ -918,5 +936,6 @@
 (define (nodeeditor-setcontents selected-node)
   ; tell hypertextnode which node we're editing; will add text
   ; and links from the node
+  (display "node editor set contents ")(newline)
   (ask node-editor 'clear-content!)
   (ask node-editor 'set-node! selected-node))

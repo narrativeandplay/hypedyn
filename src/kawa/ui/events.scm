@@ -229,6 +229,13 @@
 ; make a document listener
 ; note: document listener cannot make changes to the document, as this will
 ; likely cause a deadlock - alex
+
+; note: is there a difference between making a change to the document and making a change to the content of
+; the text component? the quoting from the following link
+; http://docs.oracle.com/javase/tutorial/uiswing/components/generaltext.html
+; You may want to change the document's text within a document listener. However, you should never modify 
+; the contents of a text component from within a document listener. If you do, the program will likely deadlock.
+; Instead, you can use a formatted text field or provide a document filter.
 (define (make-documentlistener insert-callback remove-callback changed-callback)
   (object (<javax.swing.event.DocumentListener>)
     ((insert-update e :: <javax.swing.event.DocumentEvent>) :: <void>

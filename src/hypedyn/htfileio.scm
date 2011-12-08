@@ -65,9 +65,7 @@
 ; new
 (define (donew)
   ; first check if we should save
-  (if
-      ; check if data has changed
-      (confirm-save)
+  (if (confirm-save)  ;; check if data has changed
       ; safe, so proceed
       (begin
         ; close any open editor/reader windows
@@ -162,11 +160,8 @@
                         ; load from file
                         (if (load-from-file newfilename)
                             (begin
-                              ; add to recent menu
-                              (add-recent-file newfilename)
-
-                              ; populate the display
-                              (populate-display)))
+                              (add-recent-file newfilename)  ;; add to recent menu
+                              (populate-display)))           ;; populate the display
                         )))
                  ;; older app opening newer file
                  ((< (get-fileformat-version) file-version-number)
@@ -180,9 +175,7 @@
                                       (to-string file-version-number)
                                       " or later.")
                                      )
-                  )
-               )
-           
+                  ))
            ))
    (ex <java.lang.Throwable>
    ;; extra to do after exception
@@ -214,8 +207,7 @@
               (if (import-from-file newfilename)
                   (begin
                     ; populate the display
-                    (populate-display))))))))
-  )
+                    (populate-display)))))))))
 
 ; export to web (applet)
 (define (doexport-hypedyn-web)

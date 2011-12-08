@@ -31,12 +31,13 @@
                set-text-append
                set-textpane-page
                get-textpane-doc set-text-default-style set-text-style
-               get-text get-text-section get-text-selstart get-text-selend get-text-length
+               get-text get-text-section get-text-selstart get-text-selend get-text-length get-doc-text
                set-text-selection
                get-text-position-from-point check-has-attributes get-attributes-pos set-style-attributes
                set-attribute-data get-attribute-data get-attribute-data-pos
                get-cursor-pos get-selection-end set-cursor-pos
-               get-change-length get-change-offset get-font-height)
+               get-change-length get-change-offset get-font-height
+               textpane-insert textpane-remove)
                
 ;;
 ;; text
@@ -119,6 +120,18 @@
    ((instance? in-field <javax.swing.JButton>)
     (invoke (as <javax.swing.JButton> in-field) 'setText in-txt))
    ))
+
+(define (get-doc-text doc start-offset end-offset)
+  (define length (- end-offset start-offset))
+  (define doc-length (invoke doc 'get-length))
+  (if (and (<= length doc-length)
+           (>= start-offset 0))
+      (invoke doc 'get-text start-offset (- end-offset start-offset))
+      (begin
+        (display "[ERROR][get-doc-text] failed ")(newline)
+        (display "  Either start-offset less than 0 ")(display start-offset)(newline)
+        (display "  Or end-offset ")(display end-offset)(display " > doc length ")(display doc-length)(newline)  
+        )))
 
 ; insert text at given position into a Document
 (define (set-text-insert in-doc :: <javax.swing.text.Document> in-txt in-position)
@@ -213,6 +226,25 @@
   (let ((the-caret :: <javax.swing.text.Caret> (invoke in-text 'getCaret)))
     (invoke the-caret 'setDot in-selstart)
     (invoke the-caret 'moveDot in-selend)))
+
+;; if there's no text select then it is an insert
+(define-private (replace-selection in-pane :: <javax.swing.JTextPane>
+                           str)
+  (invoke in-pane 'replace-selection str))
+
+(define (textpane-insert in-pane :: <javax.swing.JTextPane>
+                         str
+                         offset :: <int>
+                         #!optional attr ;; :: <javax.swing.text.AttributeSet>
+                         )
+  (set-text-selection in-pane offset offset) ;; no selection
+  (replace-selection in-pane str))
+
+(define (textpane-remove in-pane :: <javax.swing.JTextPane>
+                         offset :: <int>
+                         length :: <int>)
+  (set-text-selection in-pane offset (+ offset length)) ;; no selection
+  (replace-selection in-pane ""))
 
 ; translate from view x,y position to position in model
 (define (get-text-position-from-point in-text :: <javax.swing.text.JTextComponent> x :: <int> y :: <int>)

@@ -89,8 +89,7 @@
             (begin
               (display "in delete-link-action ")(newline)
               (display "from-nodeID edited-nodeID different so did not add to link-list ")(newline)
-              )
-            )
+              ))
 
         ; remove from nodeeditor
         (if del-in-nodeeditor
@@ -137,13 +136,22 @@
 
   (display "diid redo sexpr ")(display redo-sexpr)(newline)
   
+  (display "[delete-link-undo]")(newline)
   (define from-node (get 'nodes from-nodeID)) 
-  (set! thelink (get 'links linkID))
+  
   ;(display "[thelink] in [delete-link-undo] ")(display thelink)(newline)
   
-  ; now need to update the node editor - this is actually the old link, should retrieve the newly recreated link
-  (if del-in-nodeeditor
-      (ask node-editor 'addlink thelink))
+  ;; retrieve the newly recreated link
+  (set! thelink (get 'links linkID))
+  (display " del-in-nodeeditor ")(display del-in-nodeeditor)(newline)
+  
+  ;; now need to update the node editor
+;  (if del-in-nodeeditor
+;      (ask node-editor 'addlink thelink))
+  
+  ;; when should we not do this? when should del-in-nodeeditor be false? and why?
+  ;; undoing a deletion of link text (whole link) seem to not underline the text properly 
+  (ask node-editor 'addlink thelink)
   
   ; and the link list - cheat by just repopulating the list (this updates the left list in the node editor)
   (if (= from-nodeID edited-nodeID)
@@ -169,9 +177,6 @@
   )
 
 ;; set by before-editlink
-(define unedited-link-lambda #f)
-(define edited-link-lambda #f)
-
 (define unedited-link-data (list))
 (define unedited-link-data2 (list))
 (define edited-link-data (list))
@@ -219,17 +224,6 @@
               (set! unedited-link-data2
                     (list usedest to-nodeID usealtdest to-alt-nodeID))
               (set! editlink-common-data (list name from-nodeID link-ID))
-;;              (set! unedited-link-lambda
-;;                    (lambda () ;; restore the link before edit
-;;                      (delete-link-action link-ID thelink from-nodeID to-nodeID to-alt-nodeID
-;;                                          name usedest usealtdest
-;;                                          #t node-graph update-node-style)
-;;                      (delete-link-undo redo-sexpr
-;;                                        link-ID thelink from-nodeID to-nodeID to-alt-nodeID
-;;                                        name usedest usealtdest
-;;                                        #t node-graph update-node-style
-;;                                        )
-;;                      ))
               )
             (begin
               ;; used for both delete-link-action and delete-link-undo
@@ -240,23 +234,11 @@
                           #t node-graph update-node-style))
               (set! edited-link-data2
                     (list usedest to-nodeID usealtdest to-alt-nodeID))
-;;              (set! edited-link-lambda
-;;                    (lambda () ;; redo editlink
-;;                      (delete-link-action link-ID thelink from-nodeID to-nodeID to-alt-nodeID
-;;                                          name usedest usealtdest
-;;                                          #t node-graph update-node-style)
-;;                      (delete-link-undo redo-sexpr
-;;                                        link-ID thelink from-nodeID to-nodeID to-alt-nodeID
-;;                                        name usedest usealtdest
-;;                                        #t node-graph update-node-style
-;;                                        )))
               ))
         ))
   )
 
 (define (post-editlink-undoable-event)
-  (display "[post edit undoable] ")(display (list unedited-link-lambda edited-link-lambda))(newline)
-  
   (define unedited-link-cache (list-copy unedited-link-data))
   (define edited-link-cache (list-copy edited-link-data))
   
@@ -301,7 +283,6 @@
               edited-link-cache2
               (list (list-ref editlink-common-cache 2)))))
     ))
-        ;))
   )
 
 (define (before-editnode node-ID)

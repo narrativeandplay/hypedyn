@@ -21,12 +21,12 @@
 (begin
   (require "../kawa/miscutils.scm")
   (require "../kawa/ui/component.scm")
-  (require "../kawa/color.scm")
   (require "../kawa/ui/events.scm")
   (require "../kawa/ui/text.scm")
   (require "../kawa/ui/cursor.scm")
   ;(require "../kawa/ui/splitpane.scm")
   (require "../kawa/ui/undo.scm")
+  (require "../kawa/color.scm")
   (require "../kawa/graphics-kawa.scm") ; for open-image-file
   (require "objects.scm")
   (require "datatable.scm") ;; get
@@ -81,38 +81,47 @@
          (undo-action #f)
          (redo-action #f)
          (re-edit-node-callback #f)
-
+         
          ;; compound action tracking
          ;; ( (list))
          )
     
     ; initialize the hypertexteditor
     (define (init)
-      (buildui)
-      )
-
+      (buildui))
+    
     ; build the UI
     (define (buildui)
       ; make text editor for content
       (set! the-editor (make-textpane-with-background-image))
-      (add-caretlistener the-editor
-                         (make-caretlistener cursor-handler))
-      (add-documentlistener the-editor
-                            (make-documentlistener document-insert-handler
-                                                   document-remove-handler
-                                                   document-changed-handler))
-      ;; have to set document filter to the document
-      (define doc-filter 
-        (make-documentfilter document-filter-insert-string-handler
-                             document-filter-remove-handler
-                             document-filter-replace-handler))
-      (add-documentfilter the-editor doc-filter)
-      (add-keylistener the-editor (make-keylistener key-press-handler
-                                                    key-type-handler
-                                                    key-release-handler))
       ; get the doc for editor
       (set! the-doc (get-textpane-doc the-editor))
-
+      
+      ;; force all newline insertions to be of the form "\n" in the textpane
+      ;; an issue might be when it is written out to a file "\n" is still used
+      ;; the lines won't be broken properly when opened in other text editing programs
+      (set-text the-editor "\n")
+      (set-text the-editor "")
+      
+      (add-caretlistener
+       the-editor
+       (make-caretlistener cursor-handler))
+      (add-documentlistener
+       the-editor
+       (make-documentlistener document-insert-handler
+                              document-remove-handler
+                              document-changed-handler))
+      (add-documentfilter
+       the-editor
+       (make-documentfilter document-filter-insert-string-handler
+                            document-filter-remove-handler
+                            document-filter-replace-handler))
+      (add-keylistener
+       the-editor
+       (make-keylistener key-press-handler
+                         key-type-handler
+                         key-release-handler))
+      
       ; set size for editor - don't hard-code this in the long term
       (set-component-preferred-size the-editor w h)
 
@@ -162,12 +171,7 @@
     ; which node is being edited
     (define (set-node! in-node)
       (set-nodeID! (ask in-node 'ID))
-      
-      ;; hack to ensure the pressing enter in textpane does not add "\r\n"
-      ;; but just a "\n"
-      (settext " ") ;; this seem to do the job
       (settext (ask in-node gettext-method))
-      
       (setlinks (ask in-node getlinks-method))
       (set-cursor-pos the-editor 0))
     
@@ -187,7 +191,7 @@
 
     ; add a link in the editor as an underline
     (define (addlink thislink)
-      
+      (display "[addlink]")(newline)
       ;; cache the value of track-undoable-edits and set it back later
       (define original-track-undoable-edits track-undoable-edits)
       (set-track-undoable-edits! #f)
@@ -196,6 +200,11 @@
              (end-index (ask thislink 'end-index))
              (len (- end-index start-index))
              (this-linkID (ask thislink 'ID)))
+        
+        (display " start-index ")(display start-index)(newline)
+        (display " end-index ")(display end-index)(newline)
+        (display " len ")(display len)(newline)
+        (display " this-linkID ")(display this-linkID)(newline)
         
         ;;TODO should check whether we are setting beyond the document length
         ;; 0 < start-index < doc-len
@@ -232,33 +241,10 @@
              (len (- end-index start-index))
              (this-linkID (ask thislink 'ID)))
         
-        ;; for debug only
-        (define (get-attributes-pos2 in-doc :: <javax.swing.text.DefaultStyledDocument>
-                                     pos :: <int>
-                                     ) ;:: <javax.swing.text.AttributeSet>
-          (let ((charElement :: <javax.swing.text.Element>
-                             (invoke in-doc 'getCharacterElement pos)))
-            (define gotten-attr (invoke charElement 'getAttributes))))
-        
-        (get-attributes-pos2 the-doc start-index)
-        (get-attributes-pos2 the-doc (+ start-index len))
-        
         (set-text-style the-doc style-nolink
                         start-index
                         len
-                        #t)
-        
-;;        (display "[start index] ")(display start-index)(newline)
-;;        (display "[end-index] ")(display end-index)(newline)
-;;        (display "[len] ")(display len)(newline)
-;;        (display "[this-linkID]")(display this-linkID)(newline)
-;;        
-;;        (display "[delete link] ")(display (list start-index len (get-text-length the-doc)))(newline)
-;;        (display "cond check ")(display (equal? (+ start-index len) (get-text-length the-doc)))(newline)
-        
-;        (display "removelink start index STYLE ")(display (get-attributes-pos2 the-doc start-index))(newline)
-;        (display "removelink END index STYLE ")(display (get-attributes-pos2 the-doc (+ start-index len)))(newline)
-        )
+                        #t))
       (set-track-undoable-edits! original-track-undoable-edits))
     
     ; rename a link
@@ -294,22 +280,22 @@
               ;; [ - start of deletion, ] - end of deletion
               (cond ((<= del-end link-start) ;; Case 1; del-start del-end link-start link-end (eg [a]aBBaa, [aa]BBaa)
                      ; Entire deletion is before link (shift link)
-                     (display "delete case 1 ")(newline)
+                     (display " delete case 1 ")(newline)
                      (ask thislink 'set-start-index! (- link-start del-len))
                      (ask thislink 'set-end-index! (- link-end del-len))
                      (set! link-deleted 0))
                     ((<= link-end del-start) ;; Case 2; link-start link-end del-start del-end (eg aaBB[a]a, aaBBa[a]) 
                      ;; Entire deletion after link (DO NOTHING to this link)
-                     (display "delete case 2 ")(newline)
+                     (display " delete case 2 ")(newline)
                      (set! link-deleted 0))
                     ((and (<= del-start link-start) ;; Case 3; del-start link-start link-end del-end (eg a[aBB]aa, a[aBBa]a, aa[BBa]a, aa[BB]aa)
                           (<= link-end del-end))
-                     (display "delete case 3 ")(newline)
+                     (display " delete case 3 ")(newline)
                      ;; Entire link is inside deletion, (delete link)
                      
                      ;; link-end = link-start (only for the purpose of \r\n check)
                      ;; normally we dont bother shifting the link since we delete it anyway
-                     (ask thislink 'set-end-index! link-start)
+                     ;(ask thislink 'set-end-index! link-start)
                      
                      (set! link-deleted (- link-end link-start))  
                      ; Delete the link
@@ -317,16 +303,13 @@
                     ((and (<= del-end link-end)         ;; Case 4; link-start del-start del-end link-end (eg aaB[B]a, aa[B]Baa, aaB[B]Baa) 
                           (<= link-start del-start))    ;; makes sure not the whole link 
                      ;; Entire deletion is inside link but not encompassing it, (shorten link by length of deletion)
-                     (display "delete case 4 ")(newline)
-                     (display "link end ")(display link-end)(newline)
-                     (display "del-len ")(display del-len)(newline)
+                     (display " delete case 4 ")(newline)
                      (ask thislink 'set-end-index! (- link-end del-len))
-                     (display "new link end ")(display (ask thislink 'end-index))(newline)
                      (set! link-deleted del-len))
                     ((and (< del-start link-start)  ;; Case 5; del-start link-start del-end link-end (eg a[aB]Baa)
                           (< link-start del-end)    ;; link boundaries does not coincides with deletion boundary    
                           (< del-end link-end))
-                     (display "delete case 5 ")(newline)
+                     (display " delete case 5 ")(newline)
                      ; a portion of the link at the head is deleted (shift link and shorten)
                      (ask thislink 'set-start-index! del-start) ;; move link-start to del-start
                      (ask thislink 'set-end-index! (+ del-start (- link-end del-end))) ; count remaining length of link and 
@@ -335,53 +318,15 @@
                     ((and (< link-start del-start)   ;; Case 6; link-start del-start link-end del-end  (eg aaB[Ba]a)
                           (< del-start link-end)     ;; link boundaries does not coincides with deletion boundary
                           (< link-end del-end))
-                     (display "delete case 6 ")(newline)
+                     (display " delete case 6 ")(newline)
                      ;; cut off an end portion of link (shift link-end)
                      (ask thislink 'set-end-index! del-start) ;; link-end moved to del-start
                      (set! link-deleted (- link-end del-start)))
                     )
-              
-;              ;; after deletion check whether we're left with only \r and \n in the link text
-;              (set! link-start (ask thislink 'start-index))
-;              (set! link-end (ask thislink 'end-index))
-;              (define link-len (- link-end link-start))
-;              
-;              (define (delete-string str del-start del-end)
-;                (string-append (substring str 0 del-start) 
-;                               (substring str del-end (string-length str))))
-;              
-;              (define content (invoke the-editor 'get-text))
-;              (define trunc-content (delete-string content del-start (+ del-start del-len)))
-;              (display "content ")(display content)(newline)
-;              (display "trunc content ")(display trunc-content)(newline)
-;              (display "link start end ")(display (list link-start link-end))(newline)
-;              (define link-text (substring trunc-content link-start link-end))
-;              
-;              ;; assumes newline characters has the most 2 char (ie   text\r\n and not text\r\r\n)
-;              
-;              (display "sanity check! ")(newline)
-;              (display "link len ")(display link-len)(newline)
-;              (display "link-text ")(display link-text)(newline)
-;              (cond
-;               ((= link-len 1)
-;                (define char1 (substring link-text 0 1))
-;                (if (or (equal? char1 "\r")
-;                        (equal? char1 "\n"))
-;                    (deletelink-callback linkID)))
-;               ((= link-len 2)
-;                (define char1 (substring link-text 0 1))
-;                (define char2 (substring link-text 1 2))
-;                (if (and (or (equal? char1 "\r")
-;                             (equal? char1 "\n"))
-;                         (or (equal? char2 "\r")
-;                             (equal? char2 "\n")))
-;                    (deletelink-callback linkID))
-;                ))
-              
               ))
         (display "end of adjust one link delete ")(newline)
         link-deleted))
-
+    
     ; adjust links after inserting
     (define (adjust-links-insert start len is-undo-action? extend-len)
       (display "adjust-links-insert ")(newline)
@@ -413,11 +358,9 @@
                          (ask thislink 'set-end-index! (+ link-end ins-len)))
                         ((and (<= link-start ins-start) (<= ins-start link-end) ) ;; Case 2 : ins within link (eg aaL[i]LLaa)
                          (display "insert case 2 (within link) ")(newline)
-                         ;; lengthen link no matter what (do i? seems like this commenting extend-len check was commented out
-                         ;; to fix a bug
+                         (display "extend-len ")(display extend-len)(newline)
                          (if (> extend-len 0)
-                             (ask thislink 'set-end-index! (+ link-end ins-len))
-                             )
+                             (ask thislink 'set-end-index! (+ link-end ins-len)))
                          )
                         ((and (= link-end ins-start) )   ;; Case 3b : ins RIGHT after link end (eg aaLLL[i]aa)
                          (display "insert case 3 (ins right after link) ")(newline)
@@ -506,26 +449,53 @@
                  (not (eq? (get-attribute-linkAction-pos the-doc (- pos 1))
                            (get-attribute-linkAction-pos the-doc pos)))))))
 
+    ;; set to true would inform insert-filter to bypass normal 
+    ;; get style method and use style-nolink by default
+    (define-private break-link #f)
+    
     ; insert a blank character with no link attached
     (define (insert-blank-space pos)
-      ; note: for some reason need a hack here, insert 2 characters and then
-      ; delete the second one, otherwise the style doesn't go away - alex
-      (set-track-links! #f)
+      
+      (define (before-break-link)
+        (set-track-links! #f)
+        (set! break-link #t)
+        
+        (compoundundomanager-postedit
+         undo-manager
+         (make-undoable-edit "Before Break Link"
+                             (lambda () #f) ;; undo
+                             (lambda () ;; redo
+                               (set-track-links! #f)
+                               (set! break-link #t)
+                               ))))
+      
+      (define (after-break-link)
+        (set! break-link #f)
+        (set-track-links! #t)
+        (adjust-links-insert pos 1 #f 0)  ;; since we not tracking link, we do the shifting ourselves here
+        
+        (compoundundomanager-postedit
+         undo-manager
+         (make-undoable-edit "After Break Link"
+                             (lambda () #f) ;; undo
+                             (lambda () ;; redo
+                               (set-track-links! #t)
+                               (set! break-link #f)
+                               (adjust-links-insert pos 1 #f 0)
+                               ))))
       
       (start-compound-undoable-event "End Linktext Extend")
+      (before-break-link)
       
-      ;DEBUG
+      ; note: for some reason need a hack here, insert 2 characters and then
+      ; delete the second one, otherwise the style doesn't go away - alex
       ;(set-text-insert-attr the-doc "  " pos style-nolink)
-        ;(set-text-insert-attr the-doc "  " pos style-link)
       ;(set-text-delete the-doc (+ pos 1) 1)
-      
       ;; no need to do the above hack anymore for some unknown reason
       (set-text-insert-attr the-doc " " pos style-nolink)
-      
-      (adjust-links-insert pos 1 #f 0)
+      (after-break-link)
       (end-compound-undoable-event "End Linktext Extend")
-      
-      (set-track-links! #t))
+      )
     
     ; get selection start
     (define (getselstart)
@@ -560,6 +530,7 @@
       ;(set-text-default-style the-editor style-link #t)
       
       (set-text the-editor in-text)
+      
       (set-text-selection the-editor 0 0)
 ;      (set-text-style the-doc style-nolink 0
 ;                      (+ (get-text-length the-doc) 1) #t)
@@ -573,11 +544,11 @@
     (define (setselection in-selstart in-selend)
       (set-text-selection the-editor in-selstart in-selend))
     
-    ; set links
+    ; set links (no need for this anymore since when doing filter-bypass
+    ;; we always check which style we should use for the text)
     (define (setlinks in-linklist)
       (map (lambda (l)
              (let ((thislink (get 'links l)))
-
                ; highlight text
                (addlink thislink)))
            in-linklist))
@@ -615,113 +586,71 @@
     ; handle key released
     (define (key-release-handler e)
       'ok)
-
+    
+    ;; used by our custom document edit undo/redo mechanism
+    (define insert-cache (list))
+    (define remove-cache (list))
+      
     ;;=============================
     ;; Document filter handlers
     ;;=============================
     ; note: these are called BEFORE the document is changed, and its safe to
     ; use the filter bypass to make changes to the document
 
+    ; handle formatting ourselves: (bolding and unlining of link text)
+    ; if its the END of a link, or (its a LINK and it isn't the START of a link), use the
+    ; formatting from the previous position, otherwise use no formatting
+    (define (style-to-use offset)
+      (if break-link 
+          style-nolink
+          (if (and (or (end-of-link? offset)
+                       (and (is-link? offset)
+                            (not (start-of-link? offset))))
+                   (not (= offset 0)))
+              (get-attributes-pos the-doc (- offset 1))
+              style-nolink)))
+    
     ; handle insert string
     (define (document-filter-insert-string-handler fb offset string attr)
       (display "INSERT FILTER ")(display (list offset string))(newline)(newline)
       (set! replace-event #f)
-      ; start compound event
+      (set! insert-cache (list offset string (string-length string)))
+      (start-compound-undoable-event "Typing(insert)") ; start compound event
       
-      (start-compound-undoable-event "Typing(insert)")
-      #t)
+      ;; used by insert-blank-space atm
+      (filter-bypass-insert fb offset string (style-to-use offset))
+      #f)
 
     ; handle remove
     ; note: extra parameter (callback) is added when doc filter is created
     (define (document-filter-remove-handler fb offset len)
       (display "REMOVE FILTER ")(display (list offset len))(newline)
-      ; start compound event
-      (start-compound-undoable-event "Typing(remove)")
+      (start-compound-undoable-event "Typing(remove)") ; start compound event
+      (define string (substring (get-text the-editor) offset (+ offset len)))
+      (after-delete offset len) ; recalculate link positions
       (set! replace-event #f)
-      
-      ;; special handling for new line (line feed) deletion
-;      (define content (invoke the-editor 'get-text))
-;      (if (<= (+ offset 2) (string-length content)) ;; make sure we dont overshoot in case of only \n
-;          (begin
-;            (define possible-rn (substring content offset (+ offset 2)))
-;            (display "[LAST 2 CHAR after DELETION] ")(display possible-rn)(newline)
-;            (if (equal? possible-rn "\r\n")
-;                (set! len (+ len 1)))
-;            ))
-      
-;      (display "removed newline? ")(newline)
-;      (define frag (substring content offset (+ offset len)))
-;      (display "frag ")(display frag)(newline)
-;      (display "return? ")(display (equal? frag "\r"))(newline)
-;      (display "newline? ")(display (equal? frag "\n"))(newline)
-
-;      ; recalculate link positions
-      (after-delete offset len)
+      (set! remove-cache (list offset string len))
       #t)
 
     ; handle replace (called when we do inserts or replaces operations)
     ; note: extra parameter (callback) is added when doc filter is created
     (define (document-filter-replace-handler fb offset len string attr)
-      ;(format #t "document-filter-replace-handler~%~!")
       (display "REPLACE FILTER ")(display (list offset len string))(newline)
-      (display "txt len b4 inserting ")(display (string-length (invoke (as <javax.swing.JTextPane> the-editor) 'get-text)))(newline)
-      (display "content b4 insert ")(display (invoke (as <javax.swing.JTextPane> the-editor) 'get-text))(newline)
-      (display "doc ")(display (invoke (as <javax.swing.JTextPane> the-editor) 'get-document))(newline)
-;      (display "string leng ")(display (string-length string))(newline)
-;      (display "newline? ")(display (equal? string "\n"))(newline)
-;      (display "return? ")(display (equal? string "\r"))(newline)
-;      (display "nr? ")(display (equal? string "\n\r"))(newline)
-;      (display "rn? ")(display (equal? string "\r\n"))(newline)
-;      (newline)
-;      
-;      (define content (invoke the-editor 'get-text))
-;      (display "string len ")(display (string-length content))(newline)
-;      (display "content ")(display content)(newline)
-;      (display "rn check ")(display (equal? "\r\n" content))(newline)
-;      (display "rnrn check ")(display (equal? "\r\na\r\n" content))(newline)
-;      (display "rnn check ")(display (equal? "\r\n\n" content))(newline)
-;      (display "rnr check ")(display (equal? "\r\n\r" content))(newline)
-;      (newline)
-      ; start compound event
-      (start-compound-undoable-event "Typing(replace)")
-      (set! replace-event #t) ;; hack to get replace to work properly
+      (start-compound-undoable-event "Typing(replace)") ; start compound event
       (after-delete offset len)
+      (set! replace-event #t) ;; hack to get replace to work properly
+      (set! insert-cache (list offset string (string-length string)))
+      (define string-removed (substring (get-text the-editor) offset (+ offset len)))
+      (set! remove-cache (list offset string-removed len))
       
-      ; handle formatting ourselves: (bolding and unlining of link text)
-      ; if its the END of a link, or (its a LINK and it isn't the START of a link), use the
-      ; formatting from the previous position, otherwise use no formatting
-      
-      ;; NOTE there is a way to differentiate between replace and non replace
       ;; replace has positive len variable while insert has 0 len
-      ;; differentiate between replacing and insert
-      (if (> len 0) ;; replace
+      (if (> len 0)
+          (filter-bypass-replace fb offset len string (style-to-use offset))
           (begin
-            (display "filter bypass replacing ")(newline)
-            (cond ((and (or (end-of-link? offset)
-                            (and
-                             (is-link? offset)
-                             (not (start-of-link? offset))))
-                        (not (= offset 0)))
-                   (filter-bypass-replace fb offset len string
-                                         ;(get-attributes-pos the-doc (- offset 1))
-                                         (get-attributes-pos the-doc offset)
-                                         ))
-                  (else (filter-bypass-replace fb offset len string style-nolink))))
-          ;; insert
-          (begin
-            (display "filter bypass inserting ")(newline)
-            (cond ((and (or (end-of-link? offset)
-                            (and
-                             (is-link? offset)
-                             (not (start-of-link? offset))))
-                        (not (= offset 0)))
-                   (filter-bypass-insert fb offset string
-                                         ;(get-attributes-pos the-doc (- offset 1))
-                                         (get-attributes-pos the-doc offset)
-                                         ))
-                  (else (filter-bypass-insert fb offset string style-nolink)))))
-      (display "txt len aft inserting ")(display (string-length (invoke (as <javax.swing.JTextPane> the-editor) 'get-text)))(newline)
-      (display "content aft insert ")(display (invoke (as <javax.swing.JTextPane> the-editor) 'get-text))(newline)
+            (display "style to use ")(display (style-to-use offset))(newline)
+          (filter-bypass-insert fb offset string (style-to-use offset))
+            )
+          )
       #f)
 
     ;; =========================
@@ -729,44 +658,68 @@
     ;; =========================
     ; note: DON'T make changes to the document from these handlers!
 
+    (define (insert-undo event-offset event-string event-len)
+      (set-track-undoable-edits! #f)
+      (set-text-delete the-doc event-offset event-len)
+      ;;(textpane-remove the-editor event-offset event-len)
+      (set-cursor-pos the-editor event-offset)
+      (set-track-undoable-edits! #t))
+    
+    (define (remove-undo event-offset event-string event-len)
+      (set-track-undoable-edits! #f)
+      (set-text-insert the-doc event-string event-offset)
+      ;;(textpane-insert the-editor event-string event-offset)
+      (set-cursor-pos the-editor (+ event-offset (string-length event-string)))
+      (set-track-undoable-edits! #t)
+      )
+    
     ; handle insert
     (define (document-insert-handler e)
-      ;(format #t "document-insert-handler~%~!")
-      
+      (display "[Handler insert] ")(newline)
       ; recalculate link positions
       (let ((change-length (get-change-length e))
             (change-offset (get-change-offset e)))
-        (display "[Handler insert] ")(newline)
-        (display "  change-length ")(display change-length)(newline)
-        (display "  change-offset ")(display change-offset)(newline)
-        
-        (define content (invoke (as <javax.swing.JTextPane> the-editor) 'get-text))
-        (define new-str-frag (substring content
-                                        change-offset (+ change-offset change-length)))
-        
-;        (display "new frag ")(display new-str-frag)(newline)
-;        (display "return? ")(display (equal? new-str-frag "\r"))(newline)
-;        (display "newline? ")(display (equal? new-str-frag "\n"))(newline)
-        
-        ;; special case for line feed (pressed enter)
-        ;; change-length will return one but in actual fact we are inserting 2 character
-        ;; "\r\n"
-        
-        ;; sometimes it is just \n sometimes \r\n we have to check
-;        (if (<= (+ change-offset 2) (string-length content)) ;; make sure we dont overshoot in case of only \n
-;            (begin
-;              (define possible-rn (substring content change-offset (+ change-offset 2)))
-;              (display "[LAST 2 CHAR after insertion] ")(display possible-rn)(newline)
-;              (if (equal? possible-rn "\r\n")
-;                  (begin
-;                    (set! change-length (+ change-length 1))
-;                    )
-;                  )
-;              ))
         (after-insert change-offset change-length (undoable-edit? e)))
-
-      ; end compound event
-      (finalize-compound-undoable-event e "Typing(insert)" #t))
+      
+      (define (post-insert-undoable-edit)
+        
+        (define (post-it event-offset event-string event-len)
+          (compoundundomanager-postedit
+           undo-manager
+           (make-undoable-edit "Typing(insert)"
+                               (lambda () ;; undo
+;                                 (set-track-undoable-edits! #f)
+;                                 (set-text-delete the-doc event-offset event-len)
+;                                 ;;(textpane-remove the-editor event-offset event-len)
+;                                 (set-cursor-pos the-editor event-offset)
+;                                 (set-track-undoable-edits! #t)
+                                 (insert-undo event-offset event-string event-len)
+                                 )
+                               (lambda () ;; redo
+;                                 (set-track-undoable-edits! #f)
+;                                 (set-text-insert the-doc event-string event-offset)
+;                                 ;;(textpane-insert the-editor event-string event-offset)
+;                                 (set-cursor-pos the-editor (+ event-offset (string-length event-string)))
+;                                 (set-track-undoable-edits! #t)
+                                 (remove-undo event-offset event-string event-len)
+                                 )
+                               ))
+          (if (not (null? insert-cache))
+              (post-it (car insert-cache) 
+                       (cadr insert-cache) 
+                       (string-length event-string)))
+          (set! insert-cache '()) ;; clear insert-cache after using
+          ))
+      ;; post our own undoable edit
+      (if (and undo-manager
+               (undoable-edit? e) ; this is to avoid posting undo/redo events
+               track-undoable-edits)
+          (begin
+            (post-insert-undoable-edit)
+            
+            ;; (finalize-compound-undoable-event e "Typing(insert)" #t)
+            (end-compound-undoable-event "Typing(insert)"))) ;; end compound event
+      )
 
     ;; fix for replace events
     ;; problem is as follows
@@ -783,24 +736,70 @@
     
     ; handle delete
     (define (document-remove-handler e)
-      ;(format #t "document-remove-handler~%~!")
-      (display "HANDLER REMOVE ")(newline)
-      (display "content ")(display (invoke (as <javax.swing.JTextPane> the-editor) 'get-text))(newline)
-      (display "content len ")(display (string-length (invoke (as <javax.swing.JTextPane> the-editor) 'get-text)))(newline)
+      (display "[HANDLER REMOVE] ")(newline)
       
-      ; end compound event
-      ;; if replace-event, means that remove-handler was invoked by replace filter 
-      ;; dont end compound 
-      ;; third arg to finalize-compound-undable-event determines whether it ends compound 
-      (finalize-compound-undoable-event e "Typing(remove)" (not replace-event)))
+      (define (post-remove-undoable-edit)
+
+        (define (post-it event-offset event-string event-len)
+          (compoundundomanager-postedit
+           undo-manager
+           (make-undoable-edit "Typing(remove)"
+                               (lambda () ;; undo
+;                                 (set-track-undoable-edits! #f)
+;                                 (set-text-insert the-doc event-string event-offset)
+;                                 ;;(textpane-insert the-editor event-string event-offset)
+;                                 (set-cursor-pos the-editor (+ event-offset (string-length event-string)))
+;                                 (set-track-undoable-edits! #t)
+                                 (remove-undo event-offset event-string event-len)
+                                 )
+                               (lambda () ;; redo
+;                                 (set-track-undoable-edits! #f)
+;                                 (set-text-delete the-doc event-offset event-len)
+;                                 ;;(textpane-remove the-editor event-offset event-len)
+;                                 (set-cursor-pos the-editor event-offset)
+;                                 (set-track-undoable-edits! #t)
+                                 (insert-undo event-offset event-string event-len)
+                                 )
+                               )))
+        (if (not (null? remove-cache))
+            (post-it (car remove-cache)     ;; event-offset
+                     (cadr remove-cache)    ;; event-string
+                     (caddr remove-cache))) ;; event-len
+
+        (set! remove-cache '()) ;; clear remove-cache after using
+        )
+
+      (if (and undo-manager
+               (undoable-edit? e) ; this is to avoid posting undo/redo events
+               track-undoable-edits)
+          (begin
+            (post-remove-undoable-edit)
+
+            ;; if replace-event, means that remove-handler was invoked by replace filter 
+            ;; dont end compound 
+            ;(finalize-compound-undoable-event e "Typing(remove)" (not replace-event))
+            (if (not replace-event)
+                (end-compound-undoable-event "Typing(remove)")) ;; end compound event
+            ))
+      )
     
     ; handle style change
     (define (document-changed-handler e)
-      ;(format #t "document-changed-handler~%~!")
       (display "CHANGED HANDLER ")(newline)
       
-      ; end compound event
-      (finalize-compound-undoable-event e "CHANGED" #t))
+       (if (and undo-manager
+               (undoable-edit? e) ; this is to avoid posting undo/redo events
+               track-undoable-edits)
+          (begin ;; change does not normally do that
+            (display "!!====================================================!!")(newline)
+            (display "!!!!!!!!!!  Change handler posting undoables !!!!!!!!!!!")(newline)
+            (display "!!====================================================!!")(newline)
+            (compoundundomanager-postedit undo-manager e)
+            (if end-compound?
+                (end-compound-undoable-event event-name))
+            ))
+      ;(finalize-compound-undoable-event e "CHANGED" #t)
+      ) ;; end compound event
 
     ;
     ; called by document and caret handlers
@@ -810,64 +809,54 @@
     ; returns #t if need to manually clean up after link deletion
     (define (after-delete start len)
       (set-dirty!)
-;      (display " [after delete] ")(newline)
-;      (display "   start ")(display start)(newline)
-;      (display "   len ")(display len)(newline)
+      (display " [after delete] ")(newline)
       (if track-links 
           (begin
             ;actually do it
             (define link-len-deleted (adjust-links-delete start len))
             
             ; post the link adjustment actions for undoing
-            (compoundundomanager-postedit undo-manager
-                                          (make-undoable-edit "after-delete"
-                                                              (lambda () 
-                                                                ;(display "[after-delete undo] adjust-links-insert ")(newline)
-                                                                ;(display "args ")(display (list start len #t link-len-deleted))(newline)
-                                                                (adjust-links-insert start len #t link-len-deleted)
-                                                                )
-                                                              (lambda () 
-                                                                ;(display "[after-delete redo] adjust-links-delete ")(newline)
-                                                                ;(display "args ")(display (list start len))(newline)
-                                                                (adjust-links-delete start len))))
+            ;; no need to post anymore since when undoing/redoing we do not bypass the handler events
+            ;; after-delete/after insert would be called from here
+;            (compoundundomanager-postedit undo-manager
+;                                          (make-undoable-edit "after-delete"
+;                                                              (lambda () 
+;                                                                (adjust-links-insert start len #t link-len-deleted)
+;                                                                )
+;                                                              (lambda () 
+;                                                                (adjust-links-delete start len))))
             )
           #f))
 
     ; after-insert
     (define (after-insert start len can-undo)
-;      (display "after insert can undo? ")(display can-undo)(newline)
-;      (display "[after insert] ")(newline)
-;      (display "  start ")(display start)(newline)
-;      (display "  len ")(display len)(newline)
-      
+      (display "[after insert] ")(newline)
       (set-dirty!)
-      (if (and 
-           track-links
-           can-undo)
+      (if (and track-links
+               can-undo)
           (begin
-            ; post the link adjustment actions for undoing
-            (define insert-undoable-edit
-              (make-undoable-edit "after-insert"
-                                  (lambda () 
-                                    ;(display "[after-insert undo] adjust links delete ")(newline)
-                                    ;(display "args ")(display (list start len))(newline)
-                                    (adjust-links-delete start len))
-                                  (lambda () 
-                                    ;(display "[after-insert redo] adjust links delete ")(newline)
-                                    ;(display "args ")(display (list start len #f 0))(newline)
-                                    (adjust-links-insert start len #f 0))))
-            (compoundundomanager-postedit undo-manager insert-undoable-edit)
-
             ; and actually do it
-            (adjust-links-insert start len #f len))))
+            (adjust-links-insert start len #f len)
+            
+            ; post the link adjustment actions for undoing
+;            (define insert-undoable-edit
+;              (make-undoable-edit "after-insert"
+;                                  (lambda () ;; undo
+;                                    (display "[after-insert undo] adjust links delete ")(newline)
+;                                    (adjust-links-delete start len))
+;                                  (lambda () ;; redo
+;                                    (display "[after-insert redo] adjust links delete ")(newline)
+;                                    (adjust-links-insert start len #f 0))))
+            ;(compoundundomanager-postedit undo-manager insert-undoable-edit)
+            )))
 
     ; after-set-position
     (define (after-set-position sel-start sel-end)
       (if track-links (check-links-overlap sel-start sel-end)))
 
-    ;
-    ; define mouse listener
-    ;
+    ;;
+    ;; define mouse listener
+    ;;
     
     ; is there a link at the given position?
     (define (is-link? pos)
@@ -932,41 +921,42 @@
 
     ; tell undo manager to start a compound undoable event
     (define (start-compound-undoable-event in-undo-label)
-      ;(display (string-append "[OPEN] start compound undoable event from " in-undo-label))(newline)
-      (if (and
-           undo-manager
-           track-undoable-edits)
+      (if (and undo-manager
+               track-undoable-edits)
           (begin
             ; start the compound edit
+            (display "start compound undoable event ")(display in-undo-label)(newline)
             (compoundundomanager-beginupdate undo-manager)
             
             ; make sure that the correct node is being edited for redo
             (let ((undo-nodeID the-nodeID))
-              (compoundundomanager-postedit undo-manager
-                                            (make-undoable-edit in-undo-label
-                                                                (lambda ()
-                                                                  (format #t "compound-undoable-edit end of undo~%~!"))
-                                                                (lambda () ;; start of redo
-                                                                  (format #t "compound-undoable-edit start of redo~%~!")
-                                                                  
-                                                                  ;; selects the right node and brings up the node editor if need be
-                                                                  (re-edit-node undo-nodeID)
-                                                                  
-                                                                  ;; hack to solve the hanging issue with first character 
-                                                                  (if (= (get-text-length the-doc) 0)
-                                                                      (begin
-                                                                        (set! track-undoable-edits #f)
-                                                                        (set-text-style the-doc style-nolink 0 1 #t) ;; correct one
-                                                                        (set! track-undoable-edits #t)
-                                                                        ))
-                                                                  ))))
+              (compoundundomanager-postedit
+               undo-manager
+               (make-undoable-edit in-undo-label
+                                   (lambda ()
+                                     (format #t "compound-undoable-edit end of undo~%~!"))
+                                   (lambda () ;; start of redo
+                                     (format #t "compound-undoable-edit start of redo~%~!")
+
+                                     ;; selects the right node and brings up the node editor if need be
+                                     (re-edit-node undo-nodeID)
+
+                                     ;; hack to solve the hanging issue with first character 
+                                     (if (= (get-text-length the-doc) 0)
+                                         (begin
+                                           (set! track-undoable-edits #f)
+                                           (set-text-style the-doc style-nolink 0 1 #t) ;; correct one
+                                           (set! track-undoable-edits #t)
+                                           ))
+                                     ))))
             )))
     
     ; tell the undo manager to end a compound undoable event
     (define (end-compound-undoable-event in-undo-label)
-      ;(display (string-append "[CLOSE] start compound undoable event from " in-undo-label))(newline)
       ; make sure that the correct node is being edited for undo
       (let ((undo-nodeID the-nodeID))
+        (display "end compound-undoable-event ")(newline)
+        (display "posting last event for ")(display in-undo-label)(newline)
         (compoundundomanager-postedit 
          undo-manager
          (make-undoable-edit in-undo-label
@@ -980,28 +970,20 @@
                                (format #t "compound-undoable-edit end of redo~%~!")))))
       (compoundundomanager-endupdate undo-manager undo-action redo-action))
     
+    
     ;; called by document-insert-handler, document-remove-handler, document-change-handler
     ;; to finalize and add compound typing undoable event
-    ;; event-str is the name of the undoable event
-    (define (finalize-compound-undoable-event e event-str end-compound?)
-;      (display "[finalize compound] ")(newline)
-;      (display "  undoable? ")(display (undoable-edit? e))(newline)
-;      (display "  track undoable edits ")(display track-undoable-edits)(newline)
-;      (display "  event str ")(display event-str)(newline)
-      (if (and undo-manager
-               (undoable-edit? e) ; this is to avoid posting undo/redo events
-               track-undoable-edits)
-          (begin
-;            (display "posting in finalize compound ")(newline)
-            (compoundundomanager-postedit undo-manager e) ; post the compound edit
-;            (display "posted the compound edit ")(newline)
-            (if end-compound?
-                (begin
-                  ;(display (string-append "[close] from " event-str))(newline)
-                (end-compound-undoable-event event-str)
-                  ;(display "ended compound ")(newline)
-                  ))
-            )))
+    ;; event-name is the name of the undoable event
+    ;; NOTE: decommissioned because insert-handler, remove-handler and change handler 
+    ;; does not share common code anymore
+;    (define (finalize-compound-undoable-event e event-name end-compound?)
+;      (if (and undo-manager
+;               (undoable-edit? e) ; this is to avoid posting undo/redo events
+;               track-undoable-edits)
+;          (begin
+;            (if end-compound?
+;                (end-compound-undoable-event event-name))
+;            )))
       
     ; re-edit a node: need to make sure that the hypertextpane is currently being edited
     (define (re-edit-node in-nodeID)
@@ -1135,7 +1117,6 @@
     (obj-put this-obj 'init
              (lambda (self) 
                (init)))
-    
     this-obj))
 
 

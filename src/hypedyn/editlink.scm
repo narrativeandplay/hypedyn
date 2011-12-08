@@ -47,7 +47,6 @@
 ; export
 (module-export doeditlink doeditnoderule doeditdocrule
                create-editlink-dialog
-               
                editlink-dialog-ok ;; required by hypedyn-undo.scm
                )
 
@@ -80,7 +79,6 @@
   
   ; reset the editor, in case this failed when we closed last time
   (reset-rule-editor)
-  (display "[reset-rule-editor] inside doeditlink ")(newline)
   
   ; remember which link we're editing
   (set! edited-linkID selected-linkID)
@@ -148,7 +146,7 @@
               (set-combobox-selection editlink-panel-else-text-typechoice 1))))
     
     ; set check boxes
-    (format #t "set check boxes~%~!")
+    (display "set check boxes")(newline)
     (set-checkbox-value editlink-panel-then-link-check link-uselink)
     (set-checkbox-value editlink-panel-else-link-check link-usealtlink)
     (set-checkbox-value editlink-panel-else-text-check link-usealttext)
@@ -206,7 +204,6 @@
   
   ; reset the editor, in case this failed when we closed last time
   (reset-rule-editor)
-  (display "[reset-rule-editor] inside doeditnoderule ")(newline)
   
   ; remember which link we're editing ie. none
   (set! edited-linkID '())
@@ -1138,8 +1135,8 @@
            (ask the-link 'set-destination! destID)
            (ask the-link 'set-use-alt-destination! usealtlink)
            (ask the-link 'set-alt-destination! altdestID)
-                                        ; if using alt text, and alttext-fact is true, then set use-alt-text to 'fact,
-                                        ; otherwise just set to usealttext
+           ;; if using alt text, and alttext-fact is true, then set use-alt-text to 'fact,
+           ;; otherwise just set to usealttext
            (ask the-link 'set-use-alt-text!
                 (if (and usealttext
                          alttext-fact)
@@ -1147,16 +1144,14 @@
                     usealttext))
            (format #t "*** use-alt-text: ~a ***~%~!" (ask the-link 'use-alt-text))
 
-                                        ; if alttext-fact is true, store the factID in alt text otherwise store text
+           ;; if alttext-fact is true, store the factID in alt text otherwise store text
            (if alttext-fact
                (ask the-link 'set-alt-text! (get-comboboxwithdata-selecteddata editlink-panel-else-text-factchoice))
                (ask the-link 'set-alt-text! alttext))
 
-                                        ;(display "[update-callback] in [editlink-dialog-ok] ")(display update-callback)
-
-; update links in graph if callback provided
-; note: if uselink/usealtlink is false, then pass -1 ie. don't draw line
-; similar for old links
+           ;; update links in graph if callback provided
+           ;; note: if uselink/usealtlink is false, then pass -1 ie. don't draw line
+           ;; similar for old links
            (if update-callback
                (update-callback new-rulename edited-nodeID
                                 olduselink olddestID
@@ -1190,7 +1185,6 @@
     ; hide link editor, and reset (for next time)
     (set-component-visible editlink-dialog #f)
     (reset-rule-editor)
-    ;(display "[reset-rule-editor] inside editlink-dialog-ok ")(newline)
     ))
 
 ; currently this isn't needed as the action is stored as a string - alex

@@ -112,19 +112,13 @@
 ;  (display "update levels open ")
 ;  (display (compoundundomanager-updatelevel in-undo-manager))(newline) 
   
-  (save-point-newedit in-undo-manager)
-  (invoke in-undo-manager 'postEdit in-edit)
-  
-  (update-undo-action (invoke in-undo-manager 'get-undo-action))
-  (update-redo-action (invoke in-undo-manager 'get-redo-action))
-  
-;  (if (undoable-edit? in-edit)
-;      (invoke in-undo-manager 'postEdit in-edit)
-;      (begin
-;        (display "WARNING: compoundundomanager-postedit trying to add non undoable event ")(newline)
-;        (display "this event :")(display in-edit)(newline)
-;        )
-;      )
+  (if (undoable-edit? in-edit)
+      (begin
+        (save-point-newedit in-undo-manager)
+        (invoke in-undo-manager 'postEdit in-edit)
+        (update-undo-action (invoke in-undo-manager 'get-undo-action))
+        (update-redo-action (invoke in-undo-manager 'get-redo-action))
+        ))
   )
 
 ; check if a given event is an undoable edit
@@ -137,6 +131,7 @@
   (undo-edit-support :: <javax.swing.undo.UndoableEditSupport>)
   (undo-action :: <undoAction>)
   (redo-action :: <redoAction>)
+  (undoing-redoing-lock :: boolean)
   
   ; constructor
   ((*init*)
@@ -146,6 +141,8 @@
    ; create an instance of undoable edit support to handle listeners
    (set! undo-edit-support (<javax.swing.undo.UndoableEditSupport>))
    
+   (set! undoing-redoing-lock #f)
+   
    ; add ourselves as a listener to our undo edit support class
    (invoke undo-edit-support 'addUndoableEditListener (this)))
   
@@ -153,9 +150,15 @@
   ((postEdit (e :: <javax.swing.undo.UndoableEdit>)) :: <void>
    (begin
      ;(format #t "compoundundomanager postEdit: ~a~%~!" e)
-     ;(display "REACHED HERE ")(display e)(newline)
-     (invoke undo-edit-support 'postEdit e)
-     ;(display "end of this postedit ")(newline)
+     (if (and (undoable-edit? e)
+              (not undoing-redoing-lock))
+         (invoke undo-edit-support 'postEdit e)
+         (begin
+           (display "[undo manager] postEdit failed or intensionally ignored")(newline)
+           (display "Either not undoable-edit? ")(display (not (undoable-edit? e)))(newline)
+           (display "Or undoing-redoing-lock ")(display undoing-redoing-lock)(newline)
+           )
+         )
      ))
      
   ; begin batching of edits
@@ -176,6 +179,26 @@
   ((set-undo-redo-actions in-undo-action in-redo-action)
    (set! undo-action in-undo-action)
    (set! redo-action in-redo-action)
+   )
+  
+  ;; check locks to make sure that you do not post new undoableedit
+  ;; in the middle of an undo or redo
+  ((get-lock) :: <boolean>
+   undoing-redoing-lock)
+  ((lock) 
+   (set! undoing-redoing-lock #t))
+  ((unlock) 
+   (set! undoing-redoing-lock #f))
+  
+  ((undo)
+   (lock)
+   (invoke-special <javax.swing.undo.UndoManager> (this) 'undo)
+   (unlock)
+   )
+  ((redo)
+   (lock)
+   (invoke-special <javax.swing.undo.UndoManager> (this) 'redo)
+   (unlock)
    )
   
   ((get-undo-action) :: <undoAction>
@@ -395,7 +418,6 @@
      ; call the undo procedure
      (if (procedure? undo-procedure)
          (begin
-           ;(format #t "undoing~%~!")
            (display "[undo] ")(display presentation-name)(newline)
            (undo-procedure))
          (begin
@@ -414,7 +436,6 @@
      ; call the redo procedure
      (if (procedure? redo-procedure)
          (begin
-           ;(format #t "redoing~%~!")
            (display "[redo] ")(display presentation-name)(newline)
            (redo-procedure))
          (begin

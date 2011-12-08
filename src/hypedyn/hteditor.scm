@@ -260,16 +260,11 @@
                                             (doeditdocrule))))))
 
     ; undo
-;    (set! undo-manager (make-compoundundomanager))
-;    (set! undo-action (make-undo-action undo-manager))
-;    (set! redo-action (make-redo-action undo-manager))
     (init-undo-system)
     (if (is-undo-enabled?)
         (begin
           (add-menu-action m-edit undo-action)
           (add-menu-action m-edit redo-action)))
-;    (set-associated-redoaction! undo-action redo-action)
-;    (set-associated-undoaction! redo-action undo-action)
 
     ; view menu
     (add-component main-menu m-view)
@@ -559,11 +554,8 @@
 
 ; open recent file
 (define (doopenrecent newfilename)
-  (if
-      ; check if data has changed
-      (confirm-save)
-      ; safe, so proceed
-      (open-file-by-name newfilename)))
+  (if (confirm-save)                     ;; check if data has changed
+      (open-file-by-name newfilename)))  ;; safe, so proceed
 
 ; add items to the "recent files" menu
 ; takes a full filepath
@@ -667,11 +659,7 @@
 (define (newnode-redo node-name anywhere? nodeID node-sexpr)
   (display "redo sexpr ")(display node-sexpr)(newline)
   (eval-sexpr node-sexpr)
-;;  (create-node node-name ""
-;;               80 45
-;;               anywhere? update-display-nodes nodeID)
-  (update-dirty-state)
-  )
+  (update-dirty-state))
 
 (define (newnode-undo nodeID)
   (delete-node nodeID))
@@ -681,7 +669,6 @@
   (let ((newmsg (if anywhere "New anywhere node" "New node"))
         (logmsg (if anywhere "NewAnywhereNode" "NewNode")))
     (define new-nodename 
-      ;(make-input-dialogbox-check-empty (get-main-ui-frame) "" "Node name" newmsg))
       (make-input-dialogbox-custom (get-main-ui-frame) "" newmsg "Node name"))
     
     ;; if canceled in dialogbox, #!null is returned
@@ -773,8 +760,6 @@
   (let* ((remember-selected-nodeID selected-nodeID)
          (selected-node (get 'nodes selected-nodeID))
          (oldname (ask selected-node 'name))
-         ;(newname (make-input-dialogbox (get-main-ui-frame) oldname "Enter the new name for this node" "Rename node"))
-         ;(newname (make-input-dialogbox-check-empty (get-main-ui-frame) oldname "Enter the new name for this node" "Rename node"))
          (newname (make-input-dialogbox-custom (get-main-ui-frame) oldname "Rename node" "Enter the new name for this node"))
          )
     
@@ -860,14 +845,11 @@
       (newnode-redo nodename node-anywhere cached-nodeID node-sexpr)
       (update-display-nodes cached-nodeID nodename
                                     actual-x actual-y
-                                    node-anywhere)
-      )
+                                    node-anywhere))
     (lambda () ;; undo new node is redo for delnode
-      (newnode-undo cached-nodeID)
-      )
+      (newnode-undo cached-nodeID))
     ))
-  (compoundundomanager-endupdate undo-manager undo-action redo-action)
-  )
+  (compoundundomanager-endupdate undo-manager undo-action redo-action))
 
 ; delete a node
 (define (delete-node nodeID)
@@ -922,8 +904,6 @@
           ; also delete from graph - node name in graph is now nodeName not nodeID
           (let ((the-graph (if (ask thenode 'anywhere?) anywhere-graph node-graph)))
             (ask the-graph 'del-node nodeID)))))) 
-;;                 (ask the-graph 'node-get-by-data (number->string nodeID))))))))
-
 
 ; delete all links from this node to given node
 (define (del-links-to thenode destNodeID)
@@ -980,38 +960,21 @@
           (ask parent-obj 'select-object selected-nodeID)))
 
     ; message handling
-;    (lambda (message)
-;      (cond ((eq? message 'init)
-;             (lambda (self)
-;               (init)))
     (obj-put this-obj 'init
              (lambda (self)
                (init)))
-;            ((eq? message 'populate-nodes-list)
-;             (lambda (self)
-;               (populate-nodes-list)))
     (obj-put this-obj 'populate-nodes-list
              (lambda (self)
                (populate-nodes-list)))
-;            ((eq? message 'add-node)
-;             (lambda (self new-nodeID name)
-;               (add-node new-nodeID name)))
     (obj-put this-obj 'add-node
              (lambda (self new-nodeID name)
                (add-node new-nodeID name)))
-;            ((eq? message 'select-node)
-;             (lambda (self in-nodeID)
-;               (ask parent-obj 'select-object in-nodeID)))
     (obj-put this-obj 'select-node
              (lambda (self in-nodeID)
                (ask parent-obj 'select-object in-nodeID)))
-;            ((eq? message 'deselect-node)
-;             (lambda (self)
-;               (ask parent-obj 'deselect-object)))
     (obj-put this-obj 'deselect-node
              (lambda (self)
                (ask parent-obj 'deselect-object)))
-;            (else (get-method parent-obj message))))
     this-obj))
 
 ; selected a node in the node list
@@ -1337,36 +1300,19 @@
           (ask parent-obj 'select-object selected-factID)))
 
     ; message handling
-;    (lambda (message)
-;      (cond ((eq? message 'init)
-;             (lambda (self)
-;               (init)))
     (obj-put this-obj 'init
              (lambda (self) (init)))
-;            ((eq? message 'populate-facts-list)
-;             (lambda (self)
-;               (populate-facts-list)))
     (obj-put this-obj 'populate-facts-list
              (lambda (self) (populate-facts-list)))
-;            ((eq? message 'add-fact)
-;             (lambda (self new-factID name)
-;               (add-fact new-factID name)))
     (obj-put this-obj 'add-fact
              (lambda (self new-factID name)
                (add-fact new-factID name)))
-;            ((eq? message 'select-fact)
-;             (lambda (self in-factID)
-;               (ask parent-obj 'select-object in-factID)))
     (obj-put this-obj 'select-fact
              (lambda (self in-factID)
                (ask parent-obj 'select-object in-factID)))
-;            ((eq? message 'deselect-node)
-;             (lambda (self)
-;               (ask parent-obj 'deselect-object)))
     (obj-put this-obj 'deselect-node
              (lambda (self)
                (ask parent-obj 'deselect-object)))
-;            (else (get-method parent-obj message))))
     this-obj))
 
 ; selected an fact in the fact list
@@ -1385,7 +1331,6 @@
         (let ((event-click-count (get-mouseevent-click-count e)))
           (if (= 2 event-click-count)
               (dorenamefact))))))
-
 
 ;;
 ;; graph editor
@@ -1569,16 +1514,7 @@
 
 ; append "*" to filename if its dirty, used only for main window label
 (define (build-display-filename)
-  ;(display "[build display filename] ")(display (dirty?))(display " ")(display (nodeeditor-dirty?))(newline)
   (let ((the-filename (get-saved-filename-string)))
-    
-;    (display "returning ")
-;    (display (string-append
-;     (if the-filename the-filename "Untitled")
-;     (if (or
-;          (dirty?)
-;          (nodeeditor-dirty?))
-;         "*" "")))(newline)
     
     (string-append
      (if the-filename the-filename "Untitled")
