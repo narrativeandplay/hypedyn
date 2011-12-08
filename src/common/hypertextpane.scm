@@ -659,6 +659,7 @@
     ; note: DON'T make changes to the document from these handlers!
 
     (define (insert-undo event-offset event-string event-len)
+      (display "insert-undo")(newline)
       (set-track-undoable-edits! #f)
       (set-text-delete the-doc event-offset event-len)
       ;;(textpane-remove the-editor event-offset event-len)
@@ -666,6 +667,7 @@
       (set-track-undoable-edits! #t))
     
     (define (remove-undo event-offset event-string event-len)
+      (display "remove-undo")(newline)
       (set-track-undoable-edits! #f)
       (set-text-insert the-doc event-string event-offset)
       ;;(textpane-insert the-editor event-string event-offset)
@@ -688,34 +690,24 @@
            undo-manager
            (make-undoable-edit "Typing(insert)"
                                (lambda () ;; undo
-;                                 (set-track-undoable-edits! #f)
-;                                 (set-text-delete the-doc event-offset event-len)
-;                                 ;;(textpane-remove the-editor event-offset event-len)
-;                                 (set-cursor-pos the-editor event-offset)
-;                                 (set-track-undoable-edits! #t)
-                                 (insert-undo event-offset event-string event-len)
-                                 )
+                                 (insert-undo event-offset event-string event-len))
                                (lambda () ;; redo
-;                                 (set-track-undoable-edits! #f)
-;                                 (set-text-insert the-doc event-string event-offset)
-;                                 ;;(textpane-insert the-editor event-string event-offset)
-;                                 (set-cursor-pos the-editor (+ event-offset (string-length event-string)))
-;                                 (set-track-undoable-edits! #t)
-                                 (remove-undo event-offset event-string event-len)
-                                 )
-                               ))
+                                 (remove-undo event-offset event-string event-len))
+                               )))
+          
           (if (not (null? insert-cache))
-              (post-it (car insert-cache) 
-                       (cadr insert-cache) 
-                       (string-length event-string)))
+              (post-it (car insert-cache)   ;; event offset 
+                       (cadr insert-cache)  ;; event string
+                       (string-length (cadr insert-cache)))) ;; event len
           (set! insert-cache '()) ;; clear insert-cache after using
-          ))
-      ;; post our own undoable edit
+          )
+      
+      
       (if (and undo-manager
                (undoable-edit? e) ; this is to avoid posting undo/redo events
                track-undoable-edits)
           (begin
-            (post-insert-undoable-edit)
+            (post-insert-undoable-edit)  ;; post our own undoable edit
             
             ;; (finalize-compound-undoable-event e "Typing(insert)" #t)
             (end-compound-undoable-event "Typing(insert)"))) ;; end compound event
@@ -745,22 +737,11 @@
            undo-manager
            (make-undoable-edit "Typing(remove)"
                                (lambda () ;; undo
-;                                 (set-track-undoable-edits! #f)
-;                                 (set-text-insert the-doc event-string event-offset)
-;                                 ;;(textpane-insert the-editor event-string event-offset)
-;                                 (set-cursor-pos the-editor (+ event-offset (string-length event-string)))
-;                                 (set-track-undoable-edits! #t)
-                                 (remove-undo event-offset event-string event-len)
-                                 )
+                                 (remove-undo event-offset event-string event-len))
                                (lambda () ;; redo
-;                                 (set-track-undoable-edits! #f)
-;                                 (set-text-delete the-doc event-offset event-len)
-;                                 ;;(textpane-remove the-editor event-offset event-len)
-;                                 (set-cursor-pos the-editor event-offset)
-;                                 (set-track-undoable-edits! #t)
-                                 (insert-undo event-offset event-string event-len)
-                                 )
+                                 (insert-undo event-offset event-string event-len))
                                )))
+        
         (if (not (null? remove-cache))
             (post-it (car remove-cache)     ;; event-offset
                      (cadr remove-cache)    ;; event-string
