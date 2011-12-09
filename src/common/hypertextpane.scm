@@ -335,6 +335,7 @@
       (let ((edited-node (get nodelist-name the-nodeID)))
         (display "here ")(newline)
         (display "list len ")(display (length (ask edited-node getlinks-method)))(newline)
+        (display "extend-len ")(display extend-len)(newline)
         ; run through each link and adjust
         (map (lambda (l)
                (adjust-one-link-insert start len l is-undo-action? extend-len))
@@ -354,72 +355,108 @@
               (display "in adjust one link insert ")(display (list link-start link-end))(newline)
               (display "ins-start ins-end ")(display (list ins-start ins-end))(newline)
   
-              (if (not is-undo-action?)
-                  (cond ((and (<= ins-start link-start) ) ;; Case 1 : ins before link (eg aa[i]LLLaa, a[i]aLLLaa)
-                         (display "insert case 1 insert before link (just shift link) ")(newline)
-                         (display "link start end ")(display (list link-start link-end))(newline)
-                         ;; just shift link without changing length
-                         (ask thislink 'set-start-index! (+ link-start ins-len))
-                         (ask thislink 'set-end-index! (+ link-end ins-len)))
-                        ((and (<= link-start ins-start) (<= ins-start link-end) ) ;; Case 2 : ins within link (eg aaL[i]LLaa)
-                         (display "insert case 2 (within link) ")(newline)
-                         (display "extend-len ")(display extend-len)(newline)
-                         (if (> extend-len 0)
-                             (ask thislink 'set-end-index! (+ link-end ins-len)))
-                         )
-                        ((and (= link-end ins-start) )   ;; Case 3b : ins RIGHT after link end (eg aaLLL[i]aa)
-                         (display "insert case 3 (ins right after link) ")(newline)
-                         (display "extend-len ")(display extend-len)(newline)
-                         (if (> extend-len 0) ;; used by insert-blank-space (custom call that does not extend link len ie extend-len is 0)
-                             (ask thislink 'set-end-index! (+ link-end ins-len)))) ;; lengthen link by ins-len
-                        ((= link-end ins-start) ;; Case 3a: ins after link (do nothing) (eg aaLLLa[i]a)
-                         (display "INSERT AFTER LINK")(newline)
-                         #f))
-                  ;; undo-actions 
+              (cond ((not is-undo-action?)
+                     (cond ((and (<= ins-start link-start) ) ;; Case 1 : ins before link (eg aa[i]LLLaa, a[i]aLLLaa)
+                            (display "insert case 1 insert before link (just shift link) ")(newline)
+                            (display "link start end ")(display (list link-start link-end))(newline)
+                            ;; just shift link without changing length
+                            (ask thislink 'set-start-index! (+ link-start ins-len))
+                            (ask thislink 'set-end-index! (+ link-end ins-len)))
+                           ((and (<= link-start ins-start) (<= ins-start link-end) ) ;; Case 2 : ins within link (eg aaL[i]LLaa)
+                            (display "insert case 2 (within link) ")(newline)
+                            (display "extend-len ")(display extend-len)(newline)
+                                        ;(if (> extend-len 0)
+                            (ask thislink 'set-end-index! (+ link-end ins-len));)
+                            )
+                           ((and (= link-end ins-start) )   ;; Case 3b : ins RIGHT after link end (eg aaLLL[i]aa)
+                            (display "insert case 3 (ins right after link) ")(newline)
+                            (display "extend-len ")(display extend-len)(newline)
+                            (if (> extend-len 0) ;; used by insert-blank-space (custom call that does not extend link len ie extend-len is 0)
+                                (ask thislink 'set-end-index! (+ link-end ins-len)))) ;; lengthen link by ins-len
+                           ((= link-end ins-start) ;; Case 3a: ins after link (do nothing) (eg aaLLLa[i]a)
+                            (display "INSERT AFTER LINK")(newline)
+                            #f)))
+                  ;; undo-actions (delete undo or insert redo)
                   ;; if extend-len is 0 means the insertion makes no extension to this link
-                  (cond ((and (<= ins-start link-start) ) ;; insert before link (undo deletion case 1 and 5)
-                         (display "insert case 1 insert before link version UNDO ")(newline)
-                         (display "extend-len ")(display extend-len)(newline)
-                         
-                         (display "link start b4 ")(display link-start)(newline)
-                         (display "link start aft ")(display (+ link-start ins-len))(newline)
-                         
-;                         (if (and (> extend-len 0)          ;; Case 1 special : undoing deletion of head of link
-;                                  (= ins-start link-start)) ;; adding the length of deleted (extend-len) to the start
-                         (if  (> extend-len 0)
-                             (begin           
-                               (display "extend special")(newline)
-                               (set! link-start (ask thislink 'start-index))
-                               (ask thislink 'set-start-index! (- link-start extend-len))
-                               (display "tracking edits ?")(display track-undoable-edits)(newline)
-                               (set-text-style the-doc style-link (- link-start extend-len) extend-len #t)
-                               (display "link start aftaft ")(display (- link-start extend-len))(newline)
-                               (display "double check ")(display (ask thislink 'start-index))(newline)
-                               )
-                             (begin
-                               ;; do the same for non undo case 1 (shift the link text (start and end) right)
-;                               (ask thislink 'set-start-index! (+ link-start ins-len))
-;                               (ask thislink 'set-end-index! (+ link-end ins-len))
-                               #f
-                               )
-                             ))
-;                        ;; need to distinguish between case 1 deletion and case 5 deletion undo
-;                        ((and (<= ins-start link-start) )
-;                         
-;                         )
-                        ((and (<= link-start ins-start) (<= ins-start link-end) ) ;; Case 2 ins within link (same as non undo)
-                         (display "insert (delete undo) case 2 ")(newline)
-                         (if (> extend-len 0) ;; redundant check since deletion of link within will always return positive deletion length
-                             (ask thislink 'set-end-index! (+ link-end extend-len))))
-                        ((and (<= link-end ins-start) (> extend-len 0)) ;; Case 3 ins after link : (undo deletion case 2 and 6)
-                         (display "delete undo case 3 ")(display extend-len)(newline)
-                         (if (> extend-len 0) ;; undo deletion of tail of link
-                             (begin
-                               (ask thislink 'set-end-index! (+ link-end extend-len)) ;; lengthen link by extend-len (instead of ins-len in normal case)
-                               (set-text-style the-doc style-link link-start extend-len #t)
-                               ))
-                         )
-                        ))
+                    (is-undo-action?
+                     (cond ((and (<= ins-start link-start) ) ;; insert before link (undo deletion case 1 and 5)
+                            (display "insert case 1 insert before link version UNDO ")(newline)
+                            (display "extend-len ")(display extend-len)(newline)
+
+                            (display "link start b4 ")(display link-start)(newline)
+                            (display "link start aft ")(display (+ link-start ins-len))(newline)
+
+                            (ask thislink 'set-start-index! (+ link-start ins-len))
+                            (ask thislink 'set-end-index! (+ link-end ins-len))
+
+                                        ;                         (if (and (> extend-len 0)          ;; Case 1 special : undoing deletion of head of link
+                                        ;                                  (= ins-start link-start)) ;; adding the length of deleted (extend-len) to the start
+                            (if  (> extend-len 0)
+                                (begin
+                                  (display "extend special")(newline)
+                                  (set! link-start (ask thislink 'start-index))
+                                  (ask thislink 'set-start-index! (- link-start extend-len))
+                                  (display "tracking edits ?")(display track-undoable-edits)(newline)
+
+                                  (display "new start ")(display (- link-start extend-len))(newline)
+                                  (display "extend len ")(display extend-len)(newline)
+                                  (set-text-style the-doc style-link (- link-start extend-len) extend-len #t)
+
+                                  (display "link start aftaft ")(display (- link-start extend-len))(newline)
+                                  (display "double check ")(display (ask thislink 'start-index))(newline)
+                                  )
+                                (begin
+                                  ;; do the same for non undo case 1 (shift the link text (start and end) right)
+                                  ;                               (ask thislink 'set-start-index! (+ link-start ins-len))
+                                  ;                               (ask thislink 'set-end-index! (+ link-end ins-len))
+                                  #f
+                                  )
+                                ))
+                                        ;                        ;; need to distinguish between case 1 deletion and case 5 deletion undo
+                                        ;                        ((and (<= ins-start link-start) )
+                                        ;                         
+                                        ;                         )
+                           ((and (<= link-start ins-start) (<= ins-start link-end) ) ;; Case 2 ins within link (same as non undo)
+                            (display "insert (delete undo) case 2 ")(newline)
+                            (display "extend len ")(display extend-len)(newline)
+                            (if (> extend-len 0)
+                                (begin
+                                  (display "old link end ")(display link-end)(newline)
+                                  (display "new link end ")(display (+ link-end extend-len))(newline)
+                                  (ask thislink 'set-end-index! (+ link-end extend-len))
+                                  (set-text-style the-doc style-link ins-start extend-len #t) ;; underline link extension
+                                  (set-text-style the-doc style-nolink (+ ins-start extend-len) (- ins-len extend-len) #t) ;; make sure parts not in link not underline
+                                  )
+                                ;; insertion not part of linkn so correct formatting
+                                (begin
+                                  (display "link start ")(display link-start)(newline)
+                                  (display "ins-len ")(display ins-len)(newline)
+
+                                  ;; extend len 0 and ins at link-end means just 
+                                  ;; undoing deletion of non link text
+                                  (if (= ins-start link-end)
+                                      (set-text-style the-doc style-nolink ins-start ins-len #t)
+
+                                      ;; if extend len 0 and inserting before link end then it is an insert redo 
+                                      (begin
+                                        (display "insert redo ")(newline)
+                                        (display "new link end ")(display (+ link-end extend-len))(newline)
+                                        (display "ins len ")(display ins-len)(newline)
+                                        (ask thislink 'set-end-index! (+ link-end ins-len)) ;; extend by ins-len
+                                        (display "old link bounds ")(display (list link-start link-end))(newline)
+                                        (set-text-style the-doc style-link ins-start ins-len #t)
+                                        ))
+                                  )
+                                ))
+                           ((and (<= link-end ins-start) (> extend-len 0)) ;; Case 3 ins after link : (undo deletion case 2 and 6)
+                            (display "delete undo case 3 ")(display extend-len)(newline)
+                            (if (> extend-len 0) ;; undo deletion of tail of link
+                                (begin
+                                  (ask thislink 'set-end-index! (+ link-end extend-len)) ;; lengthen link by extend-len (instead of ins-len in normal case)
+                                  (set-text-style the-doc style-link link-start extend-len #t)
+                                  ))
+                            )))
+                    )
               ))))
 
     ; after editing position is set, determine whether new link is allowed
@@ -666,7 +703,8 @@
     (define (document-filter-replace-handler fb offset len string attr)
       (display "REPLACE FILTER ")(display (list offset len string))(newline)
       (start-compound-undoable-event "Typing(replace) compound") ; start compound event
-      (after-delete offset len)
+      (if (not (compoundundomanager-locked? undo-manager))
+          (after-delete offset len))
       (set! replace-event #t) ;; hack to get replace to work properly
       (set! insert-cache (list offset string (string-length string)))
       (define string-removed (substring (get-text the-editor) offset (+ offset len)))
@@ -716,9 +754,9 @@
       ; recalculate link positions
       (let ((change-length (get-change-length e))
             (change-offset (get-change-offset e)))
-        (after-insert change-offset change-length (undoable-edit? e)))
-      
-      (display "after after insert ")(newline)
+        ;; if locked then we are in the middle of an undo
+        (if (not (compoundundomanager-locked? undo-manager))
+            (after-insert change-offset change-length (undoable-edit? e))))
       
       (define (post-insert-undoable-edit)
         
@@ -835,6 +873,7 @@
           (begin
             ;actually do it
             (define link-len-deleted (adjust-links-delete start len))
+            (display "link len deleted ")(display link-len-deleted)(newline)
             
             ; post the link adjustment actions for undoing
             ;; need this to keep link-len-deleted data 
@@ -843,6 +882,7 @@
                                           (make-undoable-edit "after-delete"
                                                               (lambda () ;; undo
                                                                 (display "undoing delete here ")(newline)
+                                                                (display "link len deleted ")(display link-len-deleted)(newline)
                                                                 (adjust-links-insert start len #t link-len-deleted)
                                                                 )
                                                               (lambda () ;; redo
@@ -863,15 +903,15 @@
             ;; no need to post anymore since when undoing/redoing we do not bypass the handler events
             ;; after insert would be called from handler
             ;; after insert is the same for real inserts and undo/redo
-;            (define insert-undoable-edit
-;              (make-undoable-edit "after-insert"
-;                                  (lambda () ;; undo
-;                                    (display "[after-insert undo] adjust links delete ")(newline)
-;                                    (adjust-links-delete start len))
-;                                  (lambda () ;; redo
-;                                    (display "[after-insert redo] adjust links delete ")(newline)
-;                                    (adjust-links-insert start len #f 0))))
-;            ;(compoundundomanager-postedit undo-manager insert-undoable-edit)
+            (define insert-undoable-edit
+              (make-undoable-edit "after-insert"
+                                  (lambda () ;; undo
+                                    (display "[after-insert undo] adjust links delete ")(newline)
+                                    (adjust-links-delete start len))
+                                  (lambda () ;; redo
+                                    (display "[after-insert redo] adjust links delete ")(newline)
+                                    (adjust-links-insert start len #f 0))))
+            (compoundundomanager-postedit undo-manager insert-undoable-edit)
             )))
 
     ; after-set-position
@@ -993,7 +1033,6 @@
                                
                                ;; selects the right node and brings up the node editor if need be
                                (re-edit-node undo-nodeID)
-                               (display "END OF START UNDO typing ")(newline)
                                )
                              (lambda () ;; end of redo
                                (format #t "compound-undoable-edit end of redo~%~!")
