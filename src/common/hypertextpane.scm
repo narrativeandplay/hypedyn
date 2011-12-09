@@ -76,7 +76,7 @@
          (lastmousemove #f)
 
          ;; undo handling
-         (track-undoable-edits #f)
+         (track-undoable-edits #t)
          (undo-manager #f)
          (undo-action #f)
          (redo-action #f)
@@ -305,6 +305,8 @@
                      ;; Entire deletion is inside link but not encompassing it, (shorten link by length of deletion)
                      (display " delete case 4 ")(newline)
                      (ask thislink 'set-end-index! (- link-end del-len))
+                     (display "link start ")(display link-start)(newline)
+                     (display "new link end ")(display (- link-end del-len))(newline)
                      (set! link-deleted del-len))
                     ((and (< del-start link-start)  ;; Case 5; del-start link-start del-end link-end (eg a[aB]Baa)
                           (< link-start del-end)    ;; link boundaries does not coincides with deletion boundary    
@@ -331,6 +333,8 @@
     (define (adjust-links-insert start len is-undo-action? extend-len)
       (display "adjust-links-insert ")(newline)
       (let ((edited-node (get nodelist-name the-nodeID)))
+        (display "here ")(newline)
+        (display "list len ")(display (length (ask edited-node getlinks-method)))(newline)
         ; run through each link and adjust
         (map (lambda (l)
                (adjust-one-link-insert start len l is-undo-action? extend-len))
@@ -340,6 +344,7 @@
     ; Note: if extend-len is more than 0, extend the end of link 
     (define (adjust-one-link-insert ins-start ins-len linkID is-undo-action? extend-len)
       (display "adjust one link insert ")(newline)
+      (display "is undo ?")(display is-undo-action?)(newline)
       (let ((thislink (get 'links linkID)))
         (if thislink
             (let ((link-start (ask thislink 'start-index))
@@ -374,17 +379,34 @@
                   ;; if extend-len is 0 means the insertion makes no extension to this link
                   (cond ((and (<= ins-start link-start) ) ;; insert before link (undo deletion case 1 and 5)
                          (display "insert case 1 insert before link version UNDO ")(newline)
-                         ;; do the same for non undo case 1
-                         (ask thislink 'set-start-index! (+ link-start ins-len))
-                         (ask thislink 'set-end-index! (+ link-end ins-len))
-                         (if (> extend-len 0) ;; Case 1 special : undoing deletion of head of link
-                             (begin           ;; adding the length of deleted (extend-len) to the start
+                         (display "extend-len ")(display extend-len)(newline)
+                         
+                         (display "link start b4 ")(display link-start)(newline)
+                         (display "link start aft ")(display (+ link-start ins-len))(newline)
+                         
+;                         (if (and (> extend-len 0)          ;; Case 1 special : undoing deletion of head of link
+;                                  (= ins-start link-start)) ;; adding the length of deleted (extend-len) to the start
+                         (if  (> extend-len 0)
+                             (begin           
+                               (display "extend special")(newline)
                                (set! link-start (ask thislink 'start-index))
-                               (ask thislink 'set-start-index! (- link-start extend-len)))
+                               (ask thislink 'set-start-index! (- link-start extend-len))
+                               (display "tracking edits ?")(display track-undoable-edits)(newline)
+                               (set-text-style the-doc style-link (- link-start extend-len) extend-len #t)
+                               (display "link start aftaft ")(display (- link-start extend-len))(newline)
+                               (display "double check ")(display (ask thislink 'start-index))(newline)
+                               )
                              (begin
+                               ;; do the same for non undo case 1 (shift the link text (start and end) right)
+;                               (ask thislink 'set-start-index! (+ link-start ins-len))
+;                               (ask thislink 'set-end-index! (+ link-end ins-len))
                                #f
                                )
                              ))
+;                        ;; need to distinguish between case 1 deletion and case 5 deletion undo
+;                        ((and (<= ins-start link-start) )
+;                         
+;                         )
                         ((and (<= link-start ins-start) (<= ins-start link-end) ) ;; Case 2 ins within link (same as non undo)
                          (display "insert (delete undo) case 2 ")(newline)
                          (if (> extend-len 0) ;; redundant check since deletion of link within will always return positive deletion length
@@ -392,7 +414,11 @@
                         ((and (<= link-end ins-start) (> extend-len 0)) ;; Case 3 ins after link : (undo deletion case 2 and 6)
                          (display "delete undo case 3 ")(display extend-len)(newline)
                          (if (> extend-len 0) ;; undo deletion of tail of link
-                             (ask thislink 'set-end-index! (+ link-end extend-len)))) ;; lengthen link by extend-len (instead of ins-len in normal case)
+                             (begin
+                               (ask thislink 'set-end-index! (+ link-end extend-len)) ;; lengthen link by extend-len (instead of ins-len in normal case)
+                               (set-text-style the-doc style-link link-start extend-len #t)
+                               ))
+                         )
                         ))
               ))))
 
@@ -525,6 +551,7 @@
     (define (settext in-text)
       (set-track-links! #f)
       (set-track-dirty! #f)
+      (define old-track-undoable-edits track-undoable-edits)
       (set-track-undoable-edits! #f)
       (set-text-default-style the-editor style-nolink #t) ;;DEBUG
       ;(set-text-default-style the-editor style-link #t)
@@ -535,7 +562,7 @@
 ;      (set-text-style the-doc style-nolink 0
 ;                      (+ (get-text-length the-doc) 1) #t)
       
-      (set-track-undoable-edits! #t)
+      (set-track-undoable-edits! old-track-undoable-edits)
       (set-track-links! #t)
       (set-track-dirty! #t)
       (clear-dirty!))
@@ -614,8 +641,8 @@
     (define (document-filter-insert-string-handler fb offset string attr)
       (display "INSERT FILTER ")(display (list offset string))(newline)(newline)
       (set! replace-event #f)
-      (set! insert-cache (list offset string (string-length string)))
-      (start-compound-undoable-event "Typing(insert)") ; start compound event
+      (set! insert-cache (list offset string (string-length string) attr))
+      (start-compound-undoable-event "Typing(insert) compound") ; start compound event
       
       ;; used by insert-blank-space atm
       (filter-bypass-insert fb offset string (style-to-use offset))
@@ -625,9 +652,11 @@
     ; note: extra parameter (callback) is added when doc filter is created
     (define (document-filter-remove-handler fb offset len)
       (display "REMOVE FILTER ")(display (list offset len))(newline)
-      (start-compound-undoable-event "Typing(remove)") ; start compound event
+      (start-compound-undoable-event "Typing(remove) compound") ; start compound event
       (define string (substring (get-text the-editor) offset (+ offset len)))
-      (after-delete offset len) ; recalculate link positions
+      ;; if locked then we are in the middle of an undo
+      (if (not (compoundundomanager-locked? undo-manager))
+          (after-delete offset len)) ; recalculate link positions
       (set! replace-event #f)
       (set! remove-cache (list offset string len))
       #t)
@@ -636,7 +665,7 @@
     ; note: extra parameter (callback) is added when doc filter is created
     (define (document-filter-replace-handler fb offset len string attr)
       (display "REPLACE FILTER ")(display (list offset len string))(newline)
-      (start-compound-undoable-event "Typing(replace)") ; start compound event
+      (start-compound-undoable-event "Typing(replace) compound") ; start compound event
       (after-delete offset len)
       (set! replace-event #t) ;; hack to get replace to work properly
       (set! insert-cache (list offset string (string-length string)))
@@ -647,7 +676,7 @@
       (if (> len 0)
           (filter-bypass-replace fb offset len string (style-to-use offset))
           (begin
-            (display "style to use ")(display (style-to-use offset))(newline)
+            ;(display "style to use ")(display (style-to-use offset))(newline)
           (filter-bypass-insert fb offset string (style-to-use offset))
             )
           )
@@ -660,28 +689,36 @@
 
     (define (insert-undo event-offset event-string event-len)
       (display "insert-undo")(newline)
-      (set-track-undoable-edits! #f)
+      (display "track undo here ")(display track-undoable-edits)(newline)
+      ;(set-track-undoable-edits! #f)
       (set-text-delete the-doc event-offset event-len)
       ;;(textpane-remove the-editor event-offset event-len)
       (set-cursor-pos the-editor event-offset)
-      (set-track-undoable-edits! #t))
+      ;(set-track-undoable-edits! #t)
+      )
     
     (define (remove-undo event-offset event-string event-len)
       (display "remove-undo")(newline)
-      (set-track-undoable-edits! #f)
+      (display "track undo here ")(display track-undoable-edits)(newline)
+      ;(set-track-undoable-edits! #f)
       (set-text-insert the-doc event-string event-offset)
       ;;(textpane-insert the-editor event-string event-offset)
       (set-cursor-pos the-editor (+ event-offset (string-length event-string)))
-      (set-track-undoable-edits! #t)
+      ;(set-track-undoable-edits! #t)
       )
     
     ; handle insert
     (define (document-insert-handler e)
       (display "[Handler insert] ")(newline)
+      (display "undoable? ")(display (undoable-edit? e))(newline)
+      (display "redoing ")(display (compoundundomanager-locked? undo-manager))(newline)
+      
       ; recalculate link positions
       (let ((change-length (get-change-length e))
             (change-offset (get-change-offset e)))
         (after-insert change-offset change-length (undoable-edit? e)))
+      
+      (display "after after insert ")(newline)
       
       (define (post-insert-undoable-edit)
         
@@ -698,11 +735,12 @@
           (if (not (null? insert-cache))
               (post-it (car insert-cache)   ;; event offset 
                        (cadr insert-cache)  ;; event string
-                       (string-length (cadr insert-cache)))) ;; event len
+                       (caddr insert-cache)))
           (set! insert-cache '()) ;; clear insert-cache after using
           )
       
-      
+      (display "undoable-edit? ")(display (undoable-edit? e))(newline)
+      (display "track edit ")(display track-undoable-edits)(newline)
       (if (and undo-manager
                (undoable-edit? e) ; this is to avoid posting undo/redo events
                track-undoable-edits)
@@ -710,7 +748,7 @@
             (post-insert-undoable-edit)  ;; post our own undoable edit
             
             ;; (finalize-compound-undoable-event e "Typing(insert)" #t)
-            (end-compound-undoable-event "Typing(insert)"))) ;; end compound event
+            (end-compound-undoable-event "Typing(insert) close compound"))) ;; end compound event
       )
 
     ;; fix for replace events
@@ -750,6 +788,8 @@
         (set! remove-cache '()) ;; clear remove-cache after using
         )
 
+      (display "undoable-edit? ")(display (undoable-edit? e))(newline)
+      (display "track edit ")(display track-undoable-edits)(newline)
       (if (and undo-manager
                (undoable-edit? e) ; this is to avoid posting undo/redo events
                track-undoable-edits)
@@ -760,7 +800,7 @@
             ;; dont end compound 
             ;(finalize-compound-undoable-event e "Typing(remove)" (not replace-event))
             (if (not replace-event)
-                (end-compound-undoable-event "Typing(remove)")) ;; end compound event
+                (end-compound-undoable-event "Typing(remove) close compound")) ;; end compound event
             ))
       )
     
@@ -776,8 +816,8 @@
             (display "!!!!!!!!!!  Change handler posting undoables !!!!!!!!!!!")(newline)
             (display "!!====================================================!!")(newline)
             (compoundundomanager-postedit undo-manager e)
-            (if end-compound?
-                (end-compound-undoable-event event-name))
+            ;(if end-compound?
+            (end-compound-undoable-event "Doc Changed  close compound")
             ))
       ;(finalize-compound-undoable-event e "CHANGED" #t)
       ) ;; end compound event
@@ -797,15 +837,16 @@
             (define link-len-deleted (adjust-links-delete start len))
             
             ; post the link adjustment actions for undoing
-            ;; no need to post anymore since when undoing/redoing we do not bypass the handler events
-            ;; after-delete/after insert would be called from here
-;            (compoundundomanager-postedit undo-manager
-;                                          (make-undoable-edit "after-delete"
-;                                                              (lambda () 
-;                                                                (adjust-links-insert start len #t link-len-deleted)
-;                                                                )
-;                                                              (lambda () 
-;                                                                (adjust-links-delete start len))))
+            ;; need this to keep link-len-deleted data 
+            ;; to determine whether we've deleted link text
+            (compoundundomanager-postedit undo-manager
+                                          (make-undoable-edit "after-delete"
+                                                              (lambda () ;; undo
+                                                                (display "undoing delete here ")(newline)
+                                                                (adjust-links-insert start len #t link-len-deleted)
+                                                                )
+                                                              (lambda () ;; redo
+                                                                (adjust-links-delete start len))))
             )
           #f))
 
@@ -819,7 +860,9 @@
             ; and actually do it
             (adjust-links-insert start len #f len)
             
-            ; post the link adjustment actions for undoing
+            ;; no need to post anymore since when undoing/redoing we do not bypass the handler events
+            ;; after insert would be called from handler
+            ;; after insert is the same for real inserts and undo/redo
 ;            (define insert-undoable-edit
 ;              (make-undoable-edit "after-insert"
 ;                                  (lambda () ;; undo
@@ -828,7 +871,7 @@
 ;                                  (lambda () ;; redo
 ;                                    (display "[after-insert redo] adjust links delete ")(newline)
 ;                                    (adjust-links-insert start len #f 0))))
-            ;(compoundundomanager-postedit undo-manager insert-undoable-edit)
+;            ;(compoundundomanager-postedit undo-manager insert-undoable-edit)
             )))
 
     ; after-set-position
@@ -914,10 +957,13 @@
               (compoundundomanager-postedit
                undo-manager
                (make-undoable-edit in-undo-label
-                                   (lambda ()
-                                     (format #t "compound-undoable-edit end of undo~%~!"))
+                                   (lambda () ;; end of undo
+                                     (format #t "compound-undoable-edit end of undo~%~!")
+                                     (set-track-undoable-edits! #t)
+                                     )
                                    (lambda () ;; start of redo
                                      (format #t "compound-undoable-edit start of redo~%~!")
+                                     (set-track-undoable-edits! #f)
 
                                      ;; selects the right node and brings up the node editor if need be
                                      (re-edit-node undo-nodeID)
@@ -925,9 +971,9 @@
                                      ;; hack to solve the hanging issue with first character 
                                      (if (= (get-text-length the-doc) 0)
                                          (begin
-                                           (set! track-undoable-edits #f)
+                                           ;(set! track-undoable-edits #f)
                                            (set-text-style the-doc style-nolink 0 1 #t) ;; correct one
-                                           (set! track-undoable-edits #t)
+                                           ;(set! track-undoable-edits #t)
                                            ))
                                      ))))
             )))
@@ -941,15 +987,21 @@
         (compoundundomanager-postedit 
          undo-manager
          (make-undoable-edit in-undo-label
-                             (lambda ()
+                             (lambda () ;; start of undo
                                (format #t "compound-undoable-edit start of undo~%~!")
+                               (set-track-undoable-edits! #f)
+                               
                                ;; selects the right node and brings up the node editor if need be
                                (re-edit-node undo-nodeID)
                                (display "END OF START UNDO typing ")(newline)
                                )
-                             (lambda ()
-                               (format #t "compound-undoable-edit end of redo~%~!")))))
-      (compoundundomanager-endupdate undo-manager undo-action redo-action))
+                             (lambda () ;; end of redo
+                               (format #t "compound-undoable-edit end of redo~%~!")
+                               (set-track-undoable-edits! #t)
+                               ))))
+      (display "end compound success ")(newline)
+      (compoundundomanager-endupdate undo-manager undo-action redo-action)
+      )
     
     
     ;; called by document-insert-handler, document-remove-handler, document-change-handler

@@ -17,11 +17,14 @@
 ;; with this program; if not, write to the Free Software Foundation, Inc.,
 ;; 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+(require "../miscutils.scm") ;; custom-try-catch
+
 (module-export make-undo-manager make-undoableeditlistener add-undoableeditlistener
                undo-manager-add-edit undo-manager-discard-all-edits
                make-compoundundomanager compoundundomanager-beginupdate 
                compoundundomanager-endupdate compoundundomanager-postedit
                compoundundomanager-updatelevel
+               compoundundomanager-locked?
                undoable-edit?
                make-undo-action set-associated-redoaction! update-undo-action
                make-redo-action set-associated-undoaction! update-redo-action
@@ -105,10 +108,6 @@
 (define (compoundundomanager-postedit in-undo-manager :: <compoundundomanager>
                                       in-edit :: <javax.swing.undo.UndoableEdit>)
   
-  (display "[postedit] adding undoable '")
-  (display (invoke in-edit 'getPresentationName))
-  (display "'")(newline)
-  
 ;  (display "update levels open ")
 ;  (display (compoundundomanager-updatelevel in-undo-manager))(newline) 
   
@@ -120,6 +119,9 @@
         (update-redo-action (invoke in-undo-manager 'get-redo-action))
         ))
   )
+
+(define (compoundundomanager-locked? in-undo-manager :: <compoundundomanager>) :: <boolean>
+  (invoke in-undo-manager 'get-lock))
 
 ; check if a given event is an undoable edit
 (define (undoable-edit? e)
@@ -152,11 +154,16 @@
      ;(format #t "compoundundomanager postEdit: ~a~%~!" e)
      (if (and (undoable-edit? e)
               (not undoing-redoing-lock))
-         (invoke undo-edit-support 'postEdit e)
          (begin
-           (display "[undo manager] postEdit failed or intensionally ignored")(newline)
-           (display "Either not undoable-edit? ")(display (not (undoable-edit? e)))(newline)
-           (display "Or undoing-redoing-lock ")(display undoing-redoing-lock)(newline)
+           (display "[postedit] adding undoable '")
+           (display (invoke e 'getPresentationName))
+           (display "'")(newline)
+           (invoke undo-edit-support 'postEdit e)
+           )
+         (begin
+           (display "[postedit ignored] '")(display (invoke e 'getPresentationName))(display "'")(newline)
+           (display "  Either not undoable-edit? ")(display (not (undoable-edit? e)))(newline)
+           (display "  Or undoing-redoing-lock ")(display undoing-redoing-lock)(newline)
            )
          )
      ))
@@ -261,18 +268,19 @@
   
   ; perform the undo
   ((actionPerformed e :: <java.awt.event.ActionEvent>) :: <void>
-   (begin
-     (try-catch
+   (define cached-presentation-name (invoke undo 'getUndoPresentationName))
+   (try-catch
+       (begin
+         (invoke undo 'undo)
+         (save-point-undo))
+     (ex <javax.swing.undo.CannotUndoException>
          (begin
-           (invoke undo 'undo)
-           (save-point-undo))
-       (ex <javax.swing.undo.CannotUndoException>
-           (begin
-             (display (*:toString ex))(newline)
-             (*:printStackTrace ex))))
-     (invoke (this) 'update)
-     (if associatedRedoAction
-         (invoke associatedRedoAction 'update))))
+           (display cached-presentation-name)(display " [undo failed]")(newline)
+           (display (*:toString ex))(newline)
+           (*:printStackTrace ex))))
+   (invoke (this) 'update)
+   (if associatedRedoAction
+       (invoke associatedRedoAction 'update)))
 
   ; update the action
   ((update) access: 'protected :: <void>
@@ -332,6 +340,7 @@
   
   ; perform the redo
   ((actionPerformed e :: <java.awt.event.ActionEvent>) :: <void>
+   (define cached-presentation-name (invoke undo 'getUndoPresentationName))
    (begin
      (try-catch
          (begin
@@ -341,6 +350,7 @@
            )
        (ex <javax.swing.undo.CannotRedoException>
            (begin
+             (display cached-presentation-name)(display " [redo failed]")(newline)
              (display (*:toString ex))(newline)
              (*:printStackTrace ex))))
      (invoke (this) 'update)
@@ -412,7 +422,6 @@
   ((undo) throws: (<javax.swing.undo.CannotUndoException>) :: <void>
    (begin
      ;(format #t "undo:~a ~a~%~!" presentation-name undo-procedure)
-     
      (invoke-special <javax.swing.undo.AbstractUndoableEdit> (this) 'undo)
      
      ; call the undo procedure
