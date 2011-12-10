@@ -514,7 +514,7 @@
 
     ;; set to true would inform insert-filter to bypass normal 
     ;; get style method and use style-nolink by default
-    (define-private break-link #f)
+    (define break-link #f)
     
     ; insert a blank character with no link attached
     (define (insert-blank-space pos)

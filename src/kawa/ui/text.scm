@@ -121,7 +121,7 @@
     (invoke (as <javax.swing.JButton> in-field) 'setText in-txt))
    ))
 
-(define (get-doc-text doc start-offset end-offset)
+(define (get-doc-text doc :: <javax.swing.text.Document> start-offset end-offset)
   (define length (- end-offset start-offset))
   (define doc-length (invoke doc 'get-length))
   (if (and (<= length doc-length)
