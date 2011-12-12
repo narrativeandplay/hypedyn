@@ -201,11 +201,6 @@
              (len (- end-index start-index))
              (this-linkID (ask thislink 'ID)))
         
-        (display " start-index ")(display start-index)(newline)
-        (display " end-index ")(display end-index)(newline)
-        (display " len ")(display len)(newline)
-        (display " this-linkID ")(display this-linkID)(newline)
-        
         ;;TODO should check whether we are setting beyond the document length
         ;; 0 < start-index < doc-len
         ;; len <= doc-len 
@@ -333,9 +328,6 @@
     (define (adjust-links-insert start len is-undo-action? extend-len)
       (display "adjust-links-insert ")(newline)
       (let ((edited-node (get nodelist-name the-nodeID)))
-        (display "here ")(newline)
-        (display "list len ")(display (length (ask edited-node getlinks-method)))(newline)
-        (display "extend-len ")(display extend-len)(newline)
         ; run through each link and adjust
         (map (lambda (l)
                (adjust-one-link-insert start len l is-undo-action? extend-len))
@@ -351,9 +343,9 @@
             (let ((link-start (ask thislink 'start-index))
                   (link-end (ask thislink 'end-index))
                   (ins-end (+ ins-start ins-len)))
-              (display "ins len ")(display ins-len)(newline)
-              (display "in adjust one link insert ")(display (list link-start link-end))(newline)
-              (display "ins-start ins-end ")(display (list ins-start ins-end))(newline)
+;              (display "ins len ")(display ins-len)(newline)
+;              (display "in adjust one link insert ")(display (list link-start link-end))(newline)
+;              (display "ins-start ins-end ")(display (list ins-start ins-end))(newline)
   
               (cond ((not is-undo-action?)
                      (cond ((and (<= ins-start link-start) ) ;; Case 1 : ins before link (eg aa[i]LLLaa, a[i]aLLLaa)
@@ -373,6 +365,7 @@
                             (display "extend-len ")(display extend-len)(newline)
                             (if (> extend-len 0) ;; used by insert-blank-space (custom call that does not extend link len ie extend-len is 0)
                                 (ask thislink 'set-end-index! (+ link-end ins-len)))) ;; lengthen link by ins-len
+                           
                            ((= link-end ins-start) ;; Case 3a: ins after link (do nothing) (eg aaLLLa[i]a)
                             (display "INSERT AFTER LINK")(newline)
                             #f)))
@@ -427,7 +420,7 @@
                                   (set-text-style the-doc style-link ins-start extend-len #t) ;; underline link extension
                                   (set-text-style the-doc style-nolink (+ ins-start extend-len) (- ins-len extend-len) #t) ;; make sure parts not in link not underline
                                   )
-                                ;; insertion not part of linkn so correct formatting
+                                ;; insertion not part of link so just correct formatting
                                 (begin
                                   (display "link start ")(display link-start)(newline)
                                   (display "ins-len ")(display ins-len)(newline)
@@ -435,15 +428,15 @@
                                   ;; extend len 0 and ins at link-end means just 
                                   ;; undoing deletion of non link text
                                   (if (= ins-start link-end)
-                                      (set-text-style the-doc style-nolink ins-start ins-len #t)
-
+                                      (begin
+                                        (display "inserting at link END ")(newline)
+                                        (set-text-style the-doc style-nolink ins-start ins-len #t))
                                       ;; if extend len 0 and inserting before link end then it is an insert redo 
+                                      ;; need to extend the link
                                       (begin
                                         (display "insert redo ")(newline)
                                         (display "new link end ")(display (+ link-end extend-len))(newline)
-                                        (display "ins len ")(display ins-len)(newline)
                                         (ask thislink 'set-end-index! (+ link-end ins-len)) ;; extend by ins-len
-                                        (display "old link bounds ")(display (list link-start link-end))(newline)
                                         (set-text-style the-doc style-link ins-start ins-len #t)
                                         ))
                                   )
@@ -523,10 +516,13 @@
         (set-track-links! #f)
         (set! break-link #t)
         
+        
         (compoundundomanager-postedit
          undo-manager
          (make-undoable-edit "Before Break Link"
-                             (lambda () #f) ;; undo
+                             (lambda () #f
+                               (display "track?1 ")(display track-undoable-edits)(newline)
+                               ) ;; undo
                              (lambda () ;; redo
                                (set-track-links! #f)
                                (set! break-link #t)
@@ -535,28 +531,36 @@
       (define (after-break-link)
         (set! break-link #f)
         (set-track-links! #t)
-        (adjust-links-insert pos 1 #f 0)  ;; since we not tracking link, we do the shifting ourselves here
+        (adjust-links-insert pos 1 #t 0)  ;; since we not tracking link, we do the shifting ourselves here
         
         (compoundundomanager-postedit
          undo-manager
          (make-undoable-edit "After Break Link"
-                             (lambda () #f) ;; undo
+                             (lambda () 
+                               #f
+                               (display "track?2 ")(display track-undoable-edits)(newline)
+                               ) ;; undo
                              (lambda () ;; redo
                                (set-track-links! #t)
                                (set! break-link #f)
-                               (adjust-links-insert pos 1 #f 0)
+                               ;; does not extend link len in this case
+                               (adjust-links-insert pos 1 #t 0)
                                ))))
       
       (start-compound-undoable-event "End Linktext Extend")
+      (display "track undoable flag1 ")(display track-undoable-edits)(newline)
       (before-break-link)
-      
+      (display "track undoable flag2 ")(display track-undoable-edits)(newline)
       ; note: for some reason need a hack here, insert 2 characters and then
       ; delete the second one, otherwise the style doesn't go away - alex
       ;(set-text-insert-attr the-doc "  " pos style-nolink)
       ;(set-text-delete the-doc (+ pos 1) 1)
       ;; no need to do the above hack anymore for some unknown reason
-      (set-text-insert-attr the-doc " " pos style-nolink)
+      ;(set-text-insert-attr the-doc " " pos style-nolink)
+      (set-text-insert the-doc " " pos)
+      (display "track undoable flag3 ")(display track-undoable-edits)(newline)
       (after-break-link)
+      (display "track undoable flag4 ")(display track-undoable-edits)(newline)
       (end-compound-undoable-event "End Linktext Extend")
       )
     
@@ -728,28 +732,22 @@
     (define (insert-undo event-offset event-string event-len)
       (display "insert-undo")(newline)
       (display "track undo here ")(display track-undoable-edits)(newline)
-      ;(set-track-undoable-edits! #f)
       (set-text-delete the-doc event-offset event-len)
       ;;(textpane-remove the-editor event-offset event-len)
       (set-cursor-pos the-editor event-offset)
-      ;(set-track-undoable-edits! #t)
       )
     
     (define (remove-undo event-offset event-string event-len)
-      (display "remove-undo")(newline)
-      (display "track undo here ")(display track-undoable-edits)(newline)
-      ;(set-track-undoable-edits! #f)
       (set-text-insert the-doc event-string event-offset)
       ;;(textpane-insert the-editor event-string event-offset)
       (set-cursor-pos the-editor (+ event-offset (string-length event-string)))
-      ;(set-track-undoable-edits! #t)
       )
     
     ; handle insert
     (define (document-insert-handler e)
       (display "[Handler insert] ")(newline)
-      (display "undoable? ")(display (undoable-edit? e))(newline)
-      (display "redoing ")(display (compoundundomanager-locked? undo-manager))(newline)
+;      (display "undoable? ")(display (undoable-edit? e))(newline)
+;      (display "redoing ")(display (compoundundomanager-locked? undo-manager))(newline)
       
       ; recalculate link positions
       (let ((change-length (get-change-length e))
@@ -777,8 +775,8 @@
           (set! insert-cache '()) ;; clear insert-cache after using
           )
       
-      (display "undoable-edit? ")(display (undoable-edit? e))(newline)
-      (display "track edit ")(display track-undoable-edits)(newline)
+;      (display "undoable-edit? ")(display (undoable-edit? e))(newline)
+;      (display "track edit ")(display track-undoable-edits)(newline)
       (if (and undo-manager
                (undoable-edit? e) ; this is to avoid posting undo/redo events
                track-undoable-edits)
@@ -826,8 +824,8 @@
         (set! remove-cache '()) ;; clear remove-cache after using
         )
 
-      (display "undoable-edit? ")(display (undoable-edit? e))(newline)
-      (display "track edit ")(display track-undoable-edits)(newline)
+;      (display "undoable-edit? ")(display (undoable-edit? e))(newline)
+;      (display "track edit ")(display track-undoable-edits)(newline)
       (if (and undo-manager
                (undoable-edit? e) ; this is to avoid posting undo/redo events
                track-undoable-edits)
@@ -850,12 +848,14 @@
                (undoable-edit? e) ; this is to avoid posting undo/redo events
                track-undoable-edits)
           (begin ;; change does not normally do that
-            (display "!!====================================================!!")(newline)
-            (display "!!!!!!!!!!  Change handler posting undoables !!!!!!!!!!!")(newline)
-            (display "!!====================================================!!")(newline)
+;            (display "!!====================================================!!")(newline)
+;            (display "!!!!!!!!!!  Change handler posting undoables !!!!!!!!!!!")(newline)
+;            (display "!!====================================================!!")(newline)
             (compoundundomanager-postedit undo-manager e)
-            ;(if end-compound?
-            (end-compound-undoable-event "Doc Changed  close compound")
+            
+            ;(if end-compound? 
+            ;; for now we don't close compound undoable 
+            ;(end-compound-undoable-event "Doc Changed  close compound")
             ))
       ;(finalize-compound-undoable-event e "CHANGED" #t)
       ) ;; end compound event
@@ -873,7 +873,7 @@
           (begin
             ;actually do it
             (define link-len-deleted (adjust-links-delete start len))
-            (display "link len deleted ")(display link-len-deleted)(newline)
+;            (display "link len deleted ")(display link-len-deleted)(newline)
             
             ; post the link adjustment actions for undoing
             ;; need this to keep link-len-deleted data 
@@ -881,8 +881,8 @@
             (compoundundomanager-postedit undo-manager
                                           (make-undoable-edit "after-delete"
                                                               (lambda () ;; undo
-                                                                (display "undoing delete here ")(newline)
-                                                                (display "link len deleted ")(display link-len-deleted)(newline)
+;                                                                (display "undoing delete here ")(newline)
+;                                                                (display "link len deleted ")(display link-len-deleted)(newline)
                                                                 (adjust-links-insert start len #t link-len-deleted)
                                                                 )
                                                               (lambda () ;; redo
@@ -906,10 +906,10 @@
             (define insert-undoable-edit
               (make-undoable-edit "after-insert"
                                   (lambda () ;; undo
-                                    (display "[after-insert undo] adjust links delete ")(newline)
+;                                    (display "[after-insert undo] adjust links delete ")(newline)
                                     (adjust-links-delete start len))
                                   (lambda () ;; redo
-                                    (display "[after-insert redo] adjust links delete ")(newline)
+;                                    (display "[after-insert redo] adjust links delete ")(newline)
                                     (adjust-links-insert start len #f 0))))
             (compoundundomanager-postedit undo-manager insert-undoable-edit)
             )))
