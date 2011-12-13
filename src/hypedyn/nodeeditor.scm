@@ -188,8 +188,8 @@
         (content (ask node-editor 'gettext))
         (dirty (nodeeditor-dirty?))
         )
-    (display "content len in nodeeditor-save ")(display (string-length content))(newline)
-    (display "content during nodeeditor-save ")(display content)(newline)
+;    (display "content len in nodeeditor-save ")(display (string-length content))(newline)
+;    (display "content during nodeeditor-save ")(display content)(newline)
       (if (and ;dirty 
                (not (eq? '() content)) 
                (not (eq? '() (get-edited-nodeID))))
@@ -830,6 +830,12 @@
                                              (number->string new-linkID)
                                              ")")
                               name)))
+        
+        ;; DEBUG
+        (define thislink (get 'links new-linkID))
+        (define old-start (ask thislink 'start-index))
+        (define old-end (ask thislink 'end-index))
+        (display "[add-link] ")(display (list old-start old-end))(newline)
         (ask parent-obj 'add-object new-linkID display-name)))
 
     ; message handling

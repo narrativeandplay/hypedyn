@@ -713,7 +713,7 @@
 ; will also exclude edited-nodeID
 (define (create-node-choice parent-panel in-callback nodeID excludeAnywhere in-edited-nodeID)
   (let ((node-list (make-sortedcomboboxwithdata)))
-    (format #t "Creating node-choice: nodeID:~a, in-edited-nodeID:~a~%~!" nodeID in-edited-nodeID)
+;    (format #t "Creating node-choice: nodeID:~a, in-edited-nodeID:~a~%~!" nodeID in-edited-nodeID)
 
     ; add entries to node choice
     (set-comboboxwithdata-clear node-list)
@@ -969,7 +969,7 @@
 
   ; selection of destination node changed, so update checkboxes if necessary, and update OK button state
 (define (selected-node-in-destination c)
-  (format #t "selected-node-in-destination~%~!")
+;  (format #t "selected-node-in-destination~%~!")
   ; if "none" destination selected, uncheck the checkbox
   (if (and (eq? c editlink-panel-then-link-choice)
            editlink-panel-then-link-check 
