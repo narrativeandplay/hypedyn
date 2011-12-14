@@ -151,7 +151,7 @@
   <target name="dist-applet-windows" depends="" if="windows">
     <copy file="${build.htapplet.jar}" todir="${dist.editor.package.javadir}" />
 	<copy file="${src.dir}/htapplet.html" todir="${dist.editor.package.javadir}" />
-	<copy file="${src.dir}/story.dyn" todir="${dist.editor.package.javadir}" />
+	<!-- <copy file="${src.dir}/story.dyn" todir="${dist.editor.package.javadir}" /> -->
   </target>
   
   <!-- linux -->
