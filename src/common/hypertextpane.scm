@@ -460,7 +460,7 @@
                                             (set-text-style the-doc style-link ;; format new extension
                                                             link-start
                                                             (- del-end link-start) #t)
-                                            (set-clickback linkID del-start (- del-end link-start))
+                                            (set-clickback linkID link-start (- del-end link-start))
                                             (display "style link-start del-end ")(display (list link-start del-end))(newline)
                                             (display "link")(newline)
                                             )
