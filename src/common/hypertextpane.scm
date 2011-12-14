@@ -784,7 +784,8 @@
       (start-compound-undoable-event "Typing(remove) compound") ; start compound event
       (define string (substring (get-text the-editor) offset (+ offset len)))
       ;; if locked then we are in the middle of an undo
-      (if (not (compoundundomanager-locked? undo-manager))
+      (if (or (not undo-manager) 
+              (not (compoundundomanager-locked? undo-manager)))
           (after-delete offset len)) ; recalculate link positions
       (set! replace-event #f)
       (set! remove-cache (list offset string len))
@@ -795,7 +796,8 @@
     (define (document-filter-replace-handler fb offset len string attr)
       (display "REPLACE FILTER ")(display (list offset len string))(newline)
       (start-compound-undoable-event "Typing(replace) compound") ; start compound event
-      (if (not (compoundundomanager-locked? undo-manager))
+      (if (or (not undo-manager) 
+              (not (compoundundomanager-locked? undo-manager)))
           (after-delete offset len))
       (set! replace-event #t) ;; hack to get replace to work properly
       (set! insert-cache (list offset string (string-length string)))
@@ -841,7 +843,8 @@
       (let ((change-length (get-change-length e))
             (change-offset (get-change-offset e)))
         ;; if locked then we are in the middle of an undo
-        (if (not (compoundundomanager-locked? undo-manager))
+        (if (or (not undo-manager) 
+                (not (compoundundomanager-locked? undo-manager)))
             (after-insert change-offset change-length (undoable-edit? e))))
       
       (define (post-insert-undoable-edit)
@@ -1165,6 +1168,8 @@
              (lambda (self) (clear-dirty!)))
     (obj-put this-obj 'set-track-links!
              (lambda (self m) (set-track-links! m)))
+    (obj-put this-obj 'set-track-undoable-edits!
+             (lambda (self m) (set-track-undoable-edits! m)))
     (obj-put this-obj 'getselstart
              (lambda (self) (getselstart)))
     (obj-put this-obj 'getselend
@@ -1257,6 +1262,9 @@
       
       ; set editor to read-only
       (set-text-component (ask htpane-obj 'getcomponent) #f #t) ; parameters are editable and enabled
+      
+      ; don't track undoable edits
+      (ask htpane-obj 'set-track-undoable-edits! #f)
       
       ; set mouseover callback
       (ask htpane-obj 'set-mouseover-callback! mouseover-callback))
