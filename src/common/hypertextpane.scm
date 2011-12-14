@@ -211,19 +211,23 @@
                         #t)
 
         ; and set clickback
-        (let ((link-attribute-set (make-attribute-set)))
-          (set-attribute-linkAction link-attribute-set
-                                    (lambda ()
-                                      (clickback this-linkID)))
-          (set-attribute-linkID link-attribute-set this-linkID)
-          (set-text-style the-doc 
-                          link-attribute-set
-                          start-index
-                          len
-                          #f)))
+        (set-clickback this-linkID start-index len))
       
       ;; set back original value
       (set-track-undoable-edits! original-track-undoable-edits))
+    
+    ; set clickback on a range of text
+    (define (set-clickback this-linkID start-index len)
+      (let ((link-attribute-set (make-attribute-set)))
+        (set-attribute-linkAction link-attribute-set
+                                  (lambda ()
+                                    (clickback this-linkID)))
+        (set-attribute-linkID link-attribute-set this-linkID)
+        (set-text-style the-doc
+                        link-attribute-set
+                        start-index
+                        len
+                        #f)))
     
     ; remove a link (underline) from the editor
     (define (removelink thislink)
@@ -426,6 +430,7 @@
                                             (set-text-style the-doc style-link ;; format new extension
                                                             del-start
                                                             (- del-end del-start) #t)
+                                            (set-clickback linkID del-start (- del-end del-start))
                                             (display "delstart delend ")(display (list del-start del-end))(newline)
                                             (display "link ")(newline)
                                             )
@@ -455,6 +460,7 @@
                                             (set-text-style the-doc style-link ;; format new extension
                                                             link-start
                                                             (- del-end link-start) #t)
+                                            (set-clickback linkID del-start (- del-end link-start))
                                             (display "style link-start del-end ")(display (list link-start del-end))(newline)
                                             (display "link")(newline)
                                             )
@@ -478,6 +484,7 @@
                                             (set-text-style the-doc style-link ;; format new extension
                                                             del-start
                                                             (- link-end del-start) #t)
+                                            (set-clickback linkID del-start (- link-end del-start))
                                             (set-text-style the-doc style-nolink ;; clear formatting after link
                                                             link-end
                                                             (- del-end link-end) #t)
