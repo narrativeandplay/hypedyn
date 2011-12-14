@@ -315,13 +315,55 @@
                   (del-end (+ del-start del-len)))
               (display "adjust one link delete ")(display (list del-start del-end link-start link-end))(newline)
 
+              ;; making sure I dont leave out any conditions and 
+              ;; there is not conflicts/overlap between conditions
+;              del-start 0
+;              del-end 1
+;              link-start 2
+;              link-end 3
+;              permutate the position of 0123
+;              get rid of permutations with 3 in front of 2, and 1 in front of 0
+;              32 (get rid impossible) (3 > 2)
+;              10 (get rid impossible) (1 > 0)
+;              we're left with case 1 to 6
+;              
+;              0 = 1 case 0a ignored
+;              2 = 3 case 0b (0 length link shouldnt exist)
+;              special is cases that might have conflicts
+              
+;              0123 case 1 ;; deletion in front of link
+;                special 1 = 2 ;; deleting character just left of link
+;              
+;              2301 case 2 ;; deletion behind the link
+;                special 3 = 0 ;; deleting character just right of link
+;              
+;              0213 case 5 ;; part of the deletion contains head potion of link
+;                no equal
+;              2031 case 6 ;; part of the deletion contains tail portion of link
+;                no equal
+;              
+;              0231 case 3 ;; delete whole link
+;                ;; does no formatting 
+;                special 0 = 2
+;                special 3 = 1
+;              
+;              2013 case 4 ;; whole deletion within link
+;                special 2 = 0  
+;                special 1 = 3  
+              ;; possible conflict with case 3 is when 
+              ;; (and (= 0 2) (= 1 3)) but would not have reached case 4 since case 3 is on top
+              ;; so we're safe
+              
               ;; how to read the examples aaBBaa  
               ;; a - non link text,  b - link text
               ;; [ - start of deletion, ] - end of deletion
-              (cond ((= del-start del-end)
+              (cond ((= del-start del-end) ;; Case 0a
                      #f ;; empty deletion (nothing deleted)
                      )
-                    ((<= del-end link-start) ;; Case 1; del-start del-end link-start link-end (eg [a]aBBaa, [aa]BBaa)
+                    ((= link-start link-end) ;; Case 0b
+                     (display "[ZERO LEN LINK BUG ALERT!!]")(newline)
+                     )
+                    ((<= del-end link-start) ;; Case 1; del-start del-end link-start link-end (eg [a]aBBaa, [aa]BBaa) 0123
                      ; Entire deletion is before link (shift link)
                      (display " delete case 1 ")(newline)
                      ;(ask thislink 'set-start-index! (- link-start del-len))
@@ -332,7 +374,7 @@
                      ;(set! link-deleted 0)
                      (set! link-deleted '())
                      )
-                    ((<= link-end del-start) ;; Case 2; link-start link-end del-start del-end (eg aaBB[a]a, aaBBa[a]) 
+                    ((<= link-end del-start) ;; Case 2; link-start link-end del-start del-end (eg aaBB[a]a, aaBBa[a]) 2301
                      ;; Entire deletion after link (DO NOTHING to this link)
                      (display " delete case 2 ")(newline)
                      
