@@ -256,6 +256,16 @@
              (old-start (ask thislink 'start-index))
              (old-end (ask thislink 'end-index)))
         
+        ;; takes care of clickback setting when resizing 
+        ;; boundaries (new-val is the one you're setting to now)
+        (define (clickback-resize old-val new-val side)
+          (if (and (equal? side 'start)
+                   (> old-val new-val))
+              (set-clickback linkID new-val (- old-val new-val)))
+          (if (and (equal? side 'end)
+                   (> new-val old-val))
+              (set-clickback linkID new-val (- new-val old-val))))
+        
       (if thislink
           (begin
             (if (equal? side 'start)
@@ -270,11 +280,13 @@
                                          (set! thislink (get 'links linkID))
                                          ;(display " setting start to ")(display old-start)(newline)
                                          (ask thislink 'set-start-index! old-start)
+                                         (clickback-resize new-val old-start side)
                                          ) ;; undo
                                        (lambda () ;; redo
                                          (set! thislink (get 'links linkID))
                                          ;(display " setting start to ")(display new-val)(newline)
                                          (ask thislink 'set-start-index! new-val)
+                                         (clickback-resize old-start new-val side)
                                          )))
                   ))
             (if (equal? side 'end)
@@ -287,11 +299,13 @@
                                          (set! thislink (get 'links linkID))
                                          ;(display " setting end to ")(display old-end)(newline)
                                          (ask thislink 'set-end-index! old-end)
+                                         (clickback-resize new-val old-end side)
                                          ) 
                                        (lambda () ;; redo
                                          (set! thislink (get 'links linkID))
                                          ;(display " setting end to ")(display new-val)(newline)
                                          (ask thislink 'set-end-index! new-val)
+                                         (clickback-resize old-end new-val side)
                                          )))
                   ))
             ))
@@ -300,12 +314,40 @@
     ; adjust links after deleting
     ; returns #t if need to manually clean up after link deletion
     (define (adjust-links-delete start len)
-      ;(display "adjust-links-delete ")(newline)
-      (let ((edited-node (get nodelist-name the-nodeID)))
+      (display "[adjust-links-delete] ")(newline)
+      (let ((edited-node (get nodelist-name the-nodeID))
+            (deleted-link-bound '()))
         ; run through each link and adjust
         (map (lambda (l)
-               (adjust-one-link-delete start len l))
+               (set! deleted-link-bound 
+                     (append deleted-link-bound (list (adjust-one-link-delete start len l))))
+               )
              (ask edited-node getlinks-method))
+        
+        (display "  deleted link-bound ")(display deleted-link-bound)(newline)
+        
+        ;; bound lst is a two element list with start and end position of the link
+        ;; fragment that we are suppose to restore underline/bold formatting to
+        (define (format-link-text bound-lst)
+          (display "   bound-lst ")(display bound-lst)(newline)
+          (if (not (null? bound-lst)) 
+              (set-text-style the-doc style-link ;; format new extension
+                              (car bound-lst) ;; start
+                              (- (cadr bound-lst) (car bound-lst)) #t)))
+        
+        (compoundundomanager-postedit
+         undo-manager
+         (make-undoable-edit "link text formating"
+                             (lambda () ;; undo
+                               (display "link text formating ")(newline)
+                               (set-text-style the-doc style-nolink ;; clear formatting for whole of deletion
+                                               start
+                                               len #t)
+                               (map format-link-text deleted-link-bound) ;; then put in formatting for link fragments
+                               )
+                             (lambda () ;; redo
+                               #f
+                               )))
         ))
 
     ; adjust one link after deletion
@@ -370,48 +412,21 @@
                     ((<= del-end link-start) ;; Case 1; del-start del-end link-start link-end (eg [a]aBBaa, [aa]BBaa) 0123
                      ; Entire deletion is before link (shift link)
                      (display " delete case 1 ")(newline)
-                     ;(ask thislink 'set-start-index! (- link-start del-len))
-                     ;(ask thislink 'set-end-index! (- link-end del-len))
                      (shift-link-boundary linkID 'start (- link-start del-len))
                      (shift-link-boundary linkID 'end (- link-end del-len))
-                     
                      ;(set! link-deleted 0)
                      (set! link-deleted '())
                      )
                     ((<= link-end del-start) ;; Case 2; link-start link-end del-start del-end (eg aaBB[a]a, aaBBa[a]) 2301
                      ;; Entire deletion after link (DO NOTHING to this link)
                      (display " delete case 2 ")(newline)
-                     
-                     ;; only need to do correct if the deletion is right after a link (and not part of that link)
-                     (if (= link-end del-start)
-                         (compoundundomanager-postedit
-                          undo-manager
-                          (make-undoable-edit "link text formating"
-                                              (lambda () ;; undo
-                                                (display "link text formating ")(newline)
-
-                                                (set-text-style the-doc style-nolink ;; format new extension
-                                                                del-start
-                                                                (- del-end del-start) #t)
-                                                (display "delstart delend ")(display (list del-start del-end))(newline)
-                                                (display "nolink ")(newline)
-                                                )
-                                              (lambda () ;; redo
-                                                #f
-                                                ))))
-                     
-                     ;(set! link-deleted 0)
                      (set! link-deleted '())
+                     ;(set! link-deleted 0)
                      )
                     ((and (<= del-start link-start) ;; Case 3; del-start link-start link-end del-end (eg a[aBB]aa, a[aBBa]a, aa[BBa]a, aa[BB]aa)
                           (<= link-end del-end))
                      (display " delete case 3 ")(newline)
                      ;; Entire link is inside deletion, (delete link)
-                     
-                     ;; link-end = link-start (only for the purpose of \r\n check)
-                     ;; normally we dont bother shifting the link since we delete it anyway
-                     ;(ask thislink 'set-end-index! link-start)
-                     
                      ;(set! link-deleted (- link-end link-start))
                      (set! link-deleted (list link-start link-end))
                      ; Delete the link
@@ -420,23 +435,7 @@
                           (<= link-start del-start))    ;; makes sure not the whole link 
                      ;; Entire deletion is inside link but not encompassing it, (shorten link by length of deletion)
                      (display " delete case 4 ")(newline)
-                     ;(ask thislink 'set-end-index! (- link-end del-len))
                      (shift-link-boundary linkID 'end (- link-end del-len))
-                     (compoundundomanager-postedit
-                      undo-manager
-                      (make-undoable-edit "link text formating"
-                                          (lambda () ;; undo
-                                            (display "link text formating ")(newline)
-                                            (set-text-style the-doc style-link ;; format new extension
-                                                            del-start
-                                                            (- del-end del-start) #t)
-                                            (set-clickback linkID del-start (- del-end del-start))
-                                            (display "delstart delend ")(display (list del-start del-end))(newline)
-                                            (display "link ")(newline)
-                                            )
-                                          (lambda () ;; redo
-                                            #f
-                                            )))
                      (display "link start ")(display link-start)(newline)
                      (display "new link end ")(display (- link-end del-len))(newline)
                      ;(set! link-deleted del-len)
@@ -447,26 +446,8 @@
                           (< del-end link-end))
                      (display " delete case 5 ")(newline)
                      ; a portion of the link at the head is deleted (shift link and shorten)
-                     ;(ask thislink 'set-start-index! del-start) ;; move link-start to del-start
-                     ;(ask thislink 'set-end-index! (+ del-start (- link-end del-end))) ; count remaining length of link and 
-                                                                                       ; offset that from new link-start (del-start)
                      (shift-link-boundary linkID 'start del-start)
                      (shift-link-boundary linkID 'end (+ del-start (- link-end del-end)))
-                     (compoundundomanager-postedit
-                      undo-manager
-                      (make-undoable-edit "link text formating"
-                                          (lambda () ;; undo
-                                            (display "link text formating ")(newline)
-                                            (set-text-style the-doc style-link ;; format new extension
-                                                            link-start
-                                                            (- del-end link-start) #t)
-                                            (set-clickback linkID link-start (- del-end link-start))
-                                            (display "style link-start del-end ")(display (list link-start del-end))(newline)
-                                            (display "link")(newline)
-                                            )
-                                          (lambda () ;; redo
-                                            #f
-                                            )))
                      ;(set! link-deleted (- del-end link-start)) ;; the length of head deleted
                      (set! link-deleted (list link-start del-end)))
                     ((and (< link-start del-start)   ;; Case 6; link-start del-start link-end del-end  (eg aaB[Ba]a)
@@ -474,59 +455,13 @@
                           (< link-end del-end))
                      (display " delete case 6 ")(newline)
                      ;; cut off an end portion of link (shift link-end)
-                     ;(ask thislink 'set-end-index! del-start) ;; link-end moved to del-start
                      (shift-link-boundary linkID 'end del-start)
-                     (compoundundomanager-postedit
-                      undo-manager
-                      (make-undoable-edit "link text formating"
-                                          (lambda () ;; undo
-                                            (display "link text formating ")(newline)
-                                            (set-text-style the-doc style-link ;; format new extension
-                                                            del-start
-                                                            (- link-end del-start) #t)
-                                            (set-clickback linkID del-start (- link-end del-start))
-                                            (set-text-style the-doc style-nolink ;; clear formatting after link
-                                                            link-end
-                                                            (- del-end link-end) #t)
-                                            (display "del-start link-end ")(display (list del-start link-end))(newline)
-                                            (display "link ")(newline)
-                                            (display "link-end del-end ")(display (list link-end del-end))(newline)
-                                            (display "nolink")(newline)
-                                            )
-                                          (lambda () ;; redo
-                                            #f
-                                            )))
                      ;(set! link-deleted (- link-end del-start))
                      (set! link-deleted (list del-start link-end))
-                     )
-                    )
+                     ))
               ))
         (display "end of adjust one link delete ")(newline)
         link-deleted))
-    
-    ;; deleted-links-list is in the form '( '() '(1 3) '(3 4) ) 
-    ;; it is either an empty list or a list of boundary values
-    ;; given a pos number get-deleted-link returns the boundary
-    ;; of a deleted link. 
-    (define (get-deleted-link pos deleted-links-list)
-      (display "pos in get delete link ")(display pos)(newline) 
-      (define to-return #f)
-      (map (lambda (lst)
-             (if (not (null? lst))
-                 (begin
-                   (display "iter ")(display lst)(newline)
-                   (if (and (>= pos (car lst)) ;; more than lower bound
-                            (<= pos (cadr lst))) ;; less than upper bound
-                       (set! to-return lst))
-                   ))
-             ) deleted-links-list)
-      (if (not to-return)
-          (begin
-            (display "get-deleted-link returning #f ")(newline)
-            #f
-            )
-          to-return)
-      )
     
     ; adjust links after inserting
     (define (adjust-links-insert start len #!optional break-link)
@@ -560,23 +495,9 @@
                      ;(ask thislink 'set-end-index! (+ link-end ins-len))
                      (shift-link-boundary linkID 'start (+ link-start ins-len))
                      (shift-link-boundary linkID 'end (+ link-end ins-len))
-                                        ;                            (compoundundomanager-postedit
-                                        ;                             undo-manager
-                                        ;                             (make-undoable-edit "link text formating"
-                                        ;                                                 (lambda () ;; undo
-                                        ;                                                   (set-text-style the-doc style-nolink ;; format new extension
-                                        ;                                                                   del-start
-                                        ;                                                                   del-end #t)
-                                        ;                                                   (display "delstart delend ")(display (list del-start del-end))(newline)
-                                        ;                                                   )
-                                        ;                                                 (lambda () ;; redo
-                                        ;                                                   #f
-                                        ;                                                   )))
                      )
                     ((and (< link-start ins-start) (< ins-start link-end) ) ;; Case 2 : ins within link (eg aaL[i]LLaa)
                      (display "insert case 2 (within link) ")(newline)
-                                        ;(if (> extend-len 0)
-                                        ;(ask thislink 'set-end-index! (+ link-end ins-len))
                      (shift-link-boundary linkID 'end (+ link-end ins-len))
                      )
                     ((= link-end ins-start)   ;; Case 3b : ins RIGHT after link end (eg aaLLL[i]aa)
