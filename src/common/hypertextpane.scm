@@ -264,7 +264,9 @@
               (set-clickback linkID new-val (- old-val new-val)))
           (if (and (equal? side 'end)
                    (> new-val old-val))
-              (set-clickback linkID new-val (- new-val old-val))))
+              (set-clickback linkID old-val (- new-val old-val))
+              )
+          )
         
       (if thislink
           (begin
