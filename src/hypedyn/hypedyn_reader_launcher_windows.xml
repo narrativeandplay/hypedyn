@@ -1,8 +1,8 @@
 <launch4jConfig>
-  <dontWrapJar>true</dontWrapJar>
+  <dontWrapJar>false</dontWrapJar>
   <headerType>gui</headerType>
-  <jar>lib\hypedyn.jar</jar>
-  <outfile>hypedyn.exe</outfile>
+  <jar>.\lib\hypedyn-reader.jar</jar>
+  <outfile>hypedyn-reader.exe</outfile>
   <errTitle></errTitle>
   <cmdLine></cmdLine>
   <chdir>.</chdir>
@@ -10,13 +10,13 @@
   <downloadUrl>http://java.com/download</downloadUrl>
   <supportUrl></supportUrl>
   <customProcName>false</customProcName>
-  <stayAlive>false</stayAlive>
+  <stayAlive>true</stayAlive>
   <manifest></manifest>
   <icon>hypedyn.ico</icon>
   <classPath>
-    <mainClass>runhypedyn</mainClass>
-    <cp>lib\kawa.jar</cp>
-    <cp>lib\AppleJavaExtensions.jar</cp>
+    <mainClass>htreader</mainClass>
+    <cp>.\lib\kawa.jar</cp>
+    <cp>.\lib\AppleJavaExtensions.jar</cp>
   </classPath>
   <jre>
     <path></path>
@@ -25,15 +25,15 @@
     <jdkPreference>preferJre</jdkPreference>
   </jre>
   <versionInfo>
-    <fileVersion>2.1.6.0</fileVersion>
-    <txtFileVersion>2.1.6 beta rev 7 28 November 2011</txtFileVersion>
-    <fileDescription>HypeDyn version 2.1.6 beta</fileDescription>
+    <fileVersion>2.1.7.0</fileVersion>
+    <txtFileVersion>2.1.7 rev 27 15 December 2011</txtFileVersion>
+    <fileDescription>HypeDyn Reader version 2.1.7</fileDescription>
     <copyright>2008-2011 National University of Singapore</copyright>
-    <productVersion>2.1.6.0</productVersion>
-    <txtProductVersion>2.1.6 beta rev 7 28 November 2011</txtProductVersion>
-    <productName>HypeDyn</productName>
+    <productVersion>2.1.7.0</productVersion>
+    <txtProductVersion>2.1.7 rev 27 15 December 2011</txtProductVersion>
+    <productName>HypeDyn Reader</productName>
     <companyName>National University of Singapore</companyName>
-    <internalName>HypeDyn</internalName>
-    <originalFilename>HypeDyn.exe</originalFilename>
+    <internalName>HypeDyn Reader</internalName>
+    <originalFilename>HypeDynReader.exe</originalFilename>
   </versionInfo>
 </launch4jConfig>

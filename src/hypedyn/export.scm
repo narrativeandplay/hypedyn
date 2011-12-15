@@ -273,6 +273,7 @@
                               export-standalone-linux-app-filename)))
          (lib-folder (if (= export-platform export-standalone-macos)
                          (make-file (string-append (path-file export-folder) 
+                                                   export-standalone-macos-app-filename
                                                    export-standalone-macos-lib-folder))
                          (make-file (string-append (path-file export-folder) 
                                                    export-standalone-nonmac-lib-folder))))
@@ -362,6 +363,7 @@
 
 ; helper fn to create folder, first deleting if it already exists
 (define (export-create-folder export-folder)
+  (display "****** export-create-folder: ")(display export-folder)(newline)
   ; create folder, first deleting if it already exists
   (if (file-exists? export-folder)
       (if (file-directory? export-folder)

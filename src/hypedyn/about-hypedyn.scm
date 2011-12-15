@@ -50,7 +50,7 @@
   (set-text-component about-editor #f #t)
   (set-text about-editor 
             "HypeDyn hypertext fiction editor 
-Version 2.1.6 rev 7, 28 November 2011\n
+Version 2.1.7 rev 27, 15 December 2011\n
 Copyright (C) 2008-2011
 National Univeristy of Singapore\n
 This program is free software; you can redistribute it and/or 
@@ -89,7 +89,8 @@ Zeng Qiang, Alex Mitchell\n
 Testing:
 Ruchi Bajoria, Zeng Qiang, Alex Mitchell,
 Kevin McGee, Kow Wei Man, Tim Merritt, Lim Teng Chek,
-Lim Teng Howe, Shane Hua, and students of NM2217 and NM3222.\n
+Lim Teng Howe, Shane Hua, Praveen Sudalaimuthu Namasivayam,
+and the students of NM2217 and NM3222.\n
 This work was funded in part under a Singapore Ministry of 
 Education Academic Research Fund Faculty Research Committee 
 (Tier 1) research grant, \"Understanding Interactivity: 
