@@ -218,9 +218,11 @@
     
     ; set clickback on a range of text
     (define (set-clickback this-linkID start-index len)
+      (display "set-clicback! ***********")(display (list this-linkID start-index len))(newline)
       (let ((link-attribute-set (make-attribute-set)))
         (set-attribute-linkAction link-attribute-set
                                   (lambda ()
+                                    (display "clickback ***********")(display this-linkID)(newline)
                                     (clickback this-linkID)))
         (set-attribute-linkID link-attribute-set this-linkID)
         (set-text-style the-doc

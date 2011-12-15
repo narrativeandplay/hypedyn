@@ -38,7 +38,7 @@
                set-basic-version! set-normal-version! set-sculptural-version! set-full-version!)
 
 ; enable/disable undo
-(define-private undo-enabled #f)
+(define-private undo-enabled #t)
 (define (is-undo-enabled?)
   undo-enabled)
 (define (set-undo-enabled! in-flag)
