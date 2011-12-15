@@ -353,7 +353,7 @@
     ; adjust one link after deletion
     ; returns #t if need to manually clean up after link deletion
     (define (adjust-one-link-delete del-start del-len linkID)
-      (let ((link-deleted #f)
+      (let ((link-deleted '())
             (thislink (get 'links linkID)))
         (if thislink
             (let ((link-start (ask thislink 'start-index))
@@ -404,9 +404,10 @@
               ;; a - non link text,  b - link text
               ;; [ - start of deletion, ] - end of deletion
               (cond ((= del-start del-end) ;; Case 0a
-                     #f ;; empty deletion (nothing deleted)
+                     (set! link-deleted '()) ;; empty deletion (nothing deleted)
                      )
                     ((= link-start link-end) ;; Case 0b
+                     (set! link-deleted '())
                      (display "[ZERO LEN LINK BUG ALERT!!]")(newline)
                      )
                     ((<= del-end link-start) ;; Case 1; del-start del-end link-start link-end (eg [a]aBBaa, [aa]BBaa) 0123
