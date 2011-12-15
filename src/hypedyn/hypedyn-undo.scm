@@ -146,16 +146,21 @@
   (display " del-in-nodeeditor ")(display del-in-nodeeditor)(newline)
   
   ;; now need to update the node editor
-;  (if del-in-nodeeditor
-;      (ask node-editor 'addlink thelink))
+;;  (if del-in-nodeeditor
+;;      (ask node-editor 'addlink thelink))
   
   ;; when should we not do this? when should del-in-nodeeditor be false? and why?
-  ;; undoing a deletion of link text (whole link) seem to not underline the text properly 
-  (ask node-editor 'addlink thelink)
+  ;; undoing a deletion of link text (whole link) seem to not underline the text properly
+  
+      
   
   ; and the link list - cheat by just repopulating the list (this updates the left list in the node editor)
   (if (= from-nodeID edited-nodeID)
-      (ask link-list 'populate-list from-node #f)
+      (begin
+        ;; all these only makes sense if we are editing the node in the node editor
+        (ask link-list 'populate-list from-node #f)
+        (ask node-editor 'addlink thelink)
+        )
       (begin
         (display "in delete-link-undo ")(display (list from-nodeID edited-nodeID))(newline)
         (display "from-nodeID edited-nodeID different so did not add to link-list ")(newline)

@@ -324,6 +324,7 @@
     ;; to be called before doing link boundary shifting
     ;; updates the clickback boundaries of the link
     (define (post-clickback-resize-undoable linkID)
+      (display "[posting clickback] ")(newline)
       (compoundundomanager-postedit
        undo-manager
        (make-undoable-edit "link clickback resize"
@@ -578,12 +579,22 @@
     ; end, or next position is not the same link
     (define (end-of-link? pos)
       (let ((text-length (get-text-length the-doc)))
+        (display "end of link test ")(display pos)(newline)
+        (display " (> text-length 0) ")(display (> text-length 0))(newline)
+        (display " (> pos 0) ")(display (> pos 0))(newline)
+        (display " (is-link? (- pos 1)) ")(display (is-link? (- pos 1)))(newline)
+        (display " or (= pos text-length) ")(display (= pos text-length))(newline)
+        (display " or (not (eq? (get-attribute-linkAction-pos the-doc (- pos 1))
+                           (get-attribute-linkAction-pos the-doc pos)))")
+        (display (not (eq? (get-attribute-linkAction-pos the-doc (- pos 1))
+                           (get-attribute-linkAction-pos the-doc pos))))(newline)
         (and (> text-length 0)
              (> pos 0)
              (is-link? (- pos 1))
              (or (= pos text-length)
-                 (not (eq? (get-attribute-linkAction-pos the-doc (- pos 1))
-                           (get-attribute-linkAction-pos the-doc pos)))))))
+                 (not (equal? (get-attribute-linkAction-pos the-doc (- pos 1))
+                           (get-attribute-linkAction-pos the-doc pos)))))
+        ))
 
     ; check if we're at the start of a link:
     ; not a zero-length document, not at the end,
@@ -779,7 +790,10 @@
       (start-compound-undoable-event "Typing(insert) compound") ; start compound event
       
       ;; used by insert-blank-space atm
+      (display "style to use ")(display (style-to-use offset))(newline)
+      (display "end of link? ")(display (end-of-link? offset))(newline)
       (filter-bypass-insert fb offset string (style-to-use offset))
+      
       #f)
 
     ; handle remove
@@ -815,13 +829,36 @@
       (set! remove-cache (list offset string-removed len))
       
       ;; replace has positive len variable while insert has 0 len
-      (if (> len 0)
-          (filter-bypass-replace fb offset len string (style-to-use offset))
+      ;(if (> len 0)
+      ;    (filter-bypass-replace fb offset len string (style-to-use offset))
           (begin
-            ;(display "style to use ")(display (style-to-use offset))(newline)
-          (filter-bypass-insert fb offset string (style-to-use offset))
+            (display "style to use replace ")(display (style-to-use offset))(newline)
+            (display "this returns .. ")(display (get-attributes-pos the-doc (- offset 1)))(newline)
+            (display "this is class tyep ")(display (invoke (get-attributes-pos the-doc (- offset 1)) 'get-class))(newline)
+            (display "class type ")(display (invoke (style-to-use offset) 'get-class))(newline)
+            
+            (define test-cast (as <javax.swing.text.AttributeSet> (get-attributes-pos the-doc (- offset 1))))
+            (display "test-cast ")(display test-cast)(newline)
+            (display "test cast class ")(display (invoke test-cast 'get-class))(newline)
+            
+            (display "offset ")(display (- offset 1))(newline)
+            
+            (display "is this attribute set ")
+            (display (javax.swing.text.AttributeSet? (get-attributes-pos the-doc (- offset 1))))
+            (newline)
+            
+            (display "doc len ")(display (invoke the-doc 'get-length))(newline)
+;;            (set-text-style the-doc test-cast
+;;                            ;(- (invoke the-doc 'get-length) 6)'
+;;                            0
+;;                            (invoke the-doc 'get-length) #t)
+            
+            (display "is style-link ")(display (equal? (style-to-use offset) style-link))(newline)
+            (display "is style-nolink ")(display (equal? (style-to-use offset) style-nolink))(newline)
+            (display "!!!end of link?!! ")(display (end-of-link? offset))(newline)
+            (filter-bypass-insert fb offset string (style-to-use offset))
             )
-          )
+       ;   )
       #f)
 
     ;; =========================
