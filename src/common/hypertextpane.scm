@@ -250,23 +250,31 @@
     (define (renamelink in-linkID in-newname)
       'ok)
     
-        ;; shift the boundaries of the link and 
-    (define (shift-link-boundary linkID side new-val)
+    ;; shift the boundaries of the link and
+    ;; trimming flag differentiate between a link shifting and a trimming when boundary shifts
+    (define (shift-link-boundary linkID side new-val #!optional trimming)
       (let* ((thislink (get 'links linkID))
              (old-start (ask thislink 'start-index))
              (old-end (ask thislink 'end-index)))
         
         ;; takes care of clickback setting when resizing 
         ;; boundaries (new-val is the one you're setting to now)
-        (define (clickback-resize old-val new-val side)
-          (if (and (equal? side 'start)
-                   (> old-val new-val))
-              (set-clickback linkID new-val (- old-val new-val)))
-          (if (and (equal? side 'end)
-                   (> new-val old-val))
-              (set-clickback linkID old-val (- new-val old-val))
-              )
-          )
+;        (define (clickback-resize old-val new-val side)
+;          (display "clickback resize linkID ")(display linkID)(newline)
+;          (display "old-val new-val ")(display (list old-val new-val trimming))(newline)
+;          (if (and (equal? side 'start)
+;                   (> old-val new-val)
+;                   trimming)
+;              (begin
+;                (display "shifting start ")(newline)
+;                (set-clickback linkID new-val (- old-val new-val))))
+;          (if (and (equal? side 'end)
+;                   (> new-val old-val)
+;                   trimming)
+;              (begin
+;                (display "shifting end ")(newline)
+;                (set-clickback linkID old-val (- new-val old-val)))
+;              ))
         
       (if thislink
           (begin
@@ -282,13 +290,13 @@
                                          (set! thislink (get 'links linkID))
                                          ;(display " setting start to ")(display old-start)(newline)
                                          (ask thislink 'set-start-index! old-start)
-                                         (clickback-resize new-val old-start side)
+                                         ;(clickback-resize new-val old-start side)
                                          ) ;; undo
                                        (lambda () ;; redo
                                          (set! thislink (get 'links linkID))
                                          ;(display " setting start to ")(display new-val)(newline)
                                          (ask thislink 'set-start-index! new-val)
-                                         (clickback-resize old-start new-val side)
+                                         ;(clickback-resize old-start new-val side)
                                          )))
                   ))
             (if (equal? side 'end)
@@ -301,17 +309,43 @@
                                          (set! thislink (get 'links linkID))
                                          ;(display " setting end to ")(display old-end)(newline)
                                          (ask thislink 'set-end-index! old-end)
-                                         (clickback-resize new-val old-end side)
+                                         ;(clickback-resize new-val old-end side)
                                          ) 
                                        (lambda () ;; redo
                                          (set! thislink (get 'links linkID))
                                          ;(display " setting end to ")(display new-val)(newline)
                                          (ask thislink 'set-end-index! new-val)
-                                         (clickback-resize old-end new-val side)
+                                         ;(clickback-resize old-end new-val side)
                                          )))
                   ))
             ))
       ))
+    
+    ;; to be called before doing link boundary shifting
+    ;; updates the clickback boundaries of the link
+    (define (post-clickback-resize-undoable linkID)
+      (compoundundomanager-postedit
+       undo-manager
+       (make-undoable-edit "link clickback resize"
+                           (lambda () ;; undo 
+                             (let* ((this-link (get 'links linkID))
+                                    (link-start (ask this-link 'start-index))
+                                    (link-end (ask this-link 'end-index))
+                                    (link-len (- link-end link-start)))
+                               (set-clickback linkID link-start link-len)
+                               ))
+                           (lambda () ;; redo
+                             #f
+                             ))))
+    
+    ;; bound lst is a two element list with start and end position of the link
+        ;; fragment that we are suppose to restore underline/bold formatting to
+        (define (format-link-text bound-lst)
+          (display "   bound-lst ")(display bound-lst)(newline)
+          (if (not (null? bound-lst)) 
+              (set-text-style the-doc style-link ;; format new extension
+                              (car bound-lst) ;; start
+                              (- (cadr bound-lst) (car bound-lst)) #t)))
     
     ; adjust links after deleting
     ; returns #t if need to manually clean up after link deletion
@@ -328,15 +362,6 @@
         
         (display "  deleted link-bound ")(display deleted-link-bound)(newline)
         
-        ;; bound lst is a two element list with start and end position of the link
-        ;; fragment that we are suppose to restore underline/bold formatting to
-        (define (format-link-text bound-lst)
-          (display "   bound-lst ")(display bound-lst)(newline)
-          (if (not (null? bound-lst)) 
-              (set-text-style the-doc style-link ;; format new extension
-                              (car bound-lst) ;; start
-                              (- (cadr bound-lst) (car bound-lst)) #t)))
-        
         (compoundundomanager-postedit
          undo-manager
          (make-undoable-edit "link text formating"
@@ -351,6 +376,8 @@
                                #f
                                )))
         ))
+    
+    
 
     ; adjust one link after deletion
     ; returns #t if need to manually clean up after link deletion
@@ -438,7 +465,8 @@
                           (<= link-start del-start))    ;; makes sure not the whole link 
                      ;; Entire deletion is inside link but not encompassing it, (shorten link by length of deletion)
                      (display " delete case 4 ")(newline)
-                     (shift-link-boundary linkID 'end (- link-end del-len))
+                     (post-clickback-resize-undoable linkID)
+                     (shift-link-boundary linkID 'end (- link-end del-len) #t)
                      (display "link start ")(display link-start)(newline)
                      (display "new link end ")(display (- link-end del-len))(newline)
                      ;(set! link-deleted del-len)
@@ -449,7 +477,8 @@
                           (< del-end link-end))
                      (display " delete case 5 ")(newline)
                      ; a portion of the link at the head is deleted (shift link and shorten)
-                     (shift-link-boundary linkID 'start del-start)
+                     (post-clickback-resize-undoable linkID)
+                     (shift-link-boundary linkID 'start del-start #t)
                      (shift-link-boundary linkID 'end (+ del-start (- link-end del-end)))
                      ;(set! link-deleted (- del-end link-start)) ;; the length of head deleted
                      (set! link-deleted (list link-start del-end)))
@@ -458,7 +487,8 @@
                           (< link-end del-end))
                      (display " delete case 6 ")(newline)
                      ;; cut off an end portion of link (shift link-end)
-                     (shift-link-boundary linkID 'end del-start)
+                     (post-clickback-resize-undoable linkID)
+                     (shift-link-boundary linkID 'end del-start #t)
                      ;(set! link-deleted (- link-end del-start))
                      (set! link-deleted (list del-start link-end))
                      ))
@@ -882,7 +912,8 @@
            undo-manager
            (make-undoable-edit "Typing(remove)"
                                (lambda () ;; undo
-                                 (remove-undo event-offset event-string event-len))
+                                 (remove-undo event-offset event-string event-len)
+                                 )
                                (lambda () ;; redo
                                  (insert-undo event-offset event-string event-len))
                                )))
