@@ -34,9 +34,25 @@
   <property name="build.htapplet.jar"    value="${build.dir}/${base.htapplet.jar}"/>
   <property name="build.kawa.jar"    value="${kawa.dir}/${base.kawa.jar}"/>
 	
-  <condition property="macosx"> <os family="mac" />    </condition>
-  <condition property="windows"><os family="windows" /></condition>
-  <condition property="linux">  <os family="unix" />   </condition>
+  <condition property="windows"><os family="windows" /> </condition>
+  
+  	<condition property="linux">
+  		<and>
+  		  <os family="unix"/>
+  		  <not>
+  		    <os family="mac"/>
+  	      </not>
+  		</and>
+  	  </condition>
+  	
+  	<condition property="macosx">
+  		<and>
+  		  <os family="mac"/>
+  		  <not>
+  		  	<istrue value="${linux}"/>
+  	      </not>
+  		</and>
+  	  </condition>
 
   <!-- build files, to be cleaned -->
   <fileset id="build.classes" dir="${build.dir}">
@@ -120,25 +136,29 @@
  <target name="dist-common" >
 
      <condition property="dist.editor.package" value="${dist.dir}/HypeDyn.win">
-  	    <os family="windows" /> </condition>
-     <condition property="dist.editor.package" value="${dist.dir}/HypeDyn.linux">
-        <os family="unix" /> </condition>
-     <condition property="dist.editor.package" value="${dist.dir}/HypeDyn.app">
-  	    <os family="mac" /> </condition>
+     	<istrue value="${windows}"/> </condition>
+     <!-- <condition property="dist.editor.package" value="${dist.dir}/HypeDyn.linux">
+        <os family="unix" /> </condition> -->
+ 	<condition property="dist.editor.package" value="${dist.dir}/HypeDyn.linux">
+ 		<istrue value="${linux}"/> </condition>
+    <condition property="dist.editor.package" value="${dist.dir}/HypeDyn.app">
+     	<istrue value="${macosx}"/> </condition>
+ 	
+ 	<!-- <condition property="macosx"> <os family="mac" />    </condition> -->
   	 
      <!-- only used in macosx -->
  	<condition property="dist.reader.package" value="${dist.dir}/HypeDynReader.app">
- 	  	<os family="mac" /> </condition>
+ 		<istrue value="${macosx}"/> </condition>
  	
   	 <property name="src.editor.package"  value="${src.dir}/HypeDyn_package.app"/>
  	 <property name="src.reader.package" value="${src.dir}/HypeDynReader_package.app" />
  	
  	<!-- only used in macosx -->
      <condition property="dist.editor.package.javadir" value="${dist.editor.package}/Contents/Resources/Java" >
-	    <os family="mac" /> 
+     	<istrue value="${macosx}"/> 
      </condition>
  	<condition property="dist.reader.package.javadir" value="${dist.reader.package}/Contents/Resources/Java" >
- 		<os family="mac" /> 
+ 		<istrue value="${macosx}"/>
  	</condition>
  	
  	<condition property="dist.editor.package.javadir" value="${dist.editor.package}/Java">
