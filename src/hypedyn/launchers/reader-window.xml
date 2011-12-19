@@ -1,7 +1,7 @@
 <launch4jConfig>
   <dontWrapJar>true</dontWrapJar>
   <headerType>gui</headerType>
-  <jar>Java\reader.jar</jar>
+  <jar>Java\hypedyn-reader.jar</jar>
   <outfile>reader.exe</outfile>
   <errTitle></errTitle>
   <cmdLine></cmdLine>
