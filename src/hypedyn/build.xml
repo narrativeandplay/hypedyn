@@ -168,6 +168,14 @@
  	   </or>
  	</condition>
 
+   
+   <condition property="dist.editor.package.appstub" value="${dist.editor.package}/Contents/MacOS/JavaApplicationStub" >
+      <istrue value="${macosx}"/>
+   </condition>
+   <condition property="dist.reader.package.appstub" value="${dist.reader.package}/Contents/MacOS/JavaApplicationStub" >
+      <istrue value="${macosx}"/>
+   </condition>
+
     <!-- copy the help file -->
   	<copy file="${src.dir}/hypedyn.txt" todir="${dist.editor.package.javadir}"/>
 
@@ -185,7 +193,7 @@
   <target name="dist-editor-linux" if="linux">
 	<!-- copy the executable -->
   	<copy file="${src.dir}/hypedyn" todir="${dist.editor.package}" />
-  	<chmod file="${dist.editor.package}/hypedyn" perm="744" />
+  	<chmod file="${dist.editor.package}/hypedyn" perm="a+x" />
   	      		
    	<!-- copy the jar files to the linux bundle -->
     <copy file="${build.hypedyn.jar}" todir="${dist.editor.package.javadir}"/>
@@ -218,6 +226,7 @@
   	<copy todir="${dist.editor.package}">
   	   <fileset dir="${src.editor.package}"/>
   	</copy>
+	<chmod file="${dist.editor.package.appstub}" perm="a+x"/>
   </target>
   	
 	<!-- Distribute Reader Linux -->
@@ -227,7 +236,7 @@
   	<copy file="${build.kawa.jar}" todir="${dist.editor.package.javadir}"/>
   		
   	<copy file="${src.dir}/hypedyn-reader" todir="${dist.editor.package}" />
-	<chmod file="${dist.editor.package}/hypedyn-reader" perm="744"/>
+	<chmod file="${dist.editor.package}/hypedyn-reader" perm="a+x"/>
   </target>
   	      	
 	<!-- Distribute Reader Windows -->
@@ -244,13 +253,14 @@
 	
   <target name="dist-reader-macosx" depends="" if="macosx" >
   	<!-- copy the jar files to the mac bundle -->
-  	<copy file="$${build.htreader.jar}" todir="${dist.reader.package.javadir}"/>
+  	<copy file="${build.htreader.jar}" todir="${dist.reader.package.javadir}"/>
   	<copy file="${build.kawa.jar}" todir="${dist.reader.package.javadir}"/>
   	  	
   	<!-- copy the mac bundle skeleton -->
   	<copy todir="${dist.reader.package}">
   	   <fileset dir="${src.reader.package}"/>
   	</copy>
+        <chmod file="${dist.reader.package.appstub}" perm="a+x"/>
   </target>
   
   <!-- clean -->
