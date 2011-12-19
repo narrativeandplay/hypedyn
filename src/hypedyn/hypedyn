@@ -2,4 +2,4 @@
 
 APPDIR=$(dirname "$0")
 cd "$APPDIR"
-java -Xms128M -Xmx256M -Djava.library.path="$APPDIR" -cp "$APPDIR/lib/hypedyn.jar:$APPDIR/lib/AppleJavaExtensions.jar:$APPDIR/lib/kawa.jar" runhypedyn
+java -Xms128M -Xmx256M -Djava.library.path="$APPDIR" -cp "$APPDIR/Java/hypedyn.jar:$APPDIR/Java/AppleJavaExtensions.jar:$APPDIR/Java/kawa.jar" runhypedyn
