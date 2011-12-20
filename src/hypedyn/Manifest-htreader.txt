@@ -1,2 +1,0 @@
-Main-Class: htreader
-Class-Path: htreader.jar kawa.jar

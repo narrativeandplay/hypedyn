@@ -1,2 +1,0 @@
-Main-Class: runhypedyn
-Class-Path: kawa.jar
