@@ -22,7 +22,7 @@
   <property name="launcher.dir" value="${basedir}/launchers" />
   <property name="doc.dir"      value="${basedir}/../../doc/" />
   <property name="appletlib.dir" value="${basedir}/../../lib/" />
-  <property name="mac.package.dir" value="${basedir}/../../lib/MacPackage/" />
+  <property name="mac.package.dir" value="${basedir}/../../lib/mac-package/" />
 
   <property name="editor-mainclass" value="runhypedyn.scm"/>
   <property name="reader-mainclass" value="htreader.scm"/>
@@ -298,7 +298,7 @@
   	<copy file="${build.kawa.jar}" todir="${dist.reader.package.javadir}"/>
   	
   	<!-- rename to kawa.jar -->
-  	<move file="${dist.editor.package.javadir}/${base.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar" />
+  	<move file="${dist.reader.package.javadir}/${base.kawa.jar}" tofile="${dist.reader.package.javadir}/kawa.jar" />
   	  	
   	<!-- copy the mac bundle skeleton -->
   	<copy todir="${dist.reader.package}">
