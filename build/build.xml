@@ -373,11 +373,10 @@
 	<!-- Distribute Applet Common (not os dependent) -->
 	<target name="dist-applet-common" >
 		<copy file="${build.htapplet.jar}" todir="${dist.applet.package}" />
-		<copy file="${appletlib.dir}/htapplet.html" todir="${dist.applet.package}" />
 		<copy file="${appletlib.dir}/${base.appletkawa.jar}" todir="${dist.applet.package}" />
-		<copy file="${appletlib.dir}/htapplet.html" todir="${dist.applet.package}" />
 		<copy file="${appletlib.dir}/AppleJavaExtensions.jar" todir="${dist.applet.package}" />
-		<copy file="${appletlib.dir}/story.dyn" todir="${dist.applet.package}" />
+		<copy file="${shared.dir}/htapplet.html" todir="${dist.applet.package}" />
+		<copy file="${shared.dir}/story.dyn" todir="${dist.applet.package}" />
 	</target>
   
   <!-- clean -->
