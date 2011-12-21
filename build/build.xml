@@ -145,7 +145,7 @@
    </condition>
   	
   	<!-- determine where to place export folder -->
-  	<condition property="export.dir" value="${dist.editor.package.javadir}/" >
+  	<condition property="export.dir" value="${dist.editor.package.javadir}/export/" >
   		<istrue value="${macosx}"/>
   	</condition>
   	
@@ -246,7 +246,7 @@
 
 	<!-- copy kawa.jar and hypedyn-reader.jar -->
 	<copy file="${dist.editor.package.javadir}/kawa.jar" todir="${export.dir}"/>
-	<copy file="${dist.editor.package.javadir}/hypedyn-reader.jar" todir="${export.dir}"/>
+	<copy file="${dist.reader.package.javadir}/hypedyn-reader.jar" todir="${export.dir}"/>
 </target>
  
   <!-- Distribute Editor Linux -->

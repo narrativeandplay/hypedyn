@@ -3,3 +3,6 @@
 not-for-release
 releases
 src/tptest
+bin
+temp
+src/hypedyn/myprefs
