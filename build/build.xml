@@ -16,17 +16,21 @@
   
   <property name="kawa.dir"      value="/usr/local/share/java/"/>
 
-  <property name="src.dir"      value="${basedir}"/>
-  <property name="build.dir"    value="${basedir}/build"/>
-  <property name="dist.dir"     value="${basedir}/bin"/>
-  <property name="launcher.dir" value="${basedir}/launchers" />
-  <property name="doc.dir"      value="${basedir}/../../doc/" />
-  <property name="appletlib.dir" value="${basedir}/../../lib/" />
-  <property name="mac.package.dir" value="${basedir}/../../lib/mac-package/" />
+  <property name="src.dir"      value="${basedir}/../src/hypedyn/"/>
+  <property name="temp.dir"    value="${basedir}/temp"/>
+  <property name="build.dir"    value="${basedir}"/>
+  <property name="dist.dir"     value="${basedir}/../bin/"/>
+  
+  <property name="shared.dir"	value="${build.dir}/shared/" />
+  <property name="launcher.windows.dir" value="${build.dir}/windows/launcher" />
+  <property name="launcher.linux.dir" value="${build.dir}/linux/launcher" />
+  <property name="doc.dir"      value="${basedir}/../doc/" />
+  <property name="appletlib.dir" value="${basedir}/../lib/" />
+  <property name="mac.package.dir" value="${basedir}/macosx/" />
 
-  <property name="editor-mainclass" value="runhypedyn.scm"/>
-  <property name="reader-mainclass" value="htreader.scm"/>
-  <property name="applet-mainclass" value="htapplet.scm"/>
+  <property name="editor-mainclass" value="${src.dir}/runhypedyn.scm"/>
+  <property name="reader-mainclass" value="${src.dir}/htreader.scm"/>
+  <property name="applet-mainclass" value="${src.dir}/htapplet.scm"/>
 
   <property name="base.kawa.jar" value="kawa.jar"/> 
 	
@@ -35,9 +39,9 @@
   <property name="base.htreader.jar" value="hypedyn-reader.jar"/>
   <property name="base.appletkawa.jar" value="kawa-applet.jar"/>
   
-  <property name="build.hypedyn.jar"    value="${build.dir}/${base.hypedyn.jar}"/>
-  <property name="build.htreader.jar"    value="${build.dir}/${base.htreader.jar}"/>
-  <property name="build.htapplet.jar"    value="${build.dir}/${base.htapplet.jar}"/>
+  <property name="build.hypedyn.jar"    value="${temp.dir}/${base.hypedyn.jar}"/>
+  <property name="build.htreader.jar"    value="${temp.dir}/${base.htreader.jar}"/>
+  <property name="build.htapplet.jar"    value="${temp.dir}/${base.htapplet.jar}"/>
   <property name="build.kawa.jar"    value="${kawa.dir}/${base.kawa.jar}"/>
 	
   <condition property="windows"><os family="windows" /> </condition>
@@ -61,7 +65,7 @@
   	  </condition>
 
   <!-- build files, to be cleaned -->
-  <fileset id="build.classes" dir="${build.dir}">
+  <fileset id="build.classes" dir="${temp.dir}">
      <include name="*.class"/>
   </fileset>
   
@@ -97,11 +101,11 @@
     <echo>
         version=${version}
     	build.hypedyn.jar=${build.hypedyn.jar}
-        build.dir=${build.dir}
+        temp.dir=${temp.dir}
     </echo>
   	
   <!-- set up directory structure -->
-    <mkdir dir="${build.dir}"/>
+    <mkdir dir="${temp.dir}"/>
     <mkdir dir="${dist.dir}"/>
   </target>
 
@@ -117,13 +121,13 @@
 	<java failonerror="true"
 		classname="kawa.repl"
 	    classpath="${build.kawa.jar};${appletlib.dir}/AppleJavaExtensions.jar">
-	    <arg line="-d ${build.dir} --warn-invoke-unknown-method --warn-undefined-variable --main -C ${editor-mainclass}"/>
+	    <arg line="-d ${temp.dir} --warn-invoke-unknown-method --warn-undefined-variable --main -C ${editor-mainclass}"/>
 	</java>
 	<!-- put into jar file -->
 	<jar jarfile="${build.hypedyn.jar}"
-	     basedir="${build.dir}"
+	     basedir="${temp.dir}"
 		 excludes="${base.hypedyn.jar}"
-	     manifest="${src.dir}/Manifest/Manifest.editor"/>
+	     manifest="${build.dir}/manifest/Manifest.editor"/>
   </target>
 
   <target name="build-reader-common" >
@@ -133,13 +137,13 @@
   	<java failonerror="true"
   		    classname="kawa.repl"
   	        classpath="${build.kawa.jar};${appletlib.dir}/AppleJavaExtensions.jar">
-  	      <arg line="-d ${build.dir} --warn-invoke-unknown-method --warn-undefined-variable --main -C ${reader-mainclass}"/>
+  	      <arg line="-d ${temp.dir} --warn-invoke-unknown-method --warn-undefined-variable --main -C ${reader-mainclass}"/>
   	    </java>
   		<!-- put into jar file -->
   		<jar jarfile="${build.htreader.jar}"
-  	    	 basedir="${build.dir}"
+  	    	 basedir="${temp.dir}"
   			 excludes="${base.htreader.jar}"
-  	    	 manifest="${src.dir}/Manifest/Manifest.reader"/>
+  	    	 manifest="${build.dir}/manifest/Manifest.reader"/>
   </target>
 	
   <target name="build-applet-common" >
@@ -150,14 +154,14 @@
 	    <java failonerror="true"
 		    classname="kawa.repl"
 	        classpath="${appletlib.dir}/${base.appletkawa.jar};${appletlib.dir}/AppleJavaExtensions.jar">
-	      <arg line="-d ${build.dir} --warn-invoke-unknown-method --warn-undefined-variable --applet -C ${applet-mainclass}"/>
+	      <arg line="-d ${temp.dir} --warn-invoke-unknown-method --warn-undefined-variable --applet -C ${applet-mainclass}"/>
 	    </java>
 		
 		<!-- put into jar file -->
 		<jar jarfile="${build.htapplet.jar}"
-	    	 basedir="${build.dir}"
+	    	 basedir="${temp.dir}"
 			 excludes="${base.htapplet.jar}"
-	    	 manifest="${src.dir}/Manifest/empty.txt"/>
+	    	 manifest="${build.dir}/manifest/empty.txt"/>
 	</target>
 
   <!-- DISTTRIBUTE -->
@@ -176,7 +180,7 @@
      	<istrue value="${macosx}"/> 
     </condition>
      	
-    <property name="dist.applet.package" value="${dist.dir}/HypeDyn_applet" />
+    <property name="dist.applet.package" value="${dist.dir}/HypeDyn-applet" />
   	 
      <!-- only used in macosx -->
  	<condition property="dist.reader.package" value="${dist.dir}/HypeDynReader.app">
@@ -214,7 +218,7 @@
 
   	<!-- copy the examples and tutorials -->
   	<copy todir="${dist.editor.package.javadir}/examples">
-  		<fileset dir="${src.dir}/examples"/>
+  		<fileset dir="${shared.dir}/examples"/>
   	</copy>
   	<copy todir="${dist.editor.package.javadir}/tutorials">
   		<fileset file="${doc.dir}/*.pdf"/>
@@ -224,15 +228,28 @@
   <!-- Distribute Editor Linux -->
 	
   <target name="dist-editor-linux" if="linux">
+	<echo>
+		dist.editor.package=${dist.editor.package}
+		${dist.editor.package}/hypedyn
+	</echo>
+
 	<!-- copy the executable -->
-  	<copy file="${launcher.dir}/hypedyn" todir="${dist.editor.package}" />
+  	<copy file="${launcher.linux.dir}/hypedyn" todir="${dist.editor.package}" />
+	<available property="present"
+               file="${dist.editor.package}/hypedyn"
+               />
+
+	<echo>
+		hypeydn file is present? ${present}
+	</echo>
+
   	<chmod file="${dist.editor.package}/hypedyn" perm="a+x" />
   	      		
    	<!-- copy the jar files to the linux bundle -->
-    <copy file="${build.hypedyn.jar}" todir="${dist.editor.package.javadir}"/>
+    	<copy file="${build.hypedyn.jar}" todir="${dist.editor.package.javadir}"/>
   	<copy file="${build.kawa.jar}" todir="${dist.editor.package.javadir}"/>
   	<!-- rename to kawa.jar -->
-  	  	<move file="${dist.editor.package.javadir}/${base.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar" />
+  	<move file="${dist.editor.package.javadir}/${base.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar" />
   </target>
 
 
@@ -241,7 +258,7 @@
   <target name="dist-editor-windows" if="windows">
   	
 	<!-- copy the executable -->
-  	<copy file="${launcher.dir}/hypedyn.exe" todir="${dist.editor.package}" />
+  	<copy file="${launcher.windows.dir}/hypedyn.exe" todir="${dist.editor.package}" />
   		  	      		
    	<!-- copy the jar files to the windows bundle -->
     <copy file="${build.hypedyn.jar}" todir="${dist.editor.package.javadir}"/>
@@ -275,7 +292,7 @@
 	<!-- rename to kawa.jar -->
   	<move file="${dist.editor.package.javadir}/${base.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar" />
   		
-  	<copy file="${launcher.dir}/hypedyn-reader" todir="${dist.editor.package}" />
+  	<copy file="${launcher.linux.dir}/hypedyn-reader" todir="${dist.editor.package}" />
 	<chmod file="${dist.editor.package}/hypedyn-reader" perm="a+x"/>
   </target>
   	      	
@@ -287,7 +304,7 @@
 	<!-- rename to kawa.jar -->
   	<move file="${dist.editor.package.javadir}/${base.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar" />
     	
-  	<copy file="${launcher.dir}/reader.exe" todir="${dist.editor.package}" />
+  	<copy file="${launcher.windows.dir}/reader.exe" todir="${dist.editor.package}" />
   </target>
   	
 	<!-- Distribute Reader Mac -->
@@ -323,7 +340,7 @@
   	 <delete>
   	    <fileset refid="build.classes"/>
   	 </delete>
-  	 <delete dir="${build.dir}"/>
+  	 <delete dir="${temp.dir}"/>
   </target>
 
   <target name="clean-dist">
