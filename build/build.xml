@@ -86,7 +86,7 @@
   <!-- <target name="dist" depends="dist-editor, dist-reader, dist-applet" /> -->
 	
   <!-- note clean-dist and dist-common is only done once -->
-  <target name="dist-editor" depends="dist-editor-windows, dist-editor-linux, dist-editor-macosx" />
+  <target name="dist-editor" depends="dist-common, dist-editor-windows, dist-editor-linux, dist-editor-macosx" />
   <target name="dist-reader" depends="dist-reader-windows, dist-reader-linux, dist-reader-macosx" />
   <target name="dist-applet" depends="dist-applet-common" />
   <!-- <target name="dist-applet" depends="dist-applet-windows, dist-applet-linux, dist-applet-macosx, dist-common-windows" /> -->
@@ -136,6 +136,14 @@
  			<istrue value="${linux}"/>
  	   </or>
  	</condition>
+  	
+  	<!-- reader and editor in linux and windows just share the same Java folder -->
+  	<condition property="dist.reader.package.javadir" value="${dist.editor.package}/Java">
+  	 	    <or> 
+  	 	    	<istrue value="${windows}"/>
+  	 			<istrue value="${linux}"/>
+  	 	   </or>
+  	</condition>
 
    <condition property="dist.editor.package.appstub" value="${dist.editor.package}/Contents/MacOS/JavaApplicationStub" >
       <istrue value="${macosx}"/>
@@ -248,6 +256,19 @@
 	<copy file="${dist.editor.package.javadir}/kawa.jar" todir="${export.dir}"/>
 	<copy file="${dist.reader.package.javadir}/hypedyn-reader.jar" todir="${export.dir}"/>
 </target>
+	
+	<target name="dist-common" >
+		<!-- copy the help file -->
+		<copy file="${doc.dir}/hypedyn-help.txt" todir="${dist.editor.package.javadir}"/>
+
+		<!-- copy the examples and tutorials -->
+		<copy todir="${dist.editor.package.javadir}/examples">
+		  	<fileset dir="${shared.dir}/examples"/>
+		</copy>
+		<copy todir="${dist.editor.package.javadir}/tutorials">
+		  	<fileset file="${doc.dir}/*.pdf"/>
+		</copy>
+	</target>
  
   <!-- Distribute Editor Linux -->
 	
@@ -275,16 +296,6 @@
   	<!-- rename to kawa.jar -->
   	<!-- <move file="${dist.editor.package.javadir}/${base.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar" /> -->
   	
-    <!-- copy the help file -->
-  	<copy file="${doc.dir}/hypedyn-help.txt" todir="${dist.editor.package.javadir}"/>
-
-  	<!-- copy the examples and tutorials -->
-  	<copy todir="${dist.editor.package.javadir}/examples">
-  		<fileset dir="${shared.dir}/examples"/>
-  	</copy>
-  	<copy todir="${dist.editor.package.javadir}/tutorials">
-  		<fileset file="${doc.dir}/*.pdf"/>
-  	</copy>
   </target>
 
 
