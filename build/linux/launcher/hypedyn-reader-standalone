@@ -2,4 +2,4 @@
 
 APPDIR=$(dirname "$0")
 cd "$APPDIR"
-java  -Djava.library.path="$APPDIR" -cp "$APPDIR/lib/hypedyn-reader.jar:$APPDIR/lib/kawa.jar" htreader $APPDIR/lib/story.dyn
+java  -Djava.library.path="$APPDIR" -cp "$APPDIR/Java/hypedyn-reader.jar:$APPDIR/Java/kawa.jar" htreader $APPDIR/Java/story.dyn

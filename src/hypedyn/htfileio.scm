@@ -211,7 +211,7 @@
 
 ; export to web (applet)
 (define (doexport-hypedyn-web)
-  (export-web "lib/export"
+  (export-web export-standalone-folder
               "htapplet.jar"
               "htapplet.html"
               export-hypedyn-web-callback))

@@ -43,16 +43,20 @@
 
 (module-export get-last-exported-dir set-last-exported-dir! update-last-exported-dir!
                get-content-file export-web export-standalone
-               export-create-folder)
+               export-create-folder
+               export-standalone-folder)
 
 ; last exported directory, a <java.io.File>, or #!null if none
 (define last-exported-dir #!null)
+
 (define (get-last-exported-dir)
   (if (not-null? last-exported-dir)
       last-exported-dir
       (make-file (get-user-directory))))
+
 (define (set-last-exported-dir! newdir)
   (set! last-exported-dir newdir))
+
 (define (update-last-exported-dir! newdir)
   (set! last-exported-dir (if (and newdir (not (is-null? newdir)))
                                (make-file (path-parent newdir))
@@ -60,7 +64,7 @@
 
 ; export to applet for web
 ;;	- export-web-folder (export-web-folder) must contain:
-;;		- the kawa.jar file
+;;		- the kawa-applet.jar file (hand modified kawa.jar)
 ;;      - the AppleJavaExtensions.jar file
 ;;		- the reader jar file (export-web-reader-jar-filename)
 ;;		- the html file that embeds the reader jar file (export-web-html-filename)
@@ -80,6 +84,12 @@
                     export-web-reader-jar-filename
                     export-web-html-filename
                     save-callback)
+  (display "export web ")(newline)
+  (display "export web folder ")(display export-web-folder)(newline)
+  (display "export web reader jar filename ")(display export-web-reader-jar-filename)(newline)
+  (display "export web html filename ")(display export-web-html-filename)(newline)
+  (display "save-callback ")(display save-callback)(newline)
+  
   (let ((export-folder (get-safe-new-filename (get-last-exported-dir) #t '())))
     (if (not (eq? #f export-folder))
         (begin
@@ -91,12 +101,20 @@
           (let* ((source-folder-string (path-file (get-content-file export-web-folder))))
             ; copy relevant files into folder
             ; note, copy-file-nio requires java.lang.File
+            (display "source-folder-string ")(display source-folder-string)(newline)
+            (display "export folder ")(display export-folder)(newline)
+            (display "path file folder ")(display (path-file export-folder))(newline)
+            (display "copying export-web-html-filename ")(newline)
+            
             (copy-file-nio (make-file (string-append source-folder-string "/" export-web-html-filename))
                            (make-file (string-append (path-file export-folder) "/" export-web-html-filename)))
+            (display "copy export-web-reader-jar-filename ")(newline)
             (copy-file-nio (make-file (string-append source-folder-string "/" export-web-reader-jar-filename))
                            (make-file (string-append (path-file export-folder) "/" export-web-reader-jar-filename)))
+            (display "copying kawa-applet.jar ")(newline)
             (copy-file-nio (make-file (string-append source-folder-string "/kawa-applet.jar"))
                            (make-file (string-append (path-file export-folder) "/kawa-applet.jar")))
+            (display "copying AppleJavaExtensions.jar ")(newline)
             (copy-file-nio (make-file (string-append source-folder-string "/AppleJavaExtensions.jar"))
                            (make-file (string-append (path-file export-folder) "/AppleJavaExtensions.jar")))
 
@@ -112,13 +130,13 @@
 ;; 
 
 ; constants to define relative locations of files for export
-(define-constant export-standalone-folder "lib/export")
+(define-constant export-standalone-folder "/export")
 (define-constant export-standalone-story-filename "/story.dyn")
 (define-constant export-standalone-windows-app-filename "/hypedyn-reader.exe")
 (define-constant export-standalone-macos-app-filename "/HypeDynReader.app")
 (define-constant export-standalone-linux-app-filename "/hypedyn-reader")
 (define-constant export-standalone-macos-lib-folder "/Contents/Resources/Java")
-(define-constant export-standalone-nonmac-lib-folder "/lib")
+(define-constant export-standalone-nonmac-lib-folder "/Java")
 (define-constant export-standalone-jar-filename "/hypedyn-reader.jar")
 (define-constant export-standalone-kawa-jar-filename "/kawa.jar")
 (define-constant export-standalone-macos-folder "/standalone-macos")
