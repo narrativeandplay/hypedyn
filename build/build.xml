@@ -145,7 +145,7 @@
    </condition>
   	
   	<!-- determine where to place export folder -->
-  	<condition property="export.dir" value="${dist.editor.package.javadir}/export/" >
+  	<condition property="export.dir" value="${dist.editor.package.javadir}/" >
   		<istrue value="${macosx}"/>
   	</condition>
   	
