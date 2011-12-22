@@ -90,7 +90,7 @@
   (display "export web html filename ")(display export-web-html-filename)(newline)
   (display "save-callback ")(display save-callback)(newline)
   
-  (let ((export-folder (get-safe-new-filename (get-last-exported-dir) #t '())))
+  (let ((export-folder (get-safe-new-filename (get-last-exported-dir) #t '() "default-folder")))
     (if (not (eq? #f export-folder))
         (begin
           ; create folder, first deleting if it already exists
@@ -119,6 +119,7 @@
                            (make-file (string-append (path-file export-folder) "/AppleJavaExtensions.jar")))
 
             ; do app-specific saving
+            (display "save-callback ")(display save-callback)(newline)
             (if (procedure? save-callback)
                 (save-callback (path-file export-folder) source-folder-string)))
           #t)
@@ -227,7 +228,7 @@
   (set-component-visible in-dialog #f)
 
   ; get folder to export to (should check if no platforms selected first)
-  (let ((export-folder (get-safe-new-filename (get-last-exported-dir) #t '())))
+  (let ((export-folder (get-safe-new-filename (get-last-exported-dir) #t '() "default-folder")))
     (if (not (eq? #f export-folder))
         (begin
           ; create the folder

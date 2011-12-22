@@ -68,10 +68,10 @@
 ; open file dialog to save a file
 ; select-dir: #t if user is selecting a directory, #f if user is selecting a file
 ; filterlist: list of filetype filter(s)
-(define (get-file-to-save dir :: <java.io.File> select-dir filterlist #!optional default-extension)
+(define (get-file-to-save dir :: <java.io.File> select-dir filterlist #!optional default-name default-extension)
   (if (is-mac-os?)
-      (show-file-dialog dir "Save..." <java.awt.FileDialog>:SAVE select-dir filterlist default-extension)
-      (show-jfilechooser dir 'showSaveDialog select-dir filterlist default-extension)))
+      (show-file-dialog dir "Save..." <java.awt.FileDialog>:SAVE select-dir filterlist default-name default-extension)
+      (show-jfilechooser dir 'showSaveDialog select-dir filterlist default-name default-extension)))
 
 ; open file dialog to load a file
 ; select-dir: #t if user is selecting a directory, #f if user is selecting a file
@@ -83,7 +83,7 @@
 
 ; common code for file dialog, flag to select directories, and list of filetype filter(s)
 ; note that for Windows, only the first filetype filter is used
-(define (show-file-dialog dir :: <java.io.File> title mode select-dir filterlist #!optional default-extension)
+(define (show-file-dialog dir :: <java.io.File> title mode select-dir filterlist #!optional default-name default-extension)
   ; now create the jfilechooser
   (let ((fchooser :: <java.awt.FileDialog> (<java.awt.FileDialog> (<javax.swing.JFrame>) title mode)))
     (invoke fchooser 'setDirectory (if (is-null? dir) (get-user-directory) dir))
@@ -121,6 +121,8 @@
                          (invoke the-string 'to-string)))
                       )))
         ;)
+   
+    (invoke fchooser 'setFile default-name)
     
     ; show the dialog
     (invoke fchooser 'show)
@@ -162,17 +164,28 @@
 ; common code for jfilechooser, flag to select directories, and list of filetype filter(s)
 ; get file to save from file chooser, starting in dir,
 ; or in user's default directory if dir is #!null
-(define (show-jfilechooser dir :: <java.io.File> mode select-dir filterlist #!optional default-extension)
+(define (show-jfilechooser dir :: <java.io.File> mode select-dir filterlist 
+                           #!optional 
+                           default-name
+                           default-extension)
+  
   (let* ((fchooser :: <javax.swing.JFileChooser>
                    (if (is-null? dir)
                        (<javax.swing.JFileChooser>)
-                       (<javax.swing.JFileChooser> dir)))
+                       (<javax.swing.JFileChooser> dir))
+                       )
          (local-frame (<javax.swing.JFrame>)))
-
+    
+    ;; this should be called before setFileSelectionMode
+    ;; or it will not work
+    (if (or (string? default-name)
+            (java.lang.String? default-name))
+        (invoke fchooser 'setSelectedFile (make-file default-name)))
+    
     ; select directory?
-    (if select-dir
-        (invoke fchooser 'setFileSelectionMode <javax.swing.JFileChooser>:DIRECTORIES_ONLY))
-
+;    (if select-dir
+;        (invoke fchooser 'setFileSelectionMode <javax.swing.JFileChooser>:DIRECTORIES_ONLY))
+    
     ; file filter
     (if (not (null? filterlist))
         (invoke fchooser 'setFileFilter
@@ -206,6 +219,12 @@
     (let ((returnVal (invoke fchooser mode local-frame)))
       (if (= returnVal <javax.swing.JFileChooser>:APPROVE_OPTION)
           (begin
+            ; select directory?
+            ;; setting this disallows the default-name to be set to the textfield
+            ;; so we set it after clicking on ok
+            (if select-dir
+                (invoke fchooser 'setFileSelectionMode <javax.swing.JFileChooser>:DIRECTORIES_ONLY))
+            
             (define tmp-file (invoke fchooser 'getSelectedFile))
             (define dir-str (invoke tmp-file 'get-parent))
             (define file-name (invoke tmp-file 'get-name))

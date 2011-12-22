@@ -221,6 +221,7 @@
   (let ((export-file (path (string-append
                             in-export-folder
                             "/story.dyn"))))
+    (display "ARGH export-file ")(display export-file)(newline)
     (ht-save-to-file export-file #t)))
 
 ; export to standalone
@@ -231,7 +232,7 @@
 (define (doexport-text)
   (easy-try-catch
    (lambda ()
-      (let ((exportfilename (get-safe-new-filename (get-last-saved-dir) #f (list ".txt") "txt")))
+      (let ((exportfilename (get-safe-new-filename (get-last-saved-dir) #f (list ".txt") "default.txt" "txt")))
         (if (not (eq? #f exportfilename))
             (begin
               (if (file-exists? exportfilename)
@@ -290,7 +291,7 @@
 
 (define (dosaveas)
   (if (check-file-version)
-      (let ((newfile (get-safe-new-filename (get-last-saved-dir) #f (list ".dyn") "dyn")))
+      (let ((newfile (get-safe-new-filename (get-last-saved-dir) #f (list ".dyn") "default.dyn" "dyn")))
         (if (not (eq? #f newfile))
             (begin
               (ht-save-to-file newfile #f)

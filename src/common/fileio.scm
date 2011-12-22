@@ -306,8 +306,8 @@
 ; select-dir: #t if user is selecting a directory, #f if selecting a file
 ; filetype: extension for 
 ; returns filename if can proceed, #f otherwise
-(define (get-safe-new-filename in-dir select-dir filterlist #!optional default-extension)
-  (let ((newfilename (get-file-to-save in-dir select-dir filterlist default-extension)))
+(define (get-safe-new-filename in-dir select-dir filterlist #!optional default-name default-extension)
+  (let ((newfilename (get-file-to-save in-dir select-dir filterlist default-name default-extension)))
     (if (is-mac-os?)
         ; mac, so assume java.awt.FileDialog has already checked, don't check twice
         newfilename
@@ -333,7 +333,7 @@
                                     "Warning: file exists")))
                         (cond ((eq? 1 reply) newfilename) ; yes, so return the new filename
                               ((eq? 2 reply) #f) ; cancel, so return #f
-                              (else (get-safe-new-filename in-dir select-dir filterlist default-extension)))) ; no, so ask again
+                              (else (get-safe-new-filename in-dir select-dir filterlist default-name default-extension)))) ; no, so ask again
                       ; not duplicate, so return filename
                       newfilename)
                   ; not safe, so an exception occurred
