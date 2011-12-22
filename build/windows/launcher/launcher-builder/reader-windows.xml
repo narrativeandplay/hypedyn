@@ -2,7 +2,7 @@
   <dontWrapJar>true</dontWrapJar>
   <headerType>gui</headerType>
   <jar>Java\hypedyn-reader.jar</jar>
-  <outfile>reader.exe</outfile>
+  <outfile>..\reader.exe</outfile>
   <errTitle></errTitle>
   <cmdLine></cmdLine>
   <chdir>.</chdir>
@@ -20,12 +20,12 @@
     <jdkPreference>preferJre</jdkPreference>
   </jre>
   <versionInfo>
-    <fileVersion>2.1.5.0</fileVersion>
-    <txtFileVersion>2.1.5 rev 27 15 December 2010</txtFileVersion>
-    <fileDescription>HypeDyn version 2.1.5 beta</fileDescription>
-    <copyright>2008-2011 National University of Singapore and National University of Singapore</copyright>
-    <productVersion>2.1.5.0</productVersion>
-    <txtProductVersion>2.1.5 rev 27 15 December 2010</txtProductVersion>
+    <fileVersion>2.1.7.0</fileVersion>
+    <txtFileVersion>2.1.7 rev 27 15 December 2010</txtFileVersion>
+    <fileDescription>HypeDyn version 2.1.7</fileDescription>
+    <copyright>2008-2011 National University of Singapore</copyright>
+    <productVersion>2.1.7.0</productVersion>
+    <txtProductVersion>2.1.7 rev 27 15 December 2010</txtProductVersion>
     <productName>HypeDyn</productName>
     <companyName>National University of Singapore</companyName>
     <internalName>HypeDyn</internalName>

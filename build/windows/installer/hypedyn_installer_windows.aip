@@ -15,19 +15,26 @@
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiDirsComponent">
     <ROW Directory="APPDIR" Directory_Parent="TARGETDIR" DefaultDir="APPDIR:." IsPseudoRoot="1"/>
+    <ROW Directory="Contents_Dir" Directory_Parent="HypeDynReader.app_Dir" DefaultDir="Contents"/>
     <ROW Directory="DesktopFolder" Directory_Parent="TARGETDIR" DefaultDir="Deskto~1|DesktopFolder" IsPseudoRoot="1"/>
+    <ROW Directory="HypeDynReader.app_Dir" Directory_Parent="export_DIR" DefaultDir="HypeDy~1.app|HypeDynReader.app"/>
     <ROW Directory="HypeDyn_DIR" Directory_Parent="ProgramMenuFolder" DefaultDir="HypeDyn"/>
+    <ROW Directory="MacOS_Dir" Directory_Parent="Contents_Dir" DefaultDir="MacOS"/>
     <ROW Directory="ProgramMenuFolder" Directory_Parent="TARGETDIR" DefaultDir="Progra~1|ProgramMenuFolder" IsPseudoRoot="1"/>
+    <ROW Directory="Resources_Dir" Directory_Parent="Contents_Dir" DefaultDir="Resour~1|Resources"/>
     <ROW Directory="SHORTCUTDIR" Directory_Parent="TARGETDIR" DefaultDir="SHORTC~1|SHORTCUTDIR" IsPseudoRoot="1"/>
     <ROW Directory="TARGETDIR" DefaultDir="SourceDir"/>
     <ROW Directory="examples_DIR" Directory_Parent="APPDIR" DefaultDir="examples"/>
-    <ROW Directory="export_DIR" Directory_Parent="lib_DIR" DefaultDir="export"/>
-    <ROW Directory="lib_DIR" Directory_Parent="APPDIR" DefaultDir="lib"/>
+    <ROW Directory="export_DIR" Directory_Parent="APPDIR" DefaultDir="export"/>
+    <ROW Directory="lib_DIR" Directory_Parent="APPDIR" DefaultDir="Java"/>
     <ROW Directory="tutorials_DIR" Directory_Parent="APPDIR" DefaultDir="tutori~1|tutorials"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiCompsComponent">
     <ROW Component="HypeDyn" ComponentId="{779F6BA5-4498-478E-B6EC-BB66948261B1}" Directory_="HypeDyn_DIR" Attributes="0"/>
+    <ROW Component="Info.plist" ComponentId="{70B07262-B557-4D5F-80F0-35BFE4AEBCDD}" Directory_="Contents_Dir" Attributes="0" KeyPath="Info.plist" Type="0"/>
+    <ROW Component="JavaApplicationStub" ComponentId="{CA39E8DD-AF26-40E6-9D1E-F781499AD97F}" Directory_="MacOS_Dir" Attributes="0" KeyPath="JavaApplicationStub" Type="0"/>
     <ROW Component="SHORTCUTDIR" ComponentId="{7C14D11E-7F0B-401E-9890-6AFEE198C659}" Directory_="SHORTCUTDIR" Attributes="0"/>
+    <ROW Component="dyn.icns" ComponentId="{ADC0EDF6-46D6-46D2-9CB1-3D96E9B88C22}" Directory_="Resources_Dir" Attributes="0" KeyPath="dyn.icns" Type="0"/>
     <ROW Component="hypedyn.exe" ComponentId="{EA8E8F65-628E-45CE-A889-FF8169A62565}" Directory_="APPDIR" Attributes="0" KeyPath="hypedyn.exe"/>
     <ROW Component="hypedyn.jar" ComponentId="{C1C4CFD5-09FC-42B4-B14F-C44ADEE5DB97}" Directory_="lib_DIR" Attributes="0" KeyPath="hypedyn.jar" Type="0"/>
     <ROW Component="hypedyn.jar_1" ComponentId="{3E75FAAB-1FCD-4C54-A7ED-CEE304E567B8}" Directory_="export_DIR" Attributes="0" KeyPath="hypedyn.jar_1" Type="0"/>
@@ -38,30 +45,35 @@
     <ROW Component="rashomon_alt_anywhere.dyn" ComponentId="{923C0FF9-CD25-4241-9778-F1E3A6F343BE}" Directory_="examples_DIR" Attributes="0" KeyPath="LRRH.dyn" Type="0"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiFeatsComponent">
-    <ROW Feature="MainFeature" Title="MainFeature" Description="Description" Display="1" Level="1" Directory_="APPDIR" Attributes="0" Components="HypeDyn SHORTCUTDIR hypedyn.exe hypedyn.jar hypedyn.jar_1 hypedyn_reader.exe hypedyn_tutorial_1.pdf hypedyn_tutorial_2.pdf hypedyn_tutorial_3.pdf rashomon_alt_anywhere.dyn"/>
+    <ROW Feature="MainFeature" Title="MainFeature" Description="Description" Display="1" Level="1" Directory_="APPDIR" Attributes="0" Components="HypeDyn Info.plist JavaApplicationStub SHORTCUTDIR dyn.icns hypedyn.exe hypedyn.jar hypedyn.jar_1 hypedyn_reader.exe hypedyn_tutorial_1.pdf hypedyn_tutorial_2.pdf hypedyn_tutorial_3.pdf rashomon_alt_anywhere.dyn"/>
     <ATTRIBUTE name="CurrentFeature" value="MainFeature"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiFilesComponent">
-    <ROW File="AppleJavaExtensions.jar" Component_="hypedyn.jar" FileName="AppleJ~1.jar|AppleJavaExtensions.jar" Attributes="0" SourcePath="bin\hypedyn-windows\lib\AppleJavaExtensions.jar" SelfReg="false" NextFile="hypedyn.jar_1"/>
-    <ROW File="AppleJavaExtensions.jar_1" Component_="hypedyn.jar_1" FileName="AppleJ~1.jar|AppleJavaExtensions.jar" Attributes="0" SourcePath="bin\hypedyn-windows\lib\export\AppleJavaExtensions.jar" SelfReg="false" NextFile="hypedyn_reader.exe"/>
-    <ROW File="LRRH.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH.dyn" Attributes="0" SourcePath="bin\hypedyn-windows\examples\LRRH.dyn" SelfReg="false" NextFile="LRRH2.dyn"/>
-    <ROW File="LRRH2.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH2.dyn" Attributes="0" SourcePath="bin\hypedyn-windows\examples\LRRH2.dyn" SelfReg="false" NextFile="LRRH3.dyn"/>
-    <ROW File="LRRH3.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH3.dyn" Attributes="0" SourcePath="bin\hypedyn-windows\examples\LRRH3.dyn" SelfReg="false" NextFile="hypedyn_tutorial_1.pdf"/>
-    <ROW File="LRRH4.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH4.dyn" Attributes="0" SourcePath="bin\hypedyn-windows\examples\LRRH4.dyn" SelfReg="false" NextFile="kawa_applet.jar"/>
-    <ROW File="htapplet.html" Component_="hypedyn.jar_1" FileName="htappl~1.htm|htapplet.html" Attributes="0" SourcePath="bin\hypedyn-windows\lib\export\htapplet.html" SelfReg="false" NextFile="htapplet.jar"/>
-    <ROW File="htapplet.jar" Component_="hypedyn.jar_1" FileName="htapplet.jar" Attributes="0" SourcePath="bin\hypedyn-windows\lib\export\htapplet.jar" SelfReg="false" NextFile="hypedyn_tutorial_3.pdf"/>
-    <ROW File="hypedyn.exe" Component_="hypedyn.exe" FileName="hypedyn.exe" Attributes="0" SourcePath="bin\hypedyn-windows\hypedyn.exe" SelfReg="false" NextFile="LRRH.dyn"/>
-    <ROW File="hypedyn.jar" Component_="hypedyn.jar" FileName="hypedyn.jar" Attributes="0" SourcePath="bin\hypedyn-windows\lib\hypedyn.jar" SelfReg="false" NextFile="kawa.jar"/>
-    <ROW File="hypedyn.jar_1" Component_="hypedyn.jar_1" FileName="hypedyn.jar" Attributes="0" SourcePath="bin\hypedyn-windows\lib\export\hypedyn.jar" SelfReg="false" NextFile="kawa.jar_1"/>
-    <ROW File="hypedyn_reader" Component_="hypedyn.jar_1" FileName="hypedy~1|hypedyn-reader" Attributes="0" SourcePath="bin\hypedyn-windows\lib\export\hypedyn-reader" SelfReg="false" NextFile="htapplet.html"/>
-    <ROW File="hypedyn_reader.exe" Component_="hypedyn_reader.exe" FileName="hypedy~1.exe|hypedyn-reader.exe" Attributes="0" SourcePath="bin\hypedyn-windows\lib\export\hypedyn-reader.exe" SelfReg="false" NextFile="hypedyn_reader.jar"/>
-    <ROW File="hypedyn_reader.jar" Component_="hypedyn.jar_1" FileName="hypedy~1.jar|hypedyn-reader.jar" Attributes="0" SourcePath="bin\hypedyn-windows\lib\export\hypedyn-reader.jar" SelfReg="false" NextFile="hypedyn_reader"/>
-    <ROW File="hypedyn_tutorial_1.pdf" Component_="hypedyn_tutorial_1.pdf" FileName="hypedy~1.pdf|hypedyn-tutorial-1.pdf" Attributes="0" SourcePath="bin\hypedyn-windows\tutorials\hypedyn-tutorial-1.pdf" SelfReg="false" NextFile="hypedyn_tutorial_2.pdf"/>
-    <ROW File="hypedyn_tutorial_2.pdf" Component_="hypedyn_tutorial_2.pdf" FileName="hypedy~2.pdf|hypedyn-tutorial-2.pdf" Attributes="0" SourcePath="bin\hypedyn-windows\tutorials\hypedyn-tutorial-2.pdf" SelfReg="false" NextFile="hypedyn.jar"/>
-    <ROW File="hypedyn_tutorial_3.pdf" Component_="hypedyn_tutorial_3.pdf" FileName="hypedy~3.pdf|hypedyn-tutorial-3.pdf" Attributes="0" SourcePath="bin\hypedyn-windows\tutorials\hypedyn-tutorial-3.pdf" SelfReg="false" NextFile="LRRH4.dyn"/>
-    <ROW File="kawa.jar" Component_="hypedyn.jar" FileName="kawa.jar" Attributes="0" SourcePath="bin\hypedyn-windows\lib\kawa.jar" SelfReg="false" NextFile="AppleJavaExtensions.jar"/>
-    <ROW File="kawa.jar_1" Component_="hypedyn.jar_1" FileName="kawa.jar" Attributes="0" SourcePath="bin\hypedyn-windows\lib\export\kawa.jar" SelfReg="false" NextFile="AppleJavaExtensions.jar_1"/>
-    <ROW File="kawa_applet.jar" Component_="hypedyn.jar_1" FileName="kawa-a~1.jar|kawa-applet.jar" Attributes="0" SourcePath="bin\hypedyn-windows\lib\export\kawa-applet.jar" SelfReg="false"/>
+    <ROW File="AppleJavaExtensions.jar" Component_="hypedyn.jar" FileName="AppleJ~1.jar|AppleJavaExtensions.jar" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\Java\AppleJavaExtensions.jar" SelfReg="false" NextFile="hypedyn.jar_1"/>
+    <ROW File="AppleJavaExtensions.jar_1" Component_="hypedyn.jar_1" FileName="AppleJ~1.jar|AppleJavaExtensions.jar" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\export\AppleJavaExtensions.jar" SelfReg="false" NextFile="hypedyn_reader.exe"/>
+    <ROW File="Info.plist" Component_="Info.plist" FileName="Info~1.pli|Info.plist" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\export\HypeDynReader.app\Contents\Info.plist" SelfReg="false" NextFile="JavaApplicationStub"/>
+    <ROW File="JavaApplicationStub" Component_="JavaApplicationStub" FileName="JavaAp~1|JavaApplicationStub" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\export\HypeDynReader.app\Contents\MacOS\JavaApplicationStub" SelfReg="false" NextFile="PkgInfo"/>
+    <ROW File="LRRH.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH.dyn" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\Java\examples\LRRH.dyn" SelfReg="false" NextFile="LRRH2.dyn"/>
+    <ROW File="LRRH2.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH2.dyn" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\Java\examples\LRRH2.dyn" SelfReg="false" NextFile="LRRH3.dyn"/>
+    <ROW File="LRRH3.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH3.dyn" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\Java\examples\LRRH3.dyn" SelfReg="false" NextFile="hypedyn_tutorial_1.pdf"/>
+    <ROW File="LRRH4.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH4.dyn" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\Java\examples\LRRH4.dyn" SelfReg="false" NextFile="kawa_applet.jar"/>
+    <ROW File="PkgInfo" Component_="Info.plist" FileName="PkgInfo" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\export\HypeDynReader.app\Contents\PkgInfo" SelfReg="false" NextFile="dyn.icns"/>
+    <ROW File="dyn.icns" Component_="dyn.icns" FileName="dyn~1.icn|dyn.icns" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\export\HypeDynReader.app\Contents\Resources\dyn.icns" SelfReg="false" NextFile="hypedyn.icns"/>
+    <ROW File="htapplet.html" Component_="hypedyn.jar_1" FileName="htappl~1.htm|htapplet.html" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\export\htapplet.html" SelfReg="false" NextFile="htapplet.jar"/>
+    <ROW File="htapplet.jar" Component_="hypedyn.jar_1" FileName="htapplet.jar" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\export\htapplet.jar" SelfReg="false" NextFile="hypedyn_tutorial_3.pdf"/>
+    <ROW File="hypedyn.exe" Component_="hypedyn.exe" FileName="hypedyn.exe" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\hypedyn.exe" SelfReg="false" NextFile="LRRH.dyn"/>
+    <ROW File="hypedyn.icns" Component_="dyn.icns" FileName="hypedy~1.icn|hypedyn.icns" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\export\HypeDynReader.app\Contents\Resources\hypedyn.icns" SelfReg="false"/>
+    <ROW File="hypedyn.jar" Component_="hypedyn.jar" FileName="hypedyn.jar" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\Java\hypedyn.jar" SelfReg="false" NextFile="kawa.jar"/>
+    <ROW File="hypedyn.jar_1" Component_="hypedyn.jar_1" FileName="hypedyn.jar" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\Java\hypedyn.jar" SelfReg="false" NextFile="kawa.jar_1"/>
+    <ROW File="hypedyn_reader" Component_="hypedyn.jar_1" FileName="hypedy~1|hypedyn-reader" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\export\hypedyn-reader" SelfReg="false" NextFile="htapplet.html"/>
+    <ROW File="hypedyn_reader.exe" Component_="hypedyn_reader.exe" FileName="hypedy~1.exe|hypedyn-reader.exe" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\export\hypedyn-reader.exe" SelfReg="false" NextFile="hypedyn_reader.jar"/>
+    <ROW File="hypedyn_reader.jar" Component_="hypedyn.jar_1" FileName="hypedy~1.jar|hypedyn-reader.jar" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\export\hypedyn-reader.jar" SelfReg="false" NextFile="hypedyn_reader"/>
+    <ROW File="hypedyn_tutorial_1.pdf" Component_="hypedyn_tutorial_1.pdf" FileName="hypedy~1.pdf|hypedyn-tutorial-1.pdf" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\Java\tutorials\hypedyn-tutorial-1.pdf" SelfReg="false" NextFile="hypedyn_tutorial_2.pdf"/>
+    <ROW File="hypedyn_tutorial_2.pdf" Component_="hypedyn_tutorial_2.pdf" FileName="hypedy~2.pdf|hypedyn-tutorial-2.pdf" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\Java\tutorials\hypedyn-tutorial-2.pdf" SelfReg="false" NextFile="hypedyn.jar"/>
+    <ROW File="hypedyn_tutorial_3.pdf" Component_="hypedyn_tutorial_3.pdf" FileName="hypedy~3.pdf|hypedyn-tutorial-3.pdf" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\Java\tutorials\hypedyn-tutorial-3.pdf" SelfReg="false" NextFile="LRRH4.dyn"/>
+    <ROW File="kawa.jar" Component_="hypedyn.jar" FileName="kawa.jar" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\Java\kawa.jar" SelfReg="false" NextFile="AppleJavaExtensions.jar"/>
+    <ROW File="kawa.jar_1" Component_="hypedyn.jar_1" FileName="kawa.jar" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\Java\kawa.jar" SelfReg="false" NextFile="AppleJavaExtensions.jar_1"/>
+    <ROW File="kawa_applet.jar" Component_="hypedyn.jar_1" FileName="kawa-a~1.jar|kawa-applet.jar" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\export\kawa-applet.jar" SelfReg="false" NextFile="Info.plist"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.BuildComponent">
     <ROW BuildKey="DefaultBuild" BuildName="DefaultBuild" BuildOrder="1" BuildType="0" PackageFolder="." Languages="en" InstallationType="4"/>

@@ -295,6 +295,7 @@
   	<copy file="${build.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar"/>
   	<!-- rename to kawa.jar -->
   	<!-- <move file="${dist.editor.package.javadir}/${base.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar" /> -->
+	<copy file="${appletlib.dir}/AppleJavaExtensions.jar" todir="${dist.editor.package.javadir}" />
   	
   </target>
 
@@ -311,6 +312,7 @@
    	<copy file="${build.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar"/>
 	<!-- rename to kawa.jar -->
   	 <!-- <move file="${dist.editor.package.javadir}/${base.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar" /> -->
+	<copy file="${appletlib.dir}/AppleJavaExtensions.jar" todir="${dist.editor.package.javadir}" />
   </target>
   		
   <!-- Distribute Editor Mac -->
@@ -337,6 +339,7 @@
   	<copy file="${build.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar"/>
 	<!-- rename to kawa.jar -->
   	<!-- <move file="${dist.editor.package.javadir}/${base.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar" /> -->
+	<copy file="${appletlib.dir}/AppleJavaExtensions.jar" todir="${dist.editor.package.javadir}" />
   		
   	<copy file="${launcher.linux.dir}/hypedyn-reader" todir="${dist.editor.package}" />
 	<chmod file="${dist.editor.package}/hypedyn-reader" perm="a+x"/>
@@ -349,6 +352,7 @@
   	<copy file="${build.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar"/>
 	<!-- rename to kawa.jar -->
   	<!-- <move file="${dist.editor.package.javadir}/${base.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar" /> -->
+	<copy file="${appletlib.dir}/AppleJavaExtensions.jar" todir="${dist.editor.package.javadir}" />
     	
   	<copy file="${launcher.windows.dir}/reader.exe" todir="${dist.editor.package}" />
   </target>
