@@ -232,7 +232,15 @@
 (define (doexport-text)
   (easy-try-catch
    (lambda ()
-      (let ((exportfilename (get-safe-new-filename (get-last-saved-dir) #f (list ".txt") "default.txt" "txt")))
+     ;; assuming .dyn is always appended to the filename get-filename-callback returns
+     (define file-name
+       (let ((tmp (get-saved-filename-string)))
+         (if (not tmp)
+             (set! tmp "Untitled.dyn"))
+         ;; removes the extension
+         (string-append (substring tmp 0 (- (string-length tmp) 4)) ".txt")
+         ))
+      (let ((exportfilename (get-safe-new-filename (get-last-saved-dir) #f (list ".txt") file-name "txt")))
         (if (not (eq? #f exportfilename))
             (begin
               (if (file-exists? exportfilename)
@@ -254,7 +262,7 @@
 ; otherwise will open file dialog
 (define (dosave-wrapper filename)
   (if filename
-      (dosaveas)
+      (dosaveas (to-string filename))
       (dosave)))
 
 ; check file version before saving
@@ -284,14 +292,15 @@
           (begin
             (ht-save-to-file (get-saved-filename) #f)
             (update-dirty-state)))
-      (dosaveas)))
+      (dosaveas (to-string "Untitled"))))
 
 ; save-as - will ask user for a new filename, regardless of whether 
 ; file has been saved before
 
-(define (dosaveas)
+(define (dosaveas filename :: <string>)
   (if (check-file-version)
-      (let ((newfile (get-safe-new-filename (get-last-saved-dir) #f (list ".dyn") "default.dyn" "dyn")))
+      (let* ((filename (filename-extension-check filename ".dyn")) ;; make sure filename has .dyn at the end
+             (newfile (get-safe-new-filename (get-last-saved-dir) #f (list ".dyn") filename "dyn")))
         (if (not (eq? #f newfile))
             (begin
               (ht-save-to-file newfile #f)

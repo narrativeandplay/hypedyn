@@ -398,7 +398,9 @@
                                                            (saveit #f)))))
   (add-actionlistener m-file-saveas (make-actionlistener (lambda (source)
                                                            (begin
-                                                             (saveit #t)))))
+                                                             ;; just in case get-filename-callback not set still return a "Untitled"
+                                                             (define curr-filename (if get-filename-callback (get-filename-callback) "Untitled"))
+                                                             (saveit curr-filename)))))
   (add-actionlistener m-file-exit (make-actionlistener exitit))
 
   ; window listener for the main UI

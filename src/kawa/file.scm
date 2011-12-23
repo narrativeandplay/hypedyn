@@ -24,13 +24,14 @@
 (require "miscutils.scm") ; for (is-null? x)
 (require "arrays.scm")
 (require "../kawa/system.scm") ; for get-system-property
-(require "../kawa/strings.scm") ; for string-ends-with?
+(require "../kawa/strings.scm") ; for string-ends-with?, string-contains
+;(require 'srfi-13) ;; string-contains
 
 (module-export make-file create-new-file make-directory set-file-data append-file-data get-file-to-save get-file-to-open
                get-file-separator get-user-directory get-file-data
                lines-in-file get-file-from-directory get-directory-listing recursively-delete-directory recursively-copy-directory
                get-file-name get-file-absolutepath check-file-exists check-file-content
-               copy-file-nio)
+               copy-file-nio filename-extension-check)
  
 
 ;make file (open existing file with name filename OR 
@@ -138,28 +139,43 @@
       (if (is-null? chosenFile)
           #f
           (begin
-            
-            ;; duplicate code 
             ;; if filename does not contain . (ie no extension given) append with extension
-            (if (or (not (string-contains chosenFile "."))
-                    (string-ends-with? (as <java.lang.String> chosenFile) ".")  ;; freak case of . in the end
-                    (string-starts-with? (as <java.lang.String> chosenFile) ".")) ;; freak case of . in front 
-                (if default-extension
-                    (begin
-                      ;; make sure default-extension is a java string
-                      (set! default-extension (as <java.lang.String> default-extension))
-
-                      ;; make sure default-extension is in the correct form (starts with a ".")
-                      (if (not (string-starts-with? default-extension "."))
-                          (set! default-extension (string-append "." default-extension)))
-
-                      ;; make sure new file ends with default extension
-                      (set! chosenFile (string-append chosenFile default-extension))
-                      ))
-                )
+            (if default-extension
+                (set! chosenFile (filename-extension-check chosenFile default-extension)))
+            
             (make-file (string-append chosenDir (get-file-separator) chosenFile))
             ))
       )))
+
+(define (filename-extension-check file-name :: <string>
+                                  extension :: <string>)
+  ;; make sure file-name is a java string
+;;  (if (and (not (boolean? file-name))
+;;           (not (java.lang.String? file-name)))
+;;      (set! file-name (to-string file-name)))
+;;  ;; make sure extension is a java string
+;;  (if (and (not (boolean? extension))
+;;           (not (java.lang.String? extension)))
+;;      (set! extension (to-string extension)))
+  
+  (if (or (not (string-contains file-name "."))
+          (string-ends-with? file-name ".")  ;; freak case of . in the end
+          (string-starts-with? file-name ".")) ;; freak case of . in front 
+      (if (or (string? extension)
+              (java.lang.String? extension))
+          (begin
+            ;; make sure extension is a java string
+            (set! extension (to-string extension))
+
+            ;; make sure extension is in the correct form (starts with a ".")
+            (if (not (string-starts-with? extension "."))
+                (set! extension (string-append "." extension)))
+
+            ;; make sure new file ends with default extension
+            (set! file-name (string-append file-name extension))
+            ))
+      )
+  file-name)
   
 ; common code for jfilechooser, flag to select directories, and list of filetype filter(s)
 ; get file to save from file chooser, starting in dir,
@@ -231,22 +247,9 @@
             
             ;; duplicate code in show-file-dialog
             ;; if filename does not contain . (ie no extension given) append with extension
-            (if (or (not (string-contains file-name "."))
-                    (string-ends-with? (as <java.lang.String> file-name) ".")  ;; freak case of . in the end
-                    (string-starts-with? (as <java.lang.String> file-name) ".")) ;; freak case of . in front 
-                (if default-extension
-                    (begin
-                      ;; make sure default-extension is a java string
-                      (set! default-extension (as <java.lang.String> default-extension))
-
-                      ;; make sure default-extension is in the correct form (starts with a ".")
-                      (if (not (string-starts-with? default-extension "."))
-                          (set! default-extension (string-append "." default-extension)))
-
-                      ;; make sure new file ends with default extension
-                      (set! file-name (string-append file-name default-extension))
-                      ))
-                )
+            (if default-extension
+                (set! file-name (filename-extension-check file-name default-extension)))
+            
             (make-file (string-append dir-str (get-file-separator) file-name))
             )
           #f))))

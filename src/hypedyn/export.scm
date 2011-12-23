@@ -90,7 +90,21 @@
   (display "export web html filename ")(display export-web-html-filename)(newline)
   (display "save-callback ")(display save-callback)(newline)
   
-  (let ((export-folder (get-safe-new-filename (get-last-exported-dir) #t '() "default-folder")))
+;;  (define folder-name 
+;;    (if get-filename-callback 
+;;        (string-append (substring (get-filename-callback) 0 (- (string-length tmp) 4)) "-web") 
+;;        "Untitled-web"))
+  
+  ;; assuming .dyn is always appended to the filename get-filename-callback returns
+  (define folder-name
+    (let ((tmp (get-saved-filename-string)))
+      (if (not tmp)
+          (set! tmp "Untitled.dyn"))
+      ;; removes the extension
+      (string-append (substring tmp 0 (- (string-length tmp) 4)) "-web")
+      ))
+  
+  (let ((export-folder (get-safe-new-filename (get-last-exported-dir) #t '() folder-name)))
     (if (not (eq? #f export-folder))
         (begin
           ; create folder, first deleting if it already exists
@@ -120,6 +134,8 @@
 
             ; do app-specific saving
             (display "save-callback ")(display save-callback)(newline)
+            (display "path-file export folder ")(display (path-file export-folder))(newline)
+            (display "source folder string ")(display source-folder-string)(newline)
             (if (procedure? save-callback)
                 (save-callback (path-file export-folder) source-folder-string)))
           #t)
@@ -226,9 +242,23 @@
                           in-checkbox-linux)
   ; hide dialog
   (set-component-visible in-dialog #f)
+  
+  ;; assuming .dyn is always at the back of the filename
+;;  (define folder-name 
+;;    (if get-filename-callback 
+;;        (string-append (substring (get-filename-callback) 0 (- (string-length tmp) 4)) "-standalone") 
+;;        "Untitled-standalone"))
+  
+  (define folder-name
+    (let ((tmp (get-saved-filename-string)))
+      (if (not tmp)
+          (set! tmp "Untitled.dyn"))
+      ;; removes the extension
+      (string-append (substring tmp 0 (- (string-length tmp) 4)) "-standalone")
+      ))
 
   ; get folder to export to (should check if no platforms selected first)
-  (let ((export-folder (get-safe-new-filename (get-last-exported-dir) #t '() "default-folder")))
+  (let ((export-folder (get-safe-new-filename (get-last-exported-dir) #t '() folder-name)))
     (if (not (eq? #f export-folder))
         (begin
           ; create the folder
@@ -327,7 +357,7 @@
                                          dest-standalone-app-file)
              ; also need to set the application stub to be executable
              (if (not (is-windows?))
-                 (runtime-exec (fstring->string (string-append "chmod +x "
+                 (runtime-exec (to-string (string-append "chmod +x "
                                                                (path-file dest-standalone-app-file)
                                                                "/Contents/MacOS/JavaApplicationStub"))))))
           (( = export-platform export-standalone-linux)
@@ -336,7 +366,7 @@
              (format #t "copying ~a to ~a.~%~!" source-standalone-app-file dest-standalone-app-file)
              (copy-file-nio source-standalone-app-file dest-standalone-app-file)
              (if (not (is-windows?))
-                 (runtime-exec (fstring->string (string-append "chmod +x " (path-file dest-standalone-app-file)))))))
+                 (runtime-exec (to-string (string-append "chmod +x " (path-file dest-standalone-app-file)))))))
           (( = export-platform export-standalone-windows)
            (begin
              ; for windows, just copy the .exe file

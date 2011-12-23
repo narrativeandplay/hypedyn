@@ -20,7 +20,8 @@
 
 ;; where point and origin are cons-pair
 (require "graphics.scm") ; for Cosine and Sine
-(require "../kawa/strings.scm") ; for string-contains
+(require "../kawa/strings.scm") ;string-contains
+;(require 'srfi-13) ; string-contains
 
 (module-export kawa-float->kawa-int
                rotate-clockwise
@@ -513,7 +514,7 @@
           )
 
          ;; check for E 
-         (define Echeck-string (invoke our-number 'to-string))
+         (define Echeck-string (to-string our-number))
          ;(display "Echeckstring ")(display Echeck-string)(newline)
          ;(display "ecs class ")(display (invoke Echeck-string 'get-class))(newline)
          ;; add E to format-string if number contains E

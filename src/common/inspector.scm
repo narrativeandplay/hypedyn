@@ -195,7 +195,7 @@
             (set-container-layout the-inspector-panel 'flow 'left)
             ; add this inspector's panel to the inspectors window
             (add-component the-inspector-panel the-inspector-label)
-            (set-text the-inspector-label (fstring->string name))
+            (set-text the-inspector-label (to-string name))
             (add-component inspectors-panel the-inspector-panel)
             (pack-frame inspectors-window))))
        ; show the inspector

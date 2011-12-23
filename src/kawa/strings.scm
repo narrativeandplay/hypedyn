@@ -21,10 +21,15 @@
 (require "arrays.scm")
 (require 'list-lib)
 
+;; scheme string 
+;(require 'srfi-13) string-contains
+
 (module-export string-starts-with? string-ends-with? list-is-numeric? string-is-numeric? string-is-double?
                number->java-string double->java-string java-string->double URL->string string->URL 
-               string-contains string-indexof string-lastindexof
-               to-string fstring->string)
+               string-indexof string-lastindexof
+               jstring->fstring ;fstring->string 
+               to-fstring to-string
+               string-contains)
 
 ;;
 ;; strings
@@ -108,8 +113,8 @@
 (define (string->URL in-string)
   (<java.net.URL> in-string))
 
-;; string contains already implemented in srfi 13
-(define (string-contains mystring :: <java.lang.String> substring :: <java.lang.String>) ;; who put substring to int?
+;; string contains already implemented in srfi 13 (it is not working in srfi 13)
+(define (string-contains mystring :: <java.lang.String> substring :: <java.lang.String>)
   (let ((retval (string-indexof mystring substring)))
     (if (> retval 0)
         #t
@@ -121,12 +126,18 @@
 (define (string-lastindexof mystring :: <String> substring :: <String>)
   (invoke (as <java.lang.String> mystring) 'lastIndexOf (as <java.lang.String> substring)))
   
-(define (to-string object :: <java.lang.Object>)
+(define (to-string object :: <java.lang.Object>) :: <java.lang.String>
   (invoke object 'to-string))
 
+(define (to-fstring object :: <java.lang.Object>) :: <gnu.lists.FString>
+  (jstring->fstring (invoke object 'to-string)))
+
 ; get a java string from an gnu.lists.FString
-(define (fstring->string in-string :: <gnu.lists.FString>) :: <java.lang.String>
-  (invoke in-string 'toString))
+;;(define (fstring->string in-string :: <gnu.lists.FString>) :: <java.lang.String>
+;;  (invoke in-string 'toString))
+
+(define (jstring->fstring jstring :: <java.lang.String>) :: <gnu.lists.FString>
+  (<gnu.lists.Fstring> jstring))
 
 ;;(define (string-replace2 main-str :: <string> 
 ;;                        match-str :: <string> 
