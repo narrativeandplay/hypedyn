@@ -67,6 +67,8 @@
 (remove-menu (get-examples-menu))
 ;;(remove-menu (get-help-menu))
 
+;; does comments count as change? or deletion for that matter
+
 ; show the frame
 (show-main-frame)
 
