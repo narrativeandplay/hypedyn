@@ -67,6 +67,8 @@
 (remove-menu (get-examples-menu))
 ;;(remove-menu (get-help-menu))
 
+;; main tseting
+
 ; show the frame
 (show-main-frame)
 
