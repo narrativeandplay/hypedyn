@@ -834,30 +834,10 @@
       ;(if (> len 0)
       ;    (filter-bypass-replace fb offset len string (style-to-use offset))
           (begin
-            (display "style to use replace ")(display (style-to-use offset))(newline)
-            (display "this returns .. ")(display (get-attributes-pos the-doc (- offset 1)))(newline)
-            (display "this is class tyep ")(display (invoke (get-attributes-pos the-doc (- offset 1)) 'get-class))(newline)
-            (display "class type ")(display (invoke (style-to-use offset) 'get-class))(newline)
-            
-            (define test-cast (as <javax.swing.text.AttributeSet> (get-attributes-pos the-doc (- offset 1))))
-            (display "test-cast ")(display test-cast)(newline)
-            (display "test cast class ")(display (invoke test-cast 'get-class))(newline)
-            
-            (display "offset ")(display (- offset 1))(newline)
-            
-            (display "is this attribute set ")
-            (display (javax.swing.text.AttributeSet? (get-attributes-pos the-doc (- offset 1))))
-            (newline)
-            
-            (display "doc len ")(display (invoke the-doc 'get-length))(newline)
 ;;            (set-text-style the-doc test-cast
 ;;                            ;(- (invoke the-doc 'get-length) 6)'
 ;;                            0
 ;;                            (invoke the-doc 'get-length) #t)
-            
-            (display "is style-link ")(display (equal? (style-to-use offset) style-link))(newline)
-            (display "is style-nolink ")(display (equal? (style-to-use offset) style-nolink))(newline)
-            (display "!!!end of link?!! ")(display (end-of-link? offset))(newline)
             (filter-bypass-insert fb offset string (style-to-use offset))
             )
        ;   )
@@ -1009,7 +989,7 @@
     ; returns #t if need to manually clean up after link deletion
     (define (after-delete start len)
       (set-dirty!)
-      (display " [after delete] ")(newline)
+      ;(display " [after delete] ")(newline)
       (if track-links 
           (begin
             ;actually do it
@@ -1034,7 +1014,7 @@
 
     ; after-insert
     (define (after-insert start len can-undo)
-      (display "[after insert] ")(newline)
+      ;(display "[after insert] ")(newline)
       (set-dirty!)
       (if (and track-links
                can-undo)

@@ -54,7 +54,7 @@
 ; Note: file format version numbers only use the major and minor rev numbers; if you change the file format, be sure to
 ; increment at least the minor rev number (the third sequence is for bug fixes or small changes that don't affect file format)
 ; Note: hypedyn files are marked as type 'htfe (HyperTextFiction Editor, the original name of the app way back)
-(set-fileformat-version! 2.1) 
+(set-fileformat-version! 2.2) 
 (set-fileformat-type! 'htfe) 
 
 ;; for keep track of a loaded old version file

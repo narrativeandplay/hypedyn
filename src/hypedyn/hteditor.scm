@@ -500,8 +500,18 @@
     ; create node reader window
     (create-nodereader-window)
     
+    ;; create the panels (the components inside the editlink editnode dialogs)
+    (create-if-condition-panel)
+    (create-then-action-panel)
+    (create-facts-main-panel)
+    (create-actions-main-panel)
+    
+    (create-update-text-action-panel)
+    
     ; create link editor
     (create-editlink-dialog (get-nodeeditor-frame))
+    ;(create-editnode-dialog (get-nodeeditor-frame))
+    
 
     ; store any references that are needed
     (set! hteditor-ui-panel f-panel)
