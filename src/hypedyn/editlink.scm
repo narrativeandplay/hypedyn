@@ -180,7 +180,7 @@
               )
             (begin ;; show fact text
               #f
-              )))
+              ))))
     
     ; set check boxes
     (display "set check boxes")(newline)
