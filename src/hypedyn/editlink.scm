@@ -160,6 +160,8 @@
               ; set the type choice to fact, which also shows the correct component
               (set-combobox-selection editlink-panel-else-text-typechoice 1))))
 
+    ;; new code for new ui
+    
     ;; empty the panel
     (clear-container action-list-panel)
     
@@ -176,7 +178,12 @@
               (set-combobox-selection-object new-action-combobox "update text")
               ;"alternative text" "show text from fact")
               
-              (
+              (set! new-panel-component-lst (get-container-children new-panel))
+              (display "list len ")(display (length new-panel-component-lst))(newline)
+              (display "lst ")(display new-panel-component-lst)(newline)
+              (define new-update-text-combobox-panel (caddr new-panel-component-lst))
+              (define new-update-text-combobox (invoke new-update-text-combobox-panel 'getComponent 0))
+              (set-combobox-selection-object new-update-text-combobox "alternative text")
               )
             (begin ;; show fact text
               #f
@@ -769,6 +776,25 @@
 (define alt-text-textfield #f)
 (define action-type-combobox #f)
 
+(define (parameter-action-type-combobox-callback action-type-combobox alt-text-textfield fact-choice-combobox)
+  (lambda (action-type-combobox-callback source)
+    (display "combobox type selected ")
+    (define selected-item (get-combobox-selecteditem action-type-combobox))
+    (display selected-item)(newline)
+
+    (cond ((equal? selected-item "alternative text")
+           (display "equal alt text ")(newline)
+           (clear-all-except-first)
+           (add-component update-text-action-panel alt-text-textfield)
+           )
+          ((equal? selected-item "show text from fact")
+           (display "eq text from fact ")(newline)
+           (clear-all-except-first)
+           (add-component update-text-action-panel fact-choice-combobox)
+           ))
+    (set-component-visible editlink-dialog #t)
+    ))
+
 ;; the panel that comes behind the combobox selecting actions type
 (define (create-update-text-action-panel)
   (set! update-text-action-panel (make-panel))
@@ -788,27 +814,12 @@
     (remove-component update-text-action-panel alt-text-textfield)
     (remove-component update-text-action-panel fact-choice-combobox))
   
-  (define (action-type-combobox-callback source)
-    (display "combobox type selected ")
-    (define selected-item (get-combobox-selecteditem action-type-combobox))
-    (display selected-item)(newline)
-    
-    (cond ((equal? selected-item "alternative text")
-           (display "equal alt text ")(newline)
-           (clear-all-except-first)
-           (add-component update-text-action-panel alt-text-textfield)
-           )
-          ((equal? selected-item "show text from fact")
-           (display "eq text from fact ")(newline)
-           (clear-all-except-first)
-           (add-component update-text-action-panel fact-choice-combobox)
-           ))
-    (set-component-visible editlink-dialog #t)
-    ;(pack-frame editlink-dialog)
-    )
+  
+  ;(set! update-text-combobox-callback (lambda (
   
   (add-actionlistener action-type-combobox 
-                      (make-actionlistener action-type-combobox-callback))
+                      (make-actionlistener 
+                       (parameter-action-type-combobox-callback action-type-combobox alt-text-textfield fact-choice-combobox)))
   )
 
 (define (create-editlink-dialog parent)
