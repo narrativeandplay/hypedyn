@@ -165,29 +165,39 @@
     ;; empty the panel
     (clear-container action-list-panel)
     
+    (display "DOING NEW CODE ")(newline)
     ;; new code to update action list
     (if link-usealttext
         (if (eq? link-usealttext #t)
             (begin ;; show alt text
+              
               (define new-panel (add-action-callback #f)) ;; doing exactly the same as when you click add action
               ;(get-container-children action-list-panel)
               (define new-panel-component-lst (get-container-children new-panel))
               (define new-check (car new-panel-component-lst))
               (define new-action-combobox-panel (cadr new-panel-component-lst))
               (define new-action-combobox (invoke new-action-combobox-panel 'getComponent 0)) ;; get the only component inside
-              (set-combobox-selection-object new-action-combobox "update text")
-              ;"alternative text" "show text from fact")
+              (set-combobox-selection-object new-action-combobox "update text using")
+              
+              (define selected-item (get-combobox-selecteditem new-action-combobox))
+              (display selected-item)(newline)
+              ;(action-type-combobox-callback-global #f) ;; trigger the action listener callback
+              (action-type-combobox-callback new-action-combobox new-panel)
+              
+              ;"alternative text" "string fact")
               
               (set! new-panel-component-lst (get-container-children new-panel))
-              (display "list len ")(display (length new-panel-component-lst))(newline)
-              (display "lst ")(display new-panel-component-lst)(newline)
+              (display "component list length ")(display (length new-panel-component-lst))(newline)
               (define new-update-text-combobox-panel (caddr new-panel-component-lst))
               (define new-update-text-combobox (invoke new-update-text-combobox-panel 'getComponent 0))
               (set-combobox-selection-object new-update-text-combobox "alternative text")
+              
+              (action-update-text-combobox-callback)
               )
             (begin ;; show fact text
               #f
               )))
+    (display "HERE ")(newline)
     
     ; set check boxes
     (display "set check boxes")(newline)
@@ -626,7 +636,7 @@
   (define delete-action-button (make-button "Delete Selected"))
   
   ;; label
-  (define action-label (make-label-with-title "Actions"))
+  (define action-label (make-label-with-title "THEN perform the following actions:"))
   (define action-label-panel (make-panel))
   (set-container-layout action-label-panel 'vertical)
   (add-component action-label-panel action-label)
@@ -650,7 +660,45 @@
                       (make-actionlistener add-action-callback))
   )
 
-(define action-type-list (list "<Choose action>" "update text" "follow link" "update fact"))
+(define action-type-list (list "<Choose action>" "update text using" "follow link to" "update fact"))
+
+;(define action-type-combobox-callback-global #f)
+
+(define (action-type-combobox-callback action-type-choice action-panel)
+  (display "AHHHHHHHHHHHHHHHHHHHHHHH")(newline)
+
+  (display "combobox type selected ")
+  (define selected-item (get-combobox-selecteditem action-type-choice))
+  (display selected-item)(newline)
+
+  ;; remove choice for other action panels
+  ;(set! action-type-list (remove (lambda (e) (equal? e selected-item)) action-type-list ))
+
+;  (define (clear-top-panel)
+;    (remove-component action-panel update-text-action-panel))
+
+                                        ;(list "<Choose action>" "update text using" "follow link to" "update fact")
+  (cond ((equal? selected-item "update text using")
+         (display "equal update text ")(newline)
+         (clear-container-from-index-onwards action-panel 2)
+         (add-component action-panel update-text-action-panel)
+         )
+        ((equal? selected-item "follow link to")
+         (display "eq text from fact ")(newline)
+         (clear-container-from-index-onwards action-panel 2)
+         (add-component action-panel (create-node-choice #f (lambda (e) #f) #f #t #f)) ;; edited-nodeID last arg
+         )
+        ((equal? selected-item "update fact")
+         (display "eq text from fact ")(newline)
+         (clear-container-from-index-onwards action-panel 2)
+         (add-component action-panel (create-fact-panel2 #f #f #f))
+         )
+        ((equal? selected-item "<Choose action>")
+         (clear-container-from-index-onwards action-panel 2)
+         ))
+  
+  (pack-frame editlink-dialog)
+  )
 
 ;; an instance of the action type selector panel
 (define (create-action-panel) ; the-type )
@@ -677,7 +725,7 @@
 
     ;(format #t "Creating condition-panel: targetID:~a, in-edited-nodeID:~a~%~!" targetID in-edited-nodeID)
 
-    ;(define action-type-choice (make-combobox "update text" "follow link" "update fact"))
+    ;(define action-type-choice (make-combobox "update text using" "follow link to" "update fact"))
     (define action-type-choice (apply make-combobox action-type-list))
     (define action-type-choice-container (make-panel))
     (add-component action-type-choice-container action-type-choice)
@@ -729,55 +777,45 @@
       ;(remove-combobox-item action-type-choice to-remove)
       )
     
-    (define (action-type-combobox-callback source)
-      (display "combobox type selected ")
-      (define selected-item (get-combobox-selecteditem action-type-choice))
-      (display selected-item)(newline)
-      
-      ;; remove choice for other action panels
-      (set! action-type-list (remove (lambda (e) (equal? e selected-item)) action-type-list ))
-      
-      (define (clear-top-panel)
-        (remove-component top-panel update-text-action-panel)
-        )
-
-      ;(list "<Choose action>" "update text" "follow link" "update fact")
-      ;"update text" "follow link" "update fact"))
-      (cond ((equal? selected-item "update text")
-             (display "equal update text ")(newline)
-             (clear-top-panel)
-             (add-component top-panel update-text-action-panel)
-             )
-            ((equal? selected-item "follow link")
-             (display "eq text from fact ")(newline)
-             (clear-top-panel)
-             ;(add-component update-text-action-panel fact-choice-combobox)
-             )
-            ((equal? selected-item "update fact")
-             (display "eq text from fact ")(newline)
-             (clear-top-panel)
-             ;(add-component update-text-action-panel fact-choice-combobox)
-             )
-            ((equal? selected-item "<Choose action>")
-             (clear-top-panel)
-             )
-            )
-      (pack-frame editlink-dialog)
-      ;(set-component-visible editlink-dialog #t)
-      )
-    
     (add-actionlistener action-type-choice
-                        (make-actionlistener action-type-combobox-callback))
+                        (make-actionlistener
+                         (lambda (e) 
+                           (action-type-combobox-callback action-type-choice top-panel))))
     
     ; return the panel
     top-panel))
 
+;;
+;; Update text panels
+;;
+
 (define update-text-action-panel #f)
 (define alt-text-textfield #f)
 (define action-type-combobox #f)
+(define fact-string-choice-combobox #f)
+(define fact-boolean-choice-combobox #f)
+(define update-text-fact-selection-panel #f)
 
-(define (parameter-action-type-combobox-callback action-type-combobox alt-text-textfield fact-choice-combobox)
-  (lambda (action-type-combobox-callback source)
+(define (action-update-text-combobox-callback)
+  (define (clear-all-except-first)
+    (display "clear all ")(newline)
+    (remove-component update-text-action-panel alt-text-textfield)
+    (remove-component update-text-action-panel update-text-fact-selection-panel)
+    (display "clear all done ")(newline))
+  
+  (define link-obj (get 'links edited-linkID))
+;         (link-name (ask link-obj 'name))
+;         (link-dest1 (ask link-obj 'destination))
+;         (link-uselink (ask link-obj 'use-destination))
+;         (link-usealtlink (ask link-obj 'use-alt-destination))
+;         (link-usealttext (ask link-obj 'use-alt-text))
+;         (link-dest2 (ask link-obj 'alt-destination))
+  (define link-alttext (ask link-obj 'alt-text))
+;         (link-start-index (ask link-obj 'start-index))
+;         (link-end-index (ask link-obj 'end-index))
+;         (edited-node (get 'nodes edited-nodeID))
+;         (anywhere (ask edited-node 'anywhere?)))
+  
     (display "combobox type selected ")
     (define selected-item (get-combobox-selecteditem action-type-combobox))
     (display selected-item)(newline)
@@ -786,41 +824,132 @@
            (display "equal alt text ")(newline)
            (clear-all-except-first)
            (add-component update-text-action-panel alt-text-textfield)
+           (display "[link-alttext] ")(display link-alttext) 
+           (set-text alt-text-textfield link-alttext)
            )
-          ((equal? selected-item "show text from fact")
+          ((equal? selected-item "string fact")
            (display "eq text from fact ")(newline)
            (clear-all-except-first)
-           (add-component update-text-action-panel fact-choice-combobox)
+           ;(add-component update-text-action-panel fact-choice-combobox)
+           
+;           (set! fact-string-choice-combobox ;editlink-panel-else-text-factchoice 
+;                 (create-fact-choice 'string update-text-action-panel
+;                                     selected-fact-in-link -1))
+           
+           ;; create and add the combobox containing the string facts
+           (define string-facts-combobox (create-fact-choice 'string #f selected-fact-in-action #f))
+           
+           ;; add to a container panel and add to the update-text-action-panel
+           (add-component update-text-fact-selection-panel (create-fact-choice 'string #f selected-fact-in-action #f))
+           (add-component update-text-action-panel update-text-fact-selection-panel)
+           
+           ;(add-component update-text-action-panel fact-string-choice-combobox)
            ))
-    (set-component-visible editlink-dialog #t)
-    ))
+    ;(set-component-visible editlink-dialog #t)
+  (pack-frame editlink-dialog)
+    )
+
+;; update update-text-fact-selection-panel
+(define (populate-facts)
+  
+  ;; empty update-text-fact-selection-panel
+  (clear-container update-text-fact-selection-panel)
+  (display "finished clearing populate facts ")(newline)
+  
+;  (define link-obj (get 'links edited-linkID))
+;  ;(display "link obj ")(display link-obj)(newline)
+;  (define selected-ruleID (ask link-obj 'rule))
+;  (define rule-obj (get 'rules selected-ruleID))
+;  (define facts (ask rule-obj 'actions))
+  
+  (define the-facts (get-list 'facts))
+  (display "facts before populate ")(display the-facts)(newline)
+  
+   ;; go through the facts list and add a fact panel for every fact
+;  (if the-facts
+;      (map (lambda (myaction)
+;             (let* ((action-obj (get 'actions myaction))
+;                    (the-action-string (ask action-obj 'expr))
+;                    (the-action-expr (read (open-input-string the-action-string))) ; hack, should change to saving as sexpr
+;                    (the-action (car the-action-expr))
+;                    (targetID (cadr the-action-expr))
+;                    (the-value (cond ((eq? the-action 'set-value!)
+;                                      (caddr the-action-expr))
+;                                     ((eq? the-action 'assert) #t)
+;                                     ((eq? the-action 'retract) #f)
+;                                     ))
+;                    (fact-type (cond ((or (eq? the-action 'assert)
+;                                          (eq? the-action 'retract))
+;                                      "boolean")
+;                                     ((eq? the-action 'set-value!)
+;                                      "string")))
+
+;                    )
+;               (format #t "fact: ~a (~a, ~a, ~a)~%~!" the-action-expr the-action the-value targetID)
+;               (define new-fact-panel (create-fact-panel2 fact-type targetID the-value))
+;               (display "new fact panel ")(display new-fact-panel)(newline)
+
+;               (add-component update-text-fact-selection-panel new-fact-panel)))
+;           the-facts))
+;  (if the-facts 
+;      (map (lambda (fact)
+;             (display "fact ")(display fact)(newline)
+;             (let* ((fact-obj (cdr fact))
+;                    (factID (car fact))
+;                    (the-value (ask fact-obj 'get-value))
+;                    (fact-type (ask fact-obj 'type))
+;                    )
+;               (display "FACT TYPE ")(display fact-type)(newline)
+;               (display "fact type class ")(display (invoke fact-type 'get-class))(newline)
+;               (define new-fact-panel (create-fact-panel2 fact-type factID the-value))
+;               (add-component update-text-fact-selection-panel new-fact-panel)
+;               )
+;             ) the-facts))
+  ;(add-component update-text-fact-selection-panel (create-fact-panel2 'boolean #f #f))
+;  (add-component update-text-fact-selection-panel (create-fact-choice 'string #f selected-fact-in-action #f))
+  
+  (display "end of populate facts ")(newline)
+      )
 
 ;; the panel that comes behind the combobox selecting actions type
 (define (create-update-text-action-panel)
   (set! update-text-action-panel (make-panel))
-  (set! action-type-combobox (make-combobox "alternative text" "show text from fact"))
+  (set! action-type-combobox (make-combobox "alternative text" "string fact"))
   (set! alt-text-textfield (make-textfield "" 20))
-  ;(define fact-choice-combobox (make-combobox))
   
-  (define fact-choice-combobox ;editlink-panel-else-text-factchoice 
+  (set! update-text-fact-selection-panel (make-panel))
+  
+  (set! fact-string-choice-combobox ;editlink-panel-else-text-factchoice 
     (create-fact-choice 'string update-text-action-panel
+                        selected-fact-in-link -1))
+  
+  (set! fact-boolean-choice-combobox ;editlink-panel-else-text-factchoice 
+    (create-fact-choice 'boolean update-text-action-panel
                         selected-fact-in-link -1))
   
   (add-component update-text-action-panel action-type-combobox)
   (add-component update-text-action-panel alt-text-textfield)
   
-  (define (clear-all-except-first)
-    (display "clear all ")(newline)
-    (remove-component update-text-action-panel alt-text-textfield)
-    (remove-component update-text-action-panel fact-choice-combobox))
-  
-  
   ;(set! update-text-combobox-callback (lambda (
   
   (add-actionlistener action-type-combobox 
                       (make-actionlistener 
-                       (parameter-action-type-combobox-callback action-type-combobox alt-text-textfield fact-choice-combobox)))
+                       (lambda (e)
+                         (action-update-text-combobox-callback))))
   )
+
+;; 
+;; Update Fact panels
+;;
+;(define update-fact-action-panel #f)
+
+;; create an instance of update fact action panel
+(define (create-update-fact-action-panel)
+  ;(set! update-fact-action-panel (make-panel))
+  (define top-panel (make-panel))
+  (add-component top-panel (create-fact-panel2 'boolean #f #f))
+  
+  top-panel)
 
 (define (create-editlink-dialog parent)
   ; remember parent
@@ -1154,7 +1283,9 @@
                                                (in-callback source))))
     
     ; select the chosen node
-    (set-comboboxwithdata-selection-bydata node-list nodeID)
+    (if nodeID
+        (set-comboboxwithdata-selection-bydata node-list nodeID)
+        (set-combobox-selection node-list 0))
 
     ; return the list
     node-list))
@@ -1195,43 +1326,51 @@
     ; return the list
     link-list))
 
-; add an fact choice - same as above, refactor! - alex
+; add a fact choice - same as above, refactor! - alex
 ; creates a choice containing facts of the given type
 ; callback will be called when choice changes, and factID will be selected
-(define (create-fact-choice type parent-panel in-callback factID)
+;; if factID is #f select <None>
+;; TODO: remove parent-panel from all those create-fact-choice, create-link-choice, create-node-choice since we're not using it anymore
+(define (create-fact-choice the-type parent-panel in-callback factID)
   (let ((fact-list (make-sortedcomboboxwithdata)))
 
     ; add entries to fact choice - moved this afterwards to allow for adding of data
     (set-comboboxwithdata-clear fact-list)
     (let ((the-facts (get-list 'facts)))
+      (display "THE FACTS ")(newline)
+      (display the-facts)(newline)
       (if the-facts
           (map (lambda (a)
                  (let* ((thisfactID (car a))
                         (thisfact (cdr a))
                         (name (ask thisfact 'name))
-                        (display-name (if (show-IDs?)
-                                          (string-append name
-                                                         " ("
-                                                         (number->string thisfactID)
-                                                         ")")
-                                          name))
+                        (display-name 
+                         (if (show-IDs?)
+                             (string-append name
+                                            " ("
+                                            (number->string thisfactID)
+                                            ")")
+                             name))
                         (thistype (ask thisfact 'type)))
-                   (if (or
-                        (eq? thistype 'any)
-                        (eq? thistype type))
-                       (add-comboboxwithdata-string fact-list display-name thisfactID))))
+                   (if (or (eq? thistype 'any)
+                           (eq? thistype the-type))
+                       (add-comboboxwithdata-string fact-list display-name thisfactID))
+                   ))
                the-facts)))
 
     ; make sure the "None" entry is explicitly inserted at the start of the list
     (insert-comboboxwithdata-string-at fact-list "<None>" -1 0)
     
+    
     ; add action listener
     (add-actionlistener fact-list
                         (make-actionlistener (lambda (source)
-                                               (in-callback source type))))
+                                               (in-callback source the-type))))
 
     ; select the chosen fact
-    (set-comboboxwithdata-selection-bydata fact-list factID)
+    (if factID
+        (set-comboboxwithdata-selection-bydata fact-list factID)
+        (set-combobox-selection fact-list 0)) ;; no fact selected
     
     ; return the list
     fact-list))
@@ -1811,12 +1950,19 @@
 
 ;; empty the container of any children component
 ;; can consider moving this elsewhere as this is useful
-  (define (clear-container in-container)
-    (let ((children (get-container-children in-container)))
-      (if (not (null? children))
-          (begin
-            (remove-component in-container (car children))
-            (clear-container in-container)))))
+(define (clear-container in-container)
+  (let ((children (get-container-children in-container)))
+    (if (not (null? children))
+        (begin
+          (remove-component in-container (car children))
+          (clear-container in-container)))))
+
+(define (clear-container-from-index-onwards in-container index)
+  (let ((children (get-container-children in-container)))
+    (if (> (length children) index)
+        (begin
+          (remove-component in-container (list-ref children index))
+          (clear-container-from-index-onwards in-container index)))))
   
   
 ; reset the rule editor
@@ -1826,7 +1972,7 @@
   
   ;; empty the two dialogs
   
-  (reset-helper editlink-panel-top)
+  ;(reset-helper editlink-panel-top)
   ;(reset-helper editnode-panel-top)
   
   ; remove conditions
@@ -1834,7 +1980,7 @@
   
   ; remove facts
   ;; not even sure what this does
-  (reset-helper editnode-panel-then-facts)
+  ;(reset-helper editnode-panel-then-facts)
   
   ; remove link destination choicebox - these are recreated when link editor is opened
   (if editlink-panel-then-link-choice
@@ -1889,7 +2035,7 @@
   (pack-frame editlink-dialog))
 
 ; create an fact panel
-; the-action: the type of condition 'assert, 'retract or 'set-value!
+; the-action: the type of action 'assert, 'retract or 'set-value!
 ; targetID: the currently selected fact, if any (pass in -1 if none selected)
 ; the-value: value that will be set (for 'set-value! only)
 (define (create-fact-panel the-action targetID the-value)
@@ -1903,7 +2049,9 @@
     
     ; add top-panel
     (set-container-layout top-panel 'horizontal)
-    (add-component editnode-panel-then-facts top-panel)
+    
+    ;; nolong add to the facts panel
+    ;(add-component editnode-panel-then-facts top-panel)
     
     ;; add checkbox
     (add-component top-panel the-checkbox)
@@ -1934,6 +2082,73 @@
     ; return the panel
     top-panel))
 
+;; new version of the above (will eventually replace the above)
+;; fact type is only needed if a factID is selected
+(define (create-fact-panel2 fact-type factID the-value)
+  (display "create fact panel 2")(newline)
+  
+  (let* ((top-panel (make-panel))
+         ;(the-checkbox (make-checkbox ""))
+         (the-type-choice (make-combobox "True/False" "Text"))
+         (the-boolean-choice (make-combobox "True" "False"))
+         (the-string-entry (make-textfield "[the fact text...........]" 20))
+         (the-fact-list-boolean (create-fact-choice 'boolean top-panel selected-fact-in-action factID))
+         (the-fact-list-string (create-fact-choice 'string top-panel selected-fact-in-action factID)))
+    
+    ; add top-panel
+    (set-container-layout top-panel 'horizontal)
+    
+    ;; nolong add to the facts panel
+    ;(add-component editnode-panel-then-facts top-panel)
+    
+    ;; add checkbox
+    ;(add-component top-panel the-checkbox)
+
+    ;; add type choice
+    (add-component top-panel the-type-choice)
+  
+    ;; choose the fact type index
+;    (define (fact-type-index)
+;      (cond ((equal? "boolean" fact-type) 0)
+;            ((equal? "string" fact-type) 1)))
+    (define (fact-type-index)
+      (cond ((equal? 'boolean fact-type) 0)
+            ((equal? 'string fact-type) 1)
+            (else 0)
+            ))
+    
+    ; set type choice
+;    (set-combobox-selection the-type-choice (if (eq? the-action 'set-value!) 1 0))
+    (set-combobox-selection the-type-choice (fact-type-index))
+    
+    ;; add the appropriate components
+    (set-fact-panel-components top-panel (fact-type-index)
+                               the-fact-list-string the-string-entry
+                               the-fact-list-boolean the-boolean-choice)
+    
+    ; set value
+;    (if (eq? the-action 'set-value!)
+;        (set-text the-string-entry the-value)
+;        (set-combobox-selection the-boolean-choice (if (eq? the-action 'assert) 0 1)))
+    
+    ;; set current value of fact
+    (if factID ;; if factID false
+        (cond ((equal? fact-type 'boolean)
+               (cond ((equal? the-value #t) (set-combobox-selection the-boolean-choice 0))
+                     ((equal? the-value #f) (set-combobox-selection the-boolean-choice 1))))
+              ((equal? fact-type 'string)
+               (set-text the-string-entry the-value))))
+    
+    ; add type callback
+    (add-actionlistener the-type-choice
+                        (make-actionlistener (lambda (source)
+                                               (selected-type-in-action source top-panel
+                                                                        the-fact-list-boolean the-boolean-choice
+                                                                        the-fact-list-string the-string-entry))))
+
+    ; return the panel
+    top-panel))
+
 ; set fact panel components
 (define (set-fact-panel-components top-panel the-type
                                    the-fact-list-string the-string-entry
@@ -1941,10 +2156,12 @@
   (if (eq? the-type 1)
       ; string
       (begin
+        (display "adding string ")(newline)
         (add-component top-panel the-fact-list-string)
         (add-component top-panel the-string-entry))
       ; boolean
       (begin
+        (display "adding boolean ")(newline)
         (add-component top-panel the-fact-list-boolean)
         (add-component top-panel the-boolean-choice))))
 
@@ -1955,12 +2172,18 @@
   (format #t "selected-type-in-assertion~%~!")
   
   ; remove the current target and operator lists
+;  (let* ((children (get-container-children top-panel))
+;         (old-target (caddr children))
+;         (old-operator (cadddr children)))
+;    (remove-component top-panel old-target)
+;    (remove-component top-panel old-operator))
+  
   (let* ((children (get-container-children top-panel))
-         (old-target (caddr children))
-         (old-operator (cadddr children)))
+         (old-target (cadr children))
+         (old-operator (caddr children)))
     (remove-component top-panel old-target)
     (remove-component top-panel old-operator))
-
+  
   ; add the appropriate components and set value
   (set-fact-panel-components top-panel (get-combobox-selectedindex c)
                              the-fact-list-string the-string-entry
