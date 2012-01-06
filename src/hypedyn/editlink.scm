@@ -34,6 +34,7 @@
   (require "../kawa/ui/tabpanel.scm")
   (require "../kawa/ui/undo.scm") ;; debug compoundundomanager-updatelevel 
   (require "../kawa/system.scm") ; is-windows?
+  (require "../kawa/strings.scm") ;; to-string
   (require "../common/objects.scm") ;; ask
   (require "../common/datatable.scm") ;; get
   (require "../common/main-ui.scm") ; for get-main-ui-frame
@@ -167,37 +168,37 @@
     
     (display "DOING NEW CODE ")(newline)
     ;; new code to update action list
-    (if link-usealttext
-        (if (eq? link-usealttext #t)
-            (begin ;; show alt text
-              
-              (define new-panel (add-action-callback #f)) ;; doing exactly the same as when you click add action
-              ;(get-container-children action-list-panel)
-              (define new-panel-component-lst (get-container-children new-panel))
-              (define new-check (car new-panel-component-lst))
-              (define new-action-combobox-panel (cadr new-panel-component-lst))
-              (define new-action-combobox (invoke new-action-combobox-panel 'getComponent 0)) ;; get the only component inside
-              (set-combobox-selection-object new-action-combobox "update text using")
-              
-              (define selected-item (get-combobox-selecteditem new-action-combobox))
-              (display selected-item)(newline)
-              ;(action-type-combobox-callback-global #f) ;; trigger the action listener callback
-              (action-type-combobox-callback new-action-combobox new-panel)
-              
-              ;"alternative text" "string fact")
-              
-              (set! new-panel-component-lst (get-container-children new-panel))
-              (display "component list length ")(display (length new-panel-component-lst))(newline)
-              (define new-update-text-combobox-panel (caddr new-panel-component-lst))
-              (define new-update-text-combobox (invoke new-update-text-combobox-panel 'getComponent 0))
-              (set-combobox-selection-object new-update-text-combobox "alternative text")
-              
-              (action-update-text-combobox-callback)
-              )
-            (begin ;; show fact text
-              #f
-              )))
-    (display "HERE ")(newline)
+;    (if link-usealttext
+;        (if (eq? link-usealttext #t)
+;            (begin ;; show alt text
+;              
+;              (define new-panel (add-action-callback #f)) ;; doing exactly the same as when you click add action
+;              
+;              ;; getting the action combobox we just added and set the selection to "update text using"
+;              (define new-panel-component-lst (get-container-children new-panel))
+;              (define new-check (car new-panel-component-lst))
+;              (define new-action-combobox-panel (cadr new-panel-component-lst))
+;              (define new-action-combobox (invoke new-action-combobox-panel 'getComponent 0)) ;; get the only component inside
+;              (set-combobox-selection-object new-action-combobox "update text using")
+;              
+;              (define selected-item (get-combobox-selecteditem new-action-combobox))
+;              (display selected-item)(newline)
+;              ;(action-type-combobox-callback-global #f) ;; trigger the action listener callback
+;              (action-type-combobox-callback new-action-combobox new-panel)
+;              
+;              ;"alternative text" "string fact")
+;              
+;              (set! new-panel-component-lst (get-container-children new-panel))
+;              (display "component list length ")(display (length new-panel-component-lst))(newline)
+;              (define new-update-text-combobox-panel (caddr new-panel-component-lst))
+;              (define new-update-text-combobox (invoke new-update-text-combobox-panel 'getComponent 0))
+;              (set-combobox-selection-object new-update-text-combobox "alternative text")
+;              
+;              (action-update-text-combobox-callback)
+;              )
+;            (begin ;; show fact text
+;              #f
+;              )))
     
     ; set check boxes
     (display "set check boxes")(newline)
@@ -618,20 +619,51 @@
 
 (define actions-main-panel #f)
 (define action-list-panel #f)
+(define action-type-choice #f)
 
+;; returns a list of the action panels in action-list-panel
+(define (action-panel-list)
+  (get-container-children action-list-panel))
+
+;; called when add action button is pressed
 (define (add-action-callback source)
   (display "add action! ")(newline)
                                         ;(add-component actions-main-panel update-text-action-panel 'border-center)
-  (define new-action-panel (create-action-panel))
+  ;; get the selected type
+  (define selected-action-type (get-combobox-selecteditem action-type-choice))
+  (define new-action-panel (create-action-panel selected-action-type))
   (add-component action-list-panel new-action-panel)
+  
+  ;; remove unavailable (taken/existent) choices
+  ;(update-action-type-choice2 new-action-panel)
+  
   (pack-frame editlink-dialog)
   new-action-panel
   )
+
+;; called when delete action button is pressed
+(define (delete-action-callback source)
+  (map (lambda (action-panel)
+         (define comp-lst (get-container-children action-panel))
+         (define action-checkbox (car comp-lst))
+         (define action-label (cadr comp-lst))
+         (if (get-checkbox-value action-checkbox)
+             (begin
+               (define action-type (get-text action-label))
+               ;; add the choice back if we're deleting a unique action (only a copy of the action should exist)
+               (if (member (get-text action-label) unique-choices)
+                   (add-combobox-string action-type-choice action-type))
+               
+               ;; remove that panel from action-list-panel
+               (remove-component action-list-panel action-panel)
+               ))
+         ) (action-panel-list)))
 
 (define (create-actions-main-panel)
   
   (set! actions-main-panel (make-panel))
   (set-container-layout actions-main-panel 'border)
+  
   (define add-action-button (make-button "Add Action"))
   (define delete-action-button (make-button "Delete Selected"))
   
@@ -647,27 +679,44 @@
   (set-container-layout action-list-panel 'vertical)
   (add-component actions-main-panel action-list-panel 'border-center)
   
+  ;; action type list contains the remaining available types left (after previous adding of actions)
+  (set! action-type-choice (apply make-combobox action-type-list))
+  (define action-type-choice-container (make-panel))
+  (add-component action-type-choice-container action-type-choice)
+
   ;; button panel
   (define actions-buttons-panel (make-panel))
   (set-container-layout actions-buttons-panel 'flow 'center)
   (add-component actions-main-panel actions-buttons-panel 'border-south)
   
+  ;; Add action choice
+  (add-component actions-buttons-panel action-type-choice-container)
   (add-component actions-buttons-panel add-action-button)
   (add-component actions-buttons-panel delete-action-button)
   
   ;; action listeners
   (add-actionlistener add-action-button 
                       (make-actionlistener add-action-callback))
+  
+  (add-actionlistener delete-action-button 
+                      (make-actionlistener delete-action-callback))
   )
 
-(define action-type-list (list "<Choose action>" "update text using" "follow link to" "update fact"))
+;; kept to ensure some actions are only added once
+(define action-type-list (list "update text using" "follow link to" "update fact"))
+(define-constant unique-choices (list "update text using" "follow link to")) ;; choices that shouldnt be duplicated
 
 ;(define action-type-combobox-callback-global #f)
 
-(define (action-type-combobox-callback action-type-choice action-panel)
-  (display "AHHHHHHHHHHHHHHHHHHHHHHH")(newline)
+(define (reset-action-type-combobox)
+  #f
+  )
 
-  (display "combobox type selected ")
+(define action-type-combobox-actionlistener #f)
+
+;; not used anymore. used to be triggered when action type combobox was changed
+(define (action-type-combobox-callback action-type-choice action-panel)
+  (display "combobox type selected here ")
   (define selected-item (get-combobox-selecteditem action-type-choice))
   (display selected-item)(newline)
 
@@ -676,113 +725,234 @@
 
 ;  (define (clear-top-panel)
 ;    (remove-component action-panel update-text-action-panel))
-
-                                        ;(list "<Choose action>" "update text using" "follow link to" "update fact")
-  (cond ((equal? selected-item "update text using")
-         (display "equal update text ")(newline)
-         (clear-container-from-index-onwards action-panel 2)
-         (add-component action-panel update-text-action-panel)
-         )
-        ((equal? selected-item "follow link to")
-         (display "eq text from fact ")(newline)
-         (clear-container-from-index-onwards action-panel 2)
-         (add-component action-panel (create-node-choice #f (lambda (e) #f) #f #t #f)) ;; edited-nodeID last arg
-         )
-        ((equal? selected-item "update fact")
-         (display "eq text from fact ")(newline)
-         (clear-container-from-index-onwards action-panel 2)
-         (add-component action-panel (create-fact-panel2 #f #f #f))
-         )
-        ((equal? selected-item "<Choose action>")
-         (clear-container-from-index-onwards action-panel 2)
-         ))
   
-  (pack-frame editlink-dialog)
-  )
-
-;; an instance of the action type selector panel
-(define (create-action-panel) ; the-type )
-  ;(define (create-condition-panel the-type targetID selectedOperator in-edited-nodeID)
-  (let* ((top-panel (make-panel))
-         (the-checkbox (make-checkbox ""))
-;         (the-type-choice (if (is-basic-mode?)
-;                              (make-combobox "Node")
-;                              (if (show-facts?)
-;                                  (make-combobox "Node" "Link" "Fact")
-;                                  (make-combobox "Node" "Link"))))
-         
-;         (the-node-list (create-node-choice top-panel selected-node-in-condition targetID #f in-edited-nodeID))
-;         (the-link-list (create-link-choice top-panel selected-link-in-condition targetID))
-;         (the-fact-list (create-fact-choice 'boolean top-panel selected-fact-in-condition targetID))
-;         (the-node-operator-choice (if (not (is-basic-mode?))
-;                                       (make-combobox "Not Visited" "Visited" "Previous Node")
-;                                       (make-combobox "Not Visited" "Visited")))
-;         (the-link-operator-choice (make-combobox "Not Followed" "Followed"))
-;         (the-fact-operator-choice (make-combobox "False" "True"))
-         )
-    
-    ;(set-combobox-clear)
-
-    ;(format #t "Creating condition-panel: targetID:~a, in-edited-nodeID:~a~%~!" targetID in-edited-nodeID)
-
-    ;(define action-type-choice (make-combobox "update text using" "follow link to" "update fact"))
-    (define action-type-choice (apply make-combobox action-type-list))
-    (define action-type-choice-container (make-panel))
-    (add-component action-type-choice-container action-type-choice)
-    
-    ; add top-panel
-    (set-container-layout top-panel 'flow 'left)
-    (add-component editlink-panel-conditions top-panel)
-    
-    ;; Add checkbox
-    (add-component top-panel the-checkbox)
-    
-    ;; Add action choice
-    (add-component top-panel action-type-choice-container)
-    
-    ;; Add type choice
-;    (if (not (is-basic-mode?))
-;        (begin
-;          (add-component top-panel the-type-choice)
-;          (set-combobox-selection the-type-choice the-type)
-;          (add-actionlistener the-type-choice
-;                              (make-actionlistener (lambda (source)
-;                                                     (selected-type-in-condition source top-panel
-;                                                                                 the-node-list the-node-operator-choice
-;                                                                                 the-link-list the-link-operator-choice
-;                                                                                 the-fact-list the-fact-operator-choice)))))
-;        (add-component top-panel (make-label-with-title "Node")))
-
-    ;; Add target choice - may have problems if loading a file that doesn't match chosen version
-;    (cond 
-;     ((= 0 the-type) (add-component top-panel the-node-list))
-;     ((= 1 the-type) (add-component top-panel the-link-list))
-;     ((= 2 the-type) (add-component top-panel the-fact-list)))
-
-    ;; add condition
-;    (let ((the-choice (cond 
-;                       ((= 0 the-type) the-node-operator-choice)
-;                       ((= 1 the-type) the-link-operator-choice)
-;                       ((= 2 the-type) the-fact-operator-choice))))
-;      (add-component top-panel the-choice)
-;      (set-combobox-selection the-choice selectedOperator))
-
+  
     ;; add an action to the action list panel
     ;; makes sure there is only one of each type of action
     ;; if action already added, make sure it is not available as an option
     ;;   (unless that particular action is what is currently selected)  
     (define (update-action-type-choice to-remove)
       ;(get-container-children
-      (set! action-type-list (remove action-type-list to-remove))
+      (set! action-type-list (remove (lambda (e) (equal? e to-remove)) action-type-list))
       ;(remove-combobox-item action-type-choice to-remove)
       )
+
+                                        ;(list "<Choose action>" "update text using" "follow link to" "update fact")
+  (cond ((equal? selected-item "update text using")
+         (display "equal update text ")(newline)
+         (clear-container-from-index-onwards action-panel 2)
+         ;(update-action-type-choice "update text using")
+         (update-action-type-choice2)
+         (add-component action-panel update-text-action-panel)
+         )
+        ((equal? selected-item "follow link to")
+         (display "eq text from fact ")(newline)
+         (clear-container-from-index-onwards action-panel 2)
+         ;(update-action-type-choice "follow link to")
+         (update-action-type-choice2)
+         (display "add follow link t ")(newline)
+         (add-component action-panel (create-node-choice #f (lambda (e) #f) #f #t #f)) ;; edited-nodeID last arg
+         (display "aft follow link t ")(newline)
+         )
+        ((equal? selected-item "update fact") ;; update fact can have many copy
+         (display "eq text from fact ")(newline)
+         (clear-container-from-index-onwards action-panel 2)
+         (update-action-type-choice2)
+         (add-component action-panel (create-fact-panel2 #f #f #f))
+         )
+        ((equal? selected-item "<Choose action>")
+         (clear-container-from-index-onwards action-panel 2)
+         (update-action-type-choice2)
+         ))
+  
+  (pack-frame editlink-dialog)
+  )
+
+;; look through the other existing action-panel
+;; and update all existing action-panel's choice
+;; note that it keeps the current selected 
+;; if this action panel is passed in do the correction only to this-action-panel
+(define (update-action-type-choice2 #!optional this-action-panel)
+  
+  (display "update action type choice 2")(newline)
+  ;(define action-type-choice (apply make-combobox action-type-list))
+
+;  (define action-panel-list (get-container-children action-list-panel))
+
+  ;; construct the unavailable choices
+  (define unavailable-choices '())
+  (define repeatable-choices (list "<Choose action>" "update fact"))
+  
+  (map (lambda (ap)
+         (define ap-children (get-container-children ap))
+         (define action-type-choice-panel (cadr ap-children))
+         (define action-type-choice (car (get-container-children action-type-choice-panel)))
+         (define selected-item (get-combobox-selecteditem action-type-choice))
+
+         ;; if selected is one of the unique choices add it to unvailable-choices
+         (if (and (member selected-item unique-choices)
+                  (not (member selected-item repeatable-choices)))
+             (set! unavailable-choices (append unavailable-choices (list selected-item))))
+         ) action-panel-list)
+  
+  (define (repopulate-action-choice ap)
+    (define ap-children (get-container-children ap))
+    (define action-type-choice-panel (cadr ap-children))
+    (define action-type-choice (car (get-container-children action-type-choice-panel)))
     
-    (add-actionlistener action-type-choice
-                        (make-actionlistener
-                         (lambda (e) 
-                           (action-type-combobox-callback action-type-choice top-panel))))
+    ;; remember selected to set back later
+    (define selected-item (get-combobox-selecteditem action-type-choice))
     
-    ; return the panel
+    (display "REPOP ")(newline)
+    
+    ;; deactivate action listener so that our actions won't trigger them many times
+    (remove-actionlistener action-type-choice action-type-combobox-actionlistener)
+    (display "here1 ")(newline)
+    (set-combobox-clear action-type-choice)
+    (display "here2 ")(newline)
+    (map (lambda (item)
+           (add-combobox-item action-type-choice item)
+           ) action-type-list)
+    (display "here3 ")(newline)
+    
+    ;; set back selected item
+    (set-combobox-selection-object action-type-choice selected-item)
+    
+    ;; add action listener back
+;    (add-actionlistener action-type-choice
+;                        (make-actionlistener
+;                         (lambda (e)
+;                           (action-type-combobox-callback action-type-choice top-panel))))
+    
+    ;;debug 
+    (display "ADDING BACK action listener ")(newline)
+    (add-actionlistener action-type-choice action-type-combobox-actionlistener)
+    ;(add-actionlistener action-type-choice action-type-combobox-actionlistener)
+    )
+  
+  (define (remove-unavailable-from-action-panel ap)
+    (define ap-children (get-container-children ap))
+    (define action-type-choice-panel (cadr ap-children))
+    (define action-type-choice (car (get-container-children action-type-choice-panel)))
+    (define selected-item (get-combobox-selecteditem action-type-choice))
+;    (display "unavailable-choices ")(display unavailable-choices)(newline)
+;    (display "selected item ")(display selected-item)(newline)
+    (map (lambda (unavailable)
+           ;; remove unvailable except the one that this panel is representing
+           (if (not (equal? selected-item unavailable))
+               (begin
+;                 (display "removing available ")(display unavailable)(newline)
+                 (remove-combobox-item action-type-choice unavailable)(newline)
+               ))
+           ) unavailable-choices)
+    )
+  
+(define (me-debug ap)
+    (define ap-children (get-container-children ap))
+    (define action-type-choice-panel (cadr ap-children))
+    (define action-type-choice (car (get-container-children action-type-choice-panel)))
+    
+    ;; remember selected to set back later
+    (define selected-item (get-combobox-selecteditem action-type-choice))
+    
+    (set-combobox-clear action-type-choice)
+    (map (lambda (item)
+           (add-combobox-item action-type-choice "hehe")
+           ) action-type-list)
+    
+    ;; set back selected item
+    (set-combobox-selection-object action-type-choice selected-item)
+  
+    )
+  
+  (if (not this-action-panel)
+      (begin
+        (map repopulate-action-choice action-panel-list)
+        ;(map me-debug action-panel-list)
+        ;(map remove-unavailable-from-action-panel action-panel-list)
+        )
+      (begin
+        (remove-unavailable-from-action-panel this-action-panel)
+        ))
+  )
+
+;; an instance of the action type selector panel
+(define (create-action-panel action-type) ; the-type )
+  (let* ((top-panel (make-panel))
+         (the-checkbox (make-checkbox "")))
+    ; add top-panel
+    (set-container-layout top-panel 'flow 'left)
+    (add-component editlink-panel-conditions top-panel)
+
+    ;; Add checkbox
+    (add-component top-panel the-checkbox)
+    
+;    (cond ((equal? selected-item "update text using")
+;         (display "equal update text ")(newline)
+;         (clear-container-from-index-onwards action-panel 2)
+;         ;(update-action-type-choice "update text using")
+;         (update-action-type-choice2)
+;         (add-component action-panel update-text-action-panel)
+;         )
+;        ((equal? selected-item "follow link to")
+;         (display "eq text from fact ")(newline)
+;         (clear-container-from-index-onwards action-panel 2)
+;         ;(update-action-type-choice "follow link to")
+;         (update-action-type-choice2)
+;         (display "add follow link t ")(newline)
+;         (add-component action-panel (create-node-choice #f (lambda (e) #f) #f #t #f)) ;; edited-nodeID last arg
+;         (display "aft follow link t ")(newline)
+;         )
+;        ((equal? selected-item "update fact") ;; update fact can have many copy
+;         (display "eq text from fact ")(newline)
+;         (clear-container-from-index-onwards action-panel 2)
+;         (update-action-type-choice2)
+;         (add-component action-panel (create-fact-panel2 #f #f #f))
+;         )
+;        ((equal? selected-item "<Choose action>")
+;         (clear-container-from-index-onwards action-panel 2)
+;         (update-action-type-choice2)
+;         ))
+    
+    ;; add the action label display
+    (define action-label (make-label-with-title (to-string action-type)))
+    (add-component top-panel action-label)
+    
+    (define action-type-str (to-string action-type))
+    ;"update text using" "follow link to" "update fact"))
+    (cond ((equal? action-type-str "update text using")
+           (add-component top-panel update-text-action-panel)
+           )
+          ((equal? action-type-str "follow link to")
+           (add-component top-panel (create-node-choice #f (lambda (e) #f) #f #t #f))
+           )
+          ((equal? action-type-str "update fact")
+           (add-component top-panel (create-fact-panel2 #f #f #f))
+           )
+          (else 
+           (display "create-action-panel error ")(display action-type)(newline)
+           (display "action type class type ")(display (invoke action-type 'get-class))(newline)
+           )
+          )
+    
+    (display "check to remove TYPES ")(newline)
+    (display "action type ")(display action-type)(newline)
+    (display "action type class type ")(display (invoke action-type 'get-class))(newline)
+    (display "member check ")(display (member action-type unique-choices))(newline)
+    (display (to-string action-type))(newline)
+    (display (invoke (to-string action-type) 'get-class))(newline)
+    (display unique-choices)(newline)
+    (display (invoke (car unique-choices) 'get-class))(newline)
+    (display (member (to-string action-type) unique-choices))(newline)
+    
+    ;; update action-type-choice combobox
+    ;; remove from available
+    (if (member (to-string action-type) unique-choices)
+        (begin
+          (display "removing combobox item")(newline)
+          (remove-combobox-item action-type-choice action-type))
+        )
+    
     top-panel))
 
 ;;
@@ -1337,8 +1507,6 @@
     ; add entries to fact choice - moved this afterwards to allow for adding of data
     (set-comboboxwithdata-clear fact-list)
     (let ((the-facts (get-list 'facts)))
-      (display "THE FACTS ")(newline)
-      (display the-facts)(newline)
       (if the-facts
           (map (lambda (a)
                  (let* ((thisfactID (car a))
@@ -2156,12 +2324,10 @@
   (if (eq? the-type 1)
       ; string
       (begin
-        (display "adding string ")(newline)
         (add-component top-panel the-fact-list-string)
         (add-component top-panel the-string-entry))
       ; boolean
       (begin
-        (display "adding boolean ")(newline)
         (add-component top-panel the-fact-list-boolean)
         (add-component top-panel the-boolean-choice))))
 

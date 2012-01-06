@@ -166,9 +166,10 @@
                                                 in-data :: <object>)
   (invoke in-combo 'setSelectedData in-data))
 
+;; remove a selected object from the combobox
 (define (remove-combobox-item in-combo :: <javax.swing.JComboBox>
                               to-remove :: <java.lang.Object>)
-  (invoke in-combo 'remove to-remove)
+  (invoke in-combo 'remove-item to-remove)
   )
 
 ; add an item to a combobox
