@@ -830,6 +830,8 @@
       (define string-removed (substring (get-text the-editor) offset (+ offset len)))
       (set! remove-cache (list offset string-removed len))
       
+      ;; testing bzr push merge functionality (whether it detect changes in on the server)
+      
       ;; replace has positive len variable while insert has 0 len
       ;(if (> len 0)
       ;    (filter-bypass-replace fb offset len string (style-to-use offset))
