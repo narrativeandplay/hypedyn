@@ -831,8 +831,8 @@
       (set! remove-cache (list offset string-removed len))
       
       ;; replace has positive len variable while insert has 0 len
-      ;(if (> len 0)
-      ;    (filter-bypass-replace fb offset len string (style-to-use offset))
+      (if (> len 0)
+          (filter-bypass-replace fb offset len string (style-to-use offset))
           (begin
             (display "style to use replace ")(display (style-to-use offset))(newline)
             (display "this returns .. ")(display (get-attributes-pos the-doc (- offset 1)))(newline)
@@ -860,7 +860,7 @@
             (display "!!!end of link?!! ")(display (end-of-link? offset))(newline)
             (filter-bypass-insert fb offset string (style-to-use offset))
             )
-       ;   )
+          )
       #f)
 
     ;; =========================
