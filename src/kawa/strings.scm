@@ -137,7 +137,7 @@
 ;;  (invoke in-string 'toString))
 
 (define (jstring->fstring jstring :: <java.lang.String>) :: <gnu.lists.FString>
-  (<gnu.lists.Fstring> jstring))
+  (<gnu.lists.FString> jstring))
 
 ;;(define (string-replace2 main-str :: <string> 
 ;;                        match-str :: <string> 
