@@ -69,6 +69,7 @@
   (primitive-procedure-add! 'create-link create-link)                                ; (create-link name fromnodeID tonodeID start-index end-index use-destination use-alt-destination use-alt-text alt-destination alt-text update-display . args)
   (primitive-procedure-add! 'create-rule create-rule)                                ; (create-rule name expression linkID . args)
   (primitive-procedure-add! 'create-typed-rule create-typed-rule)                    ; (create-typed-rule name type expression parentID . args)
+  (primitive-procedure-add! 'create-typed-rule2 create-typed-rule2)                  ; (create-typed-rule2 name type and-or negate? parentID . args)
   (primitive-procedure-add! 'create-condition create-condition)                      ; (create-condition name nodeID operator ruleID . args)
   (primitive-procedure-add! 'create-typed-condition create-typed-condition)          ; (create-typed-condition name type targetID operator ruleID . args)
   (primitive-procedure-add! 'create-action create-action)                            ; (create-action name type expr ruleID . args)

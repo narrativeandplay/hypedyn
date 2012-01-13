@@ -23,7 +23,7 @@
 (require "nodeeditor.scm") ;; nodeeditor-set-dirty! nodeeditor-clear-dirty!
 (require "hteditor.scm") ;; update-dirty-state, update-node-style, update-link-display
 (require "htfileio.scm") ;; ht-build-sexpr-from-object-with-rule, update-dirty-state
-(require "editlink.scm") ;; doeditlink
+;(require "editlink.scm") ;; doeditlink
 (require 'list-lib) ;; list-copy
 
 (module-export delete-link-action

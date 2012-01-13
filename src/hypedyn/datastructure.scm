@@ -34,7 +34,7 @@
                set-nodecount-display-callback! reset-node-count inc-node-count dec-node-count get-node-count
                set-import-offsets!
                create-node deletenode
-               create-link create-rule create-typed-rule
+               create-link create-rule create-typed-rule create-typed-rule2
                create-condition create-typed-condition create-action create-fact)
 
 ;; debug var 
@@ -64,6 +64,7 @@
                        (uniqueID-obj (make-uniqueID-object name (if (pair? args) (car args))))
                        (this-obj (new-object uniqueID-obj))
                        (rule 'not-set)
+                       (rule-lst '())
                        (visited? 0)
                        (inspectable-fields (list (list 'visited? 'number "visited: "))))
                   (obj-put this-obj 'content
@@ -96,11 +97,15 @@
                            (lambda (self link)
                              (set! links (delete! link links))))
                   (obj-put this-obj 'rule (lambda (self) rule))
+                  (obj-put this-obj 'rule-lst (lambda (self) rule-lst))
                   (obj-put this-obj 'set-rule!
                            (lambda (self new-rule)
                              (set! rule new-rule)
                              ;(ht-set-dirty!)
                              ))
+                  (obj-put this-obj 'add-rule
+                           (lambda (self new-rule-ID)
+                             (set! rule-lst (append rule-lst new-rule-ID))))
                   (obj-put this-obj 'to-save-sexpr
                            (lambda (self)
                              (list 'create-node
@@ -131,6 +136,7 @@
                 (let* ((uniqueID-obj (make-uniqueID-object name (if (pair? args) (car args))))
                        (this-obj (new-object uniqueID-obj))
                        (rule 'not-set) ; 'not-set or the ruleID
+                       (rule-lst '())
                        (followed? 0) ; 0 = not followed, 1 = followed
                        (link-type 'default) ; 'default or 'hover
                        (custom-cursor-image #f) ; filename of custom cursor for this link, if any
@@ -190,11 +196,17 @@
                              ;(ht-set-dirty!)
                              ))
                   (obj-put this-obj 'rule (lambda (self) rule))
+                  (obj-put this-obj 'rule-lst (lambda (self) rule-lst))
+                  
                   (obj-put this-obj 'set-rule!
                            (lambda (self new-rule)
                              (set! rule new-rule)
                              ;(ht-set-dirty!)
                              ))
+                  (obj-put this-obj 'add-rule
+                           (lambda (self new-rule-ID)
+                             (set! rule-lst (append rule-lst new-rule-ID))))
+                  
                   (obj-put this-obj 'followed?
                            (lambda (self)
                              followed?))
@@ -241,9 +253,34 @@
                            (lambda (self) inspectable-fields))
                   this-obj))
 
+
+(define-private (make-rule2 name type and-or negate? linkID #!rest args)
+                (display "MAKE RULE 2 ")(display negate?)(newline)
+                
+                (define parent-obj (apply make-rule (append (list name type and-or linkID) args)))
+                (define this-obj (new-object parent-obj))
+                
+                (obj-put this-obj 'negate? (lambda (self) negate?)) 
+                (obj-put this-obj 'rule-expr
+                           (lambda (self)
+                             (if negate?
+                                 (cons 'not (ask parent-obj 'rule-expr))
+                                 (ask parent-obj 'rule-expr))))
+                
+                (obj-put this-obj 'to-save-sexpr
+                           (lambda (self)
+                             (list 'create-typed-rule2
+                                   (ask self 'name)                        ; name (string)
+                                   (list 'quote type)                      ; type ('link/'node)
+                                   (list 'quote and-or)                ; expression ('and/'or)
+                                   negate?
+                                   linkID                                  ; parent linkID (int)
+                                   (ask self 'ID))))
+                this-obj)
+
 ;; rule
 ; type: 'link or 'node
-(define-private (make-rule name type expression linkID . args)
+(define-private (make-rule name type expression linkID #!rest args)
                 (let* ((uniqueID-obj (make-uniqueID-object name (if (pair? args) (car args))))
                        (this-obj (new-object uniqueID-obj))
                        ;; note: these actions are actually "before" and "after" for nodes, and
@@ -252,7 +289,9 @@
                        (then-action #f) ; action to take when rule is satisfied
                        (else-action #f) ; action to take when rule is not satisfied
                        (conditions '()) ; list of conditions which must be satisfied
-                       (actions '()))   ; generalized actions, currently used for updating facts in node rules
+                       (actions '())   ; generalized actions, currently used for updating facts in node rules
+                       (negate? #f))   ;; not the whole condition
+                  
                   
                   (obj-put this-obj 'linkID (lambda (self) linkID))
                   (obj-put this-obj 'expression (lambda (self) expression))
@@ -410,7 +449,7 @@
                            (lambda (self) inspectable-fields))
                   this-obj))
 
-; keep track of document-level rule
+; keep track of document-level rule (OLD)
 (define-private document-ruleID 'not-set)
 (define (set-document-ruleID! ruleID)
   (set! document-ruleID (if (importing?)
@@ -422,8 +461,18 @@
   document-ruleID)
 (define (reset-document-ruleID)
   (set! document-ruleID 'not-set))
+;(define (has-document-rule?)
+;  (not (eq? document-ruleID 'not-set)))
+
+;; new rule list at document level
+(define-private document-ruleID-lst '())
+(define-private (add-document-ruleID ruleID)
+    (set! document-ruleID-lst (append document-ruleID-lst (list ruleID))))
+(define (get-document-ruleID-lst) document-ruleID-lst)
+(define (reset-document-ruleID-lst)
+  (set! document-ruleID-lst '()))
 (define (has-document-rule?)
-  (not (eq? document-ruleID 'not-set)))
+  (not (null? document-ruleID-lst)))
 
 ; keep track of start node
 (define-private start-nodeID #f)
@@ -564,6 +613,7 @@
 
 ; create a typed rule
 ; type: 'link or 'node
+;; this is preserved to load older file format of hypedyn
 (define (create-typed-rule name type expression parentID . args)
   ;(format #t "Creating rule: ~a~%~!" name)
   (let* ((actual-parentID (if (importing?)
@@ -591,6 +641,47 @@
                (the-parent (get the-get-symbol actual-parentID)))
           (if the-parent
               (ask the-parent 'set-rule! rule-ID))))
+    
+    ; return the rule ID
+    rule-ID))
+
+;; version 2 of create-typed-rule 
+;; expression from version 1 takes either 'and or 'or (thus i renamed it as so and-or)
+;; version 2 has a new argument negate? which takes in a boolean 
+;; it duplicates most of the code except that it uses make-rule2 
+;; TODO: combine create-typed-rule with this
+(define (create-typed-rule2 name type and-or negate? parentID . args)
+  (let* ((actual-parentID (if (importing?)
+                              (+ parentID import-offset-ID)
+                              parentID))
+         (new-rule (make-rule2 name type and-or negate? actual-parentID
+                               (if (pair? args)
+                                   (if (importing?)
+                                       (+ (car args) import-offset-ID)
+                                       (car args)))))
+         (rule-ID (ask new-rule 'ID)))
+    
+    ; add to rule list
+    (put 'rules rule-ID new-rule)
+    ;(format #t "New rule: ~a~%~!" new-rule)
+
+    ; set rule in parent
+    (if (eq? type 'doc)
+        
+        ; document rule, so just set
+        ;(set-document-ruleID! rule-ID)
+        (add-document-ruleID rule-ID)
+        
+        ; otherwise, get the parent and set
+        (let* ((the-get-symbol (if (eq? type 'link) 
+                                   'links
+                                   'nodes))
+               (the-parent (get the-get-symbol actual-parentID)))
+          (if the-parent
+              ;(ask the-parent 'set-rule! rule-ID)
+              (ask the-parent 'add-rule rule-ID)
+              )))
+    
     ; return the rule ID
     rule-ID))
 

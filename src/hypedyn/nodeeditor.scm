@@ -297,11 +297,13 @@
   (add-component m-edit1 m-edit1-editlink)
   (add-actionlistener m-edit1-editlink
                       (make-actionlistener (lambda (source)
-                                             (doeditlink
-                                              selected-linkID
-                                              (get-edited-nodeID)
-                                              update-link-display-callback
-                                              (get-link-text selected-linkID)))))
+;                                             (doeditlink
+;                                              selected-linkID
+;                                              (get-edited-nodeID)
+;                                              update-link-display-callback
+;                                              (get-link-text selected-linkID))
+                                             (create-rules-manager 'link)
+                                             )))
   (set-menu-item-accelerator m-edit1-editlink #\E)
   (set-menuitem-component m-edit1-editlink #f)
 
@@ -374,10 +376,12 @@
   (add-component nodeeditor-toolbar-panel nodeeditor-toolbar-button-editlink )
   (add-actionlistener nodeeditor-toolbar-button-editlink
                       (make-actionlistener (lambda (source)
-                                             (doeditlink selected-linkID
-                                                         (get-edited-nodeID)
-                                                         update-link-display-callback
-                                                         (get-link-text selected-linkID)))))
+;                                             (doeditlink selected-linkID
+;                                                         (get-edited-nodeID)
+;                                                         update-link-display-callback
+;                                                         (get-link-text selected-linkID))
+                                             (create-rules-manager 'link)
+                                             )))
 
   ; button to rename link
   (set! nodeeditor-toolbar-button-renamelink (make-button "Rename Link"))
@@ -625,6 +629,7 @@
             
             ; show edit link dialogue
             (doeditlink newlink-ID (get-edited-nodeID) update-link-display-callback (get-link-text newlink-ID))
+            ;(create-rules-manager 'link)
             
             ))))
   
@@ -902,7 +907,9 @@
                selected-linkID
                (get-edited-nodeID)
                update-link-display-callback
-               (get-link-text selected-linkID)))))))
+               (get-link-text selected-linkID))
+              ;(create-rules-manager 'link)
+              )))))
 
 ; get the text of the specified link, used by editlink
 (define (get-link-text in-linkID)

@@ -48,6 +48,7 @@
                dosave-wrapper confirm-save ht-save-to-file
                ht-build-sexpr-from-object-with-rule ht-build-sexpr-from-rule
                clear-loaded-file-version ;; used by clear-data in hteditor.scm
+               loaded-file-version
                )
 
 ; set fileformat version and type
@@ -132,7 +133,8 @@
                                       (if (symbol? file-type)
                                           (string-append " (type: " (symbol->string file-type) ").")
                                           "."))))
-                 ((>= (get-fileformat-version) file-version-number)
+                 ;; opening file saved in older versions of hypedyn (or same version if equal)
+                 ((>= (get-fileformat-version) file-version-number) 
                   
                   (define open-choice #f)
                   (define diff-version? (not (= (get-fileformat-version) file-version-number)))
@@ -152,11 +154,15 @@
                                           ".")
                                           )))
                   
+                  ;; user decides to open the file anyway 
+                  ;; or it is of the same version 
                   (if (or (and diff-version?
                                (equal? open-choice 1))
                           (not diff-version?))
-                      (begin 
-                        (set! loaded-file-version file-version-number)
+                      (begin
+                        
+                        (set! loaded-file-version file-version-number) 
+                        
                         ; load from file
                         (if (load-from-file newfilename)
                             (begin
