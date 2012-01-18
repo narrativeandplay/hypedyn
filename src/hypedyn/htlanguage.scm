@@ -121,6 +121,11 @@
   (primitive-procedure-add! 'get-step-count get-step-count)                          ; (get-step-count): gets current step count
   (primitive-procedure-add! 'get-current-nodeID get-read-nodeID)                     ; (get-current-nodeID): returns current nodeID
   
+  ;; rule actions
+  (primitive-procedure-add! 'follow-link follow-link2)
+  (primitive-procedure-add! 'replace-link-text replace-link-text)
+  (primitive-procedure-add! 'goto-node goto-node)
+  
   ; some additional useful primitives
   (primitive-procedure-add! 'random generate-random-int)
   

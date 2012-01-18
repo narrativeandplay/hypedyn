@@ -69,7 +69,9 @@
                update-node-counter toggle-show-node-counter
                set-reader-background-color!
                set-reader-background-image! clear-reader-background-image!
-               play-audio loop-audio loop-audio-forever stop-audio)
+               play-audio loop-audio loop-audio-forever stop-audio
+               
+               replace-link-text follow-link2)
 
 ;;
 ;; config flags
@@ -557,9 +559,13 @@
 
           ; remember read node    
           (set! read-nodeID next-nodeID)
-
+          
+          ;; trigger rules
+          (ask nodereader-pane 'rule-check-trigger-links next-nodeID)
+          
           ; highlight links
           (ask nodereader-pane 'highlight-links)
+          
 
           ; add anywhere nodes
           (format #t "goto-node: card-shark=~a~%~!\n" (card-shark?))
@@ -739,6 +745,7 @@
     (get 'actions the-action-ID)))
 
 ; evaluate a rule expression by ID
+;; new name should be check-rule-condition
 (define (eval-rule-expr-by-ID in-ruleID)
   (if (not (eq? in-ruleID 'not-set))
       (eval-rule-expr (get 'rules in-ruleID))
@@ -841,3 +848,79 @@
         (stop-audio-clip the-clip)
         (close-audio-clip the-clip)
         (set! the-clip #!null))))
+
+;;;; new addition to htlanguage
+
+    ;; text-type is either 'text 'fact 
+    ;; value would be a string when it is text-type 
+    ;;       or a factID if it is a fact (num)
+    ;; part of htlanguage
+(define (replace-link-text text-type value linkID)
+  (if nodereader-pane
+      (let* ((link-obj (get 'links linkID))
+             (start-index (ask link-obj 'start-index))
+             (end-index (ask link-obj 'end-index))
+             (newtext (cond ((eq? text-type 'text)
+                             value)
+                            ((eq? text-type 'fact)
+                             (define fact-obj (get 'facts value))
+                             (if fact-obj
+                                 (begin
+                                   (define fact-text (ask fact-obj 'get-value))
+                                   (if fact-text
+                                       fact-text
+                                       "[fact not set]")
+                                   )
+                                 "[fact not found]"
+                                 ))))
+             (new-end-index (+ start-index (string-length newtext)))
+             (use-alt-text (alttext? thislink)))
+
+        ;; do the replacement in the textpane
+        ;(ask htpane-obj 'set-track-links! #f)
+        (let ((nodereader-doc (ask nodereader-pane 'getdocument)))
+          (set-text-delete nodereader-doc
+                           start-index
+                           (- end-index start-index))
+          (set-text-insert nodereader-doc
+                           newtext
+                           start-index))
+                                        ;(ask htpane-obj 'set-track-links! #t)
+        )))
+
+;; part of htlanguage
+;; check whether condition in ruleID is met then carry out follow link
+;; a copy of follow-link
+(define (follow-link2 the-link the-action parent-ruleID use-link link-type dest-nodeID)
+  (if nodereader-pane
+      (begin
+                                        ; increment followed count
+        (ask the-link 'set-followed!
+             (+ (ask the-link 'followed?) 1))
+
+                                        ; perform action, if any, before going to destination
+        (if the-action
+            (do-action the-action))
+
+                                        ; and go to destination node if link is active
+        (if use-link
+            (if (and (or (not hover-links)
+                         (equal? link-type 'default))
+                     (check-rule-condition parent-ruleID))
+                (begin
+                                        ; goto node
+                  (goto-node dest-nodeID #t))
+
+                (if hover-links
+                                        ; show the hover link 
+                    (let ((e (ask nodereader-pane 'get-lastmousemove)))
+                      (set-tooltip-text (ask the-link 'ID))
+                                        ; dispatch a mouseevent to trick tooltipmanager into displaying tooltip
+                      (if e
+                          (begin ;; QUESTION: why do it twice here?
+                            (dispatch-mouseevent (ask nodereader-pane 'getcomponent) e)
+                            (dispatch-mouseevent (ask nodereader-pane 'getcomponent) e)
+                            ))))
+                ))
+        ))
+  )

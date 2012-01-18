@@ -29,9 +29,9 @@
 (require "../common/links.scm")
 (require "../common/myhashtable.scm")
 (require "../common/evaluator.scm")
-(require "../common/objects.scm")  
+(require "../common/objects.scm") 
 (require "../common/datatable.scm") ;; get-list, get, 
-(require "../common/hypertextpane.scm")
+(require "../common/hypertextpane.scm") ;; make-hypertextpane-readonly
 (require "../common/runcode.scm")
 (require "config-options.scm")
 (require "reader.scm")
@@ -57,11 +57,13 @@
                       'links
                       'nodes))
          (this-obj (new-object htpane-obj))
+         (bg-change #f) 
+         
+         ;; for studies
          (custom-cursors #f)
-         (hover-links #f)
-         (hover-click #f)
-         (bg-change #f)
-         (current-cursor-image #f))
+         (hover-links #f) ;; for tooltips
+         (hover-click #f) ;; for tooltips
+         (current-cursor-image #f)) ;; cursor image
 
     ; initialize the reader-pane
     (define (init)
@@ -113,15 +115,17 @@
                  (then-action (get-then-action this-link))
                  (else-action (get-else-action this-link))
                  (link-type (get-link-type clicked-linkID)))
-            (if (follow-link? clicked-linkID)
-                ; can follow the link
-                (follow-link this-link then-action (uselink? this-link) link-type (ask this-link 'destination))
-                ; otherwise, check for alternate links or else action
-                (if (or (altlink? this-link) else-action)
-                    ; have alt link or else action, so follow alt-link
-                    (follow-link this-link else-action (altlink? this-link) link-type (ask this-link 'alt-destination))
-                    ; this shouldn't happen as inaccessible links are disabled
-                    (access-denied))))))
+;            (if (follow-link? clicked-linkID)
+;                ; can follow the link
+;                (follow-link this-link then-action (uselink? this-link) link-type (ask this-link 'destination))
+;                ; otherwise, check for alternate links or else action
+;                (if (or (altlink? this-link) else-action)
+;                    ; have alt link or else action, so follow alt-link
+;                    (follow-link this-link else-action (altlink? this-link) link-type (ask this-link 'alt-destination))
+;                    ; this shouldn't happen as inaccessible links are disabled
+;                    (access-denied)))
+            (rule-check-trigger clicked-linkID)
+            )))
     
     ; follow a link's then or else behaviour:
     ; mark as followed, perform the-action (if any), and if use-link=#t then follow to dest-nodeID
@@ -141,15 +145,18 @@
               (begin
                 ; goto node
                 (goto-node dest-nodeID #t))
+              
               (if hover-links
                   ; show the hover link 
                   (let ((e (ask htpane-obj 'get-lastmousemove)))
                     (set-tooltip-text (ask the-link 'ID))
                     ; dispatch a mouseevent to trick tooltipmanager into displaying tooltip
                     (if e 
-                        (begin
+                        (begin ;; QUESTION: why do it twice here?
                           (dispatch-mouseevent (ask htpane-obj 'getcomponent) e)
-                          (dispatch-mouseevent (ask htpane-obj 'getcomponent) e))))))))
+                          (dispatch-mouseevent (ask htpane-obj 'getcomponent) e)
+                          ))))
+              )))
     
     (define (access-denied)
       (display "access denied"))
@@ -198,6 +205,43 @@
       (if (>= this-index insert-index)
           (hash-table-put! this-hashtable this-key (+ this-index offset))))
 
+    (define (check-rule-condition ruleID)
+;      (define (follow-link? linkID)
+;      (let* ((thelink (get 'links linkID))
+;             (ruleID (ask thelink 'rule)))
+;        (eval-rule-expr-by-ID ruleID)))
+      (eval-rule-expr-by-ID ruleID)
+      )
+    
+    ;; carry out the action from this rule
+    (define (do-rule-action ruleID)
+      (map (lambda (action)
+             (do-action action)
+             ) (get-action-from-rule-by-ID 'actions ruleID))
+      )
+    
+    ;; obj can be a link or node..
+    ;; TODO: doc should fit into this somehow
+    (define (rule-check-trigger linkID)
+      (define obj (get 'links linkID))
+      (define rule-lst (ask obj 'rule-lst))
+      (map (lambda (ruleID)
+             (if (check-rule-condition ruleID)
+                 (begin
+                   (do-rule-action ruleID)
+                   )))
+              rule-lst)
+      )
+    
+    ;; goes through all the links of this node and 
+    ;; check for rule triggers
+    (define (rule-check-trigger-links nodeID)
+      (map (lambda (linkID)
+             (rule-check-trigger linkID))
+              (ask (get 'nodes nodeID) 'links))
+      )
+      
+    
     ; highlight links in reader
     (define (highlight-links)
       (let ((thisnode (get 'nodes (ask htpane-obj 'get-nodeID)))
@@ -206,13 +250,13 @@
 
         ; first pass - make copy of link positions, to be offset when
         ; text is changed by alternate links
-        (map (lambda (l)
-               (let* ((thislink (get 'links l))
-                      (start-index (ask thislink 'start-index))
-                      (end-index (ask thislink 'end-index)))
-                 (hash-table-put! start-indices l start-index)
-                 (hash-table-put! end-indices l end-index)))
-             (ask thisnode 'links))
+;        (map (lambda (l)
+;               (let* ((thislink (get 'links l))
+;                      (start-index (ask thislink 'start-index))
+;                      (end-index (ask thislink 'end-index)))
+;                 (hash-table-put! start-indices l start-index)
+;                 (hash-table-put! end-indices l end-index)))
+;             (ask thisnode 'links))
 
         ; second pass - highlight links, update text, and set clickbacks
         (map (lambda (l)
@@ -253,81 +297,82 @@
                                              (- end-index start-index)
                                              #f))))
                      ; no, so need to check for alternate link/text
-                     (let ((new-end-index end-index)
-                           (use-alt-text (alttext? thislink)))
-                       (if use-alt-text
-                           (let* ((alt-text (ask thislink 'alt-text))
-                                  ; if use-alt-text is #t, then use text from alt-text,
-                                  ; otherwise if use-alt-text is 'fact then alt-text is a factID
-                                  (newtext (if (eq? #t use-alt-text)
-                                               alt-text
-                                               (let ((the-fact (get 'facts alt-text)))
-                                                 (if (and the-fact
-                                                          (eq? (ask the-fact 'type) 'string))
-                                                     (let ((the-fact-text (ask the-fact 'get-value)))
-                                                       (if the-fact-text
-                                                           the-fact-text
-                                                           "[fact not set]"))
-                                                     "[fact not found]"))))
-                                  (newtext-len (string-length newtext))
-                                  (oldtext-len (- end-index start-index))
-                                  (offset (- newtext-len oldtext-len)))
-                             ; replace text
-                             (ask htpane-obj 'set-track-links! #f)
-                             (set-text-delete nodereader-doc
-                                              start-index
-                                              (- end-index start-index))
-                             (set-text-insert nodereader-doc
-                                              newtext
-                                              start-index)
-                             (ask htpane-obj 'set-track-links! #t)
+;                     (let ((new-end-index end-index)
+;                           (use-alt-text (alttext? thislink)))
+;                       (if use-alt-text
+;                           (let* ((alt-text (ask thislink 'alt-text))
+;                                  ; if use-alt-text is #t, then use text from alt-text,
+;                                  ; otherwise if use-alt-text is 'fact then alt-text is a factID
+;                                  (newtext (if (eq? #t use-alt-text)
+;                                               alt-text
+;                                               (let ((the-fact (get 'facts alt-text)))
+;                                                 (if (and the-fact
+;                                                          (eq? (ask the-fact 'type) 'string))
+;                                                     (let ((the-fact-text (ask the-fact 'get-value)))
+;                                                       (if the-fact-text
+;                                                           the-fact-text
+;                                                           "[fact not set]"))
+;                                                     "[fact not found]"))))
+;                                  (newtext-len (string-length newtext))
+;                                  (oldtext-len (- end-index start-index))
+;                                  (offset (- newtext-len oldtext-len)))
+;                             ; replace text
+;                             (ask htpane-obj 'set-track-links! #f)
+;                             (set-text-delete nodereader-doc
+;                                              start-index
+;                                              (- end-index start-index))
+;                             (set-text-insert nodereader-doc
+;                                              newtext
+;                                              start-index)
+;                             (ask htpane-obj 'set-track-links! #t)
 
-                             ; update link positions
-                             (set! new-end-index (+ end-index offset))
-                             (hash-table-for-each start-indices
-                                                  (lambda (k v)
-                                                    (update-indices start-indices k v end-index offset)))
-                             (hash-table-for-each end-indices
-                                                  (lambda (k v)
-                                                    (update-indices end-indices k v end-index offset)))))
+;                             ; update link positions
+;                             (set! new-end-index (+ end-index offset))
+;                             (hash-table-for-each start-indices
+;                                                  (lambda (k v)
+;                                                    (update-indices start-indices k v end-index offset)))
+;                             (hash-table-for-each end-indices
+;                                                  (lambda (k v)
+;                                                    (update-indices end-indices k v end-index offset)))))
 
-                       ; now check if also have alt link
-                       (if (or (altlink? thislink) (has-else-action? thislink))
-                           (begin
-                             ; highlight as necessary
-                             ;(if (alt-dest-visited? thislink)
-                             (if (followed? this-linkID) ; changed to followed? - alex
-                                 ; already followed, so just underline
-                                 (set-text-style nodereader-doc
-                                                 style-followed-link
-                                                 start-index
-                                                 (- new-end-index start-index)
-                                                 #t)
-                                 ; otherwise underline and bold
-                                 (set-text-style nodereader-doc
-                                                 style-link
-                                                 start-index
-                                                 (- new-end-index start-index)
-                                                 #t))
+;                       ; now check if also have alt link
+;                       (if (or (altlink? thislink) (has-else-action? thislink))
+;                           (begin
+;                             ; highlight as necessary
+;                             ;(if (alt-dest-visited? thislink)
+;                             (if (followed? this-linkID) ; changed to followed? - alex
+;                                 ; already followed, so just underline
+;                                 (set-text-style nodereader-doc
+;                                                 style-followed-link
+;                                                 start-index
+;                                                 (- new-end-index start-index)
+;                                                 #t)
+;                                 ; otherwise underline and bold
+;                                 (set-text-style nodereader-doc
+;                                                 style-link
+;                                                 start-index
+;                                                 (- new-end-index start-index)
+;                                                 #t))
 
-                             ; and set clickback
-                             (let ((link-attribute-set (make-attribute-set)))
-                               (set-attribute-linkAction link-attribute-set
-                                                         (lambda ()
-                                                           (nodereader-clickback l)))
-                               (set-attribute-linkID link-attribute-set this-linkID)
-                               (set-text-style nodereader-doc
-                                               link-attribute-set
-                                               start-index
-                                               (- new-end-index start-index)
-                                               #f)))
-                           ; otherwise just show if followed or not
-                           (if (and (uselink? thislink) (not (dest-visited? thislink)))
-                               (set-text-style nodereader-doc
-                                               style-disabled-link
-                                               start-index
-                                               (- new-end-index start-index)
-                                               #t)))))))
+;                             ; and set clickback
+;                             (let ((link-attribute-set (make-attribute-set)))
+;                               (set-attribute-linkAction link-attribute-set
+;                                                         (lambda ()
+;                                                           (nodereader-clickback l)))
+;                               (set-attribute-linkID link-attribute-set this-linkID)
+;                               (set-text-style nodereader-doc
+;                                               link-attribute-set
+;                                               start-index
+;                                               (- new-end-index start-index)
+;                                               #f)))
+;                           ; otherwise just show if followed or not
+;                           (if (and (uselink? thislink) (not (dest-visited? thislink)))
+;                               (set-text-style nodereader-doc
+;                                               style-disabled-link
+;                                               start-index
+;                                               (- new-end-index start-index)
+;                                               #t))))
+                     )))
              (ask thisnode 'links))))
 
     ; check if link has alternate link, and if it was enabled
@@ -632,65 +677,37 @@
       (string-append "<html>" (format-node-text-helper in-text) "</html>"))
 
     ; message handling                  
-;    (lambda (message)
-;      (cond ((eq? message 'init)
-;             (lambda (self)
-;               (init)))
     (obj-put this-obj 'init
              (lambda (self) (init)))
-;            ((eq? message 'set-node!)
-;             (lambda (self in-node)
-;               (set-node! in-node)))
     (obj-put this-obj 'set-node!
              (lambda (self in-node)
                (set-node! in-node)))
-;            ((eq? message 'highlight-links)
-;             (lambda (self)
-;               (highlight-links)))
     (obj-put this-obj 'highlight-links
              (lambda (self)
                (highlight-links)))
-;            ((eq? message 'add-anywherenode-links)
-;             (lambda (self)
-;               (add-anywherenode-links)))
+    (obj-put this-obj 'rule-check-trigger-links
+             (lambda (self nodeID)
+               (rule-check-trigger-links nodeID)))
+    
     (obj-put this-obj 'add-anywherenode-links
              (lambda (self)
                (add-anywherenode-links)))
-;            ((eq? message 'add-nodes-in-hand-links)
-;             (lambda (self the-nodes)
-;               (add-nodes-in-hand-links the-nodes)))
     (obj-put this-obj 'add-nodes-in-hand-links
              (lambda (self the-nodes)
                (add-nodes-in-hand-links the-nodes)))
-;            ((eq? message 'settext)
-;             (lambda (self in-text)
-;               (settext in-text)))
     (obj-put this-obj 'settext
              (lambda (self in-text)
                (settext in-text)))
-;            ((eq? message 'set-custom-cursors!)
-;             (lambda (self in-flag)
-;               (set-custom-cursors! in-flag)))
     (obj-put this-obj 'set-custom-cursors!
              (lambda (self in-flag)
                (set-custom-cursors! in-flag)))
-;            ((eq? message 'set-hover-links!)
-;             (lambda (self in-flag)
-;               (set-hover-links! in-flag)))
     (obj-put this-obj 'set-hover-links!
              (lambda (self in-flag)
                (set-hover-links! in-flag)))
-;            ((eq? message 'set-hover-click!)
-;             (lambda (self in-flag)
-;               (set-hover-click! in-flag)))
     (obj-put this-obj 'set-hover-click!
              (lambda (self in-flag)
                (set-hover-click! in-flag)))
-;            ((eq? message 'set-bg-change!)
-;             (lambda (self in-flag)
-;               (set-bg-change! in-flag)))
     (obj-put this-obj 'set-bg-change!
              (lambda (self in-flag)
                (set-bg-change! in-flag)))
-;            (else (get-method htpane-obj message))))
     this-obj))

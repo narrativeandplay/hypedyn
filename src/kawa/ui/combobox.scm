@@ -153,6 +153,8 @@
   (invoke in-combo 'getDataAt in-index))
 
 ; clear combobox
+;; TOFIX bug when using it with add-combobox-string
+;; the equals object seems to be bringing in a null object when it deletes using this
 (define (set-combobox-clear in-combo :: <javax.swing.JComboBox>)
   (invoke in-combo 'removeAllItems))
 
@@ -197,6 +199,9 @@
     ((toString) :: <java.lang.String>
      str-obj)
     ((equals obj :: <java.lang.Object>) 
+;     (display "equals ")(newline)
+;     (display "obj ")(display obj)(newline)
+;     (display "str-obj ")(display str-obj)(newline)
      (equal? (invoke obj 'to-string) (invoke str-obj 'to-string))))
   
   (make combobox-string-item))
@@ -204,6 +209,7 @@
 ; add a string to a combobox
 ; this is a workaround to avoid duplicate display of item
 ; selections, see http://download.oracle.com/javase/1,5.0/docs/api/javax/swing/JComboBox.html#addItem%28java.lang.Object%29
+; TOFIX: perhaps this is just the different types of string causing the bug
 (define (add-combobox-string in-combo :: <javax.swing.JComboBox>
                            in-item :: <object>)
   (invoke in-combo 'addItem 
@@ -265,5 +271,3 @@
 
 (define (get-combobox-item-count in-combo :: <javax.swing.JComboBox>)
   (invoke in-combo 'getItemCount))
-
-

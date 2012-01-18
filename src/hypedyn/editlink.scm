@@ -172,7 +172,8 @@
     (clear-container action-list-panel)
     
     ;; reset combobox to contain all action-type-list
-    (set! action-type-choice (apply make-combobox action-type-list))
+    ;(set! action-type-choice (apply make-combobox action-type-list))
+    (reset-action-type-choice)
     
     (display "DOING NEW CODE ")(newline)
     
@@ -205,8 +206,12 @@
     
     ;(define action-type-list (list "update text using" "follow link to" "update fact"))
     
+    (display "link dest 1 ")(display link-dest1)(newline)
+    (display "link dest 2 ")(display link-dest2)(newline)
+    
     (if (not (equal? link-dest1 -1))
         (begin
+          (display "adding dest 1")(newline)
           (add-specific-action "follow link to" link-dest1)
           ;(define dest-node-name (ask (get 'nodes link-dest1) 'name))
           ;(set-combobox-selection-object node-choice-combobox (create-combobox-string-item dest-node-name))
@@ -214,9 +219,10 @@
     
     ;; link-dest1 is used in the else so it should be in the not rules instead
     ;; do later (alt dest (not))
-;    (if link-dest2
+    
+;    (if (not (equal? link-dest2 -1))
 ;        (begin
-;          (add-specific-action "follow link to")
+;          (add-specific-action "follow link to" link-dest2)
 ;          ))
     
     ;(set-value! 12 \"left is left\")
@@ -246,8 +252,8 @@
                    (format #t "fact: ~a (~a, ~a, ~a)~%~!" the-action-expr the-action the-value targetID)
                    (add-specific-action "update fact" (list the-action targetID the-value))
 
-                                        ;(define the-panel (add-specific-action "update fact" (list the-action targetID the-value)))
-                                        ;(add-component the-panel (create-fact-panel2 the-action targetID the-value))
+                   (define the-panel (add-specific-action "update fact" (list the-action targetID the-value)))
+                   (add-component the-panel (create-fact-panel2 the-action targetID the-value))
                    ))
                facts)
           ))
@@ -403,7 +409,8 @@
         (clear-container action-list-panel)
 
         ;; reset combobox to contain all action-type-list
-        (set! action-type-choice (apply make-combobox action-type-list))
+        ;(set! action-type-choice (apply make-combobox action-type-list))
+        (reset-action-type-choice)
 
         (display "DOING NEW CODE ")(newline)
 
@@ -981,6 +988,25 @@
 (define action-list-panel #f)
 (define action-type-choice #f)
 
+(define (init-action-type-choice)
+  (set! action-type-choice (apply make-combobox action-type-list))
+  )
+
+(define (reset-action-type-choice)
+  (display "b4 set combobox clear")(newline) 
+  ;(set-combobox-clear action-type-choice)
+  
+  (map (lambda (action-type)
+         (display "action type ")(display action-type)(newline)
+        )
+       action-type-list)
+  
+  (display "aft set combobox clear ")(newline)
+;  (map (lambda (action-type)
+;         (add-combobox-string action-type-choice action-type))
+;       action-type-list)
+  )
+
 ;; returns a list of the action panels in action-list-panel
 (define (action-panel-list)
   (get-container-children action-list-panel))
@@ -989,10 +1015,14 @@
 (define (add-specific-action action-type #!rest args-lst)
   ;; cache the selection to set back at the end
   (define selected-action-type (get-combobox-selecteditem action-type-choice))
+  (display "add-specific-action ")(newline)
+  (display "action tyep choice ")(display action-type-choice)(newline)
   
   ;; choose our desired type and 
   (set-combobox-selection-object action-type-choice action-type)
   (define panel-to-return (add-action-callback #f)) 
+  
+  (display "selection? ")(display (get-combobox-selecteditem action-type-choice))(newline)
   
   ;; alter the configuration of the ui objects if args-lst given
   (if (and args-lst (not (null? args-lst)))
@@ -1022,6 +1052,7 @@
              (if (= (length args-lst) 1)
                  (let* ((link-dest1 (car args-lst))
                         (dest-node-name (ask (get 'nodes link-dest1) 'name)))
+                   (display "dest node name  ")(display dest-node-name)(newline)
                    (set-combobox-selection-object node-choice-combobox (create-combobox-string-item dest-node-name))))
              )
             ((equal? action-type "update fact")
@@ -1094,7 +1125,9 @@
   (add-component actions-main-panel action-list-panel 'border-center)
   
   ;; action type list contains the remaining available types left (after previous adding of actions)
-  (set! action-type-choice (apply make-combobox action-type-list))
+  ;(set! action-type-choice (apply make-combobox action-type-list))
+  (init-action-type-choice)
+  
   (define action-type-choice-container (make-panel))
   (add-component action-type-choice-container action-type-choice)
 
@@ -1187,7 +1220,7 @@
     (display "check to remove TYPES ")(newline)
     (display "action type ")(display action-type)(newline)
     (display "action type class type ")(display (invoke action-type 'get-class))(newline)
-    (display "member check ")(display (member action-type unique-choices))(newline)
+    (display "member check ")(display (member (to-string action-type) unique-choices))(newline)
 ;    (display (to-string action-type))(newline)
 ;    (display (invoke (to-string action-type) 'get-class))(newline)
 ;    (display unique-choices)(newline)
@@ -1198,7 +1231,10 @@
     ;; remove from available
     (if (member (to-string action-type) unique-choices)
         (begin
-          (remove-combobox-item action-type-choice action-type))
+          (display "removing cos it is inside uc")(newline)
+          (remove-combobox-item action-type-choice action-type)
+          (add-combobox-string action-type-choice "Hehehe")
+          )
         )
     
     top-panel))
@@ -2024,6 +2060,10 @@
          (then-action-string (get-text editlink-dialog-then-actiontext))
          (else-action-string (get-text editlink-dialog-else-actiontext)))
     
+    (display "and-or ")(display new-ruleexpression)(newline)
+    (display "negate? ")(display negate?)(newline)
+    
+    
     ; run through conditions and add to rule
     (map (lambda (panel) (let* ((children (get-container-children panel))
                                 (select-type (cadr children))  ;; link node fact combobox
@@ -2127,7 +2167,7 @@
            
            ;; map through the list of action panel
            (map (lambda (action-panel)
-                  (define action-type (get-action-panel action-panel))
+                  (define action-type (get-action-panel-type action-panel))
                   (cond ((equal? action-type "update text using")
                          #f
                          )

@@ -297,12 +297,12 @@
   (add-component m-edit1 m-edit1-editlink)
   (add-actionlistener m-edit1-editlink
                       (make-actionlistener (lambda (source)
-;                                             (doeditlink
-;                                              selected-linkID
-;                                              (get-edited-nodeID)
-;                                              update-link-display-callback
-;                                              (get-link-text selected-linkID))
-                                             (create-rules-manager 'link)
+                                             (doeditlink
+                                              selected-linkID
+                                              (get-edited-nodeID)
+                                              update-link-display-callback
+                                              (get-link-text selected-linkID))
+;                                             (create-rules-manager 'link)
                                              )))
   (set-menu-item-accelerator m-edit1-editlink #\E)
   (set-menuitem-component m-edit1-editlink #f)
@@ -376,11 +376,11 @@
   (add-component nodeeditor-toolbar-panel nodeeditor-toolbar-button-editlink )
   (add-actionlistener nodeeditor-toolbar-button-editlink
                       (make-actionlistener (lambda (source)
-;                                             (doeditlink selected-linkID
-;                                                         (get-edited-nodeID)
-;                                                         update-link-display-callback
-;                                                         (get-link-text selected-linkID))
-                                             (create-rules-manager 'link)
+                                             (doeditlink selected-linkID
+                                                         (get-edited-nodeID)
+                                                         update-link-display-callback
+                                                         (get-link-text selected-linkID))
+;                                             (create-rules-manager 'link)
                                              )))
 
   ; button to rename link

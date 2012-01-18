@@ -205,7 +205,13 @@
                              ))
                   (obj-put this-obj 'add-rule
                            (lambda (self new-rule-ID)
-                             (set! rule-lst (append rule-lst new-rule-ID))))
+                             (display "add rule ")(newline)
+                             (display "rule-lst ")(display rule-lst)(newline)
+                             (display "new-rule-ID ")(display new-rule-ID)(newline)
+                             (set! rule-lst (append rule-lst (list new-rule-ID)))
+                             
+                             (display "after add rule ")(newline)
+                             ))
                   
                   (obj-put this-obj 'followed?
                            (lambda (self)
@@ -328,7 +334,8 @@
                            (lambda (self) actions))
                   (obj-put this-obj 'add-action!
                            (lambda (self new-action)
-                             (set! actions (cons new-action actions))
+                             ;(set! actions (cons new-action actions))
+                             (set! action (append actions (list new-action)))
                              ;(ht-set-dirty!)
                              ))
                   (obj-put this-obj 'delaction
@@ -651,6 +658,7 @@
 ;; it duplicates most of the code except that it uses make-rule2 
 ;; TODO: combine create-typed-rule with this
 (define (create-typed-rule2 name type and-or negate? parentID . args)
+  (display "create-typed-rule2 ")(newline)
   (let* ((actual-parentID (if (importing?)
                               (+ parentID import-offset-ID)
                               parentID))
