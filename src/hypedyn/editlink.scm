@@ -996,10 +996,22 @@
   (display "b4 set combobox clear")(newline) 
   ;(set-combobox-clear action-type-choice)
   
-  (map (lambda (action-type)
-         (display "action type ")(display action-type)(newline)
-        )
-       action-type-list)
+  (define (clear-combobox-hack combobox)
+    ;; check on the first time whether combobox has anything inside
+    (if (> (get-combobox-item-count combobox) 0)
+        (remove-combobox-item combobox (get-combobox-item-at combobox 0)))
+    
+    ;; if after remove still more than 
+    (if (> (get-combobox-item-count combobox) 0)
+        (clear-combobox-hack combobox))
+    )
+  
+;  (map (lambda (action-type)
+;         (display "action type ")(display action-type)(newline)
+;        )
+;       action-type-list)
+  
+  (clear-combobox-hack action-type-choice)
   
   (display "aft set combobox clear ")(newline)
 ;  (map (lambda (action-type)
