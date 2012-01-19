@@ -849,7 +849,7 @@
             (display (javax.swing.text.AttributeSet? (get-attributes-pos the-doc (- offset 1))))
             (newline)
             
-            (display "doc len ")(display (invoke the-doc 'get-length))(newline)
+            (display "doc len ")(display (invoke (as <javax.swing.text.Document> the-doc) 'get-length))(newline)
 ;;            (set-text-style the-doc test-cast
 ;;                            ;(- (invoke the-doc 'get-length) 6)'
 ;;                            0
