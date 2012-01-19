@@ -84,7 +84,7 @@
   (set! edited-linkID selected-linkID)
   
   ; remember which node we're editing
-  (set! edited-nodeID in-edited-nodeID)
+  ;(set! edited-nodeID in-edited-nodeID)
   
   ; remember callback
   (set! update-callback in-callback)
@@ -209,7 +209,7 @@
   (set! edited-linkID '())
   
   ; remember which node we're editing
-  (set! edited-nodeID in-edited-nodeID)
+  ;(set! edited-nodeID in-edited-nodeID)
   
   ; remember callback ie. none
   ;; why do update-callback #f?
@@ -273,7 +273,7 @@
   (set! edited-linkID '())
   
   ; remember which node we're editing ie. none
-  (set! edited-nodeID '())
+  ;(set! edited-nodeID '())
   
   ; remember callback ie. none
   (set! update-callback #f)
