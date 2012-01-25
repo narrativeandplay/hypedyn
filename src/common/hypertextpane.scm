@@ -581,15 +581,15 @@
     ; end, or next position is not the same link
     (define (end-of-link? pos)
       (let ((text-length (get-text-length the-doc)))
-        (display "end of link test ")(display pos)(newline)
-        (display " (> text-length 0) ")(display (> text-length 0))(newline)
-        (display " (> pos 0) ")(display (> pos 0))(newline)
-        (display " (is-link? (- pos 1)) ")(display (is-link? (- pos 1)))(newline)
-        (display " or (= pos text-length) ")(display (= pos text-length))(newline)
-        (display " or (not (eq? (get-attribute-linkAction-pos the-doc (- pos 1))
-                           (get-attribute-linkAction-pos the-doc pos)))")
-        (display (not (eq? (get-attribute-linkAction-pos the-doc (- pos 1))
-                           (get-attribute-linkAction-pos the-doc pos))))(newline)
+;        (display "end of link test ")(display pos)(newline)
+;        (display " (> text-length 0) ")(display (> text-length 0))(newline)
+;        (display " (> pos 0) ")(display (> pos 0))(newline)
+;        (display " (is-link? (- pos 1)) ")(display (is-link? (- pos 1)))(newline)
+;        (display " or (= pos text-length) ")(display (= pos text-length))(newline)
+;        (display " or (not (eq? (get-attribute-linkAction-pos the-doc (- pos 1))
+;                           (get-attribute-linkAction-pos the-doc pos)))")
+;        (display (not (eq? (get-attribute-linkAction-pos the-doc (- pos 1))
+;                           (get-attribute-linkAction-pos the-doc pos))))(newline)
         (and (> text-length 0)
              (> pos 0)
              (is-link? (- pos 1))
@@ -792,8 +792,8 @@
       (start-compound-undoable-event "Typing(insert) compound") ; start compound event
       
       ;; used by insert-blank-space atm
-      (display "style to use ")(display (style-to-use offset))(newline)
-      (display "end of link? ")(display (end-of-link? offset))(newline)
+;      (display "style to use ")(display (style-to-use offset))(newline)
+;      (display "end of link? ")(display (end-of-link? offset))(newline)
       (filter-bypass-insert fb offset string (style-to-use offset))
       
       #f)
@@ -864,7 +864,7 @@
     
     ; handle insert
     (define (document-insert-handler e)
-      (display "[Handler insert] ")(newline)
+      ;(display "[Handler insert] ")(newline)
 ;      (display "undoable? ")(display (undoable-edit? e))(newline)
 ;      (display "redoing ")(display (compoundundomanager-locked? undo-manager))(newline)
       
@@ -922,7 +922,7 @@
     
     ; handle delete
     (define (document-remove-handler e)
-      (display "[HANDLER REMOVE] ")(newline)
+      ;(display "[HANDLER REMOVE] ")(newline)
       
       (define (post-remove-undoable-edit)
 
@@ -963,7 +963,7 @@
     
     ; handle style change
     (define (document-changed-handler e)
-      (display "CHANGED HANDLER ")(newline)
+      ;(display "CHANGED HANDLER ")(newline)
       
        (if (and undo-manager
                (undoable-edit? e) ; this is to avoid posting undo/redo events

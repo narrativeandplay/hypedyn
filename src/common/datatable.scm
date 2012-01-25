@@ -28,7 +28,8 @@
                dirty? set-dirty! clear-dirty!
                get-list 
                get put del
-               reset-table)
+               reset-table
+               table-map)
 
 ;; datatable.scm uses objects.scm
 
@@ -82,8 +83,20 @@
                        (hash-table-remove! hash value-ID)
                        'ok)
                      #f))))
+    
     (obj-put this-obj 'local-table
              (lambda (self) local-table))
+    
+    (obj-put this-obj 'table-map
+             (lambda (self lst-sym-ID lambda-obj)
+               (let ((hash (hash-table-get local-table lst-sym-ID 'not-found)))
+                 (if (not (equal? hash 'not-found))
+                     (begin
+                       (hash-table-for-each hash lambda-obj)
+                       'ok)
+                     #f))
+               ))
+    
     this-obj))
 
 (define global-table (make-table))
@@ -102,4 +115,7 @@
   (ask global-table 'get lst-sym-ID value-ID))
 (define (del lst-sym-ID value-ID)
   (ask global-table 'del lst-sym-ID value-ID))
+
+(define (table-map lst-sym-ID lambda-obj)
+  (ask global-table 'table-map lst-sym-ID lambda-obj))
 

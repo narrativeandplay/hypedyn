@@ -42,7 +42,9 @@
 ;; - custom cursors - requires global link mouseover action and get-active-linkID
 
 ; exports
-(module-export make-reader-pane)
+(module-export make-reader-pane
+               check-rule-condition
+               rule-check-trigger-links)
 
 ; read-only hypertextpane
 (define (make-reader-pane
@@ -57,7 +59,7 @@
                       'links
                       'nodes))
          (this-obj (new-object htpane-obj))
-         (bg-change #f) 
+         (bg-change #f)
          
          ;; for studies
          (custom-cursors #f)
@@ -124,7 +126,7 @@
 ;                    (follow-link this-link else-action (altlink? this-link) link-type (ask this-link 'alt-destination))
 ;                    ; this shouldn't happen as inaccessible links are disabled
 ;                    (access-denied)))
-            (rule-check-trigger clicked-linkID)
+            (rule-check-trigger 'clicked-link 'links clicked-linkID)
             )))
     
     ; follow a link's then or else behaviour:
@@ -205,42 +207,6 @@
       (if (>= this-index insert-index)
           (hash-table-put! this-hashtable this-key (+ this-index offset))))
 
-    (define (check-rule-condition ruleID)
-;      (define (follow-link? linkID)
-;      (let* ((thelink (get 'links linkID))
-;             (ruleID (ask thelink 'rule)))
-;        (eval-rule-expr-by-ID ruleID)))
-      (eval-rule-expr-by-ID ruleID)
-      )
-    
-    ;; carry out the action from this rule
-    (define (do-rule-action ruleID)
-      (map (lambda (action)
-             (do-action action)
-             ) (get-action-from-rule-by-ID 'actions ruleID))
-      )
-    
-    ;; obj can be a link or node..
-    ;; TODO: doc should fit into this somehow
-    (define (rule-check-trigger linkID)
-      (define obj (get 'links linkID))
-      (define rule-lst (ask obj 'rule-lst))
-      (map (lambda (ruleID)
-             (if (check-rule-condition ruleID)
-                 (begin
-                   (do-rule-action ruleID)
-                   )))
-              rule-lst)
-      )
-    
-    ;; goes through all the links of this node and 
-    ;; check for rule triggers
-    (define (rule-check-trigger-links nodeID)
-      (map (lambda (linkID)
-             (rule-check-trigger linkID))
-              (ask (get 'nodes nodeID) 'links))
-      )
-      
     
     ; highlight links in reader
     (define (highlight-links)
@@ -250,13 +216,13 @@
 
         ; first pass - make copy of link positions, to be offset when
         ; text is changed by alternate links
-;        (map (lambda (l)
-;               (let* ((thislink (get 'links l))
-;                      (start-index (ask thislink 'start-index))
-;                      (end-index (ask thislink 'end-index)))
-;                 (hash-table-put! start-indices l start-index)
-;                 (hash-table-put! end-indices l end-index)))
-;             (ask thisnode 'links))
+        (map (lambda (l)
+               (let* ((thislink (get 'links l))
+                      (start-index (ask thislink 'start-index))
+                      (end-index (ask thislink 'end-index)))
+                 (hash-table-put! start-indices l start-index)
+                 (hash-table-put! end-indices l end-index)))
+             (ask thisnode 'links))
 
         ; second pass - highlight links, update text, and set clickbacks
         (map (lambda (l)
@@ -685,9 +651,6 @@
     (obj-put this-obj 'highlight-links
              (lambda (self)
                (highlight-links)))
-    (obj-put this-obj 'rule-check-trigger-links
-             (lambda (self nodeID)
-               (rule-check-trigger-links nodeID)))
     
     (obj-put this-obj 'add-anywherenode-links
              (lambda (self)
@@ -711,3 +674,55 @@
              (lambda (self in-flag)
                (set-bg-change! in-flag)))
     this-obj))
+
+;; RULE HANDLING
+
+;(eval-rule-expr-by-ID ruleID)
+(define check-rule-condition eval-rule-expr-by-ID)
+
+;; carry out the action from this rule
+;; only do the actions relevant to the event-type
+(define (do-rule-action event-type ruleID)
+  (display "do-rule-action ")(newline)
+  (define action-lst (ask (get 'rules ruleID) 'actions))
+
+  (map (lambda (actionID)
+         ;; if relevant to this event type, do action
+         (define action-event-type (ask (get 'actions actionID) 'type))
+         (display "action and event ")(display action-event-type)(display " ")(display event-type)(newline)
+         (display "action expr ")(display (ask (get 'actions actionID) 'expr))(newline)
+         (if (equal? action-event-type event-type)
+             (begin
+               (display "event type matched ")(display event-type)(newline)
+             (do-action actionID)))
+         ) (ask (get 'rules ruleID) 'actions))
+  )
+
+;; obj can be a link or node..
+;; TODO: doc should fit into this somehow
+;; obj-type is either 'links or 'nodes for now
+(define (rule-check-trigger event-type obj-type obj-ID)
+  (display "rule check trigger ")(newline)
+  
+  (define obj (get obj-type obj-ID))
+  (define rule-lst (ask obj 'rule-lst))
+  
+  (display "rule-lst ")(display rule-lst)(newline)
+  (map (lambda (ruleID)
+         (if (check-rule-condition ruleID)
+             (begin
+               (display "condition satisfied ")(display ruleID)(newline)
+               (do-rule-action event-type ruleID)
+               )))
+       rule-lst)
+  )
+
+;; goes through all the links of this node and 
+;; check for rule triggers
+(define (rule-check-trigger-links event-type nodeID)
+  (display "rule check trigger links ")(newline)
+  (display "event-type ")(display event-type)(newline)
+  (map (lambda (linkID)
+         (rule-check-trigger event-type 'links linkID))
+       (ask (get 'nodes nodeID) 'links))
+  )

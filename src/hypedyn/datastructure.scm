@@ -205,12 +205,11 @@
                              ))
                   (obj-put this-obj 'add-rule
                            (lambda (self new-rule-ID)
-                             (display "add rule ")(newline)
-                             (display "rule-lst ")(display rule-lst)(newline)
-                             (display "new-rule-ID ")(display new-rule-ID)(newline)
+                             (display "[add rule] ")(newline)
+                             (display "  rule-lst ")(display rule-lst)(newline)
+                             (display "  new-rule-ID ")(display new-rule-ID)(newline)
                              (set! rule-lst (append rule-lst (list new-rule-ID)))
                              
-                             (display "after add rule ")(newline)
                              ))
                   
                   (obj-put this-obj 'followed?
@@ -261,7 +260,6 @@
 
 
 (define-private (make-rule2 name type and-or negate? linkID #!rest args)
-                (display "MAKE RULE 2 ")(display negate?)(newline)
                 
                 (define parent-obj (apply make-rule (append (list name type and-or linkID) args)))
                 (define this-obj (new-object parent-obj))
@@ -270,7 +268,7 @@
                 (obj-put this-obj 'rule-expr
                            (lambda (self)
                              (if negate?
-                                 (cons 'not (ask parent-obj 'rule-expr))
+                                 (cons 'not (list (ask parent-obj 'rule-expr)))
                                  (ask parent-obj 'rule-expr))))
                 
                 (obj-put this-obj 'to-save-sexpr
@@ -335,7 +333,8 @@
                   (obj-put this-obj 'add-action!
                            (lambda (self new-action)
                              ;(set! actions (cons new-action actions))
-                             (set! action (append actions (list new-action)))
+                             (set! actions (append actions (list new-action)))
+                             (display "add-action, new actions ")(display actions)(newline)
                              ;(ht-set-dirty!)
                              ))
                   (obj-put this-obj 'delaction
@@ -407,6 +406,9 @@
 ;; type: 'then, 'else, 'before, 'after, 'init or 'step
 ;; expr: an s-expression to be evaluated when action is triggered
 ;; ruleID: the rule that this action is attached to
+;; type is now the type of event that is relevant to this action
+;; eg. follow link action has type 'clicked-link 
+;;     replace-link-text has type 'displayed-node
 (define-private (make-action name type expr ruleID . args)
                 (let* ((uniqueID-obj (make-uniqueID-object name (if (pair? args) (car args))))
                        (this-obj (new-object uniqueID-obj)))
@@ -574,16 +576,16 @@
                      use-alt-destination use-alt-text alt-destination alt-text
                      update-display . args)
   ;(format #t "Creating link: ~a~%~!" name)
-  (display "create link args name ")(newline)
-  (display " ")(display "create-link name fromnodeID tonodeID start-index end-index use-destination
-                     use-alt-destination use-alt-text alt-destination alt-text
-                     update-display . args")(newline)
-  (display "create link ")(display (list name fromnodeID tonodeID start-index end-index
-                                         use-destination use-alt-destination))(newline)
-  (display "args2 ")(display (list use-alt-text alt-destination alt-text))(newline)
-  (display "name type ")(display (invoke name 'get-class))(newline) 
-  (display "fromnodeID ")(display (invoke fromnodeID 'get-class))(newline)
-  (display "tonodeID ")(display (invoke tonodeID 'get-class))(newline)
+;  (display "create link args name ")(newline)
+;  (display " ")(display "create-link name fromnodeID tonodeID start-index end-index use-destination
+;                     use-alt-destination use-alt-text alt-destination alt-text
+;                     update-display . args")(newline)
+;  (display "create link ")(display (list name fromnodeID tonodeID start-index end-index
+;                                         use-destination use-alt-destination))(newline)
+;  (display "args2 ")(display (list use-alt-text alt-destination alt-text))(newline)
+;  (display "name type ")(display (invoke name 'get-class))(newline) 
+;  (display "fromnodeID ")(display (invoke fromnodeID 'get-class))(newline)
+;  (display "tonodeID ")(display (invoke tonodeID 'get-class))(newline)
   (let* ((actual-fromnodeID (if (importing?)
                                 (+ fromnodeID import-offset-ID)
                                 fromnodeID))
@@ -658,7 +660,6 @@
 ;; it duplicates most of the code except that it uses make-rule2 
 ;; TODO: combine create-typed-rule with this
 (define (create-typed-rule2 name type and-or negate? parentID . args)
-  (display "create-typed-rule2 ")(newline)
   (let* ((actual-parentID (if (importing?)
                               (+ parentID import-offset-ID)
                               parentID))
@@ -731,9 +732,11 @@
                                       (if (importing?)
                                           (+ (car args) import-offset-ID)
                                           (car args)))))
-         (the-rule (get 'rules actual-ruleID)))
+         (the-rule (get 'rules actual-ruleID))
+         (new-action-ID (ask new-action 'ID)) 
+         )
     ; add to action list
-    (put 'actions (ask new-action 'ID) new-action)
+    (put 'actions new-action-ID new-action)
 
     ; add action to rule
     ; note: for nodes, before=then=step and after=else=init for now
@@ -752,7 +755,9 @@
          ((eq? type 'step)
           (ask the-rule 'set-then-action! (ask new-action 'ID)))
          ((eq? type 'init)
-          (ask the-rule 'set-else-action! (ask new-action 'ID)))))))
+          (ask the-rule 'set-else-action! (ask new-action 'ID)))))
+    
+    new-action-ID))
 
 
 ; create an fact

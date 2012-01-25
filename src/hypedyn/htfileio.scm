@@ -38,6 +38,7 @@
   (require "../kawa/ui/cursor.scm")
   (require "../common/main-ui.scm")
   (require "export.scm")
+  (require "editlink.scm") ;; obj-convertion-2.2
   (require 'list-lib) ;; list-ref
   )
 
@@ -143,16 +144,19 @@
                   ;; warn here when opening 
                   (if diff-version?
                       ;(make-confirm-dialogbox #!null 1 "Sorry, no start node defined.")
-                      (set! open-choice (make-confirm-dialogbox 
-                                         (get-main-ui-frame) 
-                                         4 
-                                         (string-append
-                                          "Warning: Opening a file saved in an older version ("
-                                          (to-string file-version-number)
-                                          ").\nFile will be saved as version "
-                                          (to-string (get-fileformat-version))
-                                          ".")
-                                          )))
+                      (begin
+                        (set! open-choice (make-confirm-dialogbox
+                                           (get-main-ui-frame)
+                                           4
+                                           (string-append
+                                            "Warning: Opening a file saved in an older version ("
+                                            (to-string file-version-number)
+                                            ").\nFile will be saved as version "
+                                            (to-string (get-fileformat-version))
+                                            ".")
+                                           ))
+                        )
+                      )
                   
                   ;; user decides to open the file anyway 
                   ;; or it is of the same version 
@@ -167,7 +171,9 @@
                         (if (load-from-file newfilename)
                             (begin
                               (add-recent-file newfilename)  ;; add to recent menu
-                              (populate-display)))           ;; populate the display
+                              (populate-display)             ;; populate the display
+                              (obj-convertion-2.2)           ;; if loading pre 2.2 objects convert to post 2.2 format
+                              ))
                         )))
                  ;; older app opening newer file
                  ((< (get-fileformat-version) file-version-number)
@@ -185,11 +191,12 @@
            ))
    (ex <java.lang.Throwable>
    ;; extra to do after exception
-     (make-message-box (get-main-ui-frame)
-                       (*:toString ex)
-                       "")
+;     (make-message-box (get-main-ui-frame)
+;                       (*:toString ex)
+;                       "")
+       
     ;(display (*:toString ex))(newline)
-    ;(*:printStackTrace ex)
+    (*:printStackTrace ex)
      ))
   
   ; reset cursor

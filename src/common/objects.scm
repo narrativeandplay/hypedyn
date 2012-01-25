@@ -328,6 +328,7 @@
         (apply gotten-attr (append (list obj) argv))
         )
       (begin
+        (newline)
         (display "NOT PROC ")(display gotten-attr)(newline)
         (display "obj ")(display obj)(newline)
         (display "prop ")(display prop)(newline)

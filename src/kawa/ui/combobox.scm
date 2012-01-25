@@ -202,7 +202,9 @@
 ;     (display "equals ")(newline)
 ;     (display "obj ")(display obj)(newline)
 ;     (display "str-obj ")(display str-obj)(newline)
-     (equal? (invoke obj 'to-string) (invoke str-obj 'to-string))))
+     (if (equal? #!null obj)
+         #f
+         (equal? (invoke obj 'to-string) (invoke str-obj 'to-string)))))
   
   (make combobox-string-item))
   

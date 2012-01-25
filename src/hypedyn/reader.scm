@@ -561,7 +561,8 @@
           (set! read-nodeID next-nodeID)
           
           ;; trigger rules
-          (ask nodereader-pane 'rule-check-trigger-links next-nodeID)
+          (rule-check-trigger-links 'displayed-node next-nodeID)
+          ;(ask nodereader-pane 'rule-check-trigger-links next-nodeID)
           
           ; highlight links
           (ask nodereader-pane 'highlight-links)
@@ -718,9 +719,13 @@
 
 ; perform an action
 ; this version assumes stored as a string
-(define (do-action in-action)
+(define (do-action actionID)
+  (display "in do action ")(display actionID)(newline)
+  (define in-action (get 'actions actionID))
   (if in-action
       (let ((this-expr (ask in-action 'expr)))
+        (display "this-expr ")(display this-expr)(newline)
+        (display "this-expr class ")(display (invoke this-expr 'get-class))(newline)
         ; wrap the expression in a "begin" so its all one expression
         (runcode (string-append "(begin\n" this-expr "\n)") 
                  display-results display-status))))
@@ -754,6 +759,7 @@
 ; evaluate a rule expression
 (define (eval-rule-expr therule)
   (let ((rule-expr (ask therule 'rule-expr)))
+    (display "evaluating condition ")(display rule-expr)(newline)
     ; evaluate the expression in our evaluator
     (try-catch
         (myeval rule-expr)
@@ -856,6 +862,7 @@
     ;;       or a factID if it is a fact (num)
     ;; part of htlanguage
 (define (replace-link-text text-type value linkID)
+  (display "REPLACE link text ")(newline)
   (if nodereader-pane
       (let* ((link-obj (get 'links linkID))
              (start-index (ask link-obj 'start-index))
@@ -879,9 +886,11 @@
         ;; do the replacement in the textpane
         ;(ask htpane-obj 'set-track-links! #f)
         (let ((nodereader-doc (ask nodereader-pane 'getdocument)))
-          (set-text-delete nodereader-doc
-                           start-index
-                           (- end-index start-index))
+          (display "delete text ")(newline)
+;          (set-text-delete nodereader-doc
+;                           start-index
+;                           (- end-index start-index))
+          (display "insert text ")(newline)
           (set-text-insert nodereader-doc
                            newtext
                            start-index))
@@ -891,36 +900,41 @@
 ;; part of htlanguage
 ;; check whether condition in ruleID is met then carry out follow link
 ;; a copy of follow-link
-(define (follow-link2 the-link the-action parent-ruleID use-link link-type dest-nodeID)
-  (if nodereader-pane
+(define (follow-link2 linkID parent-ruleID link-type dest-nodeID) ;; the-action, use-link taken out
+  (display "follow-link2 ")(newline)
+  (if nodereader-pane 
       (begin
+        
+        (define the-link (get 'links linkID))
                                         ; increment followed count
         (ask the-link 'set-followed!
              (+ (ask the-link 'followed?) 1))
 
                                         ; perform action, if any, before going to destination
-        (if the-action
-            (do-action the-action))
+;        (if the-action
+;            (do-action the-action))
 
                                         ; and go to destination node if link is active
-        (if use-link
-            (if (and (or (not hover-links)
-                         (equal? link-type 'default))
-                     (check-rule-condition parent-ruleID))
-                (begin
+        ;(if use-link
+;            (if (and (or (not hover-links)
+;                         (equal? link-type 'default))
+;                     (check-rule-condition parent-ruleID))
+        (if (check-rule-condition parent-ruleID)
+            (begin
                                         ; goto node
-                  (goto-node dest-nodeID #t))
+              (goto-node dest-nodeID #t))
 
-                (if hover-links
+            ;; else
+            ;(if hover-links
                                         ; show the hover link 
-                    (let ((e (ask nodereader-pane 'get-lastmousemove)))
-                      (set-tooltip-text (ask the-link 'ID))
+                (let ((e (ask nodereader-pane 'get-lastmousemove)))
+                  (set-tooltip-text (ask the-link 'ID))
                                         ; dispatch a mouseevent to trick tooltipmanager into displaying tooltip
-                      (if e
-                          (begin ;; QUESTION: why do it twice here?
-                            (dispatch-mouseevent (ask nodereader-pane 'getcomponent) e)
-                            (dispatch-mouseevent (ask nodereader-pane 'getcomponent) e)
-                            ))))
-                ))
+                  (if e
+                      (begin ;; QUESTION: why do it twice here?
+                        (dispatch-mouseevent (ask nodereader-pane 'getcomponent) e)
+                        (dispatch-mouseevent (ask nodereader-pane 'getcomponent) e)
+                        ))))
+            ;))
         ))
   )
