@@ -37,6 +37,8 @@
 (require "reader.scm")
 (require 'hash-table)
 
+
+
 ;; TODO: ticket #143: remove CHI study hacks:
 ;; - hover-links - requires global link mouseover + click action and get-active-linkID
 ;; - custom cursors - requires global link mouseover action and get-active-linkID
@@ -44,7 +46,12 @@
 ; exports
 (module-export make-reader-pane
                check-rule-condition
-               rule-check-trigger-links)
+               rule-check-trigger-links
+               start-indices
+               end-indices)
+
+(define start-indices (make-hash-table))
+(define end-indices (make-hash-table))
 
 ; read-only hypertextpane
 (define (make-reader-pane
@@ -202,17 +209,21 @@
 
     ;; displaying the text
 
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;; moved out to reader.scm
     ; update link indices after text replacement
-    (define (update-indices this-hashtable this-key this-index insert-index offset)
-      (if (>= this-index insert-index)
-          (hash-table-put! this-hashtable this-key (+ this-index offset))))
+;    (define (update-indices this-hashtable this-key this-index insert-index offset)
+;      (if (>= this-index insert-index)
+;          (hash-table-put! this-hashtable this-key (+ this-index offset))))
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     
     ; highlight links in reader
     (define (highlight-links)
       (let ((thisnode (get 'nodes (ask htpane-obj 'get-nodeID)))
-            (start-indices (make-hash-table))
-            (end-indices (make-hash-table)))
+            ;(start-indices (make-hash-table)) ;; moved out as a global variable
+            ;(end-indices (make-hash-table))   ;; moved out as a global variable
+            )
 
         ; first pass - make copy of link positions, to be offset when
         ; text is changed by alternate links
@@ -231,6 +242,10 @@
                       (this-linkID (ask thislink 'ID))
                       (start-index (hash-table-get start-indices l #f))
                       (end-index (hash-table-get end-indices l #f)))
+                 
+                 (display "[highlighting] ")(newline)
+                 (display " start-index ")(display start-index)(newline)
+                 (display " end-index ")(display end-index)(newline)
                  ; first check if link can be followed
                  (if (follow-link? l)
                      ; yes, so now check if link is enabled
@@ -259,7 +274,7 @@
                              (set-attribute-linkID link-attribute-set this-linkID)
                              (set-text-style nodereader-doc
                                              link-attribute-set
-                                             start-index
+                                             (+ start-index 1) ;; debug adding 1 for testing
                                              (- end-index start-index)
                                              #f))))
                      ; no, so need to check for alternate link/text
@@ -292,6 +307,8 @@
 ;                                              start-index)
 ;                             (ask htpane-obj 'set-track-links! #t)
 
+                     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                     ;; this is moved out to reader.scm
 ;                             ; update link positions
 ;                             (set! new-end-index (+ end-index offset))
 ;                             (hash-table-for-each start-indices
@@ -300,6 +317,7 @@
 ;                             (hash-table-for-each end-indices
 ;                                                  (lambda (k v)
 ;                                                    (update-indices end-indices k v end-index offset)))))
+                     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;                       ; now check if also have alt link
 ;                       (if (or (altlink? thislink) (has-else-action? thislink))

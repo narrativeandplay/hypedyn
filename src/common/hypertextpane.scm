@@ -283,42 +283,44 @@
             (if (equal? side 'start)
                 (begin
                   (ask thislink 'set-start-index! new-val)
-                  (compoundundomanager-postedit
-                   undo-manager
-                   (make-undoable-edit "Shift link start"
-                                       (lambda () ;; undo
-                                         ;; important to get the link again
-                                         ;; the previous reference to the link is outdated
-                                         (set! thislink (get 'links linkID))
-                                         ;(display " setting start to ")(display old-start)(newline)
-                                         (ask thislink 'set-start-index! old-start)
-                                         ;(clickback-resize new-val old-start side)
-                                         ) ;; undo
-                                       (lambda () ;; redo
-                                         (set! thislink (get 'links linkID))
-                                         ;(display " setting start to ")(display new-val)(newline)
-                                         (ask thislink 'set-start-index! new-val)
-                                         ;(clickback-resize old-start new-val side)
-                                         )))
+                  (if undo-manager
+                      (compoundundomanager-postedit
+                       undo-manager
+                       (make-undoable-edit "Shift link start"
+                                           (lambda () ;; undo
+                                             ;; important to get the link again
+                                             ;; the previous reference to the link is outdated
+                                             (set! thislink (get 'links linkID))
+                                        ;(display " setting start to ")(display old-start)(newline)
+                                             (ask thislink 'set-start-index! old-start)
+                                        ;(clickback-resize new-val old-start side)
+                                             ) ;; undo
+                                           (lambda () ;; redo
+                                             (set! thislink (get 'links linkID))
+                                        ;(display " setting start to ")(display new-val)(newline)
+                                             (ask thislink 'set-start-index! new-val)
+                                        ;(clickback-resize old-start new-val side)
+                                             ))))
                   ))
             (if (equal? side 'end)
                 (begin
                   (ask thislink 'set-end-index! new-val)
-                  (compoundundomanager-postedit
-                   undo-manager
-                   (make-undoable-edit "Shift link end"
-                                       (lambda () ;; undo 
-                                         (set! thislink (get 'links linkID))
-                                         ;(display " setting end to ")(display old-end)(newline)
-                                         (ask thislink 'set-end-index! old-end)
-                                         ;(clickback-resize new-val old-end side)
-                                         ) 
-                                       (lambda () ;; redo
-                                         (set! thislink (get 'links linkID))
-                                         ;(display " setting end to ")(display new-val)(newline)
-                                         (ask thislink 'set-end-index! new-val)
-                                         ;(clickback-resize old-end new-val side)
-                                         )))
+                  (if undo-manager
+                      (compoundundomanager-postedit
+                       undo-manager
+                       (make-undoable-edit "Shift link end"
+                                           (lambda () ;; undo 
+                                             (set! thislink (get 'links linkID))
+                                        ;(display " setting end to ")(display old-end)(newline)
+                                             (ask thislink 'set-end-index! old-end)
+                                        ;(clickback-resize new-val old-end side)
+                                             )
+                                           (lambda () ;; redo
+                                             (set! thislink (get 'links linkID))
+                                        ;(display " setting end to ")(display new-val)(newline)
+                                             (ask thislink 'set-end-index! new-val)
+                                        ;(clickback-resize old-end new-val side)
+                                             ))))
                   ))
             ))
       ))
@@ -364,20 +366,23 @@
              (ask edited-node getlinks-method))
         
         (display "  deleted link-bound ")(display deleted-link-bound)(newline)
+        (display "undo-manager ")(display undo-manager)(newline)
         
-        (compoundundomanager-postedit
-         undo-manager
-         (make-undoable-edit "link text formating"
-                             (lambda () ;; undo
-                               (display "link text formating ")(newline)
-                               (set-text-style the-doc style-nolink ;; clear formatting for whole of deletion
-                                               start
-                                               len #t)
-                               (map format-link-text deleted-link-bound) ;; then put in formatting for link fragments
-                               )
-                             (lambda () ;; redo
-                               #f
-                               )))
+        ;; undo-manager for read-only (reader-pane) is not set
+        (if undo-manager
+            (compoundundomanager-postedit
+             undo-manager
+             (make-undoable-edit "link text formating"
+                                 (lambda () ;; undo
+                                   (display "link text formating ")(newline)
+                                   (set-text-style the-doc style-nolink ;; clear formatting for whole of deletion
+                                                   start
+                                                   len #t)
+                                   (map format-link-text deleted-link-bound) ;; then put in formatting for link fragments
+                                   )
+                                 (lambda () ;; redo
+                                   #f
+                                   ))))
         ))
     
     
@@ -463,7 +468,9 @@
                      ;(set! link-deleted (- link-end link-start))
                      (set! link-deleted (list link-start link-end))
                      ; Delete the link
-                     (deletelink-callback linkID))
+                     ;; readonly pane does not have deletelink-callback
+                     (if (procedure? deletelink-callback)
+                         (deletelink-callback linkID)))
                     ((and (<= del-end link-end)         ;; Case 4; link-start del-start del-end link-end (eg aaB[B]a, aa[B]Baa, aaB[B]Baa) 
                           (<= link-start del-start))    ;; makes sure not the whole link 
                      ;; Entire deletion is inside link but not encompassing it, (shorten link by length of deletion)

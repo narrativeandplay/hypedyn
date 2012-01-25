@@ -344,7 +344,8 @@
                   ;; convert rule into an s-expr that can be eval-ed by our evaluator
                   (obj-put this-obj 'rule-expr
                            (lambda (self)
-                             (cons expression
+                             (define to-return
+                               (cons expression
                                    (map (lambda (c)
                                           (let* ((thiscondition (get 'conditions c))
                                                  (targetID (ask thiscondition 'targetID))
@@ -364,7 +365,11 @@
                                                 ; fact
                                                 (cond ((eq? operator 0) (list 'not (list 'holds? targetID)))
                                                       ((eq? operator 1) (list 'holds? targetID)))))))
-                                        conditions))))
+                                        conditions)))
+                             (display "rule-expr returning ")(newline)
+                             (display to-return)(newline)
+                             to-return
+                             ))
                   (obj-put this-obj 'to-save-sexpr
                            (lambda (self)
                              (list 'create-typed-rule

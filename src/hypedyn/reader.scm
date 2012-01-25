@@ -47,7 +47,9 @@
   (require "config-options.scm")
   (require "datastructure.scm")
   (require "reader-pane.scm")
-  (require 'list-lib))
+  (require 'list-lib)
+  ;(require 'hash-table)
+  (require "../common/myhashtable.scm")) ;;hash-table-for-each
 
 ; exports
 (module-export close-nodereader
@@ -752,6 +754,7 @@
 ; evaluate a rule expression by ID
 ;; new name should be check-rule-condition
 (define (eval-rule-expr-by-ID in-ruleID)
+  (display "eval rule expr by ID ")(display in-ruleID)(newline)
   (if (not (eq? in-ruleID 'not-set))
       (eval-rule-expr (get 'rules in-ruleID))
       #t))
@@ -855,6 +858,15 @@
         (close-audio-clip the-clip)
         (set! the-clip #!null))))
 
+;; used by replace-link-text
+(define (update-indices this-hashtable this-key this-index insert-index offset)
+  (display "update indices")(newline)
+  (display "this-index ")(display this-index)(newline)
+  (display "insert-index ")(display insert-index)(newline)
+  (display "check ")(display (>= this-index insert-index))(newline)
+  (if (>= this-index insert-index)
+      (hash-table-put! this-hashtable this-key (+ this-index offset))))
+
 ;;;; new addition to htlanguage
 
     ;; text-type is either 'text 'fact 
@@ -881,20 +893,35 @@
                                  "[fact not found]"
                                  ))))
              (new-end-index (+ start-index (string-length newtext)))
-             (use-alt-text (alttext? thislink)))
+             ;(use-alt-text (alttext? thislink))
+             )
 
         ;; do the replacement in the textpane
-        ;(ask htpane-obj 'set-track-links! #f)
+        (ask nodereader-pane 'set-track-links! #f)
         (let ((nodereader-doc (ask nodereader-pane 'getdocument)))
           (display "delete text ")(newline)
-;          (set-text-delete nodereader-doc
-;                           start-index
-;                           (- end-index start-index))
+          (set-text-delete nodereader-doc
+                           start-index
+                           (- end-index start-index))
           (display "insert text ")(newline)
           (set-text-insert nodereader-doc
                            newtext
                            start-index))
-                                        ;(ask htpane-obj 'set-track-links! #t)
+       (ask nodereader-pane 'set-track-links! #t) ;; htpane-obj (nodereader-pane)
+        
+        (define newtext-len (string-length newtext))
+        (define oldtext-len (- end-index start-index))
+        (define offset (- newtext-len oldtext-len))
+        (display "offset ")(display offset)(newline)
+        
+        ; update link positions
+        (set! new-end-index (+ end-index offset))
+        (hash-table-for-each start-indices
+                             (lambda (k v)
+                               (update-indices start-indices k v end-index offset))) ;; was end-index
+        (hash-table-for-each end-indices
+                             (lambda (k v)
+                               (update-indices end-indices k v end-index offset)))
         )))
 
 ;; part of htlanguage

@@ -189,6 +189,24 @@
               )
 
           (display "selected rule ID ")(display selected-rule-ID)(newline)
+          ;; transfer the condition from the original old rule to the new rules
+          ;(create-typed-condition name type targetID operator ruleID . args)
+          (define old-conditions (ask selected-rule 'conditions))
+          (map (lambda (condition)
+                 (display "this cond ID ")(display condition)(newline)
+                 ;(display "this cond ")(display (get 'conditions condition))(newline)
+                 (define this-cond (get 'conditions condition))
+;                 (display "name ")(display (ask this-cond 'name ))(newline)
+;                 (display "type ")(display (ask this-cond 'type ))(newline)
+;                  (display "targetID ")(display (ask this-cond 'targetID ))(newline)
+;                  (display "ruleID ")(display (ask this-cond 'ruleID))(newline)
+;                  (display "operator ")(display (ask this-cond 'operator))(newline)
+                 (let ((type (ask this-cond 'type))
+                       (targetID (ask this-cond 'targetID))
+                       (operator (ask this-cond 'operator)))
+                   (create-typed-condition "If-rule" type targetID operator if-rule-ID )
+                   (create-typed-condition "else-rule" type targetID operator else-rule-ID ))
+                 ) old-conditions)
 
           ))) ;; end of let
     )
