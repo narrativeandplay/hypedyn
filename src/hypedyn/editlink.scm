@@ -63,11 +63,14 @@
                create-update-text-action-panel
                create-rules-manager
                
+               get-edited-linkID
+               
                obj-convertion-2.2)
                
 
 ; remember which link we're editing
 (define-private edited-linkID '())
+(define (get-edited-linkID) edited-linkID)
 
 ; remember currently edited node
 ;(define-private edited-nodeID '()) ;; now using nodeeditor.scm's edited-nodeID
@@ -132,10 +135,14 @@
                     ;(add-specific-action "update text using" "alternative text" link-alttext)
                     (ask else-rule 'add-action!
                          (create-action link-name 'displayed-node
-                                        (string-append "(replace-link-text "
-                                                       "(quote text) "
-                                                       "\"" link-alttext "\"" " "
-                                                       (to-string linkID) ")")
+;                                        (string-append "(replace-link-text "
+;                                                       "(quote text) "
+;                                                       "\"" link-alttext "\"" " "
+;                                                       (to-string linkID) ")")
+                                        (list 'replace-link-text
+                                              (list 'quote 'text)
+                                              (string-append "\"" link-alttext "\"")
+                                              linkID)
                                         else-rule-ID
                                         ))
                     )
@@ -149,10 +156,14 @@
                     ;(add-specific-action "update text using" "string fact" link-alttext)
                     (ask else-rule 'add-action! 
                          (create-action link-name 'displayed-node 
-                                        (string-append "(replace-link-text "
-                                                       "(quote text) "
-                                                       (to-string link-alttext) " " ;; here link-alttext is factID of the fact
-                                                       (to-string linkID) ")")
+;                                        (string-append "(replace-link-text "
+;                                                       "(quote text) "
+;                                                       (to-string link-alttext) " " ;; here link-alttext is factID of the fact
+;                                                       (to-string linkID) ")")
+                                        (list 'replace-link-text
+                                              (list 'quote 'text)
+                                              (string-append "\"" link-alttext "\"")
+                                              linkID)
                                         else-rule-ID)
                          )
                     )))
@@ -166,11 +177,16 @@
           (if (not (equal? link-dest1 -1))
               (ask if-rule 'add-action!
                    (create-action link-name 'clicked-link
-                                  (string-append "(follow-link "
-                                                 (to-string linkID) " "
-                                                 (to-string (ask if-rule 'ID)) " "
-                                                 "(quote default) "
-                                                 (to-string link-dest1) ")")
+;                                  (string-append "(follow-link "
+;                                                 (to-string linkID) " "
+;                                                 (to-string (ask if-rule 'ID)) " "
+;                                                 "(quote default) "
+;                                                 (to-string link-dest1) ")")
+                                  (list 'follow-link
+                                        linkID
+                                        (ask if-rule 'ID)
+                                        (list 'quote 'default)
+                                        link-dest1)
                                   if-rule-ID
                                   ))
               )
@@ -179,11 +195,17 @@
           (if (not (equal? link-dest2 -1))
               (ask if-rule 'add-action!
                    (create-action link-name 'clicked-link
-                                  (string-append "(follow-link "
-                                                 (to-string linkID) " "
-                                                 (to-string (ask if-rule 'ID)) " "
-                                                 "(quote default) "
-                                                 (to-string link-dest2) ")")
+;                                  (string-append "(follow-link "
+;                                                 (to-string linkID) " "
+;                                                 (to-string (ask if-rule 'ID)) " "
+;                                                 "(quote default) "
+;                                                 (to-string link-dest2) ")")
+                                  (list 'follow-link 
+                                        linkID
+                                        (ask if-rule 'ID)
+                                        (list 'quote 'default)
+                                        link-dest2)
+                                        
                                   else-rule-ID
                                   ))
               )
@@ -238,6 +260,7 @@
   ; remember callback
   (set! update-callback in-callback)
   
+  (display "edited-linkID ")(display edited-linkID)(newline)
   ; get all the details from the link object
   (let* ((link-obj (get 'links edited-linkID))
          (selected-rule-ID (ask link-obj 'rule))
@@ -365,7 +388,12 @@
     ;(set-component-visible editlink-panel-else-link (and (not anywhere) (not (sculptural?))))
     
     ; reconstruct rule if necessary
-    (populate-rule-editor selected-rule-ID in-edited-nodeID))
+;    (map (lambda (rule)
+;           (populate-rule-editor rule in-edited-nodeID))
+;         rule-lst)
+    (populate-rule-editor (cadr rule-lst) in-edited-nodeID)
+    ;(populate-rule-editor selected-rule-ID in-edited-nodeID)
+    )
     
   ; pack the UI and show
   (pack-frame editlink-dialog)
@@ -681,17 +709,26 @@
 (define rules-list-panel #f)
 
 ;; one instance of the rule panel (one entry on the rule list)
-(define (make-rule-panel #!optional rule-name)
+;; TODO: also creates a new rule to be attached to the currently edited object 
+(define (make-rule-panel #!optional rule-ID)
   (define top-panel (make-panel))
   (set-container-layout top-panel 'flow 'left)
 
   (define rule-checkbox (make-checkbox ""))
 
-  (define rule-name-label 
-    (if rule-name
-        (make-label-with-title rule-name)
-        (make-label-with-title "New Rule")
-        ))
+  (define rule-name-label #f)
+  (if rule-ID
+      (begin
+        (define rule-obj (get 'rules rule-ID))
+        (define rule-name (ask rule-obj 'name))
+        (set! rule-name-label (make-label-with-title rule-name))
+        (set! mgr-rule-lst (append mgr-rule-lst (list rule-ID)))
+        )
+      ;; TODO: create new rule here
+      ;; attach rule to edited object 
+      ;; add the ID mgr-rule-lst
+      (set! rule-name-label (make-label-with-title "New Rule"))
+      )
   
   ;(define rule-name-label (make-label-with-title "SIGH"))
   
@@ -702,7 +739,9 @@
                          (define sibling-lst (get-container-children (get-parent top-panel)))
                          (define pos (list-index (lambda (panel) (eq? top-panel panel)) sibling-lst))
                          (cond ((equal? edit-mode 'link)
-                                (doeditlink edited-linkID edited-nodeID update-link-display "")
+                                (display "edited-linkID edited-nodeID update-link-display ")(newline)
+                                (display (list selected-linkID edited-nodeID update-link-display ""))(newline)
+                                (doeditlink selected-linkID edited-nodeID update-link-display "")
                                 )
                                ((equal? edit-mode 'node)
                                 #f
@@ -715,30 +754,30 @@
   (add-component top-panel rule-checkbox)
   (add-component top-panel rule-name-label)
   (add-component top-panel rule-edit-button)
-
+  ;; make rule panel
+  (display "make rule panel ")(display top-panel)(newline)
   top-panel)
 
 ;; add rule (makes a rule panel inside rules-list-panel)
-(define (add-rule-panel ;. rule-name) ;; strangely using #!optional here for rulename just crashes kawa (SIGH)
-                  #!optional rule-name)
+(define (add-rule-panel #!optional rule-ID)
+  (display "[ADD RULE PANEL] ")(newline)
   (if (and rules-list-panel
            rules-manager-main-dialog)
       (begin
 ;        (if rule-name
 ;            (add-component rules-list-panel (make-rule-panel rule-name))
 ;            (add-component rules-list-panel (make-rule-panel)))
-        (add-component rules-list-panel (make-rule-panel rule-name))
+        (add-component rules-list-panel (make-rule-panel rule-ID))
         (pack-frame rules-manager-main-dialog)
         ))
   )
 
 (define mgr-rule-lst (list))
 
-
-
 ;; target type might be 'link 'node 'doc
 ;; display the dialog with the list of rules attached to the object (which can be any of the target-type)
-(define (create-rules-manager target-type . args) ;; target-type not used yet
+(define (create-rules-manager target-type obj-ID . args) ;; target-type not used yet
+  (display "CREATE RULES MAN")(newline)
   (set! rules-manager-main-dialog (make-dialog (get-nodeeditor-frame) "Rule Editor" #t))
   
   (define rules-manager-main-panel (make-panel))
@@ -792,6 +831,18 @@
                          (set-component-visible rules-manager-main-dialog #f)
                          )))
   
+  ;; populate the rule manager
+    (display "POP RULES MAN ")(display obj-ID)(newline)
+    (cond ((equal? target-type 'link)
+           (define in-link (get 'links obj-ID))
+           (define rule-lst (ask in-link 'rule-lst))
+           (map (lambda (ruleID)
+                  (add-rule-panel ruleID)
+                  ) rule-lst)
+           ))
+  
+  
+  
   (pack-frame rules-manager-main-dialog)
   (set-component-visible rules-manager-main-dialog #t)
   )
@@ -799,11 +850,14 @@
 ; reconstruct a rule
 ; this is called from the doeditlink/doeditnoderule/doeditdocrule procedures above
 ; to finish building the GUI representation of the link/rule
+;; NOTE: doesn't seem like we need a in-edited-nodeID anymore
 (define (populate-rule-editor edited-ruleID in-edited-nodeID)
+  (display "edited rule ")(display edited-ruleID)(newline)
   ;(format #t "populate-rule-editor, edited-ruleID: ~a, in-edited-nodeID: ~a~%~!" edited-ruleID in-edited-nodeID)
   (if (not (eq? 'not-set edited-ruleID))
       (let* ((rule-obj (get 'rules edited-ruleID))
              (conditions (ask rule-obj 'conditions))
+             (actions (ask rule-obj 'actions))
              (facts (ask rule-obj 'actions))
              (rule-name (ask rule-obj 'name))
              (expr (ask rule-obj 'expression))
@@ -843,6 +897,42 @@
                       (operator (ask cond-obj 'operator)))
                  (create-condition-panel the-type targetID operator -1))) ;in-edited-nodeID))) ; should allow edited note to be a condition?
              conditions)
+        
+        ; build actions (show them in the ui)
+        (display "[POP ACTION ]")(newline)
+        (display "actions ")(display actions)(newline)
+        (map (lambda (actionID)
+               (define action (get 'actions actionID))
+               (define action-sexpr (ask action 'expr))
+               (display "action sexpr ")(display action-sexpr)(newline)
+               (display "what issit ? ")(display (invoke (ask action 'expr) 'get-class))(newline)
+               (display "proc ")(display (car action-sexpr))(newline)
+               
+               (cond  
+                 ((equal? 'follow-link (car action-sexpr)) 
+                  (display "inside follow link")(newline)
+                  (define dest-nodeID (list-ref action-sexpr 4))
+                  (add-specific-action "follow link to" dest-nodeID))
+                 
+                 ((equal? 'replace-link-text (car action-sexpr))  ;(replace-link-text text-type value linkID)
+                  (display "inside replace link text ")(newline)
+                  (define text-type (list-ref action-sexpr 1)) ;(using-type (car args-lst)) (alt-text (cadr args-lst)))
+                  (define text-value (list-ref action-sexpr 2))
+                  (display "text type ")(display text-type)(newline)
+                  (display "text value ")(display text-value)(newline)
+                  
+                  ;; 'text maps to "alternative text", 'fact maps to "string fact" 
+                  (define text-type-string #f)
+                  (cond ((equal? (cadr text-type) 'text)
+                         (set! text-type-string "alternative text")
+                         )
+                        ((equal? (cadr text-type) 'fact)
+                         (set! text-type-string "string fact")
+                         ))
+                  (add-specific-action "update text using" text-type-string text-value)
+                  ))
+               
+               ) actions)
 
         ; build facts
 ;        (format #t "building facts: ~a~%~!" facts)
@@ -859,6 +949,8 @@
 ;                 (create-fact-panel the-action targetID the-value)))
 ;             facts)
         )))
+
+
 
 ;;
 ;; build the UI
@@ -976,7 +1068,7 @@
   (add-component editlink-panel-main-buttons editlink-panel-main-buttons-delete)
   ) ;; end of IF conditions
 
-;; panel for setting actions (init editlink-panel-then)
+;; panel adding actions (init editlink-panel-then)
 (define (create-then-action-panel)
   ;; start of THEN action
 
@@ -1049,50 +1141,21 @@
   (display "init action type choice ")(newline)
   (set! action-type-choice (apply make-combobox action-type-list))
   (display "action-type-list ")(display action-type-list)(newline)
-  
   )
 
+
+;; remove all the condition and action panels from the condition action editing panel 
 (define (reset-action-type-choice)
-  (display "b4 set combobox clear")(newline) 
   (set-combobox-clear action-type-choice)
   
-  (define (clear-combobox-hack combobox)
-    (define this-item (get-combobox-item-at combobox 0))
-    (display "clear combobox hack ")(display this-item)(newline)
-    ;; check on the first time whether combobox has anything inside
-    (display "combo count ")(display (get-combobox-item-count combobox))(newline)
-    (display "first ele ")(display (get-combobox-item-at combobox 0))(newline)
-    (if (> (get-combobox-item-count combobox) 0)
-        (remove-combobox-item combobox (get-combobox-item-at combobox 0)))
-    
-    (display "aft clear combobox hack ")(display this-item)(newline)
-    ;; if after remove still more than 
-    (if (> (get-combobox-item-count combobox) 0)
-        (clear-combobox-hack combobox))
-    )
-  
-  (define (test-combobox cb)
-    (define cb-len (get-combobox-item-count cb))
-    (define (helper cb index)
-      (display index)(display " ")(display (get-combobox-item-at cb index))(newline)
-      (if (not (= (- cb-len 1) index))
-          (helper cb (+ index 1)))
-      )
-    (helper cb 0)
-    )
-  
-;  (map (lambda (action-type)
-;         (display "action type ")(display action-type)(newline)
-;        )
-;       action-type-list)
-  
-  ;(test-combobox action-type-choice)
-  ;(clear-combobox-hack action-type-choice)
-  
-  (display "aft set combobox clear ")(newline)
+  ;; reset the available actions type in the combobox
   (map (lambda (action-type)
          (add-combobox-string action-type-choice action-type))
        action-type-list)
+  )
+
+(define (populate-actions)
+  #f
   )
 
 ;; returns a list of the action panels in action-list-panel
@@ -1103,12 +1166,12 @@
 (define (add-specific-action action-type #!rest args-lst)
   ;; cache the selection to set back at the end
   (define selected-action-type (get-combobox-selecteditem action-type-choice))
-  (display "add-specific-action ")(newline)
-  (display "action tyep choice ")(display action-type-choice)(newline)
+  (display "[add-specific-action] ")(newline)
+  (display "  action type ")(display action-type)(newline)
   
   ;; choose our desired type and 
-  (set-combobox-selection-object action-type-choice action-type)
-  (define panel-to-return (add-action-callback #f)) 
+  (set-combobox-selection-object action-type-choice (create-combobox-string-item action-type))
+  (define panel-to-return (add-action-callback #f))
   
   (display "selection? ")(display (get-combobox-selecteditem action-type-choice))(newline)
   
@@ -1140,8 +1203,13 @@
              (if (= (length args-lst) 1)
                  (let* ((link-dest1 (car args-lst))
                         (dest-node-name (ask (get 'nodes link-dest1) 'name)))
+                   (display "link dest ")(display link-dest1)(newline)
                    (display "dest node name  ")(display dest-node-name)(newline)
-                   (set-combobox-selection-object node-choice-combobox (create-combobox-string-item dest-node-name))))
+                   
+                   (set! node-choice-combobox (create-node-choice panel-to-return (lambda (e) #f) link-dest1 #t -1))
+                   (set-combobox-selection-object node-choice-combobox (create-combobox-string-item dest-node-name))
+                   (add-component panel-to-return node-choice-combobox)
+                   ))
              )
             ((equal? action-type "update fact")
              (if (= (length args-lst) 3)
@@ -1297,8 +1365,9 @@
                (add-component top-panel update-text-action-panel)
                )
               ((equal? action-type-str "follow link to")
-               (set! node-choice-combobox (create-node-choice #f (lambda (e) #f) #f #t #f))
-               (add-component top-panel node-choice-combobox)
+               ;(set! node-choice-combobox (create-node-choice #f (lambda (e) #f) #f #t #f))
+               ;(add-component top-panel node-choice-combobox)
+               #f
                )
               ((equal? action-type-str "update fact")
                (add-component top-panel (create-fact-panel2 #f #f #f))

@@ -61,6 +61,7 @@
                get-edited-nodeID set-edited-nodeID!
                delete-link refresh-link-list
                nodeeditor-dirty?
+               selected-linkID
                
                ;; needed by hypedyn-undo.scm
                enable-link-buttons
@@ -297,12 +298,12 @@
   (add-component m-edit1 m-edit1-editlink)
   (add-actionlistener m-edit1-editlink
                       (make-actionlistener (lambda (source)
-                                             (doeditlink
-                                              selected-linkID
-                                              (get-edited-nodeID)
-                                              update-link-display-callback
-                                              (get-link-text selected-linkID))
-;                                             (create-rules-manager 'link)
+;                                             (doeditlink
+;                                              selected-linkID
+;                                              (get-edited-nodeID)
+;                                              update-link-display-callback
+;                                              (get-link-text selected-linkID))
+                                             (create-rules-manager 'link selected-linkID)
                                              )))
   (set-menu-item-accelerator m-edit1-editlink #\E)
   (set-menuitem-component m-edit1-editlink #f)
@@ -376,11 +377,11 @@
   (add-component nodeeditor-toolbar-panel nodeeditor-toolbar-button-editlink )
   (add-actionlistener nodeeditor-toolbar-button-editlink
                       (make-actionlistener (lambda (source)
-                                             (doeditlink selected-linkID
-                                                         (get-edited-nodeID)
-                                                         update-link-display-callback
-                                                         (get-link-text selected-linkID))
-;                                             (create-rules-manager 'link)
+;                                             (doeditlink selected-linkID
+;                                                         (get-edited-nodeID)
+;                                                         update-link-display-callback
+;                                                         (get-link-text selected-linkID))
+                                             (create-rules-manager 'link selected-linkID)
                                              )))
 
   ; button to rename link
@@ -628,7 +629,7 @@
             (newlink-undoable-postedit newlink-name newlink-ID)
             
             ; show edit link dialogue
-            (doeditlink newlink-ID (get-edited-nodeID) update-link-display-callback (get-link-text newlink-ID))
+            ;(doeditlink newlink-ID (get-edited-nodeID) update-link-display-callback (get-link-text newlink-ID))
             ;(create-rules-manager 'link)
             
             ))))
@@ -903,12 +904,14 @@
     (if (eq? event-type 'left-clicked)
         (let ((event-click-count (get-mouseevent-click-count e)))
           (if (= 2 event-click-count)
-              (doeditlink
-               selected-linkID
-               (get-edited-nodeID)
-               update-link-display-callback
-               (get-link-text selected-linkID))
-              ;(create-rules-manager 'link)
+;              (doeditlink
+;               selected-linkID
+;               (get-edited-nodeID)
+;               update-link-display-callback
+;               (get-link-text selected-linkID))
+              (begin
+                (create-rules-manager 'link selected-linkID)
+                )
               )))))
 
 ; get the text of the specified link, used by editlink

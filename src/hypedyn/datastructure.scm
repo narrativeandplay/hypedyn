@@ -426,6 +426,8 @@
                                    (ask self 'name)                      ; name (string)
                                    (list 'quote type)                    ; type ('then, 'else, 'before, 'after, 'init or 'step)
                                    ;(list 'quote expr) ; NOTE: not sure if expr should be stored as string or s-expr - alex
+                                   ;; note: trying s-expr approach, might be more convenient 
+                                   ;; to load out the actions into the action panels (teongleong)
                                    expr                                  ; expression to be evaluated (string)
                                    ruleID                                ; parent ruleID (int)
                                    (ask self 'ID))))                     ; actionID (int)

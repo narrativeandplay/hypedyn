@@ -34,6 +34,7 @@
   (require "../kawa/ui/label.scm")
   (require "../kawa/ui/button.scm")
   (require "../kawa/ui/toolbar.scm")
+  (require "../kawa/strings.scm") ;;to-string
   (require "../kawa/system.scm")
   (require "../kawa/miscutils.scm")
   (require "../kawa/audio-kawa.scm")
@@ -731,7 +732,7 @@
         (display "this-expr ")(display this-expr)(newline)
         (display "this-expr class ")(display (invoke this-expr 'get-class))(newline)
         ; wrap the expression in a "begin" so its all one expression
-        (runcode (string-append "(begin\n" this-expr "\n)") 
+        (runcode (string-append "(begin\n" (to-string this-expr) "\n)") 
                  display-results display-status))))
 
 ; display the results after running an action (debugging)
