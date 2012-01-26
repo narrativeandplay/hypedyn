@@ -523,7 +523,7 @@
           
           ; if there was a previous node, need to take next card out
           ; of hand - card shark stuff
-          (format #t "goto-node: card-shark=~a~%~!\n" (card-shark?))
+          ;(format #t "goto-node: card-shark=~a~%~!\n" (card-shark?))
           (if (and (card-shark?) 
                    prev-node)
               (begin
@@ -562,6 +562,8 @@
           ; remember read node    
           (set! read-nodeID next-nodeID)
           
+          (cache-link-bounds)
+          
           ;; trigger rules
           (rule-check-trigger-links 'displayed-node next-nodeID)
           ;(ask nodereader-pane 'rule-check-trigger-links next-nodeID)
@@ -571,7 +573,7 @@
           
 
           ; add anywhere nodes
-          (format #t "goto-node: card-shark=~a~%~!\n" (card-shark?))
+          ;(format #t "goto-node: card-shark=~a~%~!\n" (card-shark?))
           (if (card-shark?)
               (ask nodereader-pane 'add-nodes-in-hand-links nodes-in-hand)
               (ask nodereader-pane 'add-anywherenode-links))
@@ -754,7 +756,7 @@
 ; evaluate a rule expression by ID
 ;; new name should be check-rule-condition
 (define (eval-rule-expr-by-ID in-ruleID)
-  (display "eval rule expr by ID ")(display in-ruleID)(newline)
+  ;(display "eval rule expr by ID ")(display in-ruleID)(newline)
   (if (not (eq? in-ruleID 'not-set))
       (eval-rule-expr (get 'rules in-ruleID))
       #t))
@@ -762,7 +764,7 @@
 ; evaluate a rule expression
 (define (eval-rule-expr therule)
   (let ((rule-expr (ask therule 'rule-expr)))
-    (display "evaluating condition ")(display rule-expr)(newline)
+    ;(display "evaluating condition ")(display rule-expr)(newline)
     ; evaluate the expression in our evaluator
     (try-catch
         (myeval rule-expr)
@@ -858,14 +860,32 @@
         (close-audio-clip the-clip)
         (set! the-clip #!null))))
 
-;; used by replace-link-text
+;; highlight-links
 (define (update-indices this-hashtable this-key this-index insert-index offset)
-  (display "update indices")(newline)
-  (display "this-index ")(display this-index)(newline)
-  (display "insert-index ")(display insert-index)(newline)
-  (display "check ")(display (>= this-index insert-index))(newline)
+  (display "[update indices]")(newline)
+  (display "  this-index ")(display this-index)(newline)
+  (display "  insert-index ")(display insert-index)(newline)
+  (display "  check ")(display (>= this-index insert-index))(newline)
   (if (>= this-index insert-index)
       (hash-table-put! this-hashtable this-key (+ this-index offset))))
+
+(define (cache-link-bounds)
+  
+    ; first pass - make copy of link positions, to be offset when
+  ; text is changed by alternate links
+  ;; moved to reader.scm from reader-pane's highlight-links
+  (map (lambda (l)
+         (let* ((thislink (get 'links l))
+                (start-index (ask thislink 'start-index))
+                (end-index (ask thislink 'end-index)))
+           (hash-table-put! start-indices l start-index)
+           (hash-table-put! end-indices l end-index)
+           (display "[CACHING]")(newline)
+           (display "  link ")(display l)(newline)
+           (display "  start index ")(display start-index)(newline)
+           (display "  end index ")(display end-index)(newline)
+           ))
+       (ask (get 'nodes (ask nodereader-pane 'get-nodeID)) 'links)))
 
 ;;;; new addition to htlanguage
 
@@ -875,6 +895,7 @@
     ;; part of htlanguage
 (define (replace-link-text text-type value linkID)
   (display "REPLACE link text ")(newline)
+  
   (if nodereader-pane
       (let* ((link-obj (get 'links linkID))
              (start-index (ask link-obj 'start-index))
@@ -913,6 +934,7 @@
         (define oldtext-len (- end-index start-index))
         (define offset (- newtext-len oldtext-len))
         (display "offset ")(display offset)(newline)
+        (display "hash-table-for-each ")(display hash-table-for-each)(newline)
         
         ; update link positions
         (set! new-end-index (+ end-index offset))

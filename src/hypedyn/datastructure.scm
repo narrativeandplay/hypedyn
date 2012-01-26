@@ -366,8 +366,8 @@
                                                 (cond ((eq? operator 0) (list 'not (list 'holds? targetID)))
                                                       ((eq? operator 1) (list 'holds? targetID)))))))
                                         conditions)))
-                             (display "rule-expr returning ")(newline)
-                             (display to-return)(newline)
+                             ;(display "rule-expr returning ")(newline)
+                             ;(display to-return)(newline)
                              to-return
                              ))
                   (obj-put this-obj 'to-save-sexpr

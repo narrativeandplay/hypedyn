@@ -220,6 +220,7 @@
     
     ; highlight links in reader
     (define (highlight-links)
+      (display "[HIGHLIGHT]")(newline)
       (let ((thisnode (get 'nodes (ask htpane-obj 'get-nodeID)))
             ;(start-indices (make-hash-table)) ;; moved out as a global variable
             ;(end-indices (make-hash-table))   ;; moved out as a global variable
@@ -227,13 +228,16 @@
 
         ; first pass - make copy of link positions, to be offset when
         ; text is changed by alternate links
-        (map (lambda (l)
-               (let* ((thislink (get 'links l))
-                      (start-index (ask thislink 'start-index))
-                      (end-index (ask thislink 'end-index)))
-                 (hash-table-put! start-indices l start-index)
-                 (hash-table-put! end-indices l end-index)))
-             (ask thisnode 'links))
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        ;; moved to reader-pane
+;        (map (lambda (l)
+;               (let* ((thislink (get 'links l))
+;                      (start-index (ask thislink 'start-index))
+;                      (end-index (ask thislink 'end-index)))
+;                 (hash-table-put! start-indices l start-index)
+;                 (hash-table-put! end-indices l end-index)))
+;             (ask thisnode 'links))
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
         ; second pass - highlight links, update text, and set clickbacks
         (map (lambda (l)
@@ -251,6 +255,12 @@
                      ; yes, so now check if link is enabled
                      (if (or (uselink? thislink) (has-then-action? thislink))
                          (begin
+                           
+                           (newline)
+                           (display "this-linkID ")(display this-linkID)(newline)
+                           (display "link name ")(display (ask thislink 'name))(newline)
+                           (display "followed? ")(display (followed? this-linkID))(newline)
+                           
                            ; enabled, so highlight text as appropriate
                            (if (followed? this-linkID) ; changed to followed? - alex
                                ; already followed, so just underline
@@ -274,7 +284,7 @@
                              (set-attribute-linkID link-attribute-set this-linkID)
                              (set-text-style nodereader-doc
                                              link-attribute-set
-                                             (+ start-index 1) ;; debug adding 1 for testing
+                                             start-index
                                              (- end-index start-index)
                                              #f))))
                      ; no, so need to check for alternate link/text
@@ -701,17 +711,17 @@
 ;; carry out the action from this rule
 ;; only do the actions relevant to the event-type
 (define (do-rule-action event-type ruleID)
-  (display "do-rule-action ")(newline)
+  ;(display "do-rule-action ")(newline)
   (define action-lst (ask (get 'rules ruleID) 'actions))
 
   (map (lambda (actionID)
          ;; if relevant to this event type, do action
          (define action-event-type (ask (get 'actions actionID) 'type))
-         (display "action and event ")(display action-event-type)(display " ")(display event-type)(newline)
-         (display "action expr ")(display (ask (get 'actions actionID) 'expr))(newline)
+         ;(display "action and event ")(display action-event-type)(display " ")(display event-type)(newline)
+         ;(display "action expr ")(display (ask (get 'actions actionID) 'expr))(newline)
          (if (equal? action-event-type event-type)
              (begin
-               (display "event type matched ")(display event-type)(newline)
+               ;(display "event type matched ")(display event-type)(newline)
              (do-action actionID)))
          ) (ask (get 'rules ruleID) 'actions))
   )
@@ -720,16 +730,16 @@
 ;; TODO: doc should fit into this somehow
 ;; obj-type is either 'links or 'nodes for now
 (define (rule-check-trigger event-type obj-type obj-ID)
-  (display "rule check trigger ")(newline)
+  ;(display "rule check trigger ")(newline)
   
   (define obj (get obj-type obj-ID))
   (define rule-lst (ask obj 'rule-lst))
   
-  (display "rule-lst ")(display rule-lst)(newline)
+  ;(display "rule-lst ")(display rule-lst)(newline)
   (map (lambda (ruleID)
          (if (check-rule-condition ruleID)
              (begin
-               (display "condition satisfied ")(display ruleID)(newline)
+               ;(display "condition satisfied ")(display ruleID)(newline)
                (do-rule-action event-type ruleID)
                )))
        rule-lst)
@@ -738,8 +748,8 @@
 ;; goes through all the links of this node and 
 ;; check for rule triggers
 (define (rule-check-trigger-links event-type nodeID)
-  (display "rule check trigger links ")(newline)
-  (display "event-type ")(display event-type)(newline)
+  ;(display "rule check trigger links ")(newline)
+  ;(display "event-type ")(display event-type)(newline)
   (map (lambda (linkID)
          (rule-check-trigger event-type 'links linkID))
        (ask (get 'nodes nodeID) 'links))
