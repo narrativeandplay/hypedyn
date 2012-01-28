@@ -26,7 +26,6 @@
   (require "../kawa/ui/component.scm")
   (require "../kawa/ui/container.scm")
   (require "../kawa/ui/frame.scm")
-  (require "../kawa/file.scm")
   (require "../kawa/ui/events.scm")
   (require "../kawa/ui/text.scm")
   (require "../kawa/ui/panel.scm")
@@ -34,10 +33,13 @@
   (require "../kawa/ui/label.scm")
   (require "../kawa/ui/button.scm")
   (require "../kawa/ui/toolbar.scm")
+  
+  (require "../kawa/file.scm")
   (require "../kawa/strings.scm") ;;to-string
   (require "../kawa/system.scm")
   (require "../kawa/miscutils.scm")
   (require "../kawa/audio-kawa.scm")
+  
   (require "../common/evaluator.scm")
   (require "../common/objects.scm") ;; ask
   (require "../common/datatable.scm") ;; get-list, get, reset-table 
@@ -45,12 +47,15 @@
   (require "../common/fileio.scm")
   (require "../common/list-helpers.scm")
   (require "../common/runcode.scm")
+  (require "../common/myhashtable.scm") ;;hash-table-for-each
+  
   (require "config-options.scm")
   (require "datastructure.scm")
   (require "reader-pane.scm")
+  
   (require 'list-lib)
   ;(require 'hash-table)
-  (require "../common/myhashtable.scm")) ;;hash-table-for-each
+  )
 
 ; exports
 (module-export close-nodereader
@@ -974,17 +979,18 @@
                                         ; goto node
               (goto-node dest-nodeID #t))
 
-            ;; else
-            ;(if hover-links
-                                        ; show the hover link 
-                (let ((e (ask nodereader-pane 'get-lastmousemove)))
-                  (set-tooltip-text (ask the-link 'ID))
-                                        ; dispatch a mouseevent to trick tooltipmanager into displaying tooltip
-                  (if e
-                      (begin ;; QUESTION: why do it twice here?
-                        (dispatch-mouseevent (ask nodereader-pane 'getcomponent) e)
-                        (dispatch-mouseevent (ask nodereader-pane 'getcomponent) e)
-                        ))))
+;                ;; else
+;                ;(if hover-links
+;                 ; show the hover link 
+;                (let ((e (ask nodereader-pane 'get-lastmousemove)))
+;                  (set-tooltip-text (ask the-link 'ID))
+;                                        ; dispatch a mouseevent to trick tooltipmanager into displaying tooltip
+;                  (if e
+;                      (begin ;; QUESTION: why do it twice here?
+;                        (dispatch-mouseevent (ask nodereader-pane 'getcomponent) e)
+;                        (dispatch-mouseevent (ask nodereader-pane 'getcomponent) e)
+;                        )))
+            )
             ;))
         ))
   )

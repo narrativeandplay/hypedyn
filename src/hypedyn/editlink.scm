@@ -235,7 +235,9 @@
 
 ; edit a link - called from hteditor.scm
 ;; in-default-link-text not used any more
-(define (doeditlink selected-linkID in-edited-nodeID in-callback in-default-link-text)
+;; NOTE: this should be renamed as doeditrule now
+;;       since it targets one rule inside the link
+(define (doeditlink selected-linkID in-edited-nodeID in-callback in-ruleID);in-default-link-text)
   
   ;; cache a version of the unedited link for creation of undo
   (before-editlink selected-linkID)
@@ -269,13 +271,14 @@
          (link-dest1 (ask link-obj 'destination))
          (link-uselink (ask link-obj 'use-destination))
          (link-usealtlink (ask link-obj 'use-alt-destination))
-         (link-usealttext (ask link-obj 'use-alt-text))
+         ;(link-usealttext (ask link-obj 'use-alt-text))
          (link-dest2 (ask link-obj 'alt-destination))
-         (link-alttext (ask link-obj 'alt-text))
-         (link-start-index (ask link-obj 'start-index))
-         (link-end-index (ask link-obj 'end-index))
-         (edited-node (get 'nodes edited-nodeID))
-         (anywhere (ask edited-node 'anywhere?)))
+         ;(link-alttext (ask link-obj 'alt-text))
+         ;(link-start-index (ask link-obj 'start-index))
+         ;(link-end-index (ask link-obj 'end-index))
+         ;(edited-node (get 'nodes edited-nodeID))
+         ;(anywhere (ask edited-node 'anywhere?))
+         )
     
     ;; add appropriate panels to editlink-dialog
     (add-component editlink-panel-top editlink-panel-if)
@@ -287,66 +290,16 @@
                                                      link-name
                                                      (if (show-IDs?) (string-append " (" (number->string edited-linkID) ")") "")))
 
-;    ; show destination node
-;    (set! editlink-panel-then-link-choice
-;          (create-node-choice editlink-panel-then-choicepanel
-;                              selected-node-in-destination link-dest1
-;                              #t -1)) ; allow link to self
-;    (add-component editlink-panel-then-choicepanel editlink-panel-then-link-choice)
-
-;    ; show alternative destination, if any
-;    (set! editlink-panel-else-link-choice
-;          (create-node-choice editlink-panel-else-choicepanel 
-;                              selected-node-in-destination link-dest2
-;                              #t -1)) ; allow link to self
-;    (add-component editlink-panel-else-choicepanel editlink-panel-else-link-choice)
-;    
-;    ; show alternative text, if any: recreate the type choice, then determine which to show, fact or text
-;    (set! editlink-panel-else-text-factchoice 
-;          (create-fact-choice 'string editlink-panel-else-text 
-;                              selected-fact-in-link -1))
-;    (if link-usealttext
-;        ; using alt text
-;        (if (eq? link-usealttext #t)
-;            ; set to true, so its plain text
-;            (begin
-;              ; if showing facts, set the type choice to text, which also shows correct component
-;              (if (show-facts?)
-;                  (set-combobox-selection editlink-panel-else-text-typechoice 0))
-;              ; and set the text
-;              (set-text editlink-panel-else-text-message1 link-alttext))
-;            ; not true, so using a factID
-;            (begin
-;              ; and then recreate the fact choice
-;              (set! editlink-panel-else-text-factchoice (create-fact-choice 'string editlink-panel-else-text 
-;                                                                  selected-fact-in-link link-alttext))
-;              ; set the type choice to fact, which also shows the correct component
-;              (set-combobox-selection editlink-panel-else-text-typechoice 1))))
-
-
     ;; new code for new ui
     
     ;; empty the panel
     (clear-container action-list-panel)
     
     ;; reset combobox to contain all action-type-list
-    ;(set! action-type-choice (apply make-combobox action-type-list))
     (reset-action-type-choice)
-    
-    (display "DOING NEW CODE ")(newline)
-    
-    ;; new code to update action list
-    ;; this should be in the not part of the condition
-    
     
     ;; end of new code
     
-    ; set check boxes
-;    (display "set check boxes")(newline)
-;    (set-checkbox-value editlink-panel-then-link-check link-uselink)
-;    (set-checkbox-value editlink-panel-else-link-check link-usealtlink)
-;    (set-checkbox-value editlink-panel-else-text-check link-usealttext)
-
     ; set "ok" button state - cannot allow a "use" checkbox to be checked and a link to be "none"
     (set-button editlink-panel-buttons-ok
           (not
@@ -354,44 +307,17 @@
             (and link-uselink (eq? link-dest1 -1))
             (and link-usealtlink (eq? link-dest2 -1)))))
 
-    ; enable if portion of editor
-    ;(set-component-visible editlink-panel-if #t)
-    
-    ; enable then and else portions of editor except facts, and make sure its all set correctly
-    ; also disable links if its an anywhere node
-    ;(set-component-visible editlink-panel-then #t)
-    
-    ;; default text not needed anymore
-    ;(set-component-visible editlink-panel-then-text #f)
-    
-    ;; default text not needed anymore
-    ;(set-component-visible editlink-panel-then-link-message1-panel #t)
-    ;(set-text editlink-panel-then-text-message1 "show default text: ")  ;; the label
-    ;(set-component-visible editlink-panel-then-text-message1 #t)
-    
-    ;(set-text editlink-panel-then-text-message2 in-default-link-text) ;; the actual text
-    ;(set-text-selection editlink-panel-then-text-message2 0 0)
-    ;(set-component-visible editlink-panel-then-text-message2 #t)
-    
-    
-    
-    ; no links if its an anywhere node or in sculptural mode (no longer used)
-;    (set-component-visible editlink-panel-then-link (and (not anywhere) (not (sculptural?))))
-;    (set-component-visible editlink-panel-then-facts-labelpanel #f)
-;    (set-component-visible editlink-panel-then-facts #f)
-;    (set-component-visible editlink-panel-then-buttons #f)
-    
-    ;; else panel not used anymore
-    ;(set-component-visible editlink-panel-else #f) ;; was #t
-    
-    ; no links if its an anywhere node or in sculptural mode
-    ;(set-component-visible editlink-panel-else-link (and (not anywhere) (not (sculptural?))))
-    
     ; reconstruct rule if necessary
 ;    (map (lambda (rule)
 ;           (populate-rule-editor rule in-edited-nodeID))
 ;         rule-lst)
-    (populate-rule-editor (cadr rule-lst) in-edited-nodeID)
+    
+    ;; if this ruleID is really in rule-lst (might be redundant check)
+;    (if (find (lambda (obj) (= ruleID obj)) rule-lst)
+;        (populate-rule-editor ruleID in-edited-nodeID)
+;        (display "NOT FOUND")
+;        )
+    (populate-rule-editor in-ruleID in-edited-nodeID)
     ;(populate-rule-editor selected-rule-ID in-edited-nodeID)
     )
     
@@ -705,8 +631,16 @@
 ;(doeditnoderule in-edited-nodeID)
 ;(doeditdocrule)
 
+;; rmgr stands for rule manager
 (define rules-manager-main-dialog #f)
-(define rules-list-panel #f)
+(define rmgr-rules-list-panel #f) ;; the panel that contain all the rule panels
+;(define rmgr-rules-panel-list #f) ;; a list of all the rule panels (sigh sorry for the confusing names)
+(define rmgr-rule-lst (list))
+
+;; get the child of rmgr-rules-list-panel and see which position
+;; this rule-panel is in
+(define (rule-panel-position rule-panel)
+  (list-index (lambda (obj) (eq? rule-panel obj)) (get-container-children rmgr-rules-list-panel) ))
 
 ;; one instance of the rule panel (one entry on the rule list)
 ;; TODO: also creates a new rule to be attached to the currently edited object 
@@ -722,11 +656,11 @@
         (define rule-obj (get 'rules rule-ID))
         (define rule-name (ask rule-obj 'name))
         (set! rule-name-label (make-label-with-title rule-name))
-        (set! mgr-rule-lst (append mgr-rule-lst (list rule-ID)))
+        (set! rmgr-rule-lst (append rmgr-rule-lst (list rule-ID)))
         )
       ;; TODO: create new rule here
       ;; attach rule to edited object 
-      ;; add the ID mgr-rule-lst
+      ;; add the ID rmgr-rule-lst
       (set! rule-name-label (make-label-with-title "New Rule"))
       )
   
@@ -741,7 +675,13 @@
                          (cond ((equal? edit-mode 'link)
                                 (display "edited-linkID edited-nodeID update-link-display ")(newline)
                                 (display (list selected-linkID edited-nodeID update-link-display ""))(newline)
-                                (doeditlink selected-linkID edited-nodeID update-link-display "")
+                                (define rule-position (rule-panel-position top-panel))
+                                (define rule-ID (list-ref rmgr-rule-lst rule-position))
+                                
+                                (display "rule-position ")(display rule-position)(newline)
+                                (display "rule-ID ")(display rule-ID)(newline)
+                                (display "rmgr-rule-lst ")(display rmgr-rule-lst)(newline)
+                                (doeditlink selected-linkID edited-nodeID update-link-display rule-ID)
                                 )
                                ((equal? edit-mode 'node)
                                 #f
@@ -758,21 +698,19 @@
   (display "make rule panel ")(display top-panel)(newline)
   top-panel)
 
-;; add rule (makes a rule panel inside rules-list-panel)
+;; add rule (makes a rule panel inside rmgr-rules-list-panel)
 (define (add-rule-panel #!optional rule-ID)
   (display "[ADD RULE PANEL] ")(newline)
-  (if (and rules-list-panel
+  (if (and rmgr-rules-list-panel
            rules-manager-main-dialog)
       (begin
 ;        (if rule-name
 ;            (add-component rules-list-panel (make-rule-panel rule-name))
 ;            (add-component rules-list-panel (make-rule-panel)))
-        (add-component rules-list-panel (make-rule-panel rule-ID))
+        (add-component rmgr-rules-list-panel (make-rule-panel rule-ID))
         (pack-frame rules-manager-main-dialog)
         ))
   )
-
-(define mgr-rule-lst (list))
 
 ;; target type might be 'link 'node 'doc
 ;; display the dialog with the list of rules attached to the object (which can be any of the target-type)
@@ -795,9 +733,9 @@
   (add-component rules-manager-main-panel center-panel 'border-center)
   
   ;; list of rules
-  (set! rules-list-panel (make-panel))
-  (set-container-layout rules-list-panel 'vertical)
-  (add-component center-panel rules-list-panel)
+  (set! rmgr-rules-list-panel (make-panel))
+  (set-container-layout rmgr-rules-list-panel 'vertical)
+  (add-component center-panel rmgr-rules-list-panel)
   
   ;;rule list buttons
   (define add-rule-button (make-button "Add Rule"))
@@ -830,6 +768,8 @@
                        (lambda (e)
                          (set-component-visible rules-manager-main-dialog #f)
                          )))
+  ;; empty the rule ID list (corresponds to the rule list in rmgr) 
+  (set! rmgr-rule-lst '())
   
   ;; populate the rule manager
     (display "POP RULES MAN ")(display obj-ID)(newline)
