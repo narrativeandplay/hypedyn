@@ -47,6 +47,7 @@
 (module-export make-reader-pane
                check-rule-condition
                rule-check-trigger-links
+               rule-check-trigger
                start-indices
                end-indices)
 
@@ -711,7 +712,7 @@
 ;; carry out the action from this rule
 ;; only do the actions relevant to the event-type
 (define (do-rule-action event-type ruleID)
-  ;(display "do-rule-action ")(newline)
+  (display "do-rule-action ")(display event-type)(newline)
   (define action-lst (ask (get 'rules ruleID) 'actions))
 
   (map (lambda (actionID)
@@ -720,6 +721,7 @@
          ;(display "action and event ")(display action-event-type)(display " ")(display event-type)(newline)
          ;(display "action expr ")(display (ask (get 'actions actionID) 'expr))(newline)
          (if (equal? action-event-type event-type)
+                 ;(equal? action-event-type 'goto-node)) ;; testing goto-node event type
              (begin
                ;(display "event type matched ")(display event-type)(newline)
              (do-action actionID)))
@@ -730,7 +732,6 @@
 ;; TODO: doc should fit into this somehow
 ;; obj-type is either 'links or 'nodes for now
 (define (rule-check-trigger event-type obj-type obj-ID)
-  ;(display "rule check trigger ")(newline)
   
   (define obj (get obj-type obj-ID))
   (define rule-lst (ask obj 'rule-lst))

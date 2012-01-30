@@ -105,7 +105,7 @@
                              ))
                   (obj-put this-obj 'add-rule
                            (lambda (self new-rule-ID)
-                             (set! rule-lst (append rule-lst new-rule-ID))))
+                             (set! rule-lst (append rule-lst (list new-rule-ID)))))
                   (obj-put this-obj 'to-save-sexpr
                            (lambda (self)
                              (list 'create-node

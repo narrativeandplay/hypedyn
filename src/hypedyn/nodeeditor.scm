@@ -339,7 +339,10 @@
       (begin
         (add-component m-edit1 m-edit1-editnoderule)
         (add-actionlistener m-edit1-editnoderule
-                            (make-actionlistener (lambda (source) (doeditnoderule (get-edited-nodeID)))))
+                            (make-actionlistener (lambda (source) 
+                                                   ;(doeditnoderule (get-edited-nodeID))
+                                                   (create-rules-manager 'node (get-edited-nodeID))
+                                                   )))
         (set-menuitem-component m-edit1-editnoderule #t)))
 
   ;(append-editor-operation-menu-items m-edit1)
@@ -410,7 +413,10 @@
       (begin
         (add-component nodeeditor-toolbar-panel nodeeditor-toolbar-button-editnoderule)
         (add-actionlistener nodeeditor-toolbar-button-editnoderule
-                            (make-actionlistener (lambda (source) (doeditnoderule (get-edited-nodeID)))))))
+                            (make-actionlistener (lambda (source) 
+                                                   ;(doeditnoderule (get-edited-nodeID))
+                                                   (create-rules-manager 'node (get-edited-nodeID))
+                                                   )))))
   
   ;; add a splitpanel for link list and text editor
   (set! nodeeditor-frame-panel (make-splitpane #f))

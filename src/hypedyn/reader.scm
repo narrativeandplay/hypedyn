@@ -571,7 +571,8 @@
           (cache-link-bounds)
           
           ;; trigger rules
-          (rule-check-trigger-links 'displayed-node next-nodeID)
+          (rule-check-trigger-links 'displayed-node next-nodeID) ;; trigger links text display
+          (rule-check-trigger 'enter-node 'nodes next-nodeID) ;; trigger the node 
           ;(ask nodereader-pane 'rule-check-trigger-links next-nodeID)
           
           ; highlight links
