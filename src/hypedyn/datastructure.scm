@@ -106,6 +106,10 @@
                   (obj-put this-obj 'add-rule
                            (lambda (self new-rule-ID)
                              (set! rule-lst (append rule-lst (list new-rule-ID)))))
+                  (obj-put this-obj 'remove-rule
+                           (lambda (self ruleID)
+                             (set! rule-lst (remove (lambda (this-ruleID) (= this-ruleID ruleID)) rule-lst))))
+                  
                   (obj-put this-obj 'to-save-sexpr
                            (lambda (self)
                              (list 'create-node
@@ -205,12 +209,11 @@
                              ))
                   (obj-put this-obj 'add-rule
                            (lambda (self new-rule-ID)
-                             (display "[add rule] ")(newline)
-                             (display "  rule-lst ")(display rule-lst)(newline)
-                             (display "  new-rule-ID ")(display new-rule-ID)(newline)
                              (set! rule-lst (append rule-lst (list new-rule-ID)))
-                             
                              ))
+                  (obj-put this-obj 'remove-rule
+                           (lambda (self ruleID)
+                             (set! rule-lst (remove (lambda (this-ruleID) (= this-ruleID ruleID)) rule-lst))))
                   
                   (obj-put this-obj 'followed?
                            (lambda (self)
@@ -259,17 +262,21 @@
                   this-obj))
 
 
-(define-private (make-rule2 name type and-or negate? linkID #!rest args)
+;; make-rule2 provides negate? on top of what we already have
+;; the old files uses make-rule that does not have the negate arg hence the make-rule2
+(define-private (make-rule2 name type and-or negate? parentID #!rest args)
                 
-                (define parent-obj (apply make-rule (append (list name type and-or linkID) args)))
-                (define this-obj (new-object parent-obj))
+                ;; inherit make-rule
+                (define parent-rule (apply make-rule (append (list name type and-or parentID) args)))
+                (define this-obj (new-object parent-rule))
                 
+                ;; add new features and override rule-expr and to-save-sexpr
                 (obj-put this-obj 'negate? (lambda (self) negate?)) 
                 (obj-put this-obj 'rule-expr
                            (lambda (self)
                              (if negate?
-                                 (cons 'not (list (ask parent-obj 'rule-expr)))
-                                 (ask parent-obj 'rule-expr))))
+                                 (cons 'not (list (ask parent-rule 'rule-expr)))
+                                 (ask parent-rule 'rule-expr))))
                 
                 (obj-put this-obj 'to-save-sexpr
                            (lambda (self)
@@ -278,7 +285,7 @@
                                    (list 'quote type)                      ; type ('link/'node)
                                    (list 'quote and-or)                ; expression ('and/'or)
                                    negate?
-                                   linkID                                  ; parent linkID (int)
+                                   parentID                                  ; used to be linkID (int)
                                    (ask self 'ID))))
                 this-obj)
 
@@ -334,7 +341,7 @@
                            (lambda (self new-action)
                              ;(set! actions (cons new-action actions))
                              (set! actions (append actions (list new-action)))
-                             (display "add-action, new actions ")(display actions)(newline)
+                             ;(display "add-action, new actions ")(display actions)(newline)
                              ;(ht-set-dirty!)
                              ))
                   (obj-put this-obj 'delaction
@@ -406,6 +413,29 @@
                                    (ask self 'ID))))                      ; conditionID (int)
                   this-obj))
 
+;; create an sexpr that creates the sexpr
+;; example (list 'do-action (quote text) "\""string"\"" 1)
+;; when written to file it becomes (do-action 'text "string" 1)
+;; however if we want the original form to be kept in data structure 
+;;  it needs to be written as (list 'list 'do-action (list 'list 'quote 'text) "\"\""string"\"\"" 1)
+
+;; general rule
+;; 1) add 'list in from of all list
+;; 2) add "\"" to front and back of strings
+(define (sexpr-recreate sexpr)
+  (if (pair? sexpr)
+      (cons
+       'list
+       (map (lambda (element)
+              (cond ((pair? element)
+                     (sexpr-recreate element))
+;                    ((string? element)
+;                     (string-append "\"" element "\""))
+                    ((symbol? element)
+                     (list 'quote element))
+                    (else element))
+              ) sexpr))))
+
 ;; action
 ;; an expression to be evaluated, usually when rule is/isn't satisfied
 ;; type: 'then, 'else, 'before, 'after, 'init or 'step
@@ -428,7 +458,7 @@
                                    ;(list 'quote expr) ; NOTE: not sure if expr should be stored as string or s-expr - alex
                                    ;; note: trying s-expr approach, might be more convenient 
                                    ;; to load out the actions into the action panels (teongleong)
-                                   expr                                  ; expression to be evaluated (string)
+                                   (sexpr-recreate expr)                                  ; expression to be evaluated
                                    ruleID                                ; parent ruleID (int)
                                    (ask self 'ID))))                     ; actionID (int)
                   this-obj))
@@ -695,7 +725,8 @@
                (the-parent (get the-get-symbol actual-parentID)))
           (if the-parent
               ;(ask the-parent 'set-rule! rule-ID)
-              (ask the-parent 'add-rule rule-ID)
+              (begin
+                (ask the-parent 'add-rule rule-ID))
               )))
     
     ; return the rule ID
@@ -731,6 +762,9 @@
 
 ; create an action
 (define (create-action name type expr ruleID . args)
+  
+  (display "[create-action] expr ")(display expr)(newline)
+  
   (let* ((actual-ruleID (if (importing?)
                             (+ ruleID import-offset-ID)
                             ruleID))
@@ -747,22 +781,32 @@
 
     ; add action to rule
     ; note: for nodes, before=then=step and after=else=init for now
+    ;; TODO: need to clean up all these
+    ;;       action type is now the event types that trigger the action 
+    ;;       so far there is 'clicked-link 'entered-node 'displayed-node
+    
+    ;; TODO: need to reactivate the before after step init actions somehow
+    ;;       it they are still useful
     (if the-rule
-        (cond
-         ((eq? type 'fact) ; hack until generalize actions
-          (ask the-rule 'add-action! (ask new-action 'ID)))
-         ((eq? type 'then)
-          (ask the-rule 'set-then-action! (ask new-action 'ID)))
-         ((eq? type 'else)
-          (ask the-rule 'set-else-action! (ask new-action 'ID)))
-         ((eq? type 'before)
-          (ask the-rule 'set-then-action! (ask new-action 'ID)))
-         ((eq? type 'after)
-          (ask the-rule 'set-else-action! (ask new-action 'ID)))
-         ((eq? type 'step)
-          (ask the-rule 'set-then-action! (ask new-action 'ID)))
-         ((eq? type 'init)
-          (ask the-rule 'set-else-action! (ask new-action 'ID)))))
+;        (cond
+;         ((eq? type 'fact) ; hack until generalize actions
+;          (ask the-rule 'add-action! (ask new-action 'ID)))
+;         ((eq? type 'then)
+;          (ask the-rule 'set-then-action! (ask new-action 'ID)))
+;         ((eq? type 'else)
+;          (ask the-rule 'set-else-action! (ask new-action 'ID)))
+;         ((eq? type 'before)
+;          (ask the-rule 'set-then-action! (ask new-action 'ID)))
+;         ((eq? type 'after)
+;          (ask the-rule 'set-else-action! (ask new-action 'ID)))
+;         ((eq? type 'step)
+;          (ask the-rule 'set-then-action! (ask new-action 'ID)))
+;         ((eq? type 'init)
+;          (ask the-rule 'set-else-action! (ask new-action 'ID)))
+;         
+;         )
+          (ask the-rule 'add-action! (ask new-action 'ID))
+        )
     
     new-action-ID))
 

@@ -26,6 +26,7 @@
                add-comboboxwithdata-item insert-comboboxwithdata-item-at 
                add-comboboxwithdata-string insert-comboboxwithdata-string-at
                remove-combobox-item
+               remove-combobox-string
                get-combobox-item-count
                create-combobox-string-item)
                
@@ -220,8 +221,11 @@
 ;              ((toString) :: <java.lang.String>
 ;               in-item))
 ;            (make myObject))
-          (create-combobox-string-item in-item)
-          ))
+          (create-combobox-string-item in-item)))
+
+(define (remove-combobox-string in-combobox :: <javax.swing.JComboBox>
+                                in-item :: <object>)
+  (invoke in-combobox 'remove-item (create-combobox-string-item in-item)))
 
 ; add an item to a combobox with data
 (define (add-comboboxwithdata-item in-combo :: <comboboxwithdata>

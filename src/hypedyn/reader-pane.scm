@@ -276,6 +276,20 @@
                                                start-index
                                                (- end-index start-index)
                                                #t))
+ ;; TODO: links that are not followable and not yet followed has to be bold and not underlined                          
+;                           (if (followed? this-linkID) ; changed to followed? - alex
+;                                 ; already followed, so just underline
+;                                 (set-text-style nodereader-doc
+;                                                 style-followed-link
+;                                                 start-index
+;                                                 (- new-end-index start-index)
+;                                                 #t)
+;                                 ; otherwise underline and bold
+;                                 (set-text-style nodereader-doc
+;                                                 style-link
+;                                                 start-index
+;                                                 (- new-end-index start-index)
+;                                                 #t))
 
                            ; and set clickback
                            (let ((link-attribute-set (make-attribute-set)))

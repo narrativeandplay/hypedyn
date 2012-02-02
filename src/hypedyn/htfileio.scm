@@ -390,12 +390,19 @@
 ; will build both the object's s-expr and the rule's s-expr, plus any
 ; conditions and actions
 (define (ht-build-sexpr-from-object-with-rule the-object)
-  (let ((theruleID (ask the-object 'rule)))
-    (if (eq? theruleID 'not-set)
-        (ask the-object 'to-save-sexpr)
-        (list 'begin
-              (ask the-object 'to-save-sexpr)
-              (ht-build-sexpr-from-rule theruleID)))))
+;  (let ((theruleID (ask the-object 'rule)))
+;    (if (eq? theruleID 'not-set)
+;        (ask the-object 'to-save-sexpr)
+;        (list 'begin
+;              (ask the-object 'to-save-sexpr)
+;              (ht-build-sexpr-from-rule theruleID))))
+  (define rule-lst (ask the-object 'rule-lst))
+  
+  (append
+   (list 'begin
+         (ask the-object 'to-save-sexpr))
+   (map ht-build-sexpr-from-rule rule-lst))
+  )
 
 ; build sexpression for a rule and associated conditions and actions
 (define (ht-build-sexpr-from-rule theruleID)
