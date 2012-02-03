@@ -91,7 +91,6 @@
                            ; need to set dirty bit, but not if loading - add a flag?
                            (lambda (self link)
                              (set! links (cons link links))
-                             (display "[make-node] addlink ")(display links)(newline) 
                              ))
                   (obj-put this-obj 'dellink
                            (lambda (self link)
@@ -275,7 +274,8 @@
                 (obj-put this-obj 'rule-expr
                            (lambda (self)
                              (if negate?
-                                 (cons 'not (list (ask parent-rule 'rule-expr)))
+                                 (list 'not
+                                       (ask parent-rule 'rule-expr))
                                  (ask parent-rule 'rule-expr))))
                 
                 (obj-put this-obj 'to-save-sexpr
@@ -429,12 +429,25 @@
        (map (lambda (element)
               (cond ((pair? element)
                      (sexpr-recreate element))
-;                    ((string? element)
-;                     (string-append "\"" element "\""))
+                    ((string? element)
+                     ;(string-append "\"" element "\"")
+                     ;(escape-quotes element)
+                     element
+                     )
                     ((symbol? element)
                      (list 'quote element))
                     (else element))
               ) sexpr))))
+
+(define (escape-quotes str :: <string>)
+  (map (lambda (char-str)
+         (display char-str)(display " ")
+         ) (string->list str))
+  (newline)
+  str
+  )
+
+
 
 ;; action
 ;; an expression to be evaluated, usually when rule is/isn't satisfied
@@ -449,6 +462,9 @@
                        (this-obj (new-object uniqueID-obj)))
                   (obj-put this-obj 'type (lambda (self) type))
                   (obj-put this-obj 'expr (lambda (self) expr))
+                  (obj-put this-obj 'set-expr! 
+                           (lambda (self new-expr) (if (pair? new-expr)
+                                                       (set! expr new-expr))))
                   (obj-put this-obj 'ruleID (lambda (self) ruleID))
                   (obj-put this-obj 'to-save-sexpr
                            (lambda (self)
@@ -763,8 +779,7 @@
 ; create an action
 (define (create-action name type expr ruleID . args)
   
-  (display "[create-action] expr ")(display expr)(newline)
-  
+  ;(display "[create-action] expr ")(display expr)(newline)
   (let* ((actual-ruleID (if (importing?)
                             (+ ruleID import-offset-ID)
                             ruleID))

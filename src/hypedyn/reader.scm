@@ -568,6 +568,7 @@
           ; remember read node    
           (set! read-nodeID next-nodeID)
           
+          ;; cache link bounds before the replace link text is triggered by displayed-node
           (cache-link-bounds)
           
           ;; trigger rules
@@ -733,13 +734,26 @@
 (define (do-action actionID)
   (display "in do action ")(display actionID)(newline)
   (define in-action (get 'actions actionID))
+  (display "ruleID ")(display (ask in-action 'ruleID))(newline)
+  
+  ;; debug code block
+  (define ruleID (ask in-action 'ruleID))
+  (define rule (get 'rules ruleID))
+  (display "rule actions ")(display (ask rule 'actions))(newline)
+  
   (if in-action
       (let ((this-expr (ask in-action 'expr)))
-        (display "this-expr ")(display this-expr)(newline)
-        (display "this-expr class ")(display (invoke this-expr 'get-class))(newline)
+;        (display "this-expr ")(display this-expr)(newline)
+;        (display "this-expr class ")(display (invoke this-expr 'get-class))(newline)
         ; wrap the expression in a "begin" so its all one expression
-        (runcode (string-append "(begin\n" (to-string this-expr) "\n)") 
-                 display-results display-status))))
+        
+;        (runcode (string-append "(begin\n" (to-string this-expr) "\n)") 
+;                 display-results display-status)
+        
+        (runcode-just-sexpr this-expr) 
+                 ;display-results display-status)
+        
+        )))
 
 ; display the results after running an action (debugging)
 (define (display-results txt)
@@ -763,7 +777,6 @@
 ; evaluate a rule expression by ID
 ;; new name should be check-rule-condition
 (define (eval-rule-expr-by-ID in-ruleID)
-  ;(display "eval rule expr by ID ")(display in-ruleID)(newline)
   (if (not (eq? in-ruleID 'not-set))
       (eval-rule-expr (get 'rules in-ruleID))
       #t))
@@ -771,10 +784,13 @@
 ; evaluate a rule expression
 (define (eval-rule-expr therule)
   (let ((rule-expr (ask therule 'rule-expr)))
-    ;(display "evaluating condition ")(display rule-expr)(newline)
+    (display "evaluating condition ")(display rule-expr)(newline)
     ; evaluate the expression in our evaluator
     (try-catch
-        (myeval rule-expr)
+        (begin
+          (myeval rule-expr)
+          (display "result ")(display (myeval rule-expr))(newline)
+          )
       (ex <java.lang.Throwable>
           (begin
             (display (*:toString ex))(newline)
@@ -867,12 +883,11 @@
         (close-audio-clip the-clip)
         (set! the-clip #!null))))
 
-;; highlight-links
 (define (update-indices this-hashtable this-key this-index insert-index offset)
-  (display "[update indices]")(newline)
-  (display "  this-index ")(display this-index)(newline)
-  (display "  insert-index ")(display insert-index)(newline)
-  (display "  check ")(display (>= this-index insert-index))(newline)
+;  (display "[update indices]")(newline)
+;  (display "  this-index ")(display this-index)(newline)
+;  (display "  insert-index ")(display insert-index)(newline)
+;  (display "  check ")(display (>= this-index insert-index))(newline)
   (if (>= this-index insert-index)
       (hash-table-put! this-hashtable this-key (+ this-index offset))))
 
@@ -887,10 +902,10 @@
                 (end-index (ask thislink 'end-index)))
            (hash-table-put! start-indices l start-index)
            (hash-table-put! end-indices l end-index)
-           (display "[CACHING]")(newline)
-           (display "  link ")(display l)(newline)
-           (display "  start index ")(display start-index)(newline)
-           (display "  end index ")(display end-index)(newline)
+;           (display "[CACHING]")(newline)
+;           (display "  link ")(display l)(newline)
+;           (display "  start index ")(display start-index)(newline)
+;           (display "  end index ")(display end-index)(newline)
            ))
        (ask (get 'nodes (ask nodereader-pane 'get-nodeID)) 'links)))
 
@@ -901,7 +916,6 @@
     ;;       or a factID if it is a fact (num)
     ;; part of htlanguage
 (define (replace-link-text text-type value linkID)
-  (display "REPLACE link text ")(newline)
   
   (if nodereader-pane
       (let* ((link-obj (get 'links linkID))
@@ -927,24 +941,25 @@
         ;; do the replacement in the textpane
         (ask nodereader-pane 'set-track-links! #f)
         (let ((nodereader-doc (ask nodereader-pane 'getdocument)))
-          (display "delete text ")(newline)
+          (display "[delete from] ")(display start-index) (newline)
+          (display "  to ")(display end-index)(newline)
           (set-text-delete nodereader-doc
                            start-index
                            (- end-index start-index))
-          (display "insert text ")(newline)
+          (display "[insert] ")(display newtext)(newline)
+          (display "  from ")(display start-index)(newline) 
           (set-text-insert nodereader-doc
                            newtext
-                           start-index))
+                           start-index)
+          )
        (ask nodereader-pane 'set-track-links! #t) ;; htpane-obj (nodereader-pane)
         
         (define newtext-len (string-length newtext))
         (define oldtext-len (- end-index start-index))
         (define offset (- newtext-len oldtext-len))
-        (display "offset ")(display offset)(newline)
-        (display "hash-table-for-each ")(display hash-table-for-each)(newline)
         
-        ; update link positions
-        (set! new-end-index (+ end-index offset))
+        ; update link positions (shift the link bounds that comes after this link)
+        (define new-end-index (+ end-index offset))
         (hash-table-for-each start-indices
                              (lambda (k v)
                                (update-indices start-indices k v end-index offset))) ;; was end-index

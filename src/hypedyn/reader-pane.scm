@@ -248,9 +248,9 @@
                       (start-index (hash-table-get start-indices l #f))
                       (end-index (hash-table-get end-indices l #f)))
                  
-                 (display "[highlighting] ")(newline)
-                 (display " start-index ")(display start-index)(newline)
-                 (display " end-index ")(display end-index)(newline)
+;                 (display "[highlighting] ")(newline)
+;                 (display " start-index ")(display start-index)(newline)
+;                 (display " end-index ")(display end-index)(newline)
                  ; first check if link can be followed
                  (if (follow-link? l)
                      ; yes, so now check if link is enabled
@@ -749,12 +749,16 @@
   
   (define obj (get obj-type obj-ID))
   (define rule-lst (ask obj 'rule-lst))
-  
-  ;(display "rule-lst ")(display rule-lst)(newline)
+ 
   (map (lambda (ruleID)
          (if (check-rule-condition ruleID)
              (begin
                ;(display "condition satisfied ")(display ruleID)(newline)
+               (if (equal? event-type 'displayed-node)
+                   (begin
+                     (display "rule check trigger ")(display ruleID)(newline)
+                     (display " rule-lst ")(display rule-lst)(newline)
+                     ))
                (do-rule-action event-type ruleID)
                )))
        rule-lst)
@@ -763,8 +767,8 @@
 ;; goes through all the links of this node and 
 ;; check for rule triggers
 (define (rule-check-trigger-links event-type nodeID)
-  ;(display "rule check trigger links ")(newline)
-  ;(display "event-type ")(display event-type)(newline)
+  (display "[rule check trigger links] ")(newline)
+  (display "  event-type ")(display event-type)(newline)
   (map (lambda (linkID)
          (rule-check-trigger event-type 'links linkID))
        (ask (get 'nodes nodeID) 'links))

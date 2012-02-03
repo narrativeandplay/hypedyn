@@ -39,6 +39,7 @@
   (require "../common/datatable.scm") ;; get, table-map
   (require "../common/main-ui.scm") ; for get-main-ui-frame
   (require "../common/list-helpers.scm") ;; list-replace
+  (require "../common/runcode.scm") ;; string->sexpr
   (require "config-options.scm")
   (require "datastructure.scm")
   (require "hteditor.scm")
@@ -90,7 +91,20 @@
       (begin
         (table-map 'links convert-pre-2.2-links)
         (table-map 'nodes convert-pre-2.2-nodes)
+        ;(table-map 'actions convert-pre-2.2-actions)
         )))
+
+(define (convert-pre-2.2-actions actionID action)
+  (display "[CONVERT ACTION] ")(newline)
+  ;; convert the string format to sexpr
+  (define old-expr (ask action 'expr))
+  (if (not (pair? old-expr))
+      (begin
+        (display "old-expr CONVERT ")(display old-expr)(newline)
+        (ask action 'set-expr! (string->sexpr old-expr))
+        (display "converted ")(display (string->sexpr old-expr))(newline)
+        ))
+  )
 
 (define (convert-pre-2.2-nodes nodeID node-obj)
   ;; convert standard node
@@ -133,7 +147,7 @@
 ;; convertion of pre 2.2 links to 2.2 format
 ;; need to create 2 rules one for(if) and against(else) the condition in rule
 (define (convert-pre-2.2-links linkID link-obj)
-  (display "CONVERT LINKS pre 2.2")(newline)
+  ;(display "CONVERT LINKS pre 2.2")(newline)
 
   (define selected-rule-ID (ask link-obj 'rule))
   (if (not (eq? selected-rule-ID 'not-set))
@@ -150,8 +164,8 @@
         (define link-start-index (ask link-obj 'start-index))
         (define link-end-index (ask link-obj 'end-index))
         
-        (define if-rule-ID (create-typed-rule2 link-name 'link (ask selected-rule 'expression) #f linkID))
-        (define else-rule-ID (create-typed-rule2 link-name 'link (ask selected-rule 'expression) #t linkID))
+        (define if-rule-ID (create-typed-rule2 "THEN" 'link (ask selected-rule 'expression) #f linkID))
+        (define else-rule-ID (create-typed-rule2 "ELSE" 'link (ask selected-rule 'expression) #t linkID))
         (define if-rule (get 'rules if-rule-ID))
         (define else-rule (get 'rules else-rule-ID))
                                         ;)
@@ -160,73 +174,60 @@
             (if (eq? link-usealttext #t)
                 (begin ;; show alt text
                   ;; add a new action panel
-                  (ask else-rule 'add-action!
-                       (create-action link-name 'displayed-node
-                                        ;                                        (string-append "(replace-link-text "
-                                        ;                                                       "(quote text) "
-                                        ;                                                       "\"" link-alttext "\"" " "
-                                        ;                                                       (to-string linkID) ")")
-                                      (list 'replace-link-text
-                                            (list 'quote 'text)
-                                            (string-append "\"" link-alttext "\"")
-                                            linkID)
-                                      else-rule-ID
-                                      ))
+                  (create-action link-name 'displayed-node
+                                 (list 'replace-link-text
+                                       (list 'quote 'text)
+                                       link-alttext
+                                       ;(string-append "\"" link-alttext "\"")
+                                       linkID)
+                                 else-rule-ID
+                                 )
                   )
                 (begin ;; show fact text
-                  (ask else-rule 'add-action!
-                       (create-action link-name 'displayed-node
-                                        ;                                        (string-append "(replace-link-text "
-                                        ;                                                       "(quote text) "
-                                        ;                                                       (to-string link-alttext) " " ;; here link-alttext is factID of the fact
-                                        ;                                                       (to-string linkID) ")")
-                                      (list 'replace-link-text
-                                            (list 'quote 'text)
+                  (create-action link-name 'displayed-node
+                                 (list 'replace-link-text
+                                       (list 'quote 'text)
                                         ;(string-append "\"" link-alttext "\"")
-                                            link-alttext ;; this is actually factID
-                                            linkID)
-                                      else-rule-ID)
-                       )
+                                       link-alttext ;; this is actually factID
+                                       linkID)
+                                 else-rule-ID)
                   )))
 
         ;; default destination
         (if (not (equal? link-dest1 -1))
-            (ask if-rule 'add-action!
-                 (create-action link-name 'clicked-link
+            (create-action link-name 'clicked-link
                                         ;                                  (string-append "(follow-link "
                                         ;                                                 (to-string linkID) " "
                                         ;                                                 (to-string (ask if-rule 'ID)) " "
                                         ;                                                 "(quote default) "
                                         ;                                                 (to-string link-dest1) ")")
-                                (list 'follow-link
-                                      linkID
-                                      (ask if-rule 'ID)
-                                      (list 'quote 'default)
-                                      link-dest1)
-                                if-rule-ID
-                                ))
+                           (list 'follow-link
+                                 linkID
+                                 (ask if-rule 'ID)
+                                 (list 'quote 'default)
+                                 link-dest1)
+                           if-rule-ID
+                           )
             )
 
         ;; link-dest2 is used in the else so it should be in the not rules instead
         (if (not (equal? link-dest2 -1))
-            (ask if-rule 'add-action!
-                 (create-action link-name 'clicked-link
+            (create-action link-name 'clicked-link
                                         ;                                  (string-append "(follow-link "
                                         ;                                                 (to-string linkID) " "
                                         ;                                                 (to-string (ask if-rule 'ID)) " "
                                         ;                                                 "(quote default) "
                                         ;                                                 (to-string link-dest2) ")")
-                                (list 'follow-link
-                                      linkID
-                                      (ask if-rule 'ID)
-                                      (list 'quote 'default)
-                                      link-dest2)
+                           (list 'follow-link
+                                 linkID
+                                 (ask if-rule 'ID)
+                                 (list 'quote 'default)
+                                 link-dest2)
 
-                                else-rule-ID
-                                ))
+                           if-rule-ID
+                           )
             )
 
-        (display "selected rule ID ")(display selected-rule-ID)(newline)
         ;; transfer the condition from the original old rule to the new rules
         ;(create-typed-condition name type targetID operator ruleID . args)
         (define old-conditions (ask selected-rule 'conditions))
@@ -2440,19 +2441,28 @@
                                 ; (retract targetID) or
                                 ; (set-value! targetID the-value)
                                 (the-action-expr 
-                                 (string-append
-                                  "("
-                                  (if (= the-type 0)
-                                      (if (= the-value 0)
-                                          "assert"
-                                          "retract")
-                                      "set-value!")
-                                  " "
-                                  (number->string targetID)
-                                  (if (= the-type 1)
-                                      (string-append " \"" the-value "\"")
-                                      "")
-                                  ")")))
+;                                 (string-append
+;                                  "("
+;                                  (if (= the-type 0)
+;                                      (if (= the-value 0)
+;                                          "assert"
+;                                          "retract")
+;                                      "set-value!")
+;                                  " "
+;                                  (number->string targetID)
+;                                  (if (= the-type 1)
+;                                      (string-append " \"" the-value "\"")
+;                                      "")
+;                                  ")")
+                                 (cond ((= the-type 0) ;; boolean fact
+                                        (list (if (= the-value 0)
+                                                  'assert
+                                                  'retract)
+                                              targetID))
+                                       ((= the-type 1)
+                                        (list 'set-value! targetID (string-append "\"" the-value "\"")))
+                                       (else '()))
+                                 ))
                            (format #t "fact: ~a~%~!" the-action-expr)
                            (create-action new-rulename 'fact the-action-expr new-rule)))
          all-facts)
