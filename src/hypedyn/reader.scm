@@ -788,8 +788,8 @@
     ; evaluate the expression in our evaluator
     (try-catch
         (begin
-          (myeval rule-expr)
           (display "result ")(display (myeval rule-expr))(newline)
+          (myeval rule-expr)
           )
       (ex <java.lang.Throwable>
           (begin
@@ -919,8 +919,10 @@
   
   (if nodereader-pane
       (let* ((link-obj (get 'links linkID))
-             (start-index (ask link-obj 'start-index))
-             (end-index (ask link-obj 'end-index))
+             ;(start-index (ask link-obj 'start-index))
+             ;(end-index (ask link-obj 'end-index))
+             (start-index (hash-table-get start-indices linkID))
+             (end-index (hash-table-get end-indices linkID))
              (newtext (cond ((eq? text-type 'text)
                              value)
                             ((eq? text-type 'fact)
@@ -943,6 +945,7 @@
         (let ((nodereader-doc (ask nodereader-pane 'getdocument)))
           (display "[delete from] ")(display start-index) (newline)
           (display "  to ")(display end-index)(newline)
+          (display "  deleting these - ")(display (substring (ask nodereader-pane 'gettext) start-index end-index))(newline) 
           (set-text-delete nodereader-doc
                            start-index
                            (- end-index start-index))

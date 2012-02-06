@@ -36,6 +36,7 @@
 (require "config-options.scm")
 (require "reader.scm")
 (require 'hash-table)
+(require 'srfi-1) ;; find 
 
 
 
@@ -173,11 +174,35 @@
     
     ;; following links
 
-    ; check if a link can be followed
-    (define (follow-link? linkID)
+    ;; check if a link can be followed
+    ;; if check-condition? true, we check whether the 
+    ;;   condition for the follow link action is satisfied
+    ;; if check-condition? false, we only check the existence 
+    ;; TODO : haven't taken into account whether the rules falls through or not
+    ;;        if the preceding rule is triggered and it does not fall through
+    ;;        is it true that follow link is never allowed to trigger?
+    (define (follow-link-available? linkID check-condition?)
       (let* ((thelink (get 'links linkID))
-             (ruleID (ask thelink 'rule)))
-        (eval-rule-expr-by-ID ruleID)))
+             ;(ruleID (ask thelink 'rule))
+             (rule-lst (ask thelink 'rule-lst)))
+        
+        (define (find-follow-link-action rule-lst)
+          (if (null? rule-lst)
+              #f
+              (if (and (find (lambda (actionID) ;;find follow-link action
+                               (define action (get 'actions actionID))
+                               (define sexpr (ask action 'expr))
+                               (equal? (car sexpr) 'follow-link)
+                               ) (ask (get 'rules (car rule-lst)) 'actions))
+                       ;; condition for this action is satisfied
+                       (or (and check-condition? (eval-rule-expr-by-ID (car rule-lst)))
+                           (and (not check-condition?))))
+                  #t
+                  (find-follow-link-action (cdr rule-lst)))
+              ))
+        
+        (find-follow-link-action rule-lst)
+        ))
 
     ;; link actions
 
@@ -248,60 +273,94 @@
                       (start-index (hash-table-get start-indices l #f))
                       (end-index (hash-table-get end-indices l #f)))
                  
-;                 (display "[highlighting] ")(newline)
-;                 (display " start-index ")(display start-index)(newline)
-;                 (display " end-index ")(display end-index)(newline)
                  ; first check if link can be followed
-                 (if (follow-link? l)
+                 ;(if (follow-link? l)
                      ; yes, so now check if link is enabled
-                     (if (or (uselink? thislink) (has-then-action? thislink))
-                         (begin
-                           
-                           (newline)
-                           (display "this-linkID ")(display this-linkID)(newline)
-                           (display "link name ")(display (ask thislink 'name))(newline)
-                           (display "followed? ")(display (followed? this-linkID))(newline)
-                           
-                           ; enabled, so highlight text as appropriate
-                           (if (followed? this-linkID) ; changed to followed? - alex
-                               ; already followed, so just underline
-                               (set-text-style nodereader-doc
-                                               style-followed-link
-                                               start-index
-                                               (- end-index start-index)
-                                               #t)
-                               ; otherwise underline and bold
-                               (set-text-style nodereader-doc
-                                               style-link
-                                               start-index
-                                               (- end-index start-index)
-                                               #t))
- ;; TODO: links that are not followable and not yet followed has to be bold and not underlined                          
-;                           (if (followed? this-linkID) ; changed to followed? - alex
-;                                 ; already followed, so just underline
-;                                 (set-text-style nodereader-doc
-;                                                 style-followed-link
-;                                                 start-index
-;                                                 (- new-end-index start-index)
-;                                                 #t)
-;                                 ; otherwise underline and bold
-;                                 (set-text-style nodereader-doc
-;                                                 style-link
-;                                                 start-index
-;                                                 (- new-end-index start-index)
-;                                                 #t))
+                     ;(if (or (uselink? thislink) (has-then-action? thislink))
+                 
+                 ;; check whether follow link action exists and its condition satisfied
+                 (if (follow-link-available? l #t) ;; check whether I should underline it
+                     (begin ;; (substring (ask htpane-obj 'gettext) (ask thislink 'start-index) (ask thislink 'end-index))
+                       (newline)
+                       (display "this-linkID ")(display this-linkID)(newline)
+                       (display "link name ")(display (ask thislink 'name))(newline)
+                       (display "link text ")(display (substring (ask htpane-obj 'gettext) start-index end-index))(newline)
+                       
+                       (display "followed? ")(display (followed? this-linkID))(newline)
+                       (display "link followable ")(display (follow-link-available? l #f))(newline)
+                       (display "link available ")(display (follow-link-available? l #t))(newline)
 
-                           ; and set clickback
-                           (let ((link-attribute-set (make-attribute-set)))
-                             (set-attribute-linkAction link-attribute-set
-                                                       (lambda ()
-                                                         (nodereader-clickback l)))
-                             (set-attribute-linkID link-attribute-set this-linkID)
+                       ;; check whether we should bold it
+                       (if (followed? this-linkID) ; changed to followed? - alex
+                                                   ; already followed, so just underline
+                           (begin
+                           (set-text-style nodereader-doc
+                                           style-followed-link
+                                           start-index
+                                           (- end-index start-index)
+                                           #t)
+                             (display "followed link")(newline)
+                             )
+                           ; otherwise underline and bold
+                           (begin
+                           (set-text-style nodereader-doc
+                                           style-link
+                                           start-index
+                                           (- end-index start-index)
+                                           #t)
+                             (display "style link ")(newline)
+                             )
+                           )
+                       ;; TODO: links that are not followable and not yet followed has to be bold and not underlined                          
+
+                       ; and set clickback
+                       (let ((link-attribute-set (make-attribute-set)))
+                         (set-attribute-linkAction link-attribute-set
+                                                   (lambda ()
+                                                     (nodereader-clickback l)))
+                         (set-attribute-linkID link-attribute-set this-linkID)
+                         (set-text-style nodereader-doc
+                                         link-attribute-set
+                                         start-index
+                                         (- end-index start-index)
+                                         #f)))
+                      ;; check for follow link action available but with conditions not satisfied
+                     (if (follow-link-available? l #f)
+                         (begin
+                           (newline)
+                       (display "this-linkID ")(display this-linkID)(newline)
+                       (display "link name ")(display (ask thislink 'name))(newline)
+                       (display "link text ")(display (substring (ask htpane-obj 'gettext) start-index end-index))(newline)
+                       
+                       (display "followed? ")(display (followed? this-linkID))(newline)
+                       (display "link followable ")(display (follow-link-available? l #f))(newline)
+                       (display "link available ")(display (follow-link-available? l #t))(newline)
+                         (if (followed? this-linkID) 
+                             ;; strange to be followed and yet condition unmet?
+                             (begin
                              (set-text-style nodereader-doc
-                                             link-attribute-set
-                                             start-index
-                                             (- end-index start-index)
-                                             #f))))
+                                           style-nolink
+                                           start-index
+                                           (- end-index start-index)
+                                           #t)
+                               (display "style no link ")(newline)
+                               )
+                           ;not followed, but follow link action is there (bold it)
+                             (begin
+                           (set-text-style nodereader-doc
+                                           style-disabled-link
+                                           start-index
+                                           (- end-index start-index)
+                                           #t)
+                               (display "disabled link ")(newline)
+                               )
+                                        ; otherwise underline and bold
+                           ))))
+                     
+                 
+                
+                     
+                         
                      ; no, so need to check for alternate link/text
 ;                     (let ((new-end-index end-index)
 ;                           (use-alt-text (alttext? thislink)))
@@ -381,7 +440,7 @@
 ;                                               start-index
 ;                                               (- new-end-index start-index)
 ;                                               #t))))
-                     )))
+                     ))
              (ask thisnode 'links))))
 
     ; check if link has alternate link, and if it was enabled

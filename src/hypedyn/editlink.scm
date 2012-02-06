@@ -39,7 +39,7 @@
   (require "../common/datatable.scm") ;; get, table-map
   (require "../common/main-ui.scm") ; for get-main-ui-frame
   (require "../common/list-helpers.scm") ;; list-replace
-  (require "../common/runcode.scm") ;; string->sexpr
+  ;(require "../common/runcode.scm") ;; string->sexpr
   (require "config-options.scm")
   (require "datastructure.scm")
   (require "hteditor.scm")
@@ -220,11 +220,11 @@
                                         ;                                                 (to-string link-dest2) ")")
                            (list 'follow-link
                                  linkID
-                                 (ask if-rule 'ID)
+                                 (ask else-rule 'ID)
                                  (list 'quote 'default)
                                  link-dest2)
 
-                           if-rule-ID
+                           else-rule-ID
                            )
             )
 
