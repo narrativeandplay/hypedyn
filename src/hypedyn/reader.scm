@@ -508,16 +508,22 @@
 
           ; run facts for next node
           ; note: this will be generalized for all actions eventually
+;          (if next-node
+;              (let ((the-ruleID (ask next-node 'rule)))
+;                (if (not (eq? the-ruleID 'not-set))
+;                    (let* ((the-rule (get 'rules the-ruleID))
+;                           (the-actions (ask the-rule 'actions)))
+;                      (map (lambda (actionID)
+;                             (let ((the-action (get 'actions actionID)))
+;                               (if the-action
+;                                   (do-action the-action))))
+;                           the-actions)))))
+          
+          ;; trigger the rules with entered-node event 
           (if next-node
-              (let ((the-ruleID (ask next-node 'rule)))
-                (if (not (eq? the-ruleID 'not-set))
-                    (let* ((the-rule (get 'rules the-ruleID))
-                           (the-actions (ask the-rule 'actions)))
-                      (map (lambda (actionID)
-                             (let ((the-action (get 'actions actionID)))
-                               (if the-action
-                                   (do-action the-action))))
-                           the-actions)))))
+              (map (lambda (ruleID)
+                     (do-rule-action 'entered-node ruleID)
+                     ) (ask next-node 'rule-lst)))
 
           ; remember this node has been visited
           (if (not (visited? next-nodeID))

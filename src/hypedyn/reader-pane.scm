@@ -50,7 +50,10 @@
                rule-check-trigger-links
                rule-check-trigger
                start-indices
-               end-indices)
+               end-indices
+               
+               do-rule-action
+               )
 
 (define start-indices (make-hash-table))
 (define end-indices (make-hash-table))
@@ -784,6 +787,9 @@
 
 ;; carry out the action from this rule
 ;; only do the actions relevant to the event-type
+;; Note: do-action should really be triggered through this function
+;;       if we want to govern the triggering of actions with the right event-type
+;; TODO: clean up do-action to all go through this odo-rule-action
 (define (do-rule-action event-type ruleID)
   (display "do-rule-action ")(display event-type)(newline)
   (define action-lst (ask (get 'rules ruleID) 'actions))
