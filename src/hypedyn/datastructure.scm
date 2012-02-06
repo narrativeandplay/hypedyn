@@ -108,6 +108,10 @@
                   (obj-put this-obj 'remove-rule
                            (lambda (self ruleID)
                              (set! rule-lst (remove (lambda (this-ruleID) (= this-ruleID ruleID)) rule-lst))))
+                  (obj-put this-obj 'set-rule-lst
+                           (lambda (self new-rule-lst)
+                             (set! rule-lst new-rule-lst)
+                             ))
                   
                   (obj-put this-obj 'to-save-sexpr
                            (lambda (self)
@@ -206,6 +210,7 @@
                              (set! rule new-rule)
                              ;(ht-set-dirty!)
                              ))
+                  
                   (obj-put this-obj 'add-rule
                            (lambda (self new-rule-ID)
                              (set! rule-lst (append rule-lst (list new-rule-ID)))
@@ -213,6 +218,10 @@
                   (obj-put this-obj 'remove-rule
                            (lambda (self ruleID)
                              (set! rule-lst (remove (lambda (this-ruleID) (= this-ruleID ruleID)) rule-lst))))
+                  (obj-put this-obj 'set-rule-lst
+                           (lambda (self new-rule-lst)
+                             (set! rule-lst new-rule-lst)
+                             ))
                   
                   (obj-put this-obj 'followed?
                            (lambda (self)
@@ -263,6 +272,7 @@
 
 ;; make-rule2 provides negate? on top of what we already have
 ;; the old files uses make-rule that does not have the negate arg hence the make-rule2
+
 (define-private (make-rule2 name type and-or negate? parentID #!rest args)
                 
                 ;; inherit make-rule
@@ -277,6 +287,7 @@
                                  (list 'not
                                        (ask parent-rule 'rule-expr))
                                  (ask parent-rule 'rule-expr))))
+                (obj-put this-obj 'type (lambda (self) type))
                 
                 (obj-put this-obj 'to-save-sexpr
                            (lambda (self)
@@ -291,7 +302,7 @@
 
 ;; rule
 ; type: 'link or 'node
-(define-private (make-rule name type expression linkID #!rest args)
+(define-private (make-rule name type expression parentID #!rest args)
                 (let* ((uniqueID-obj (make-uniqueID-object name (if (pair? args) (car args))))
                        (this-obj (new-object uniqueID-obj))
                        ;; note: these actions are actually "before" and "after" for nodes, and
@@ -304,7 +315,7 @@
                        (negate? #f))   ;; not the whole condition
                   
                   
-                  (obj-put this-obj 'linkID (lambda (self) linkID))
+                  (obj-put this-obj 'parentID (lambda (self) parentID))
                   (obj-put this-obj 'expression (lambda (self) expression))
 
                   ;; conditions
@@ -383,7 +394,7 @@
                                    (ask self 'name)                        ; name (string)
                                    (list 'quote type)                      ; type ('link/'node)
                                    (list 'quote expression)                ; expression ('and/'or)
-                                   linkID                                  ; parent linkID (int)
+                                   parentID                                ; parent obj's ID (int)
                                    (ask self 'ID))))                       ; ruleID
                   this-obj))
 

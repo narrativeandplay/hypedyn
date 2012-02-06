@@ -21,7 +21,9 @@
 (require "../arrays.scm") ; for array-to-list
 
 ; export
-(module-export set-container-layout get-container-children)
+(module-export set-container-layout 
+               get-container-children
+               validate-container)
 
 ;;
 ;; container
@@ -71,4 +73,7 @@
   (let ((children (invoke container 'getComponents)))
     (array-to-list children children:length)))
 
+;; called after changes are made to components inside (but dont need pack-frame ie container size doesnt change)
+(define (validate-container container :: <java.awt.Container>)
+  (invoke container 'validate))
 

@@ -38,7 +38,7 @@
   (require "../common/objects.scm") ;; ask
   (require "../common/datatable.scm") ;; get, table-map
   (require "../common/main-ui.scm") ; for get-main-ui-frame
-  (require "../common/list-helpers.scm") ;; list-replace
+  (require "../common/list-helpers.scm") ;; list-replace, list-insert
   ;(require "../common/runcode.scm") ;; string->sexpr
   (require "config-options.scm")
   (require "datastructure.scm")
@@ -108,8 +108,8 @@
 
 (define (convert-pre-2.2-nodes nodeID node-obj)
   ;; convert standard node
-  (let* ((rule-ID (ask node-obj 'rule))
-         (rule-obj (get 'rules rule-ID))
+  (let* ((ruleID (ask node-obj 'rule))
+         (rule-obj (get 'rules ruleID))
          (node-name (ask node-obj 'name))
          ;(conditions (ask rule-obj 'conditions))
          ;(actions (ask rule-obj 'actions))
@@ -130,13 +130,13 @@
                      (begin
                        (display "SEXPR ")(display action-sexpr)(newline)
                        (display "pair? ")(display (pair? action-sexpr))(newline)
-                       (define new-rule-ID (create-typed-rule2 node-name 'node 'and #f nodeID))
-                       (display "new-rule-ID ")(display new-rule-ID)(newline)
+                       (define new-ruleID (create-typed-rule2 node-name 'node 'and #f nodeID))
+                       (display "new-ruleID ")(display new-ruleID)(newline)
                        (display "node name ")(display node-name)(newline)
-                       (define new-rule (get 'rules new-rule-ID))
+                       (define new-rule (get 'rules new-ruleID))
                        (create-action node-name 'entered-node
                                       action-sexpr
-                                      new-rule-ID)
+                                      new-ruleID)
                        ))
                  ) actions)
         (begin
@@ -500,30 +500,24 @@
   (list-index (lambda (obj) (eq? rule-panel obj)) (get-container-children rmgr-rules-list-panel) ))
 
 ;; one instance of the rule panel (one entry on the rule list)
-;; TODO: also creates a new rule to be attached to the currently edited object 
-(define (make-rule-panel #!optional rule-ID)
+;; only called by add-rule-panel which makes sure we are passed a valid ruleID (gotten from actual rule-lst)
+(define (make-rule-panel ruleID)
   (define top-panel (make-panel))
   (set-container-layout top-panel 'flow 'left)
 
   (define rule-checkbox (make-checkbox ""))
 
   (define rule-name-label #f)
-  (if rule-ID
-      (begin
-        (define rule-obj (get 'rules rule-ID))
-        (define rule-name (ask rule-obj 'name))
-        (set! rule-name-label (make-label-with-title rule-name))
-        (set! rmgr-rule-lst (append rmgr-rule-lst (list rule-ID)))
-        )
-      ;; TODO: create new rule here
-      ;; attach rule to edited object 
-      ;; add the ID rmgr-rule-lst
-      (set! rule-name-label (make-label-with-title "New Rule"))
-      )
-  
-  ;(define rule-name-label (make-label-with-title "SIGH"))
+
+  ;; assume ruleID valid   
+  (define rule-obj (get 'rules ruleID))
+  (define rule-name (ask rule-obj 'name))
+  (set! rule-name-label (make-label-with-title rule-name))
   
   (define rule-edit-button (make-button "Edit Rule"))
+  (define fall-through-button (make-button "Fall"))
+  (define shift-up-button (make-button "Up"))
+  (define shift-down-button (make-button "Down"))
   
   ;; edit button goes through all the rules panel and 
   ;; figure out which position is it in the parent rules-list-panel
@@ -537,26 +531,146 @@
                          (define pos (list-index (lambda (panel) (eq? top-panel panel)) sibling-lst))
                          (cond ((equal? edit-mode 'link)
                                 (define rule-position (rule-panel-position top-panel))
-                                (define rule-ID (list-ref rmgr-rule-lst rule-position))
+                                (define ruleID (list-ref rmgr-rule-lst rule-position))
                                 
 ;                                (display "rule-position ")(display rule-position)(newline)
-;                                (display "rule-ID ")(display rule-ID)(newline)
+;                                (display "ruleID ")(display ruleID)(newline)
 ;                                (display "rmgr-rule-lst ")(display rmgr-rule-lst)(newline)
-                                (doeditlink selected-linkID edited-nodeID update-link-display rule-ID)
+                                (doeditlink selected-linkID edited-nodeID update-link-display ruleID)
                                 )
                                ((equal? edit-mode 'node)
                                 (define rule-position (rule-panel-position top-panel))
-                                (define rule-ID (list-ref rmgr-rule-lst rule-position))
-                                (doeditnoderule edited-nodeID rule-ID)
+                                (define ruleID (list-ref rmgr-rule-lst rule-position))
+                                (doeditnoderule edited-nodeID ruleID)
                                 )
                                ((equal? edit-mode 'doc)
                                 #f
                                 ))
                          )))
 
+  (add-actionlistener fall-through-button 
+                      (make-actionlistener
+                       (lambda (e)
+                         ;; alternate button display between "Fall" and "Stop"
+                         (if (equal? (get-button-label fall-through-button) "Fall")
+                             (set-button-label fall-through-button "Stop")
+                             (set-button-label fall-through-button "Fall"))
+                         
+                         (pack-frame rules-manager-main-dialog)
+                         )
+                       ))
+  
+  
+  ;; TODO: MISC (non hypedyn) write a better swap that does not need two element 
+  ;; to be side by side
+  (define (swap-first-two lst)
+    (list-insert (cdr lst) (car lst) 1))
+  
+  ;; swap object at index with the object right of it
+  (define (swap-right lst index)
+    (if (>= index 0) 
+        (append (take lst index) ;; take first (index) number of object in front (left) 
+                (swap-first-two (drop lst index)))
+        lst)) ;; if already left most then do nothing
+  
+  ;; the same thing just a positional difference
+  (define (swap-left lst index)
+    (swap-right lst (- index 1)))
+  
+  ;; src and dest are index of the panel
+  ;; assuming positions makes any sense for the layout of container
+  ;; we want to move say the 1st panel to third (works with horizontal layout)
+  (define (shift-panel container src dest)
+;    (list-index (lambda (obj) (eq? rule-panel obj)) (get-container-children container) )
+    (if (and (not (= src dest)) ;; no need to do anything if src equals dest
+             (>= src 0)
+             (>= dest 0))
+        (begin
+          (define panel-lst (get-container-children container))
+          (define panel (list-ref panel-lst src))
+          (set! panel-lst (remove (lambda (o) (eq? o panel)) panel-lst))
+
+          ;; if src in front of dest, dest is affected and need to be shifted left by 1
+;          (if (< src dest)
+;              (set! panel-lst (list-insert panel-lst panel (- dest 1)))
+;              (set! panel-lst (list-insert panel-lst panel dest)))
+          (set! panel-lst (list-insert panel-lst panel dest))
+          
+          (clear-container container)
+          ;; add them all back in that order
+          (map-in-order (lambda (panel)
+                 (add-component container panel)
+                 ) panel-lst)
+          )))
+  
+  ;; assumes the 
+  (add-actionlistener shift-up-button
+                      (make-actionlistener
+                       (lambda (e)
+                         (display "UP ")(newline)
+                         (define position (list-index (lambda (o) (equal? o ruleID)) rmgr-rule-lst))
+                         ;; swap this rule panel up 
+                         ;; swap ruleID in rmgr-rule-lst leftwards
+                         (display "b4 shift up ")(display rmgr-rule-lst)(newline)
+                         (set! rmgr-rule-lst 
+                               (swap-left rmgr-rule-lst position))
+                         (display "after shift up ")(display rmgr-rule-lst)(newline)
+                         
+                         (shift-panel rmgr-rules-list-panel position (- position 1))
+                         
+                         ;; set the entire rule-lst in object 
+                         (define parentID (ask rule-obj 'parentID))
+                         (define parent-type (ask rule-obj 'type))
+                         (define parent-obj 
+                           (case parent-type
+                             ((link) (get 'links parentID))
+                             ((node) (get 'nodes parentID))))
+                         (ask parent-obj 'set-rule-lst (list-copy rmgr-rule-lst))
+                         
+                         ;; need to pack-frame for update?
+                         ;(pack-frame rules-manager-main-dialog)
+                         (validate-container rules-manager-main-dialog)
+                         )
+                       ))
+  
+  (add-actionlistener shift-down-button
+                      (make-actionlistener
+                       (lambda (e)
+                         (display "DOWN ")(newline)
+                         (define position (list-index (lambda (o) (equal? o ruleID)) rmgr-rule-lst))
+                         (display "position ")(display position)(newline)
+                         ;; swap this rule panel up 
+                         ;; swap ruleID in rmgr-rule-lst leftwards
+                         (set! rmgr-rule-lst 
+                               (swap-right rmgr-rule-lst position))
+                         
+                         (display "after shift down ")(display rmgr-rule-lst)(newline)
+                         
+                         (shift-panel rmgr-rules-list-panel position (+ position 1))
+                          
+                         ;; set the entire rule-lst in object 
+                         (define parentID (ask rule-obj 'parentID))
+                         (define parent-type (ask rule-obj 'type))
+                         (define parent-obj 
+                           (case parent-type
+                             ((link) (get 'links parentID))
+                             ((node) (get 'nodes parentID))))
+                         (ask parent-obj 'set-rule-lst (list-copy rmgr-rule-lst))
+                         
+                         ;; need to pack-frame for update?
+                         ;(pack-frame rules-manager-main-dialog)
+                         (validate-container rules-manager-main-dialog)
+                         )
+                       ))
+  
   (add-component top-panel rule-checkbox)
   (add-component top-panel rule-name-label)
+  
   (add-component top-panel rule-edit-button)
+  (add-component top-panel fall-through-button)
+  (add-component top-panel shift-up-button)
+  (add-component top-panel shift-down-button)
+  
   ;; make rule panel
   top-panel)
 
@@ -568,21 +682,22 @@
 ;;       creating new rules and adding it to the object
 
 ;; add rule (makes a rule panel inside rmgr-rules-list-panel)
-(define (add-rule-panel rule-ID)
+(define (add-rule-panel ruleID)
   (if (and rmgr-rules-list-panel
            rules-manager-main-dialog)
       (begin
         ;; create new rule if 'new passed in
-        (if (equal? rule-ID 'new)
+        (if (equal? ruleID 'new)
             (begin
-              (set! rule-ID (create-typed-rule2 "new rule" edit-mode 'and #f
+              (set! ruleID (create-typed-rule2 "new rule" edit-mode 'and #f
                                                 (case edit-mode
                                                   ((link) edited-linkID)
                                                   ((node) edited-nodeID)
                                                   ((doc) -1))))
-              (set! rmgr-rule-lst (append rmgr-rule-lst (list rule-ID)))))
-            
-        (add-component rmgr-rules-list-panel (make-rule-panel rule-ID))
+              ))
+        
+        (set! rmgr-rule-lst (append rmgr-rule-lst (list ruleID)))
+        (add-component rmgr-rules-list-panel (make-rule-panel ruleID))
         (pack-frame rules-manager-main-dialog)
         ))
   )
@@ -698,6 +813,7 @@
          (set! edited-linkID obj-ID)
          (define in-link (get 'links obj-ID))
          (define rule-lst (ask in-link 'rule-lst))
+         (display "rule lst ")(display rule-lst)(newline)
          (map (lambda (ruleID)
                 (add-rule-panel ruleID)
                 ) rule-lst)
@@ -706,6 +822,7 @@
          (set! edited-nodeID obj-ID)
          (define in-node (get 'nodes obj-ID))
          (define rule-lst (ask in-node 'rule-lst))
+         (display "rule lst ")(display rule-lst)(newline)
          (map (lambda (ruleID)
                 (add-rule-panel ruleID)
                 ) rule-lst)

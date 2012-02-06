@@ -17,7 +17,8 @@
 ;; with this program; if not, write to the Free Software Foundation, Inc.,
 ;; 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-(module-export make-button set-button set-button-label 
+(module-export make-button set-button 
+               set-button-label get-button-label 
                set-button-selected is-button-selected)
 
 ;;
@@ -45,6 +46,10 @@
 (define (set-button-label button :: <javax.swing.JButton>
                           name :: <java.lang.String>)
   (invoke button 'set-text name))
+
+;; return button's text
+(define (get-button-label button :: <javax.swing.JButton>)
+  (invoke button 'get-text))
 
 (define (set-button-selected comp :: <javax.swing.JButton>
                              in-flag)
