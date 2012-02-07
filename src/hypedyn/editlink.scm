@@ -33,22 +33,22 @@
   (require "../kawa/ui/combobox.scm")
   (require "../kawa/ui/tabpanel.scm")
   (require "../kawa/ui/undo.scm") ;; debug compoundundomanager-updatelevel 
+  
   (require "../kawa/system.scm") ; is-windows?
   (require "../kawa/strings.scm") ;; to-string
+  
   (require "../common/objects.scm") ;; ask
   (require "../common/datatable.scm") ;; get, table-map
   (require "../common/main-ui.scm") ; for get-main-ui-frame
   (require "../common/list-helpers.scm") ;; list-replace, list-insert
-  ;(require "../common/runcode.scm") ;; string->sexpr
+  
   (require "config-options.scm")
   (require "datastructure.scm")
   (require "hteditor.scm")
   (require "hypedyn-undo.scm")
   (require "nodeeditor.scm") ;; nodeeditor-save
   (require "htfileio.scm") ;; loaded-file-version
-  
   (require "node-graphview.scm") ;update-link-display
-  
   (require 'srfi-1) ;; remove
   )
 
@@ -93,18 +93,6 @@
         (table-map 'nodes convert-pre-2.2-nodes)
         ;(table-map 'actions convert-pre-2.2-actions)
         )))
-
-(define (convert-pre-2.2-actions actionID action)
-  (display "[CONVERT ACTION] ")(newline)
-  ;; convert the string format to sexpr
-  (define old-expr (ask action 'expr))
-  (if (not (pair? old-expr))
-      (begin
-        (display "old-expr CONVERT ")(display old-expr)(newline)
-        (ask action 'set-expr! (string->sexpr old-expr))
-        (display "converted ")(display (string->sexpr old-expr))(newline)
-        ))
-  )
 
 (define (convert-pre-2.2-nodes nodeID node-obj)
   ;; convert standard node
@@ -612,65 +600,66 @@
                  ) panel-lst)
           )))
   
-  ;; assumes the 
-  (add-actionlistener shift-up-button
-                      (make-actionlistener
-                       (lambda (e)
-                         (display "UP ")(newline)
-                         (define position (list-index (lambda (o) (equal? o ruleID)) rmgr-rule-lst))
-                         ;; swap this rule panel up 
-                         ;; swap ruleID in rmgr-rule-lst leftwards
-                         (display "b4 shift up ")(display rmgr-rule-lst)(newline)
-                         (set! rmgr-rule-lst 
-                               (swap-left rmgr-rule-lst position))
-                         (display "after shift up ")(display rmgr-rule-lst)(newline)
-                         
-                         (shift-panel rmgr-rules-list-panel position (- position 1))
-                         
-                         ;; set the entire rule-lst in object 
-                         (define parentID (ask rule-obj 'parentID))
-                         (define parent-type (ask rule-obj 'type))
-                         (define parent-obj 
-                           (case parent-type
-                             ((link) (get 'links parentID))
-                             ((node) (get 'nodes parentID))))
-                         (ask parent-obj 'set-rule-lst (list-copy rmgr-rule-lst))
-                         
-                         ;; need to pack-frame for update?
-                         ;(pack-frame rules-manager-main-dialog)
-                         (validate-container rules-manager-main-dialog)
-                         )
-                       ))
+  (add-actionlistener
+   shift-up-button
+   (make-actionlistener
+    (lambda (e)
+      (display "UP ")(newline)
+      (define position (list-index (lambda (o) (equal? o ruleID)) rmgr-rule-lst))
+      ;; swap this rule panel up 
+      ;; swap ruleID in rmgr-rule-lst leftwards
+      (display "b4 shift up ")(display rmgr-rule-lst)(newline)
+      (set! rmgr-rule-lst
+            (swap-left rmgr-rule-lst position))
+      (display "after shift up ")(display rmgr-rule-lst)(newline)
+
+      (shift-panel rmgr-rules-list-panel position (- position 1))
+
+      ;; set the entire rule-lst in object 
+      (define parentID (ask rule-obj 'parentID))
+      (define parent-type (ask rule-obj 'type))
+      (define parent-obj
+        (case parent-type
+          ((link) (get 'links parentID))
+          ((node) (get 'nodes parentID))))
+      (ask parent-obj 'set-rule-lst (list-copy rmgr-rule-lst))
+
+      ;; need to pack-frame for update?
+      ;(pack-frame rules-manager-main-dialog)
+      (validate-container rules-manager-main-dialog)
+      )
+    ))
   
-  (add-actionlistener shift-down-button
-                      (make-actionlistener
-                       (lambda (e)
-                         (display "DOWN ")(newline)
-                         (define position (list-index (lambda (o) (equal? o ruleID)) rmgr-rule-lst))
-                         (display "position ")(display position)(newline)
-                         ;; swap this rule panel up 
-                         ;; swap ruleID in rmgr-rule-lst leftwards
-                         (set! rmgr-rule-lst 
-                               (swap-right rmgr-rule-lst position))
-                         
-                         (display "after shift down ")(display rmgr-rule-lst)(newline)
-                         
-                         (shift-panel rmgr-rules-list-panel position (+ position 1))
-                          
-                         ;; set the entire rule-lst in object 
-                         (define parentID (ask rule-obj 'parentID))
-                         (define parent-type (ask rule-obj 'type))
-                         (define parent-obj 
-                           (case parent-type
-                             ((link) (get 'links parentID))
-                             ((node) (get 'nodes parentID))))
-                         (ask parent-obj 'set-rule-lst (list-copy rmgr-rule-lst))
-                         
-                         ;; need to pack-frame for update?
-                         ;(pack-frame rules-manager-main-dialog)
-                         (validate-container rules-manager-main-dialog)
-                         )
-                       ))
+  (add-actionlistener 
+   shift-down-button
+   (make-actionlistener
+    (lambda (e)
+      (display "DOWN ")(newline)
+      (define position (list-index (lambda (o) (equal? o ruleID)) rmgr-rule-lst))
+      (display "position ")(display position)(newline)
+      ;; swap this rule panel up 
+      ;; swap ruleID in rmgr-rule-lst leftwards
+      (set! rmgr-rule-lst
+            (swap-right rmgr-rule-lst position))
+
+      (display "after shift down ")(display rmgr-rule-lst)(newline)
+
+      (shift-panel rmgr-rules-list-panel position (+ position 1))
+
+      ;; set the entire rule-lst in object 
+      (define parentID (ask rule-obj 'parentID))
+      (define parent-type (ask rule-obj 'type))
+      (define parent-obj
+        (case parent-type
+          ((link) (get 'links parentID))
+          ((node) (get 'nodes parentID))))
+      (ask parent-obj 'set-rule-lst (list-copy rmgr-rule-lst))
+
+      ;; need to pack-frame for update?
+      ;(pack-frame rules-manager-main-dialog)
+      (validate-container rules-manager-main-dialog)
+      )
+    ))
   
   (add-component top-panel rule-checkbox)
   (add-component top-panel rule-name-label)
@@ -876,13 +865,11 @@
         (set-combobox-selection editlink-dialog-andor-operator
                                 (get-rule-pos expr)) ; add setting of operator
         
-        ;; added in version 2.2
-        (if (>= loaded-file-version 2.2)
-            (begin
-              (define negate? (ask rule-obj 'negate?)) ;; we can't be sure whether this is old rule or new rule obj
-              ;; set negate operator "if/unless"
-              (set-combobox-selection editlink-dialog-negate-operator
-                                      (if negate? 1 0))))
+        ;; added in version 2.2 (pre 2.2 rules would be converted to support this on load)
+        (define negate? (ask rule-obj 'negate?)) ;; we can't be sure whether this is old rule or new rule obj
+        ;; set negate operator "if/unless"
+        (set-combobox-selection editlink-dialog-negate-operator
+                                (if negate? 1 0))
 
         ; build conditions
         (map (lambda (mycond)
@@ -2721,7 +2708,7 @@
   
 
 ;; empty the container of any children component
-;; can consider moving this elsewhere as this is useful
+;; NOTE: can consider moving this elsewhere as this is useful
 (define (clear-container in-container)
   (let ((children (get-container-children in-container)))
     (if (not (null? children))

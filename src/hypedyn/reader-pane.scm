@@ -21,10 +21,13 @@
 ; subclass of hypertextpane with hypedyn-specific functionality
 
 ; requires
-(require "../kawa/strings.scm")
+
 (require "../kawa/ui/events.scm")
 (require "../kawa/ui/text.scm")
 (require "../kawa/ui/cursor.scm")
+
+(require "../kawa/strings.scm")
+
 (require "../common/math.scm")
 (require "../common/links.scm")
 (require "../common/myhashtable.scm")
@@ -33,6 +36,7 @@
 (require "../common/datatable.scm") ;; get-list, get, 
 (require "../common/hypertextpane.scm") ;; make-hypertextpane-readonly
 (require "../common/runcode.scm")
+
 (require "config-options.scm")
 (require "reader.scm")
 (require 'hash-table)
@@ -46,7 +50,6 @@
 
 ; exports
 (module-export make-reader-pane
-               check-rule-condition
                rule-check-trigger-links
                rule-check-trigger
                start-indices
@@ -129,15 +132,6 @@
                  (then-action (get-then-action this-link))
                  (else-action (get-else-action this-link))
                  (link-type (get-link-type clicked-linkID)))
-;            (if (follow-link? clicked-linkID)
-;                ; can follow the link
-;                (follow-link this-link then-action (uselink? this-link) link-type (ask this-link 'destination))
-;                ; otherwise, check for alternate links or else action
-;                (if (or (altlink? this-link) else-action)
-;                    ; have alt link or else action, so follow alt-link
-;                    (follow-link this-link else-action (altlink? this-link) link-type (ask this-link 'alt-destination))
-;                    ; this shouldn't happen as inaccessible links are disabled
-;                    (access-denied)))
             (rule-check-trigger 'clicked-link 'links clicked-linkID)
             )))
     
@@ -172,9 +166,6 @@
                           ))))
               )))
     
-    (define (access-denied)
-      (display "access denied"))
-    
     ;; following links
 
     ;; check if a link can be followed
@@ -198,7 +189,7 @@
                                (equal? (car sexpr) 'follow-link)
                                ) (ask (get 'rules (car rule-lst)) 'actions))
                        ;; condition for this action is satisfied
-                       (or (and check-condition? (eval-rule-expr-by-ID (car rule-lst)))
+                       (or (and check-condition? (check-rule-condition (car rule-lst)))
                            (and (not check-condition?))))
                   #t
                   (find-follow-link-action (cdr rule-lst)))
@@ -236,37 +227,10 @@
     (define (has-else-action? in-link)
       (get-else-action in-link))
 
-    ;; displaying the text
-
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;; moved out to reader.scm
-    ; update link indices after text replacement
-;    (define (update-indices this-hashtable this-key this-index insert-index offset)
-;      (if (>= this-index insert-index)
-;          (hash-table-put! this-hashtable this-key (+ this-index offset))))
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    
     ; highlight links in reader
     (define (highlight-links)
       (display "[HIGHLIGHT]")(newline)
-      (let ((thisnode (get 'nodes (ask htpane-obj 'get-nodeID)))
-            ;(start-indices (make-hash-table)) ;; moved out as a global variable
-            ;(end-indices (make-hash-table))   ;; moved out as a global variable
-            )
-
-        ; first pass - make copy of link positions, to be offset when
-        ; text is changed by alternate links
-        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-        ;; moved to reader-pane
-;        (map (lambda (l)
-;               (let* ((thislink (get 'links l))
-;                      (start-index (ask thislink 'start-index))
-;                      (end-index (ask thislink 'end-index)))
-;                 (hash-table-put! start-indices l start-index)
-;                 (hash-table-put! end-indices l end-index)))
-;             (ask thisnode 'links))
-        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+      (let ((thisnode (get 'nodes (ask htpane-obj 'get-nodeID))))
 
         ; second pass - highlight links, update text, and set clickbacks
         (map (lambda (l)
@@ -276,47 +240,26 @@
                       (start-index (hash-table-get start-indices l #f))
                       (end-index (hash-table-get end-indices l #f)))
                  
-                 ; first check if link can be followed
-                 ;(if (follow-link? l)
-                     ; yes, so now check if link is enabled
-                     ;(if (or (uselink? thislink) (has-then-action? thislink))
-                 
                  ;; check whether follow link action exists and its condition satisfied
                  (if (follow-link-available? l #t) ;; check whether I should underline it
                      (begin ;; (substring (ask htpane-obj 'gettext) (ask thislink 'start-index) (ask thislink 'end-index))
-                       (newline)
-                       (display "this-linkID ")(display this-linkID)(newline)
-                       (display "link name ")(display (ask thislink 'name))(newline)
-                       (display "link text ")(display (substring (ask htpane-obj 'gettext) start-index end-index))(newline)
-                       
-                       (display "followed? ")(display (followed? this-linkID))(newline)
-                       (display "link followable ")(display (follow-link-available? l #f))(newline)
-                       (display "link available ")(display (follow-link-available? l #t))(newline)
 
                        ;; check whether we should bold it
                        (if (followed? this-linkID) ; changed to followed? - alex
                                                    ; already followed, so just underline
-                           (begin
                            (set-text-style nodereader-doc
                                            style-followed-link
                                            start-index
                                            (- end-index start-index)
                                            #t)
-                             (display "followed link")(newline)
-                             )
-                           ; otherwise underline and bold
-                           (begin
+                                        ; otherwise underline and bold
                            (set-text-style nodereader-doc
                                            style-link
                                            start-index
                                            (- end-index start-index)
-                                           #t)
-                             (display "style link ")(newline)
-                             )
-                           )
-                       ;; TODO: links that are not followable and not yet followed has to be bold and not underlined                          
+                                           #t))
 
-                       ; and set clickback
+                                        ; and set clickback
                        (let ((link-attribute-set (make-attribute-set)))
                          (set-attribute-linkAction link-attribute-set
                                                    (lambda ()
@@ -327,122 +270,23 @@
                                          start-index
                                          (- end-index start-index)
                                          #f)))
-                      ;; check for follow link action available but with conditions not satisfied
+                     ;; check for follow link action available but with conditions not satisfied
                      (if (follow-link-available? l #f)
                          (begin
-                           (newline)
-                       (display "this-linkID ")(display this-linkID)(newline)
-                       (display "link name ")(display (ask thislink 'name))(newline)
-                       (display "link text ")(display (substring (ask htpane-obj 'gettext) start-index end-index))(newline)
-                       
-                       (display "followed? ")(display (followed? this-linkID))(newline)
-                       (display "link followable ")(display (follow-link-available? l #f))(newline)
-                       (display "link available ")(display (follow-link-available? l #t))(newline)
-                         (if (followed? this-linkID) 
-                             ;; strange to be followed and yet condition unmet?
-                             (begin
-                             (set-text-style nodereader-doc
-                                           style-nolink
-                                           start-index
-                                           (- end-index start-index)
-                                           #t)
-                               (display "style no link ")(newline)
-                               )
-                           ;not followed, but follow link action is there (bold it)
-                             (begin
-                           (set-text-style nodereader-doc
-                                           style-disabled-link
-                                           start-index
-                                           (- end-index start-index)
-                                           #t)
-                               (display "disabled link ")(newline)
-                               )
-                                        ; otherwise underline and bold
-                           ))))
-                     
-                 
-                
-                     
-                         
-                     ; no, so need to check for alternate link/text
-;                     (let ((new-end-index end-index)
-;                           (use-alt-text (alttext? thislink)))
-;                       (if use-alt-text
-;                           (let* ((alt-text (ask thislink 'alt-text))
-;                                  ; if use-alt-text is #t, then use text from alt-text,
-;                                  ; otherwise if use-alt-text is 'fact then alt-text is a factID
-;                                  (newtext (if (eq? #t use-alt-text)
-;                                               alt-text
-;                                               (let ((the-fact (get 'facts alt-text)))
-;                                                 (if (and the-fact
-;                                                          (eq? (ask the-fact 'type) 'string))
-;                                                     (let ((the-fact-text (ask the-fact 'get-value)))
-;                                                       (if the-fact-text
-;                                                           the-fact-text
-;                                                           "[fact not set]"))
-;                                                     "[fact not found]"))))
-;                                  (newtext-len (string-length newtext))
-;                                  (oldtext-len (- end-index start-index))
-;                                  (offset (- newtext-len oldtext-len)))
-;                             ; replace text
-;                             (ask htpane-obj 'set-track-links! #f)
-;                             (set-text-delete nodereader-doc
-;                                              start-index
-;                                              (- end-index start-index))
-;                             (set-text-insert nodereader-doc
-;                                              newtext
-;                                              start-index)
-;                             (ask htpane-obj 'set-track-links! #t)
-
-                     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                     ;; this is moved out to reader.scm
-;                             ; update link positions
-;                             (set! new-end-index (+ end-index offset))
-;                             (hash-table-for-each start-indices
-;                                                  (lambda (k v)
-;                                                    (update-indices start-indices k v end-index offset)))
-;                             (hash-table-for-each end-indices
-;                                                  (lambda (k v)
-;                                                    (update-indices end-indices k v end-index offset)))))
-                     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;                       ; now check if also have alt link
-;                       (if (or (altlink? thislink) (has-else-action? thislink))
-;                           (begin
-;                             ; highlight as necessary
-;                             ;(if (alt-dest-visited? thislink)
-;                             (if (followed? this-linkID) ; changed to followed? - alex
-;                                 ; already followed, so just underline
-;                                 (set-text-style nodereader-doc
-;                                                 style-followed-link
-;                                                 start-index
-;                                                 (- new-end-index start-index)
-;                                                 #t)
-;                                 ; otherwise underline and bold
-;                                 (set-text-style nodereader-doc
-;                                                 style-link
-;                                                 start-index
-;                                                 (- new-end-index start-index)
-;                                                 #t))
-
-;                             ; and set clickback
-;                             (let ((link-attribute-set (make-attribute-set)))
-;                               (set-attribute-linkAction link-attribute-set
-;                                                         (lambda ()
-;                                                           (nodereader-clickback l)))
-;                               (set-attribute-linkID link-attribute-set this-linkID)
-;                               (set-text-style nodereader-doc
-;                                               link-attribute-set
-;                                               start-index
-;                                               (- new-end-index start-index)
-;                                               #f)))
-;                           ; otherwise just show if followed or not
-;                           (if (and (uselink? thislink) (not (dest-visited? thislink)))
-;                               (set-text-style nodereader-doc
-;                                               style-disabled-link
-;                                               start-index
-;                                               (- new-end-index start-index)
-;                                               #t))))
+                           (if (followed? this-linkID)
+                               ;; strange to be followed and yet condition unmet?
+                               (set-text-style nodereader-doc
+                                               style-nolink
+                                               start-index
+                                               (- end-index start-index)
+                                               #t)
+                               ; not followed, but follow link action is there (bold it)
+                               (set-text-style nodereader-doc
+                                               style-disabled-link
+                                               start-index
+                                               (- end-index start-index)
+                                               #t)
+                               ))))
                      ))
              (ask thisnode 'links))))
 
@@ -489,7 +333,7 @@
                        ; if its an anywhere node, not the current node, and its rule is satisfied
                        (if (and (ask thisnode 'anywhere?)
                                 (not (= thisnodeID (get-read-nodeID)))
-                                (eval-rule-expr-by-ID (ask thisnode 'rule)))
+                                (check-rule-condition (ask thisnode 'rule)))
                            (begin
                              ; if its the first anywhere node, add divider
                              (if (not first-link-added)
@@ -562,7 +406,7 @@
                                     thisStartPos)
 
                    ; highlight - is its rule satisfied?
-                   (if (eval-rule-expr-by-ID (ask thisnode 'rule))
+                   (if (check-rule-condition (ask thisnode 'rule))
                        ; yes, so enable
                        (begin
                          ; underline and bold
@@ -782,9 +626,6 @@
 
 ;; RULE HANDLING
 
-;(eval-rule-expr-by-ID ruleID)
-(define check-rule-condition eval-rule-expr-by-ID)
-
 ;; carry out the action from this rule
 ;; only do the actions relevant to the event-type
 ;; Note: do-action should really be triggered through this function
@@ -817,16 +658,17 @@
  
   ;; enforce rule fall through checking
   (define (traverse-rule rule-lst)
-    (if (and (not (null? rule-lst))
-             (check-rule-condition (car rule-lst)))
+    (if (not (null? rule-lst))
         (begin
-          (do-rule-action event-type (car rule-lst))
-          ;; if this rule triggered, check whether we allow fall through
-          (if (ask (get 'rules (car rule-lst)) 'fall-through?)
-              (traverse-rule (cdr rule-lst))))
-        ;; check next ruleID
-        (traverse-rule (cdr rule-lst))
-        ))
+          (if (check-rule-condition (car rule-lst))
+              (begin
+                (do-rule-action event-type (car rule-lst))
+                ;; if this rule triggered, check whether we allow fall through
+                (if (ask (get 'rules (car rule-lst)) 'fall-through?)
+                    (traverse-rule (cdr rule-lst))))
+              ;; check next ruleID
+              (traverse-rule (cdr rule-lst)))
+          )))
   
   ;; call the local helper function
   (traverse-rule rule-lst))

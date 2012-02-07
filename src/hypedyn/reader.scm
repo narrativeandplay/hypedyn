@@ -64,13 +64,15 @@
                forget-history goto-node doback
                get-read-nodeID get-prev-read-nodeID
                dorestart doreadstartnode create-nodereader
-               visited? followed? previous? dest-visited? alt-dest-visited? holds? get-fact-value
+               visited? followed? previous? 
+               ;dest-visited? alt-dest-visited? 
+               holds? get-fact-value
                set-visited! set-followed! assert retract set-fact-value!
                get-link-type set-link-type!
                get-custom-cursor-image set-custom-cursor-image!
                get-user-data set-user-data!
                do-action get-action-from-rule-by-ID get-action-from-rule
-               eval-rule-expr-by-ID eval-rule-expr
+               check-rule-condition ;eval-rule-expr
                set-custom-cursors! set-hover-links! set-hover-click!
                set-available-node-count! get-available-node-count
                set-visited-node-count! get-visited-node-count
@@ -85,14 +87,22 @@
 ;; config flags
 ;; 
 
-; true if we're running in demo mode
-(define demo-mode #f)
+;;;; Reader states
 
-; demo filename
-(define demo-filename #f)
+(define demo-mode #f)          ;; true if we're running in demo mode
+(define demo-filename #f)      ;; demo filename
+(define applet-mode #f)        ;; true if we're running in an applet
 
-; true if we're running in an applet
-(define applet-mode #f)
+; keep track of number of nodes read, and number currently available to be read
+; note that this doesn't really make sense, but is being used for the user study
+(define visited-node-count 0)
+(define available-node-count 0)
+(define showing-node-count #f)
+
+
+;;
+;;;; UI objects
+;; 
 
 ; variables to hold components of nodereader
 (define nodereader-frame #f)
@@ -105,11 +115,7 @@
 (define nodereader-canvas #f)
 (define nodereader-pane #f)
 
-;;
-;; UI
-;; 
-
-; create the nodereader
+; create the nodereader (init ui)
 (define (create-nodereader in-frame in-applet-mode in-demo-mode in-demo-filename)
   ; remember the frame
   (set! nodereader-frame in-frame)
@@ -167,13 +173,17 @@
   (ask nodereader-pane 'init)
   (add-component in-frame (make-scrollpane (ask nodereader-pane 'getcomponent)) 'border-center))
 
-; keep track of number of nodes read, and number currently available to be read
-; note that this doesn't really make sense, but is being used for the user study
-(define visited-node-count 0)
-(define available-node-count 0)
-(define showing-node-count #f)
+; close the nodereader
+(define (close-nodereader)
+  (format #t "close-nodereader~%~!")
+  (set-component-visible nodereader-frame #f)
+  (stop-audio)
+  ;(dispose-frame nodereader-frame)
+  ;(set! nodereader-frame #f)
+  )
 
-; hide/show
+;;;; show node counter
+; hide/show label
 (define (toggle-show-node-counter)
   (set! showing-node-count (not showing-node-count))
   (set-component-visible nodereader-toolbar-label-nodecount-label showing-node-count)
@@ -192,18 +202,8 @@
              (number->string visited-node-count)
              (string-append " of " (number->string available-node-count)))))
 
-; close the nodereader
-(define (close-nodereader)
-  (format #t "close-nodereader~%~!")
-  (set-component-visible nodereader-frame #f)
-  (stop-audio)
-  ;(dispose-frame nodereader-frame)
-  ;(set! nodereader-frame #f)
-  )
-
-
 ;;
-;; file i/o
+;;;; file i/o
 ;;
 
 ; name of file being read
@@ -239,9 +239,12 @@
       #t))
 
 
+;;;; node traversal
 ;;
 ;; overall document
 ;; 
+
+;;; step count
 
 ; remember how many steps
 ; note: starts at 0, and is incremented when leaving first node,
@@ -398,7 +401,7 @@
         #f)))
 
 ;;
-;; card shark stuff
+;;;; card shark stuff
 ;;
 
 ; nodes currently in hand
@@ -454,6 +457,7 @@
 
 ;; end card shark stuff
 
+;;;; story states
 ; save the initial state, in case running the story messes up the nodes/links
 (define saved-state #f)
 
@@ -495,7 +499,7 @@
                      (doc-step-action (get-action-from-rule-by-ID 'then-action doc-ruleID)))
                 (if (and
                      doc-step-action
-                     (eval-rule-expr-by-ID doc-ruleID))
+                     (check-rule-condition doc-ruleID))
                     (do-action doc-step-action))))
 
           ; run before action for next node (not sure about exact sequence for this)
@@ -506,19 +510,6 @@
                 (if before-action
                     (do-action before-action))))
 
-          ; run facts for next node
-          ; note: this will be generalized for all actions eventually
-;          (if next-node
-;              (let ((the-ruleID (ask next-node 'rule)))
-;                (if (not (eq? the-ruleID 'not-set))
-;                    (let* ((the-rule (get 'rules the-ruleID))
-;                           (the-actions (ask the-rule 'actions)))
-;                      (map (lambda (actionID)
-;                             (let ((the-action (get 'actions actionID)))
-;                               (if the-action
-;                                   (do-action the-action))))
-;                           the-actions)))))
-          
           ;; trigger the rules with entered-node event 
           (if next-node
               (map (lambda (ruleID)
@@ -584,7 +575,6 @@
           
           ; highlight links
           (ask nodereader-pane 'highlight-links)
-          
 
           ; add anywhere nodes
           ;(format #t "goto-node: card-shark=~a~%~!\n" (card-shark?))
@@ -599,7 +589,7 @@
         #f))
   (update-inspectors))
 
-;; conditions
+;;;; conditions
 
 ; was a node visited?
 (define (visited? dest-nodeID)
@@ -614,38 +604,17 @@
     (display "Prev node: ") (display prev-read-nodeID) (newline)
     (and prev-read-nodeID (= prev-read-nodeID in-nodeID))))
 
-; check if a link's destination has been visited
-(define (dest-visited? l)
-  (let* ((dest-nodeID (ask l 'destination))
-         (dest-node (get 'nodes dest-nodeID)))
-    (> (ask dest-node 'visited?) 0)))
+;;; check if a link's destination has been visited
+;(define (dest-visited? l)
+;  (let* ((dest-nodeID (ask l 'destination))
+;         (dest-node (get 'nodes dest-nodeID)))
+;    (> (ask dest-node 'visited?) 0)))
 
-; check if a link's alt destination has been visited
-(define (alt-dest-visited? l)
-  (let* ((dest-nodeID (ask l 'alt-destination))
-         (dest-node (get 'nodes dest-nodeID)))
-    (> (ask dest-node 'visited?) 0)))
-
-; check if a link has been followed
-(define (followed? target-linkID)
-  (let ((target-link (get 'links target-linkID)))
-    (if target-link
-        (> (ask target-link 'followed?) 0)
-        #f)))
-
-; check if an fact holds
-(define (holds? target-factID)
-  (let ((target-fact (get 'facts target-factID)))
-    (if target-fact
-        (ask target-fact 'holds?)
-        #f)))
-
-; get the value of an fact
-(define (get-fact-value target-factID)
-  (let ((target-fact (get 'facts target-factID)))
-    (if target-fact
-        (ask target-fact 'get-value)
-        #f)))
+;;; check if a link's alt destination has been visited
+;(define (alt-dest-visited? l)
+;  (let* ((dest-nodeID (ask l 'alt-destination))
+;         (dest-node (get 'nodes dest-nodeID)))
+;    (> (ask dest-node 'visited?) 0)))
 
 ;; operations
 
@@ -660,6 +629,43 @@
   (let ((the-link (get 'links in-linkID)))
     (if the-link
         (ask the-link 'set-followed! in-value))))
+
+;;;; link information
+
+; get the link type
+(define (get-link-type in-linkID)
+  (let ((the-link (get 'links in-linkID)))
+    (if the-link
+        (ask the-link 'get-link-type)
+        'default)))
+
+; set the type of a link
+(define (set-link-type! in-linkID in-type)
+  (let ((the-link (get 'links in-linkID)))
+    (if the-link
+        (ask the-link 'set-link-type! in-type))))
+  
+; get the user data in a link
+(define (get-user-data in-linkID)
+  (let ((the-link (get 'links in-linkID)))
+    (if the-link
+        (ask the-link 'get-user-data)
+        '#f)))
+
+; set the user data from a link
+(define (set-user-data! in-linkID in-data)
+  (let ((the-link (get 'links in-linkID)))
+    (if the-link
+        (ask the-link 'set-user-data! in-data))))
+
+; check if a link has been followed
+(define (followed? target-linkID)
+  (let ((target-link (get 'links target-linkID)))
+    (if target-link
+        (> (ask target-link 'followed?) 0)
+        #f)))
+
+;;;; fact operations
 
 ; assert an fact
 (define (assert in-factID)
@@ -681,45 +687,21 @@
     (if target-fact
         (ask target-fact 'set-value! in-value))))
 
-; get the link type
-(define (get-link-type in-linkID)
-  (let ((the-link (get 'links in-linkID)))
-    (if the-link
-        (ask the-link 'get-link-type)
-        'default)))
+; check if an fact holds
+(define (holds? target-factID)
+  (let ((target-fact (get 'facts target-factID)))
+    (if target-fact
+        (ask target-fact 'holds?)
+        #f)))
 
-; set the type of a link
-(define (set-link-type! in-linkID in-type)
-  (let ((the-link (get 'links in-linkID)))
-    (if the-link
-        (ask the-link 'set-link-type! in-type))))
-  
-; get the custom cursor image for a link
-(define (get-custom-cursor-image in-linkID)
-  (let ((the-link (get 'links in-linkID)))
-    (if the-link
-        (ask the-link 'get-custom-cursor-image)
-        '#f)))
+; get the value of an fact
+(define (get-fact-value target-factID)
+  (let ((target-fact (get 'facts target-factID)))
+    (if target-fact
+        (ask target-fact 'get-value)
+        #f)))
 
-; set the custom cursor image for a link
-(define (set-custom-cursor-image! in-linkID in-image)
-  (let ((the-link (get 'links in-linkID)))
-    (if the-link
-        (ask the-link 'set-custom-cursor-image! in-image))))
-  
-; get the user data in a link
-(define (get-user-data in-linkID)
-  (let ((the-link (get 'links in-linkID)))
-    (if the-link
-        (ask the-link 'get-user-data)
-        '#f)))
-
-; set the user data from a link
-(define (set-user-data! in-linkID in-data)
-  (let ((the-link (get 'links in-linkID)))
-    (if the-link
-        (ask the-link 'set-user-data! in-data))))
-  
+;;;; rules operation
 ;; actions
 
 ; perform an action
@@ -749,25 +731,11 @@
   
   (if in-action
       (let ((this-expr (ask in-action 'expr)))
-;        (display "this-expr ")(display this-expr)(newline)
-;        (display "this-expr class ")(display (invoke this-expr 'get-class))(newline)
         ; wrap the expression in a "begin" so its all one expression
-        
 ;        (runcode (string-append "(begin\n" (to-string this-expr) "\n)") 
 ;                 display-results display-status)
-        
         (runcode-just-sexpr this-expr) 
-                 ;display-results display-status)
-        
         )))
-
-; display the results after running an action (debugging)
-(define (display-results txt)
-  (format #t "Results: ~a~%~!\n" txt))
-
-; display the status after running an action (debugging)
-(define (display-status txt)
-  (format #t "Status: ~a~%~!\n" txt))
 
 ; get action from rule by ID
 (define (get-action-from-rule-by-ID in-get-method in-ruleID)
@@ -782,29 +750,33 @@
 
 ; evaluate a rule expression by ID
 ;; new name should be check-rule-condition
-(define (eval-rule-expr-by-ID in-ruleID)
+(define (check-rule-condition in-ruleID)
+;  (if (not (eq? in-ruleID 'not-set))
+;      (eval-rule-expr (get 'rules in-ruleID))
+;      #t)
   (if (not (eq? in-ruleID 'not-set))
-      (eval-rule-expr (get 'rules in-ruleID))
-      #t))
+      (let ((rule-expr (ask (get 'rules in-ruleID) 'rule-expr)))
+        ;; evaluate the expression in our evaluator
+        (try-catch
+            (myeval rule-expr)
+          (ex <java.lang.Throwable>
+              (begin
+                (display (*:toString ex))(newline)
+                (*:printStackTrace ex)
+                #f))))
+      #t)
+  )
 
-; evaluate a rule expression
-(define (eval-rule-expr therule)
-  (let ((rule-expr (ask therule 'rule-expr)))
-    (display "evaluating condition ")(display rule-expr)(newline)
-    ; evaluate the expression in our evaluator
-    (try-catch
-        (begin
-          (display "result ")(display (myeval rule-expr))(newline)
-          (myeval rule-expr)
-          )
-      (ex <java.lang.Throwable>
-          (begin
-            (display (*:toString ex))(newline)
-            (*:printStackTrace ex)
-            #f)))))
+;;;; evaluator debugging
+; display the results after running an action (debugging)
+(define (display-results txt)
+  (format #t "Results: ~a~%~!\n" txt))
 
+; display the status after running an action (debugging)
+(define (display-status txt)
+  (format #t "Status: ~a~%~!\n" txt))
 
-;; display options
+;;;; cursor over display options
 
 ; not sure where this should go - turn custom cursors on/off
 (define (set-custom-cursors! in-flag)
@@ -821,6 +793,20 @@
   (if nodereader-pane
       (ask nodereader-pane 'set-hover-click! in-flag)))
 
+; get the custom cursor image for a link
+(define (get-custom-cursor-image in-linkID)
+  (let ((the-link (get 'links in-linkID)))
+    (if the-link
+        (ask the-link 'get-custom-cursor-image)
+        '#f)))
+
+; set the custom cursor image for a link
+(define (set-custom-cursor-image! in-linkID in-image)
+  (let ((the-link (get 'links in-linkID)))
+    (if the-link
+        (ask the-link 'set-custom-cursor-image! in-image))))
+
+;;;; node counts
 ; set number of available nodes, for user study
 (define (set-available-node-count! in-count)
   (set! available-node-count in-count)
@@ -832,6 +818,7 @@
 (define (get-visited-node-count)
   visited-node-count)
 
+;;;; reader background 
 ; set the background colour: takes a list as defined in ui-kawa.scm
 (define (set-reader-background-color! in-color)
   (if nodereader-pane
@@ -848,7 +835,7 @@
       (ask nodereader-pane 'clear-background-image)))
 
 ;;
-;; audio
+;;;; audio
 ;; 
 
 ; audio clip
@@ -889,17 +876,13 @@
         (close-audio-clip the-clip)
         (set! the-clip #!null))))
 
+;;;; replace text / highlight
 (define (update-indices this-hashtable this-key this-index insert-index offset)
-;  (display "[update indices]")(newline)
-;  (display "  this-index ")(display this-index)(newline)
-;  (display "  insert-index ")(display insert-index)(newline)
-;  (display "  check ")(display (>= this-index insert-index))(newline)
   (if (>= this-index insert-index)
       (hash-table-put! this-hashtable this-key (+ this-index offset))))
 
 (define (cache-link-bounds)
-  
-    ; first pass - make copy of link positions, to be offset when
+  ; first pass - make copy of link positions, to be offset when
   ; text is changed by alternate links
   ;; moved to reader.scm from reader-pane's highlight-links
   (map (lambda (l)
@@ -908,21 +891,16 @@
                 (end-index (ask thislink 'end-index)))
            (hash-table-put! start-indices l start-index)
            (hash-table-put! end-indices l end-index)
-;           (display "[CACHING]")(newline)
-;           (display "  link ")(display l)(newline)
-;           (display "  start index ")(display start-index)(newline)
-;           (display "  end index ")(display end-index)(newline)
            ))
        (ask (get 'nodes (ask nodereader-pane 'get-nodeID)) 'links)))
 
-;;;; new addition to htlanguage
+;; new addition to htlanguage
 
     ;; text-type is either 'text 'fact 
     ;; value would be a string when it is text-type 
     ;;       or a factID if it is a fact (num)
     ;; part of htlanguage
 (define (replace-link-text text-type value linkID)
-  
   (if nodereader-pane
       (let* ((link-obj (get 'links linkID))
              ;(start-index (ask link-obj 'start-index))
@@ -949,14 +927,14 @@
         ;; do the replacement in the textpane
         (ask nodereader-pane 'set-track-links! #f)
         (let ((nodereader-doc (ask nodereader-pane 'getdocument)))
-          (display "[delete from] ")(display start-index) (newline)
-          (display "  to ")(display end-index)(newline)
-          (display "  deleting these - ")(display (substring (ask nodereader-pane 'gettext) start-index end-index))(newline) 
+;          (display "[delete from] ")(display start-index) (newline)
+;          (display "  to ")(display end-index)(newline)
+;          (display "  deleting these - ")(display (substring (ask nodereader-pane 'gettext) start-index end-index))(newline) 
           (set-text-delete nodereader-doc
                            start-index
                            (- end-index start-index))
-          (display "[insert] ")(display newtext)(newline)
-          (display "  from ")(display start-index)(newline) 
+;          (display "[insert] ")(display newtext)(newline)
+;          (display "  from ")(display start-index)(newline) 
           (set-text-insert nodereader-doc
                            newtext
                            start-index)
@@ -1016,6 +994,5 @@
 ;                        (dispatch-mouseevent (ask nodereader-pane 'getcomponent) e)
 ;                        )))
             )
-            ;))
         ))
   )
