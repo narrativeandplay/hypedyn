@@ -279,6 +279,12 @@
                 (define parent-rule (apply make-rule (append (list name type and-or parentID) args)))
                 (define this-obj (new-object parent-rule))
                 
+                ;; fall through (triggering this rule will stop other rules below it from getting checked and fired)
+                (define fall-through? #t)
+                
+                (obj-put this-obj 'fall-through? (lambda (self) fall-through?))
+                (obj-put this-obj 'set-fall-through? (lambda (self new-ft) (set! fall-through? new-ft)))
+                
                 ;; add new features and override rule-expr and to-save-sexpr
                 (obj-put this-obj 'negate? (lambda (self) negate?)) 
                 (obj-put this-obj 'rule-expr

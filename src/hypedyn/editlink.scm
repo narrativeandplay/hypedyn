@@ -514,6 +514,7 @@
   (define rule-name (ask rule-obj 'name))
   (set! rule-name-label (make-label-with-title rule-name))
   
+  ;; make buttons
   (define rule-edit-button (make-button "Edit Rule"))
   (define fall-through-button (make-button "Fall"))
   (define shift-up-button (make-button "Up"))
@@ -548,18 +549,26 @@
                                 ))
                          )))
 
+  (define (fall-through-button-callback e)
+    ;; alternate button display between "Fall" and "Stop"
+    (if (equal? (get-button-label fall-through-button) "Fall")
+        (begin
+          (ask rule-obj 'set-fall-through? #f)
+          (set-button-label fall-through-button "Stop")
+          )
+        (begin
+          (ask rule-obj 'set-fall-through? #t)
+          (set-button-label fall-through-button "Fall")
+          ))
+    (pack-frame rules-manager-main-dialog))
+  
   (add-actionlistener fall-through-button 
                       (make-actionlistener
-                       (lambda (e)
-                         ;; alternate button display between "Fall" and "Stop"
-                         (if (equal? (get-button-label fall-through-button) "Fall")
-                             (set-button-label fall-through-button "Stop")
-                             (set-button-label fall-through-button "Fall"))
-                         
-                         (pack-frame rules-manager-main-dialog)
-                         )
-                       ))
+                       fall-through-button-callback))
   
+  (define rule-fall-through? (ask rule-obj 'fall-through?))
+  (if (not rule-fall-through?)
+      (set-button-label fall-through-button "Fall"))
   
   ;; TODO: MISC (non hypedyn) write a better swap that does not need two element 
   ;; to be side by side

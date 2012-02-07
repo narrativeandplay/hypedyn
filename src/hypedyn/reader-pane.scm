@@ -815,19 +815,21 @@
   (define obj (get obj-type obj-ID))
   (define rule-lst (ask obj 'rule-lst))
  
-  (map (lambda (ruleID)
-         (if (check-rule-condition ruleID)
-             (begin
-               ;(display "condition satisfied ")(display ruleID)(newline)
-               (if (equal? event-type 'displayed-node)
-                   (begin
-                     (display "rule check trigger ")(display ruleID)(newline)
-                     (display " rule-lst ")(display rule-lst)(newline)
-                     ))
-               (do-rule-action event-type ruleID)
-               )))
-       rule-lst)
-  )
+  ;; enforce rule fall through checking
+  (define (traverse-rule rule-lst)
+    (if (and (not (null? rule-lst))
+             (check-rule-condition (car rule-lst)))
+        (begin
+          (do-rule-action event-type (car rule-lst))
+          ;; if this rule triggered, check whether we allow fall through
+          (if (ask (get 'rules (car rule-lst)) 'fall-through?)
+              (traverse-rule (cdr rule-lst))))
+        ;; check next ruleID
+        (traverse-rule (cdr rule-lst))
+        ))
+  
+  ;; call the local helper function
+  (traverse-rule rule-lst))
 
 ;; goes through all the links of this node and 
 ;; check for rule triggers
