@@ -56,17 +56,15 @@
 (module-export doeditlink doeditnoderule doeditdocrule
                create-editlink-dialog
                create-editnode-dialog
-               
-               create-facts-main-panel
                create-if-condition-panel
-               create-then-action-panel
                create-actions-main-panel
-               
                create-update-text-action-panel
                create-rules-manager
                
-               get-edited-linkID
+               ;create-facts-main-panel
+               ;create-then-action-panel
                
+               get-edited-linkID
                obj-convertion-2.2)
                
 
@@ -86,6 +84,9 @@
 ; are we editing a link (default) or just a rule?
 (define-private edit-mode 'link)
 
+;;  =====================
+;;;; pre 2.2 conversion
+;;  =====================
 (define (obj-convertion-2.2)
   (if (<= loaded-file-version 2.1)
       (begin
@@ -99,12 +100,16 @@
   (let* ((ruleID (ask node-obj 'rule))
          (rule-obj (get 'rules ruleID))
          (node-name (ask node-obj 'name))
+         (anywhere? (ask node-obj 'anywhere?))
          ;(conditions (ask rule-obj 'conditions))
          ;(actions (ask rule-obj 'actions))
          )
     
+    ;; for every action (only set fact actions are on pre 2.2 nodes)
+    ;; add a rule for it
     (if rule-obj
         (begin
+          
           (define conditions (ask rule-obj 'conditions))
           (define actions (ask rule-obj 'actions))
           (map (lambda (actionID)
@@ -125,11 +130,17 @@
                        (create-action node-name 'entered-node
                                       action-sexpr
                                       new-ruleID)
+                       
+                       ;;(create-condition name nodeID operator ruleID . args)
+                       ;; add the conditions to the rules
                        ))
                  ) actions)
+          )
+          
+          
         (begin
           (display "no rule for node ")(display nodeID)(newline)
-          )))
+          ))
   ))
 
 ;; convertion of pre 2.2 links to 2.2 format
@@ -184,37 +195,22 @@
         ;; default destination
         (if (not (equal? link-dest1 -1))
             (create-action link-name 'clicked-link
-                                        ;                                  (string-append "(follow-link "
-                                        ;                                                 (to-string linkID) " "
-                                        ;                                                 (to-string (ask if-rule 'ID)) " "
-                                        ;                                                 "(quote default) "
-                                        ;                                                 (to-string link-dest1) ")")
                            (list 'follow-link
                                  linkID
                                  (ask if-rule 'ID)
                                  (list 'quote 'default)
                                  link-dest1)
-                           if-rule-ID
-                           )
-            )
+                           if-rule-ID))
 
         ;; link-dest2 is used in the else so it should be in the not rules instead
         (if (not (equal? link-dest2 -1))
             (create-action link-name 'clicked-link
-                                        ;                                  (string-append "(follow-link "
-                                        ;                                                 (to-string linkID) " "
-                                        ;                                                 (to-string (ask if-rule 'ID)) " "
-                                        ;                                                 "(quote default) "
-                                        ;                                                 (to-string link-dest2) ")")
                            (list 'follow-link
                                  linkID
                                  (ask else-rule 'ID)
                                  (list 'quote 'default)
                                  link-dest2)
-
-                           else-rule-ID
-                           )
-            )
+                           else-rule-ID))
 
         ;; transfer the condition from the original old rule to the new rules
         ;(create-typed-condition name type targetID operator ruleID . args)
@@ -229,6 +225,8 @@
                ) old-conditions)
         )))
 
+;;;; doedit
+
 ; edit a link - called from hteditor.scm
 ;; in-default-link-text not used any more
 ;; NOTE: this should be renamed as doeditrule now
@@ -239,12 +237,14 @@
   (before-editlink selected-linkID)
   
   ; set editing mode
-  (set! edit-mode 'link)
+  ;; NOTE: done in create-rules-manager now
+  ;(set! edit-mode 'link)
   
   ; set titles
-  (set-tabpanel-label-at editlink-dialog-tabpanel 0 "Link")
-  (set-tabpanel-label-at editlink-dialog-tabpanel 1 "Then action")
-  (set-tabpanel-label-at editlink-dialog-tabpanel 2 "Else action")
+  ;; Note: not used at the moment
+;  (set-tabpanel-label-at editlink-dialog-tabpanel 0 "Link")
+;  (set-tabpanel-label-at editlink-dialog-tabpanel 1 "Then action")
+;  (set-tabpanel-label-at editlink-dialog-tabpanel 2 "Else action")
   
   ; reset the editor, in case this failed when we closed last time
   (reset-rule-editor)
@@ -261,63 +261,38 @@
   ; remember callback
   (set! update-callback in-callback)
   
-  (display "edited-linkID ")(display edited-linkID)(newline)
   ; get all the details from the link object
   (let* ((link-obj (get 'links edited-linkID))
-         (selected-rule-ID (ask link-obj 'rule))
-         (rule-lst (ask link-obj 'rule-lst))
+         ;(selected-rule-ID (ask link-obj 'rule))
+         ;(rule-lst (ask link-obj 'rule-lst))
          (link-name (ask link-obj 'name))
-         (link-dest1 (ask link-obj 'destination))
-         (link-uselink (ask link-obj 'use-destination))
-         (link-usealtlink (ask link-obj 'use-alt-destination))
-         ;(link-usealttext (ask link-obj 'use-alt-text))
-         (link-dest2 (ask link-obj 'alt-destination))
-         ;(link-alttext (ask link-obj 'alt-text))
-         ;(link-start-index (ask link-obj 'start-index))
-         ;(link-end-index (ask link-obj 'end-index))
-         ;(edited-node (get 'nodes edited-nodeID))
-         ;(anywhere (ask edited-node 'anywhere?))
+         ;(link-dest1 (ask link-obj 'destination))
+         ;(link-uselink (ask link-obj 'use-destination))
+         ;(link-usealtlink (ask link-obj 'use-alt-destination))
+         ;(link-dest2 (ask link-obj 'alt-destination))
          )
+    
+    ; show link name
+    (set-dialog-title editlink-dialog (string-append "Edit link: "
+                                                     link-name
+                                                     (if (show-IDs?) (string-append " (" (number->string edited-linkID) ")") "")))
     
     ;; add appropriate panels to editlink-dialog
     (add-component editlink-panel-top editlink-panel-if)
-;    (add-component editlink-panel-top editlink-panel-then)
     (add-component editlink-panel-top actions-main-panel)
     
-    ; show link name
-    (set-dialog-title editlink-dialog (string-append "Edit link: " 
-                                                     link-name
-                                                     (if (show-IDs?) (string-append " (" (number->string edited-linkID) ")") "")))
-
-    ;; new code for new ui
-    
-    ;; empty the panel
-    (clear-container action-list-panel)
+        ;; TODO conver this to be using the new stuff
+    ; set "ok" button state - cannot allow a "use" checkbox to be checked and a link to be "none"
+;    (set-button editlink-panel-buttons-ok
+;          (not
+;           (or
+;            (and link-uselink (eq? link-dest1 -1))
+;            (and link-usealtlink (eq? link-dest2 -1)))))
     
     ;; reset combobox to contain all action-type-list
     (reset-action-type-choice 'link)
     
-    ;; end of new code
-    
-    ; set "ok" button state - cannot allow a "use" checkbox to be checked and a link to be "none"
-    (set-button editlink-panel-buttons-ok
-          (not
-           (or
-            (and link-uselink (eq? link-dest1 -1))
-            (and link-usealtlink (eq? link-dest2 -1)))))
-
-    ; reconstruct rule if necessary
-;    (map (lambda (rule)
-;           (populate-rule-editor rule in-edited-nodeID))
-;         rule-lst)
-    
-    ;; if this ruleID is really in rule-lst (might be redundant check)
-;    (if (find (lambda (obj) (= ruleID obj)) rule-lst)
-;        (populate-rule-editor ruleID in-edited-nodeID)
-;        (display "NOT FOUND")
-;        )
-    (populate-rule-editor in-ruleID in-edited-nodeID)
-    ;(populate-rule-editor selected-rule-ID in-edited-nodeID)
+    (populate-rule-editor in-ruleID)
     )
     
   ; pack the UI and show
@@ -331,14 +306,16 @@
   (format #t "doeditrule: in-edited-nodeID: ~a~%~!" in-edited-nodeID)
 
   ; set edit mode to rule
-  (set! edit-mode 'node)
+  ;; NOTE: done in create-rules-manager now
+  ;(set! edit-mode 'node)
+  
   (nodeeditor-save) ;; save text content before create sexpr in before-editnode
   (before-editnode in-edited-nodeID)
   
   ; set titles
-  (set-tabpanel-label-at editlink-dialog-tabpanel 0 "Rule")
-  (set-tabpanel-label-at editlink-dialog-tabpanel 1 "Before action")
-  (set-tabpanel-label-at editlink-dialog-tabpanel 2 "After action")
+;  (set-tabpanel-label-at editlink-dialog-tabpanel 0 "Rule")
+;  (set-tabpanel-label-at editlink-dialog-tabpanel 1 "Before action")
+;  (set-tabpanel-label-at editlink-dialog-tabpanel 2 "After action")
   
   ; reset the editor, in case this failed when we closed last time
   (reset-rule-editor)
@@ -357,72 +334,29 @@
   (set! update-callback #f)
   
   ; get the rule from the node
-  (let* ((selected-rule (ask (get 'nodes edited-nodeID) 'rule))
-         (edited-node (get 'nodes edited-nodeID))
+  (let* ((edited-node (get 'nodes edited-nodeID))
+         ;;(selected-rule (ask edited-node 'rule))
          (node-name (ask edited-node 'name))
-         (anywhere (ask edited-node 'anywhere?)))
-    
-    ; show node name
-    (set-dialog-title editlink-dialog (string-append "Edit rule for node: " node-name))
+         ;;(anywhere (ask edited-node 'anywhere?))
+         )
 
-    ;; add if panel to editnode-dialog
-    (add-component editlink-panel-top editlink-panel-if)
-    (add-component editlink-panel-top actions-main-panel)
-    
-    ;; build 'then' panel
-    (add-component editlink-panel-then editlink-panel-then-link-message1-panel)
-    (add-component editlink-panel-then editlink-panel-then-text)
-    ;(add-component editlink-panel-then editlink-panel-then-link)
-    
-    (add-component editlink-panel-then editnode-panel-then-facts-labelpanel)
-    (add-component editlink-panel-then editnode-panel-then-facts)
-    (add-component editlink-panel-then editnode-panel-then-buttons)
-    
-    ;; nothing in then panel except the "enable links to this node" label editlink-panel-then-text-message1
-    ; no links if its an anywhere node or in sculptural mode 
-;    (set-component-visible editlink-panel-else-link (and (not anywhere) (not (sculptural?))))
-    ;(set-component-visible editlink-panel-else-link #f)
-    
-    ; enable if portion of editor
-    ;(set-component-visible editlink-panel-if anywhere)
-    
-    ; enable then portion of editor if its an anywhere node, or if its not but facts are showing,
-    ; but change label and disable link
-;    (set-component-visible editlink-panel-then (or 
-;                                                anywhere
-;                                                (show-facts?)))
-;    (set-component-visible editlink-panel-then-link-message1-panel anywhere)
-    (set-text editlink-panel-then-text-message1 "enable links to this node")
-;    (set-component-visible editlink-panel-then-text-message1 anywhere)
-    (set-component-visible editlink-panel-then-text-message2 #f)
-;    (set-component-visible editlink-panel-then-link #f)
-    
-    ;; not in editlink anymore
-;    (set-component-visible editlink-panel-then-facts-labelpanel (show-facts?))
-;    (set-component-visible editlink-panel-then-facts (show-facts?))
-;    (set-component-visible editlink-panel-then-buttons (show-facts?))
-    
-    ; disable else portion of editor
-    ;; else panel not used anymore
-;    (set-component-visible editlink-panel-else #f)  was #f
-    
-    ;; new code for new ui
-    
-    ;; empty the panel
-    (clear-container action-list-panel)
-    
-    ;; reset combobox to contain all action-type-list
-    (reset-action-type-choice 'node)
-    
-    ; reconstruct rule if necessary
-    (populate-rule-editor in-ruleID in-edited-nodeID)
+    ;; show node name
+    (set-dialog-title editlink-dialog (string-append "Edit rule for node: " node-name))
     )
+
+  ;; add if panel to editnode-dialog
+  (add-component editlink-panel-top editlink-panel-if)
+  (add-component editlink-panel-top actions-main-panel)
+
+  ;; reset combobox to contain all action-type-list
+  (reset-action-type-choice 'node)
+
+  (populate-rule-editor in-ruleID)
 
   ; pack the UI and show
   (pack-frame editlink-dialog)
   (center-frame-in-parent editlink-dialog editlink-dialog-parent)
-  (set-component-visible editlink-dialog #t)
-  ;(set-component-visible editnode-dialog #t)
+  (set-component-visible editlink-dialog #t) ;; we're using the same dialog as editlink
   )
 
 ; edit document rule
@@ -431,7 +365,8 @@
   (format #t "doeditdocrule~%~!")
   
   ; set edit mode to rule
-  (set! edit-mode 'doc)
+  ;; NOTE: done in create-rules-manager now
+  ;(set! edit-mode 'doc)
   
   ; set titles
   (set-tabpanel-label-at editlink-dialog-tabpanel 0 "Step rule")
@@ -456,16 +391,8 @@
     ; show node name
     (set-dialog-title editlink-dialog "Edit document rule")
 
-    ; enable if portion of editor
-    (set-component-visible editlink-panel-if #t)
-    
-    ; disable then and else portions of editor
-    (set-component-visible editlink-panel-then #f)
-    ;; else panel not used anymore
-    (set-component-visible editlink-panel-else #f) ;; was #f
-    
     ; reconstruct rule if necessary
-    (populate-rule-editor selected-rule -1))
+    (populate-rule-editor selected-rule))
 
   ; pack the UI and show
   (pack-frame editlink-dialog)
@@ -475,6 +402,10 @@
 ;(doeditlink selected-linkID in-edited-nodeID in-callback in-default-link-text)
 ;(doeditnoderule in-edited-nodeID)
 ;(doeditdocrule)
+
+;;  ===============
+;;;; rule manager
+;;  ===============
 
 ;; rmgr stands for rule manager
 (define rules-manager-main-dialog #f)
@@ -834,10 +765,8 @@
 ; reconstruct a rule
 ; this is called from the doeditlink/doeditnoderule/doeditdocrule procedures above
 ; to finish building the GUI representation of the link/rule
-;; NOTE: doesn't seem like we need a in-edited-nodeID anymore
-(define (populate-rule-editor edited-ruleID in-edited-nodeID)
+(define (populate-rule-editor edited-ruleID)
   (display "edited rule ")(display edited-ruleID)(newline)
-  ;(format #t "populate-rule-editor, edited-ruleID: ~a, in-edited-nodeID: ~a~%~!" edited-ruleID in-edited-nodeID)
   (if (not (eq? 'not-set edited-ruleID))
       (let* ((rule-obj (get 'rules edited-ruleID))
              (conditions (ask rule-obj 'conditions))
@@ -877,7 +806,7 @@
                       (the-type (ask cond-obj 'type))
                       (targetID (ask cond-obj 'targetID))
                       (operator (ask cond-obj 'operator)))
-                 (create-condition-panel the-type targetID operator -1))) ;in-edited-nodeID))) ; should allow edited note to be a condition?
+                 (create-condition-panel the-type targetID operator -1))) ;; should allow edited note to be a choice in condition?
              conditions)
         
         ; build actions (show them in the ui)
@@ -926,27 +855,10 @@
                  )
                
                ) actions)
-
-        ; build facts
-;        (format #t "building facts: ~a~%~!" facts)
-;        (map (lambda (myaction)
-;               (let* ((action-obj (get 'actions myaction))
-;                      ;(the-action-string (ask action-obj 'expr))
-;                      ;(the-action-expr (read (open-input-string the-action-string))) ; hack, should change to saving as sexpr
-;                      (the-action-expr (ask action-obj 'expr))
-;                      (the-action (car the-action-expr))
-;                      (targetID (cadr the-action-expr))
-;                      (the-value (if (eq? the-action 'set-value!)
-;                                     (caddr the-action-expr)
-;                                     "")))
-;                 (format #t "fact: ~a (~a, ~a, ~a)~%~!" the-action-expr the-action the-value targetID)
-;                 ;(add-specific-action "update facts" the-action targetID the-value)
-;                 ))
-;             facts)
         )))
 
 ;;
-;; build the UI
+;;;; build the UI
 ;;
 (define editlink-dialog-parent #f)
 (define editlink-dialog #f)
@@ -957,48 +869,52 @@
 (define editlink-dialog-linkpanel #f)
 (define editlink-dialog-then-actiontext #f)
 (define editlink-dialog-else-actiontext #f)
+
+
 (define editlink-panel-top #f)
 (define editlink-panel-if #f)
 (define editlink-panel-follow2 #f)
 ;(define editlink-dialog-operater-label #f)
-(define editlink-dialog-negate-operator #f)
-(define editlink-dialog-andor-operator #f)
-(define editlink-dialog-message3 #f)
-(define editlink-panel-conditions #f)
+
 (define editlink-panel-main-buttons #f)
-(define editlink-panel-main-buttons-add #f)
-(define editlink-panel-main-buttons-delete #f)
-(define editlink-panel-then #f)
-(define editlink-panel-then-link-message1 #f)
-(define editlink-panel-then-link-message1-panel #f)
-(define editlink-panel-then-text #f)
-(define editlink-panel-then-text-message1 #f)
-(define editlink-panel-then-text-message2 #f)
-(define editlink-panel-then-link #f)
-(define editlink-panel-then-link-check #f)
-(define editlink-panel-then-choicepanel #f)
-(define editlink-panel-then-link-choice #f)
-(define editlink-panel-then-facts-labelpanel #f)
-(define editlink-panel-then-facts-label #f)
-(define editlink-panel-then-facts #f)
-(define editlink-panel-then-buttons #f)
-(define editlink-panel-then-buttons-add #f)
-(define editlink-panel-then-buttons-delete #f)
-(define editlink-panel-else #f)
-(define editlink-panel-else-message1-panel #f)
-(define editlink-panel-else-message1 #f)
-(define editlink-panel-else-text #f)
-(define editlink-panel-else-text-check #f)
-(define editlink-panel-else-text-typechoice #f)
-(define editlink-panel-else-text-factchoice #f)
-(define editlink-panel-else-text-message1 #f)
-(define editlink-panel-else-link #f)
-(define editlink-panel-else-link-check #f)
-(define editlink-panel-else-choicepanel #f)
-(define editlink-panel-else-link-choice #f)
+(define editlink-panel-main-buttons-add #f) ;; add conditions
+(define editlink-panel-main-buttons-delete #f) ;; delete conditions
+
 (define editlink-panel-buttons #f)
 (define editlink-panel-buttons-cancel #f)
 (define editlink-panel-buttons-ok #f)
+
+;(define editlink-panel-then #f)
+;(define editlink-panel-then-link-message1 #f)
+;(define editlink-panel-then-link-message1-panel #f)
+;(define editlink-panel-then-text #f)
+;(define editlink-panel-then-text-message1 #f)
+;(define editlink-panel-then-text-message2 #f)
+;(define editlink-panel-then-link #f)
+;(define editlink-panel-then-link-check #f)
+;(define editlink-panel-then-choicepanel #f)
+;(define editlink-panel-then-link-choice #f)
+;(define editlink-panel-then-facts-labelpanel #f)
+;(define editlink-panel-then-facts-label #f)
+;(define editlink-panel-then-facts #f)
+;(define editlink-panel-then-buttons #f)
+;(define editlink-panel-then-buttons-add #f)
+;(define editlink-panel-then-buttons-delete #f)
+
+;(define editlink-panel-else #f)
+;(define editlink-panel-else-message1-panel #f)
+;(define editlink-panel-else-message1 #f)
+;(define editlink-panel-else-text #f)
+;(define editlink-panel-else-text-check #f)
+;(define editlink-panel-else-text-typechoice #f)
+;(define editlink-panel-else-text-factchoice #f)
+;(define editlink-panel-else-text-message1 #f)
+;(define editlink-panel-else-link #f)
+;(define editlink-panel-else-link-check #f)
+;(define editlink-panel-else-choicepanel #f)
+;(define editlink-panel-else-link-choice #f)
+
+
 
 ;; if condition panel (init editlink-panel-if)
 (define (create-if-condition-panel)
@@ -1037,9 +953,9 @@
   (add-component editlink-panel-follow2 editlink-dialog-message3)
 
   ;;condition panel
-  (set! editlink-panel-conditions (make-panel))
-  (set-container-layout editlink-panel-conditions 'vertical)
-  (add-component editlink-panel-if editlink-panel-conditions)
+  (set! condition-list-panel (make-panel))
+  (set-container-layout condition-list-panel 'vertical)
+  (add-component editlink-panel-if condition-list-panel)
 
   ;; Add a horizontal panel to the dialog, with centering for buttons
   (set! editlink-panel-main-buttons (make-panel))
@@ -1062,73 +978,78 @@
   ) ;; end of IF conditions
 
 ;; panel adding actions (init editlink-panel-then)
-(define (create-then-action-panel)
-  ;; start of THEN action
+;; TODO: remove
+;(define (create-then-action-panel)
+;  ;; start of THEN action
 
-  ; panel to hold all the "then" information
-  (set! editlink-panel-then (make-panel))
-  (set-container-layout editlink-panel-then 'vertical)
-  
-  ;; add when we building the dialog
-  ;(add-component editlink-panel-top editlink-panel-then)
+;  ; panel to hold all the "then" information
+;  (set! editlink-panel-then (make-panel))
+;  (set-container-layout editlink-panel-then 'vertical)
+;  
+;  ;; add when we building the dialog
+;  ;(add-component editlink-panel-top editlink-panel-then)
 
-  ;the THEN label
-  (set! editlink-panel-then-link-message1-panel (make-panel))
-  (set-container-layout editlink-panel-then-link-message1-panel 'flow 'left)
-;  (add-component editlink-panel-then editlink-panel-then-link-message1-panel)
-  (set! editlink-panel-then-link-message1 (make-label))
-  (set-text editlink-panel-then-link-message1 "THEN") ;; was "THEN"
-  (add-component editlink-panel-then-link-message1-panel editlink-panel-then-link-message1)
+;  ;the THEN label
+;  (set! editlink-panel-then-link-message1-panel (make-panel))
+;  (set-container-layout editlink-panel-then-link-message1-panel 'flow 'left)
+;  (set! editlink-panel-then-link-message1 (make-label))
+;  (set-text editlink-panel-then-link-message1 "THEN") ;; was "THEN"
+;  (add-component editlink-panel-then-link-message1-panel editlink-panel-then-link-message1)
 
-  ; panel to hold the "if" text
-  (set! editlink-panel-then-text (make-panel))
-  (set-container-layout editlink-panel-then-text 'flow 'left)
-;  (add-component editlink-panel-then editlink-panel-then-text)
+;  ; panel to hold the "if" text
+;  (set! editlink-panel-then-text (make-panel))
+;  (set-container-layout editlink-panel-then-text 'flow 'left)
 
-  ; default link text label
-  ; TODO: fix layout when editing anywhere node rule
-  ; note: this is only problematic because I've hacked the dialog to resize for 
-  ; editing code, so this isn't worth fixing for now - alex
-  (set! editlink-panel-then-text-message1 (make-label))
-  (set-text editlink-panel-then-text-message1 "show default text: ")
-  (if (not (is-basic-mode?))
-      (add-component editlink-panel-then-text editlink-panel-then-text-message1))
+;  ; default link text label
+;  ; TODO: fix layout when editing anywhere node rule
+;  ; note: this is only problematic because I've hacked the dialog to resize for 
+;  ; editing code, so this isn't worth fixing for now - alex
+;  (set! editlink-panel-then-text-message1 (make-label))
+;  (set-text editlink-panel-then-text-message1 "show default text: ")
+;  (if (not (is-basic-mode?))
+;      (add-component editlink-panel-then-text editlink-panel-then-text-message1))
 
-  ; default link text content
-  (set! editlink-panel-then-text-message2 (make-textfield "[default text...........]" 20))
-  (set-text-component editlink-panel-then-text-message2 #f #t)
-  ;(set-text editlink-panel-then-text-message2 "[default text...........]")
-  (add-component editlink-panel-then-text editlink-panel-then-text-message2)
+;  ; default link text content
+;  (set! editlink-panel-then-text-message2 (make-textfield "[default text...........]" 20))
+;  (set-text-component editlink-panel-then-text-message2 #f #t)
+;  ;(set-text editlink-panel-then-text-message2 "[default text...........]")
+;  (add-component editlink-panel-then-text editlink-panel-then-text-message2)
 
-  ; panel to hold the "if" link
-  (set! editlink-panel-then-link (make-panel))
-  (set-container-layout editlink-panel-then-link 'horizontal)
-  ;(add-component editlink-panel-then editlink-panel-then-link)
+;  ; panel to hold the "if" link
+;  (set! editlink-panel-then-link (make-panel))
+;  (set-container-layout editlink-panel-then-link 'horizontal)
+;  ;(add-component editlink-panel-then editlink-panel-then-link)
 
-  ;; Add checkbox
-  (set! editlink-panel-then-link-check (make-checkbox "follow link to"))
-  (if (not (is-basic-mode?))
-      (begin
-        (add-itemlistener editlink-panel-then-link-check
-                          (make-itemlistener (lambda (source newstate)
-                                               (link-check-changed source newstate))))
-        (add-component editlink-panel-then-link editlink-panel-then-link-check))
-      (add-component editlink-panel-then-link (make-label-with-title "follow link to")))
+;  ;; Add checkbox
+;  (set! editlink-panel-then-link-check (make-checkbox "follow link to"))
+;  (if (not (is-basic-mode?))
+;      (begin
+;        (add-itemlistener editlink-panel-then-link-check
+;                          (make-itemlistener (lambda (source newstate)
+;                                               (link-check-changed source newstate))))
+;        (add-component editlink-panel-then-link editlink-panel-then-link-check))
+;      (add-component editlink-panel-then-link (make-label-with-title "follow link to")))
 
-  ; panel to hold the destination choice
-  (set! editlink-panel-then-choicepanel (make-panel))
-  (set-container-layout editlink-panel-then-choicepanel 'horizontal)
-  (add-component editlink-panel-then-link editlink-panel-then-choicepanel)
+;  ; panel to hold the destination choice
+;  (set! editlink-panel-then-choicepanel (make-panel))
+;  (set-container-layout editlink-panel-then-choicepanel 'horizontal)
+;  (add-component editlink-panel-then-link editlink-panel-then-choicepanel)
 
-  ; choice for destination - created dynamically when rule editor is loaded
-  (set! editlink-panel-then-link-choice #f)
+;  ; choice for destination - created dynamically when rule editor is loaded
+;  (set! editlink-panel-then-link-choice #f)
 
-  ;; end of THEN action
-  )
+;  ;; end of THEN action
+;  )
 
+;;;; rule edit UI
 (define actions-main-panel #f)
-(define action-list-panel #f)
+(define action-list-panel #f) 
 (define action-type-choice #f)
+
+(define condition-list-panel #f)
+(define editlink-dialog-negate-operator #f) ;; If/Unless combobox
+(define editlink-dialog-andor-operator #f) ;; Any/All combobox
+(define editlink-dialog-message3 #f) ;; "of the following conditions are true:" message label
 
 ;; remove all the condition and action panels from the condition action editing panel
 ;; obj-type : 'node 'link 'anywhere 'doc
@@ -1151,10 +1072,6 @@
        action-type-list)
   )
 
-(define (populate-actions)
-  #f
-  )
-
 ;; returns a list of the action panels in action-list-panel
 (define (action-panel-list)
   (get-container-children action-list-panel))
@@ -1163,14 +1080,10 @@
 ;; args-lst null means we're adding a new empty action panel,
 ;; if args-lst not null load the information provided (present existing action) 
 (define (add-specific-action action-type . args-lst)
-  ;; cache the selection to set back at the end
-  (define selected-action-type (get-combobox-selecteditem action-type-choice))
   (display "[add-specific-action] ")(newline)
   (display "  action type ")(display action-type)(newline)
   (display "  args-lst ")(display args-lst)(newline)
   
-  ;(set-combobox-selection-object action-type-choice (create-combobox-string-item action-type))
-  ;(define panel-to-return (add-action-callback #f))
   (define panel-to-return (create-action-panel action-type))
   (add-component action-list-panel panel-to-return)
   
@@ -1207,11 +1120,11 @@
 ;                                        (ask (get 'nodes link-dest1) 'name)
 ;                                        ))
                     )
-               (set! node-choice-combobox (create-node-choice panel-to-return (lambda (e) #f) link-dest1 #t -1))
+               (set! node-choice-combobox (create-node-choice link-dest1 #t -1))
                ;;
                ;(set-combobox-selection-object node-choice-combobox (create-combobox-string-item dest-node-name))
                )
-             (set! node-choice-combobox (create-node-choice panel-to-return (lambda (e) #f) #f #t -1)))
+             (set! node-choice-combobox (create-node-choice #f #t -1)))
          (add-component panel-to-return node-choice-combobox)
          )
         ((equal? action-type "update fact")
@@ -1219,13 +1132,16 @@
              (let ((the-action (car args-lst))
                    (targetID (cadr args-lst))
                    (the-value (caddr args-lst)))
-               (add-component panel-to-return (create-fact-panel2 the-action targetID the-value))
+               (add-component panel-to-return (create-fact-panel the-action targetID the-value))
                )
-             (add-component panel-to-return (create-fact-panel2 #f #f #f)))
-         ))
+             (add-component panel-to-return (create-fact-panel #f #f #f)))
+         )
+        ((equal? action-type "enable links to this node from anywhere")
+         ;; disable the checkbox of this action (so it can't be deleted)
+         (set-component-enabled (car (get-container-children panel-to-return)) #f)
+         )
+        )
   
-  ;; set back original selection
-  (set-combobox-selection-object action-type-choice selected-action-type)
   panel-to-return)
 
 ;; called when add action button is pressed
@@ -1310,6 +1226,7 @@
 (define node-choice-combobox #f)
 
 ;; an instance of the action type selector panel
+;; updates the combobox and return a panel with just a checkbox and label
 (define (create-action-panel action-type) ; the-type )
   (if (not (eq? action-type #!null))
       (let* ((top-panel (make-panel))
@@ -1317,12 +1234,10 @@
                                         ; add top-panel
         (set-container-layout top-panel 'flow 'left)
 
-                                        ;(add-component editlink-panel-conditions top-panel)
+                                        ;(add-component condition-list-panel top-panel)
 
         ;; Add checkbox
         (add-component top-panel the-checkbox)
-
-        (display "action type ")(display action-type)(newline)
 
         ;; add the action label display
         (define action-label (make-label-with-title (to-string action-type)))
@@ -1330,47 +1245,18 @@
 
         (define action-type-str (to-string action-type))
                                         ;"update text using" "follow link to" "update fact"))
-        
-        (cond ((equal? action-type-str "update text using")
-               ;(add-component top-panel update-text-action-panel)
-               #f
-               )
-              ((equal? action-type-str "follow link to")
-               ;(set! node-choice-combobox (create-node-choice #f (lambda (e) #f) #f #t #f))
-               ;(add-component top-panel node-choice-combobox)
-               #f
-               )
-              ((equal? action-type-str "update fact")
-               ;(add-component top-panel (create-fact-panel2 #f #f #f))
-               #f
-               )
-              (else
-               (display "create-action-panel error ")(display action-type)(newline)
-               (display "action type class type ")(display (invoke action-type 'get-class))(newline)
-               )
-              )
-
-        (display "check to remove TYPES ")(newline)
-        (display "action type ")(display action-type)(newline)
-        (display "action type class type ")(display (invoke action-type 'get-class))(newline)
-        (display "member check ")(display (member (to-string action-type) unique-choices))(newline)
-                                        ;    (display (to-string action-type))(newline)
-                                        ;    (display (invoke (to-string action-type) 'get-class))(newline)
-                                        ;    (display unique-choices)(newline)
-                                        ;    (display (invoke (car unique-choices) 'get-class))(newline)
-                                        ;    (display (member (to-string action-type) unique-choices))(newline)
 
         ;; update action-type-choice combobox
-        ;; remove from available
+        ;; ensure actions that should only have one instance is not available as a choice in the combobox
         (if (member (to-string action-type) unique-choices)
             (remove-combobox-string action-type-choice action-type))
 
         top-panel)
       (make-panel)))
 
-;;
-;; Update text panels
-;;
+;;  ====================
+;;;; Update text panels
+;;  ====================
 
 (define update-text-action-panel #f)
 (define alt-text-textfield #f)
@@ -1415,13 +1301,8 @@
            (clear-all-except-first)
            ;(add-component update-text-action-panel fact-choice-combobox)
            
-;           (set! fact-string-choice-combobox ;editlink-panel-else-text-factchoice 
-;                 (create-fact-choice 'string update-text-action-panel
-;                                     selected-fact-in-link -1))
-           
            ;; create and add the combobox containing the string facts
-           (set! fact-string-choice-combobox (create-fact-choice 'string #f selected-fact-in-action #f))
-           ;(define string-facts-combobox (create-fact-choice 'string #f selected-fact-in-action #f))
+           (set! fact-string-choice-combobox (create-fact-choice 'string #f))
            
            ;; add to a container panel and add to the update-text-action-panel
            (add-component update-text-fact-selection-panel fact-string-choice-combobox)
@@ -1433,68 +1314,6 @@
   (pack-frame editlink-dialog)
     )
 
-;; update update-text-fact-selection-panel
-(define (populate-facts)
-  
-  ;; empty update-text-fact-selection-panel
-  (clear-container update-text-fact-selection-panel)
-  (display "finished clearing populate facts ")(newline)
-  
-;  (define link-obj (get 'links edited-linkID))
-;  ;(display "link obj ")(display link-obj)(newline)
-;  (define selected-ruleID (ask link-obj 'rule))
-;  (define rule-obj (get 'rules selected-ruleID))
-;  (define facts (ask rule-obj 'actions))
-  
-  (define the-facts (get-list 'facts))
-  (display "facts before populate ")(display the-facts)(newline)
-  
-   ;; go through the facts list and add a fact panel for every fact
-;  (if the-facts
-;      (map (lambda (myaction)
-;             (let* ((action-obj (get 'actions myaction))
-;                    (the-action-string (ask action-obj 'expr))
-;                    (the-action-expr (read (open-input-string the-action-string))) ; hack, should change to saving as sexpr
-;                    (the-action (car the-action-expr))
-;                    (targetID (cadr the-action-expr))
-;                    (the-value (cond ((eq? the-action 'set-value!)
-;                                      (caddr the-action-expr))
-;                                     ((eq? the-action 'assert) #t)
-;                                     ((eq? the-action 'retract) #f)
-;                                     ))
-;                    (fact-type (cond ((or (eq? the-action 'assert)
-;                                          (eq? the-action 'retract))
-;                                      "boolean")
-;                                     ((eq? the-action 'set-value!)
-;                                      "string")))
-
-;                    )
-;               (format #t "fact: ~a (~a, ~a, ~a)~%~!" the-action-expr the-action the-value targetID)
-;               (define new-fact-panel (create-fact-panel2 fact-type targetID the-value))
-;               (display "new fact panel ")(display new-fact-panel)(newline)
-
-;               (add-component update-text-fact-selection-panel new-fact-panel)))
-;           the-facts))
-;  (if the-facts 
-;      (map (lambda (fact)
-;             (display "fact ")(display fact)(newline)
-;             (let* ((fact-obj (cdr fact))
-;                    (factID (car fact))
-;                    (the-value (ask fact-obj 'get-value))
-;                    (fact-type (ask fact-obj 'type))
-;                    )
-;               (display "FACT TYPE ")(display fact-type)(newline)
-;               (display "fact type class ")(display (invoke fact-type 'get-class))(newline)
-;               (define new-fact-panel (create-fact-panel2 fact-type factID the-value))
-;               (add-component update-text-fact-selection-panel new-fact-panel)
-;               )
-;             ) the-facts))
-  ;(add-component update-text-fact-selection-panel (create-fact-panel2 'boolean #f #f))
-;  (add-component update-text-fact-selection-panel (create-fact-choice 'string #f selected-fact-in-action #f))
-  
-  (display "end of populate facts ")(newline)
-      )
-
 ;; the panel that comes behind the combobox selecting actions type
 (define (create-update-text-action-panel)
   (set! update-text-action-panel (make-panel))
@@ -1504,12 +1323,12 @@
   (set! update-text-fact-selection-panel (make-panel))
   
   (set! fact-string-choice-combobox ;editlink-panel-else-text-factchoice 
-    (create-fact-choice 'string update-text-action-panel
-                        selected-fact-in-link -1))
+    (create-fact-choice 'string
+                        -1))
   
   (set! fact-boolean-choice-combobox ;editlink-panel-else-text-factchoice 
-    (create-fact-choice 'boolean update-text-action-panel
-                        selected-fact-in-link -1))
+    (create-fact-choice 'boolean
+                        -1))
   
   (add-component update-text-action-panel action-type-combobox)
   (add-component update-text-action-panel alt-text-textfield)
@@ -1522,19 +1341,7 @@
                          (action-update-text-combobox-callback))))
   )
 
-;; 
-;; Update Fact panels
-;;
-;(define update-fact-action-panel #f)
-
-;; create an instance of update fact action panel
-;(define (create-update-fact-action-panel)
-;  ;(set! update-fact-action-panel (make-panel))
-;  (define top-panel (make-panel))
-;  (add-component top-panel (create-fact-panel2 'boolean #f #f))
-;  
-;  top-panel)
-
+;;;; create-editlink
 (define (create-editlink-dialog parent)
   ; remember parent
   (set! editlink-dialog-parent parent)
@@ -1546,28 +1353,14 @@
   (set! editlink-dialog-pane (get-dialog-content-pane editlink-dialog))
   (set-container-layout editlink-dialog-pane 'border)
   
-  ;; tabbed panel for link and actions
-  (set! editlink-dialog-tabpanel (make-tab-panel))
-  (if (show-actions?)
-      (add-component editlink-dialog-pane editlink-dialog-tabpanel 'border-center))
+;  (set! editlink-dialog-tabpanel (make-tab-panel))
+;  (if (show-actions?)
+;      (add-component editlink-dialog-pane editlink-dialog-tabpanel 'border-center))
   
   ;; link
-  (set! editlink-dialog-linkpanel (make-panel))
-  (add-tabpanel-tab editlink-dialog-tabpanel "Link" editlink-dialog-linkpanel)
-  (set-container-layout editlink-dialog-linkpanel 'border)
-  
-  ;;
-  ;; actions
-
-  ; THEN action
-  (set! editlink-dialog-then-actiontext (make-textpane)) ;(make-editor-pane 300 100))
-  (set-component-preferred-size editlink-dialog-then-actiontext 300 100)
-  (add-tabpanel-tab editlink-dialog-tabpanel "Then action" (make-scrollpane editlink-dialog-then-actiontext))
-  
-  ; ELSE action
-  (set! editlink-dialog-else-actiontext (make-textpane)) ;(make-editor-pane 300 100))
-  (set-component-preferred-size editlink-dialog-else-actiontext 300 100)
-  (add-tabpanel-tab editlink-dialog-tabpanel "Else action" (make-scrollpane editlink-dialog-else-actiontext))
+;  (set! editlink-dialog-linkpanel (make-panel))
+;  (add-tabpanel-tab editlink-dialog-tabpanel "Link" editlink-dialog-linkpanel)
+;  (set-container-layout editlink-dialog-linkpanel 'border)
   
   ;; Add a horizontal panel for conditions and condition buttons
   (set! editlink-panel-top (make-panel))
@@ -1576,105 +1369,6 @@
       (add-component editlink-dialog-linkpanel editlink-panel-top 'border-center)
       (add-component editlink-dialog-pane editlink-panel-top 'border-center))
 
-  ;;
-  ;; ELSE
-  ;;
-
-  ;; start of ELSE action
-
-  ; panel to hold all the "else" information
-  (set! editlink-panel-else (make-panel))
-  (set-container-layout editlink-panel-else 'vertical)
-  
-  ;; should not have else panel in the new version
-  ;; shifted this code to where we do set-component-visible for dialog (which is doeditnode doeditlink)
-;  (if (not (is-basic-mode?))
-;      (begin
-;        (add-component editlink-panel-top editlink-panel-else)))
-
-  ; the "ELSE" label
-  (set! editlink-panel-else-message1-panel (make-panel))
-  (set-container-layout editlink-panel-else-message1-panel 'flow 'left)
-  (add-component editlink-panel-else editlink-panel-else-message1-panel)
-  (set! editlink-panel-else-message1 (make-label))
-  (set-text editlink-panel-else-message1 "ELSE")
-  (add-component editlink-panel-else-message1-panel editlink-panel-else-message1)
-
-  ; panel to hold the "else" text
-  (set! editlink-panel-else-text (make-panel))
-  (set-container-layout editlink-panel-else-text 'horizontal)
-  ;(add-component editlink-panel-else editlink-panel-else-text) ;; used to be in else 
-  ;(add-component editlink-panel-then editlink-panel-else-text)
-
-  ;; Add checkbox
-  ; need to be able to disable fact option with show-facts
-  (set! editlink-panel-else-text-check (make-checkbox 
-                                        (if (show-facts?)
-                                            "show"
-                                            "show alternative text")))
-  (add-itemlistener editlink-panel-else-text-check
-                    (make-itemlistener (lambda (source newstate)
-                                         (text-check-changed source newstate))))
-  (add-component editlink-panel-else-text editlink-panel-else-text-check)
-  
-  ; add text choice
-  (set! editlink-panel-else-text-typechoice (make-combobox "alternative text" "text from Fact"))
-  (if (show-facts?)
-      (add-component editlink-panel-else-text editlink-panel-else-text-typechoice))
-
-  ; set callback for type choice
-  (add-actionlistener editlink-panel-else-text-typechoice
-                      (make-actionlistener (lambda (source)
-                                             (selected-type-in-link source))))
-
-  ; alternative link text
-  (set! editlink-panel-else-text-message1 (make-textfield "[alternative text...........]" 20))
-  (add-component editlink-panel-else-text editlink-panel-else-text-message1)
-  
-  ; panel to hold the "else" link
-  (set! editlink-panel-else-link (make-panel))
-  (set-container-layout editlink-panel-else-link 'horizontal)
-  (add-component editlink-panel-else editlink-panel-else-link)
-
-  ;; Add checkbox
-  (set! editlink-panel-else-link-check (make-checkbox "follow link to"))
-  (add-itemlistener editlink-panel-else-link-check
-                    (make-itemlistener (lambda (source newstate)
-                                         (link-check-changed source newstate))))
-  (add-component editlink-panel-else-link editlink-panel-else-link-check)
-
-  ; panel to hold the alternative destination choice
-  (set! editlink-panel-else-choicepanel (make-panel))
-  (set-container-layout editlink-panel-else-choicepanel 'horizontal)
-  (add-component editlink-panel-else-link editlink-panel-else-choicepanel)
-
-  ; choice for alternative destination - created dynamically when rule editor is loaded
-  (set! editlink-panel-else-link-choice #f)
-
-  ;; end of ELSE action
-
-  ;; start of new NEW THEN action
-  
-  (define editlink-panel-action-buttons (make-panel))
-;  (set-container-layout editlink-panel-then-buttons 'horizontal)
-;  (add-component editlink-panel-then editlink-panel-action-buttons)
-  
-  (define editlink-panel-action-buttons-add (make-button "Add Action"))
-;  (add-actionlistener editlink-panel-then-buttons-add
-;                      (make-actionlistener (lambda (source)
-;                                             (editlink-dialog-add-fact))))
-;  (add-component editlink-panel-action-buttons editlink-panel-action-buttons-add)
-
-  ;; Add DELETE button
-  (set! editlink-panel-action-buttons-delete (make-button "Delete selected"))
-;  (add-actionlistener editlink-panel-then-buttons-delete
-;                      (make-actionlistener (lambda (source)
-;                                             (editlink-dialog-delete-facts))))
-;  (add-component editlink-panel-action-buttons editlink-panel-action-buttons-delete)
-  
-  
-  ;; end of NEW THEN action
-  
   ;;
   ;; Ok/Cancel buttons
   ;;
@@ -1701,15 +1395,10 @@
         (add-component editlink-panel-buttons editlink-panel-buttons-cancel)
         (add-component editlink-panel-buttons editlink-panel-buttons-ok)))
   
-;  (create-dialog-ok-cancel-buttons 
-;   editlink-dialog-pane 
-;                    (lambda (source)
-;                      (editlink-dialog-ok))
-;                    (lambda (source)
-;                      (editlink-dialog-cancel)))
-      
   ; pack
   (pack-frame editlink-dialog))
+
+;;;; editnode UI
 
 (define editnode-dialog #f)
 (define editnode-panel-then-facts #f)
@@ -1720,44 +1409,41 @@
 (define editnode-panel-then-facts-labelpanel #f)
 (define editnode-panel-then-buttons #f)
 
-(define (create-facts-main-panel)
-  ; panel for facts label
-  (set! editnode-panel-then-facts-labelpanel (make-panel))
-  (set-container-layout editnode-panel-then-facts-labelpanel 'flow 'left)
-  ;(add-component editnode-panel-then editnode-panel-then-facts-labelpanel)
+;; TODO: remove
+;(define (create-facts-main-panel)
+;  ; panel for facts label
+;  (set! editnode-panel-then-facts-labelpanel (make-panel))
+;  (set-container-layout editnode-panel-then-facts-labelpanel 'flow 'left)
+;  ;(add-component editnode-panel-then editnode-panel-then-facts-labelpanel)
 
-  ;; facts label
-  (define editnode-panel-then-facts-label (make-label))
-  (set-text editnode-panel-then-facts-label "when visited, update the following facts:")
-  (add-component editnode-panel-then-facts-labelpanel editnode-panel-then-facts-label)
-  
-  ;; facts panel
-  (set! editnode-panel-then-facts (make-panel))
-  
-  (set-container-layout editnode-panel-then-facts 'vertical)
-  
-  ;(add-component editnode-panel-then editnode-panel-then-facts)
+;  ;; facts label
+;  (define editnode-panel-then-facts-label (make-label))
+;  (set-text editnode-panel-then-facts-label "when visited, update the following facts:")
+;  (add-component editnode-panel-then-facts-labelpanel editnode-panel-then-facts-label)
+;  
+;  ;; facts panel
+;  (set! editnode-panel-then-facts (make-panel))
+;  
+;  (set-container-layout editnode-panel-then-facts 'vertical)
+;  
+;  ;; Add a horizontal panel to the dialog, with centering for buttons
+;  (set! editnode-panel-then-buttons (make-panel))
+;  (set-container-layout editnode-panel-then-buttons 'horizontal)
+;  
+;  ;; Add ADD button
+;  (define editnode-panel-then-buttons-add (make-button "Add fact"))
+;  (add-actionlistener editnode-panel-then-buttons-add
+;                      (make-actionlistener (lambda (source)
+;                                             (editlink-dialog-add-fact))))
+;  (add-component editnode-panel-then-buttons editnode-panel-then-buttons-add)
 
-  ;; Add a horizontal panel to the dialog, with centering for buttons
-  (set! editnode-panel-then-buttons (make-panel))
-  (set-container-layout editnode-panel-then-buttons 'horizontal)
-  
-;  (add-component editnode-panel-then editnode-panel-then-buttons)
-
-  ;; Add ADD button
-  (define editnode-panel-then-buttons-add (make-button "Add fact"))
-  (add-actionlistener editnode-panel-then-buttons-add
-                      (make-actionlistener (lambda (source)
-                                             (editlink-dialog-add-fact))))
-  (add-component editnode-panel-then-buttons editnode-panel-then-buttons-add)
-
-  ;; Add DELETE button
-  (define editnode-panel-then-buttons-delete (make-button "Delete selected"))
-  (add-actionlistener editnode-panel-then-buttons-delete
-                      (make-actionlistener (lambda (source)
-                                             (editlink-dialog-delete-facts))))
-  (add-component editnode-panel-then-buttons editnode-panel-then-buttons-delete)
-  )
+;  ;; Add DELETE button
+;  (define editnode-panel-then-buttons-delete (make-button "Delete selected"))
+;  (add-actionlistener editnode-panel-then-buttons-delete
+;                      (make-actionlistener (lambda (source)
+;                                             (editlink-dialog-delete-facts))))
+;  (add-component editnode-panel-then-buttons editnode-panel-then-buttons-delete)
+;  )
 
 (define (create-editnode-dialog parent)
   ; remember parent
@@ -1834,7 +1520,7 @@
 ; callback will be called when choice changes, and nodeID will be selected
 ; if excludeAnywhere, will exclude anywhere nodes
 ; will also exclude edited-nodeID
-(define (create-node-choice parent-panel in-callback nodeID excludeAnywhere in-edited-nodeID)
+(define (create-node-choice nodeID excludeAnywhere in-edited-nodeID)
   (let ((node-list (make-sortedcomboboxwithdata)))
 ;    (format #t "Creating node-choice: nodeID:~a, in-edited-nodeID:~a~%~!" nodeID in-edited-nodeID)
 
@@ -1861,11 +1547,6 @@
     ; make sure the "None" entry is explicitly inserted at the start of the list
     (insert-comboboxwithdata-string-at node-list "<None>" -1 0)
     
-    ; add action listener
-    (add-actionlistener node-list
-                        (make-actionlistener (lambda (source)
-                                               (in-callback source))))
-    
     ; select the chosen node
     (if nodeID
         (set-comboboxwithdata-selection-bydata node-list nodeID)
@@ -1876,7 +1557,7 @@
 
 ; add a link choice
 ; callback will be called when choice changes, and linkID will be selected
-(define (create-link-choice parent-panel in-callback linkID)
+(define (create-link-choice linkID)
   (let ((link-list (make-sortedcomboboxwithdata)))
 
     ; add entries to link choice
@@ -1914,8 +1595,7 @@
 ; creates a choice containing facts of the given type
 ; callback will be called when choice changes, and factID will be selected
 ;; if factID is #f select <None>
-;; TODO: remove parent-panel argument from all those create-fact-choice, create-link-choice, create-node-choice since we're not using it anymore
-(define (create-fact-choice the-type parent-panel in-callback factID)
+(define (create-fact-choice the-type factID)
   (let ((fact-list (make-sortedcomboboxwithdata)))
 
     ; add entries to fact choice - moved this afterwards to allow for adding of data
@@ -1942,12 +1622,6 @@
 
     ; make sure the "None" entry is explicitly inserted at the start of the list
     (insert-comboboxwithdata-string-at fact-list "<None>" -1 0)
-    
-    
-    ; add action listener
-    (add-actionlistener fact-list
-                        (make-actionlistener (lambda (source)
-                                               (in-callback source the-type))))
 
     ; select the chosen fact
     (if factID
@@ -1969,9 +1643,9 @@
                               (if (show-facts?)
                                   (make-combobox "Node" "Link" "Fact")
                                   (make-combobox "Node" "Link"))))
-         (the-node-list (create-node-choice top-panel selected-node-in-condition targetID #f in-edited-nodeID))
-         (the-link-list (create-link-choice top-panel selected-link-in-condition targetID))
-         (the-fact-list (create-fact-choice 'boolean top-panel selected-fact-in-condition targetID))
+         (the-node-list (create-node-choice targetID #f in-edited-nodeID))
+         (the-link-list (create-link-choice targetID))
+         (the-fact-list (create-fact-choice 'boolean targetID))
          (the-node-operator-choice (if (not (is-basic-mode?))
                                        (make-combobox "Not Visited" "Visited" "Previous Node")
                                        (make-combobox "Not Visited" "Visited")))
@@ -1982,7 +1656,7 @@
     
     ; add top-panel
     (set-container-layout top-panel 'horizontal)
-    (add-component editlink-panel-conditions top-panel)
+    (add-component condition-list-panel top-panel)
     
     ;; Add checkbox
     (add-component top-panel the-checkbox)
@@ -2018,42 +1692,15 @@
     top-panel))
 
 ;;
-;; callbacks from UI
+;;;; callbacks from UI
 ;;
 
 ; set "ok" button state - cannot allow a "use" checkbox to be checked and a link to be "none"
+;; TODO : outdated (used to do the above, now it should check 
+;;        for new conditions where we don't want them to hit the ok button)
 (define (update-ok-button-state)
-  (if (and editlink-panel-buttons-ok
-           editlink-panel-then-link-check
-           editlink-panel-then-link-choice
-           editlink-panel-else-link-check
-           editlink-panel-else-link-choice
-           editlink-panel-else-text-check)
-      (set-button editlink-panel-buttons-ok
-                  (not
-                   (or
-                    ; else text checked, fact type selected, but "none" selected for fact
-                    (and (get-checkbox-value editlink-panel-else-text-check)
-                         editlink-panel-else-text-typechoice ; make sure these exist
-                         editlink-panel-else-text-factchoice
-                         (eq? (get-combobox-selectedindex editlink-panel-else-text-typechoice) 1)
-                         (eq? (get-comboboxwithdata-selecteddata editlink-panel-else-text-factchoice) -1))
-                         
-                    ; then link checked but "none" selected
-                    (and (get-checkbox-value editlink-panel-then-link-check)
-                         (eq? (get-comboboxwithdata-selecteddata editlink-panel-then-link-choice) -1))
-                    
-                    ; else link checked but "none" selected
-                    (and (get-checkbox-value editlink-panel-else-link-check)
-                         (eq? (get-comboboxwithdata-selecteddata editlink-panel-else-link-choice) -1)))))))
-
-; link checkbox was changed, so update OK button state
-(define (link-check-changed c e)
-  (update-ok-button-state))
-
-; text checkbox was changed, so update OK button state
-(define (text-check-changed c e)
-  (update-ok-button-state))
+  #f
+  )
 
 ; selection of condition type changed, so change the node/link list and operator list
 (define (selected-type-in-condition c top-panel
@@ -2085,34 +1732,6 @@
     (set-combobox-selection new-operator 0))
   
   (pack-frame editlink-dialog))
-
-; selection of condition node changed: do nothing for now
-(define (selected-node-in-condition c)
-  (format #t "selected-node-in-condition~%~!"))
-
-; selection of condition link changed: do nothing for now
-(define (selected-link-in-condition c)
-  (format #t "selected-link-in-condition~%~!"))
-
-; selection of condition fact changed: do nothing for now
-(define (selected-fact-in-condition c type)
-  (format #t "selected-fact-in-condition: ~a~%~!" type))
-
-  ; selection of destination node changed, so update checkboxes if necessary, and update OK button state
-(define (selected-node-in-destination c)
-;  (format #t "selected-node-in-destination~%~!")
-  ; if "none" destination selected, uncheck the checkbox
-  (if (and (eq? c editlink-panel-then-link-choice)
-           editlink-panel-then-link-check 
-           editlink-panel-then-link-choice)
-      (set-checkbox-value editlink-panel-then-link-check
-                      (not (eq? (get-comboboxwithdata-selecteddata editlink-panel-then-link-choice) -1))))
-  (if (and (eq? c editlink-panel-else-link-choice)
-           editlink-panel-else-link-check 
-           editlink-panel-else-link-choice)
-      (set-checkbox-value editlink-panel-else-link-check
-                      (not (eq? (get-comboboxwithdata-selecteddata editlink-panel-else-link-choice) -1))))
-  (update-ok-button-state))
 
 ; cancelled, so hide newnode-dialog
 (define (editlink-dialog-cancel)
@@ -2180,7 +1799,7 @@
          (new-ruleexpression (get-rule-exp new-ruleexpression-pos))
          
          ; get conditions
-         (all-conditions (get-container-children editlink-panel-conditions))
+         (all-conditions (get-container-children condition-list-panel))
          
          ; get actions
          (actions (action-panel-list))
@@ -2189,9 +1808,6 @@
          (negate? (case negate-pos
                     ((0) #f)
                     ((1) #t)))
-         ; get facts
-         ;(all-facts (get-container-children editlink-panel-then-facts))
-         
          ; create the rule
          (new-ruleID (create-typed-rule2 new-rulename edit-mode new-ruleexpression negate?
                                        (cond ((eq? edit-mode 'link) edited-linkID)
@@ -2285,8 +1901,6 @@
            (define the-link the-rule-object)
            (define link-name (ask the-rule-object 'name))
            
-;           (define uselink (get-checkbox-value editlink-panel-then-link-check))
-;           (define destID (get-comboboxwithdata-selecteddata editlink-panel-then-link-choice))
 ;           (define olduselink (ask the-link 'use-destination))
 ;           (define olddestID (ask the-link 'destination))
 ;           (define usealtlink (get-checkbox-value editlink-panel-else-link-check))
@@ -2511,7 +2125,7 @@
                     ((1) #t)))
          
          ; get conditions
-         ;(all-conditions (get-container-children editlink-panel-conditions))
+         ;(all-conditions (get-container-children condition-list-panel))
          
          ; get facts
          (all-facts (get-container-children editnode-panel-then-facts))
@@ -2554,19 +2168,6 @@
                                 ; (retract targetID) or
                                 ; (set-value! targetID the-value)
                                 (the-action-expr 
-;                                 (string-append
-;                                  "("
-;                                  (if (= the-type 0)
-;                                      (if (= the-value 0)
-;                                          "assert"
-;                                          "retract")
-;                                      "set-value!")
-;                                  " "
-;                                  (number->string targetID)
-;                                  (if (= the-type 1)
-;                                      (string-append " \"" the-value "\"")
-;                                      "")
-;                                  ")")
                                  (cond ((= the-type 0) ;; boolean fact
                                         (list (if (= the-value 0)
                                                   'assert
@@ -2610,8 +2211,6 @@
 ;     ((eq? edit-mode 'link)
 ;                                        ; update use-alt, alt-destination and alt-text
 ;           (define the-link the-rule-object)
-;           (define uselink (get-checkbox-value editlink-panel-then-link-check))
-;           (define destID (get-comboboxwithdata-selecteddata editlink-panel-then-link-choice))
 ;           (define olduselink (ask the-link 'use-destination))
 ;           (define olddestID (ask the-link 'destination))
 ;           (define usealtlink (get-checkbox-value editlink-panel-else-link-check))
@@ -2679,95 +2278,25 @@
     (set-component-visible editnode-dialog #f)
     (reset-rule-editor)
     ))
-
-; currently this isn't needed as the action is stored as a string - alex
-;;; read the action-expression from the link editor
-;;(define (read-action-expr action-type explist new-rulename new-rule)
-;;  (let ((input
-;;         (try-catch
-;;             (begin
-;;               (read explist))
-;;           (ex <java.lang.Throwable>
-;;               (begin
-;;                 (display "error reading expressions from editlink")(newline)
-;;                 (status-callback (*:toString ex))
-;;                 ;(*:printStackTrace ex)
-;;                 )))))
-;;    (display "read-action-expr: input ")(display input)(newline)
-;;    (cond
-;;     ((eof-object? input)
-;;      ; reached then end-of-file, so done
-;;      'ok)
-;;     (else
-;;      (begin
-;;        ; create an action from this expression
-;;        (create-action new-rulename action-type input new-rule)
-
-;;        ; and recursively continue to read the expressions
-;;        (read-action-expr action-type explist new-rulename new-rule))))))
-  
-
-;; empty the container of any children component
-;; NOTE: can consider moving this elsewhere as this is useful
-(define (clear-container in-container)
-  (let ((children (get-container-children in-container)))
-    (if (not (null? children))
-        (begin
-          (remove-component in-container (car children))
-          (clear-container in-container)))))
-
-(define (clear-container-from-index-onwards in-container index)
-  (let ((children (get-container-children in-container)))
-    (if (> (length children) index)
-        (begin
-          (remove-component in-container (list-ref children index))
-          (clear-container-from-index-onwards in-container index)))))
-  
   
 ; reset the rule editor
 (define (reset-rule-editor)
-  ; runs through all conditions or facts and removes them
-  (define reset-helper clear-container)
   
-  ;; empty the two dialogs
-  
-  ;(reset-helper editlink-panel-top)
-  ;(reset-helper editnode-panel-top)
-  
-  ; remove conditions
-  (reset-helper editlink-panel-conditions)
-  
-  ; remove facts
-  ;; not even sure what this does
-  ;(reset-helper editnode-panel-then-facts)
-  
-  ; remove link destination choicebox - these are recreated when link editor is opened
-  (if editlink-panel-then-link-choice
-      (remove-component editlink-panel-then-choicepanel editlink-panel-then-link-choice))
-  (set! editlink-panel-then-link-choice #f)
-  (if editlink-panel-else-link-choice
-      (remove-component editlink-panel-else-choicepanel editlink-panel-else-link-choice))
-  (set! editlink-panel-else-link-choice #f)
-  (display "RESET removed editlink-panel-else-link-choice")(newline)
+  (clear-container condition-list-panel) ;; empty conditions panel
+  (clear-container action-list-panel)         ;; empty actions panel
 
   ; if facts are showing, reset the alt text to text, not fact
-  (if (show-facts?)
-      (set-combobox-selection editlink-panel-else-text-typechoice 0))
+;  (if (show-facts?)
+;      (set-combobox-selection editlink-panel-else-text-typechoice 0))
 
-  ; clear all checkboxes and entry fields
-  (set-checkbox-value editlink-panel-then-link-check #f)
-  (set-checkbox-value editlink-panel-else-link-check #f)
-  (set-checkbox-value editlink-panel-else-text-check #f)
-  (set-text editlink-panel-else-text-message1 "")
-  (set-combobox-selection editlink-dialog-andor-operator 0)
-  (set-text editlink-dialog-then-actiontext "")
-  (set-text editlink-dialog-else-actiontext ""))
+  (set-combobox-selection editlink-dialog-andor-operator 0))
 
 ; delete selected condition
 (define (editlink-dialog-delete-conditions)
-  (editlink-dialog-delete editlink-panel-conditions))
+  (editlink-dialog-delete condition-list-panel))
 
 ; delete selected entries in a container, used by conditions and facts
+;; TODO take this out as misc or replace with a suitable procedure from container
 (define (editlink-dialog-delete in-container)
   (define all-children 
     (if in-container
@@ -2785,120 +2314,47 @@
       (delete-recur all-children)))
 
 ;;
-;; facts
+;;;; fact panel
 ;; 
-
-; add an fact
-(define (editlink-dialog-add-fact)
-  (create-fact-panel 'assert -1 "")
-  (pack-frame editlink-dialog))
 
 ; create an fact panel
 ; the-action: the type of action 'assert, 'retract or 'set-value!
 ; targetID: the currently selected fact, if any (pass in -1 if none selected)
 ; the-value: value that will be set (for 'set-value! only)
-(define (create-fact-panel the-action targetID the-value)
-  (let* ((top-panel (make-panel))
-         (the-checkbox (make-checkbox ""))
-         (the-type-choice (make-combobox "True/False" "Text"))
-         (the-boolean-choice (make-combobox "True" "False"))
-         (the-string-entry (make-textfield "[the fact text...........]" 20))
-         (the-fact-list-boolean (create-fact-choice 'boolean top-panel selected-fact-in-action targetID))
-         (the-fact-list-string (create-fact-choice 'string top-panel selected-fact-in-action targetID)))
-    
-    ; add top-panel
-    (set-container-layout top-panel 'horizontal)
-    
-    ;; nolong add to the facts panel
-    ;(add-component editnode-panel-then-facts top-panel)
-    
-    ;; add checkbox
-    ;(add-component top-panel the-checkbox)
-
-    ;; add type choice
-    (add-component top-panel the-type-choice)
-  
-    ; set type choice
-    (set-combobox-selection the-type-choice (if (eq? the-action 'set-value!) 1 0))
-    
-    ;; add the appropriate components
-    (set-fact-panel-components top-panel (if (eq? the-action 'set-value!) 1 0)
-                               the-fact-list-string the-string-entry
-                               the-fact-list-boolean the-boolean-choice)
-    
-    ; set value
-    (if (eq? the-action 'set-value!)
-        (set-text the-string-entry the-value)
-        (set-combobox-selection the-boolean-choice (if (eq? the-action 'assert) 0 1)))
-
-    ; add type callback
-    (add-actionlistener the-type-choice
-                        (make-actionlistener (lambda (source)
-                                               (selected-type-in-action source top-panel
-                                                                        the-fact-list-boolean the-boolean-choice
-                                                                        the-fact-list-string the-string-entry))))
-
-    ; return the panel
-    top-panel))
-
-;; new version of the above (will eventually replace the above)
 ;; fact type is only needed if a factID is selected
-(define (create-fact-panel2 fact-type factID the-value)
-  (display "create fact panel 2")(newline)
+
+(define (create-fact-panel fact-type factID the-value)
   
   (let* ((top-panel (make-panel))
          ;(the-checkbox (make-checkbox ""))
          (the-type-choice (make-combobox "True/False" "Text"))
          (the-boolean-choice (make-combobox "True" "False"))
          (the-string-entry (make-textfield "[the fact text...........]" 20))
-         (the-fact-list-boolean (create-fact-choice 'boolean top-panel selected-fact-in-action factID))
-         (the-fact-list-string (create-fact-choice 'string top-panel selected-fact-in-action factID)))
+         (the-fact-list-boolean (create-fact-choice 'boolean factID))
+         (the-fact-list-string (create-fact-choice 'string factID)))
     
     ; add top-panel
     (set-container-layout top-panel 'horizontal)
     
-    ;; nolong add to the facts panel
-    ;(add-component editnode-panel-then-facts top-panel)
-    
-    ;; add checkbox
-    ;(add-component top-panel the-checkbox)
-
     ;; add type choice
     (add-component top-panel the-type-choice)
   
     ;; choose the fact type index
-;    (define (fact-type-index)
-;      (cond ((equal? "boolean" fact-type) 0)
-;            ((equal? "string" fact-type) 1)))
     (define (fact-type-index)
-      (cond ((equal? 'boolean fact-type) 0)
-            ((equal? 'string fact-type) 1)
-            ((or (equal? 'assert fact-type)
+      (cond ((or (equal? 'assert fact-type)
                  (equal? 'retract fact-type)) 0)
             ((equal? 'set-value! fact-type) 1)
             (else 0)
             ))
-    ;(set-combobox-selection the-type-choice (if (eq? the-action 'set-value!) 1 0))
-    
-;    (if (eq? the-action 'set-value!)
-;        (set-text the-string-entry the-value)
-;        (set-combobox-selection the-boolean-choice (if (eq? the-action 'assert) 0 1)))
-    
     (display "fact type index ")(display fact-type)(newline)
     
     ; set type choice
-;    (set-combobox-selection the-type-choice (if (eq? the-action 'set-value!) 1 0))
     (set-combobox-selection the-type-choice (fact-type-index))
     
     ;; add the appropriate components
     (set-fact-panel-components top-panel (fact-type-index)
                                the-fact-list-string the-string-entry
                                the-fact-list-boolean the-boolean-choice)
-    
-    ; set value
-;    (if (eq? the-action 'set-value!)
-;        (set-text the-string-entry the-value)
-;        (set-combobox-selection the-boolean-choice (if (eq? the-action 'assert) 0 1)))
     
     ;; set current value of fact
     (if factID ;; if factID false
@@ -2944,12 +2400,6 @@
   (format #t "selected-type-in-assertion~%~!")
   
   ; remove the current target and operator lists
-;  (let* ((children (get-container-children top-panel))
-;         (old-target (caddr children))
-;         (old-operator (cadddr children)))
-;    (remove-component top-panel old-target)
-;    (remove-component top-panel old-operator))
-  
   (let* ((children (get-container-children top-panel))
          (old-target (cadr children))
          (old-operator (caddr children)))
@@ -2961,56 +2411,4 @@
                              the-fact-list-string the-string-entry
                              the-fact-list-boolean the-boolean-choice)
   
-  (pack-frame editlink-dialog))
-
-  ; selection of action changed: do nothing for now
-(define (selected-action-in-action c)
-  (format #t "selected-fact-in-action~%~!"))
-
-; selection of fact changed: do nothing for now
-(define (selected-fact-in-action c type)
-  (format #t "selected-fact-in-action: ~a~%~!" type))
-
-; delete selected fact
-(define (editlink-dialog-delete-facts)
-  (editlink-dialog-delete editlink-panel-then-facts))
-
-;;
-;; facts as alternative text
-;; 
-
-; selection of alternative type changed, so change the entry field/choice
-(define (selected-type-in-link c)
-  ;(format #t "selected-type-in-link~%~!")
-
-  ; remove the current target and operator lists
-  (let* ((children (get-container-children editlink-panel-else-text))
-         (old-type (caddr children)))
-    (remove-component editlink-panel-else-text old-type))
-
-  ; add the appropriate component
-  (let ((the-type (get-combobox-selectedindex c)))
-    (if (eq? the-type 0)
-        (add-component editlink-panel-else-text editlink-panel-else-text-message1)
-        (begin
-          (add-component editlink-panel-else-text editlink-panel-else-text-factchoice)
-          ; if fact selected, uncheck the checkbox
-          (if (and editlink-panel-else-text-check
-                   editlink-panel-else-text-factchoice)
-              (set-checkbox-value editlink-panel-else-text-check
-                                  (not (eq? (get-comboboxwithdata-selecteddata editlink-panel-else-text-factchoice) -1)))))))
-
-  (update-ok-button-state)
-  (pack-frame editlink-dialog))
-
-  ; selection of fact changed: do nothing for now
-(define (selected-fact-in-link c type)
-  (format #t "selected-fact-in-link: ~a, data: ~a~%~!" type (get-comboboxwithdata-selecteddata c))
-    ; if "none" fact selected, uncheck the checkbox
-  (if (and (eq? c editlink-panel-else-text-factchoice)
-           editlink-panel-else-text-check 
-           editlink-panel-else-text-factchoice)
-      (set-checkbox-value editlink-panel-else-text-check
-                      (not (eq? (get-comboboxwithdata-selecteddata editlink-panel-else-text-factchoice) -1))))
-  (update-ok-button-state))
-  
+  (pack-frame editlink-dialog))  

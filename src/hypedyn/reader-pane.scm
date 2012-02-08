@@ -291,21 +291,25 @@
              (ask thisnode 'links))))
 
     ; check if link has alternate link, and if it was enabled
+    ;; TODO: outdated
     (define (altlink? l)
       (and (ask l 'use-alt-destination)
            (not (= -1 (ask l 'alt-destination)))))
 
     ; check if link has alternate text, and if it was enabled
+    ;; TODO : outdated
     (define (alttext? l)
       (ask l 'use-alt-text))
 
     ; check if link is enabled
+    ;; TODO : outdated
     (define (uselink? l)
       (ask l 'use-destination))
 
     ; add links to anywhere nodes
+    ;; NOTE : decided not to make this an action
     (define (add-anywherenode-links)
-      ; add in the divider
+      ;; add in the divider
       (define (add-anywherenode-divider nodereader-doc)
         ; leave a line before anywhere nodes
         (set-text-insert nodereader-doc "\n-----" (get-text-length nodereader-doc))
@@ -317,7 +321,7 @@
                         5
                         #t))
         
-      ; add in anywhere node links, if any
+      ; add in anywhere node links, if any (and if condition for it is satisfied)
       (let ((node-list (get-list 'nodes))
             (nodereader-doc (ask htpane-obj 'getdocument))
             (first-link-added #f))

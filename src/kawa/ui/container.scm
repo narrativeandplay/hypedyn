@@ -19,11 +19,16 @@
 
 ; require
 (require "../arrays.scm") ; for array-to-list
+(require "component.scm") ;; remove-component (not sure if clear-container should be calling this)
 
 ; export
 (module-export set-container-layout 
                get-container-children
-               validate-container)
+               validate-container
+               get-nth-component
+               clear-container
+               clear-container-from-index-onwards
+               )
 
 ;;
 ;; container
@@ -76,4 +81,25 @@
 ;; called after changes are made to components inside (but dont need pack-frame ie container size doesnt change)
 (define (validate-container container :: <java.awt.Container>)
   (invoke container 'validate))
+
+(define (get-nth-component container :: <java.awt.Container>
+                           n :: <int>)
+  (invoke container 'get-component n))
+
+;; empty the container of all children component
+;; TODO : implement clear-container with get-nth-component instead
+(define (clear-container in-container)
+  (let ((children (get-container-children in-container)))
+    (if (not (null? children))
+        (begin
+          (remove-component in-container (car children))
+          (clear-container in-container)))))
+
+;; clear all children component except the first n=index components
+(define (clear-container-from-index-onwards in-container index)
+  (let ((children (get-container-children in-container)))
+    (if (> (length children) index)
+        (begin
+          (remove-component in-container (list-ref children index))
+          (clear-container-from-index-onwards in-container index)))))
 

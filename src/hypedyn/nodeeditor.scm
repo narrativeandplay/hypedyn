@@ -635,6 +635,7 @@
             (newlink-undoable-postedit newlink-name newlink-ID)
             
             ; show edit link dialogue
+            ;; TODO: show rule manager when link is created (just uncomment create-rules-manager line and see if it works)
             ;(doeditlink newlink-ID (get-edited-nodeID) update-link-display-callback (get-link-text newlink-ID))
             ;(create-rules-manager 'link)
             
