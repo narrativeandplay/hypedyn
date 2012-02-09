@@ -80,6 +80,10 @@
           ((equal? obj-type 'node)
            (get 'nodes obj-ID))))
   
+  ;; for debug (delete later)
+  (define obj-name (ask this-obj 'name))
+  (display "[obj-name] ")(display obj-name)(newline)
+  
   (define rule-lst (ask this-obj 'rule-lst))
   
   ;; action name is the symbol assigned to the primitive procedure (eg 'follow-link 'retract)
