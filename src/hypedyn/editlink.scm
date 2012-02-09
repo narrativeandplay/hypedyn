@@ -101,7 +101,7 @@
          (rule-obj (get 'rules ruleID))
          (node-name (ask node-obj 'name))
          (anywhere? (ask node-obj 'anywhere?))
-         (new-ruleID (create-typed-rule2 "Enable link" 'node 'and #f nodeID))
+         (new-ruleID (create-typed-rule2 "Set fact" 'node 'and #f nodeID))
          ;(conditions (ask rule-obj 'conditions))
          ;(actions (ask rule-obj 'actions))
          )

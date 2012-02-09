@@ -822,6 +822,7 @@
   )
 
 ; delete currently selected node
+;; TODO: [undo] deletion of start node when undone does not restore start node status 
 (define (dodelnode)
   ; first save the node contents if its being edited
   (if (= (get-edited-nodeID) selected-nodeID)
