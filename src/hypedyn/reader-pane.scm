@@ -61,6 +61,68 @@
 (define start-indices (make-hash-table))
 (define end-indices (make-hash-table))
 
+    ;; if check-condition? true, we check whether the 
+    ;;   condition for the follow link action is satisfied
+    ;; if check-condition? false, we only check the existence 
+    ;; TODO : haven't taken into account whether the rules falls through or not
+    ;;        if the preceding rule is triggered and it is as if the condition isn't met 
+    ;;        and follow link is not allowed to trigger
+(define (find-action obj-ID obj-type check-condition? action-name)
+;  (display "find action ")(display "( obj-ID obj-type check-cond action-name) ")(newline)
+;  (display (list obj-ID obj-type check-cond action-name))(newline)
+;  (define this-obj
+;    (case obj-type
+;      ((link) (get 'links obj-ID))
+;      ((node) (get 'nodes obj-ID))))
+  (define this-obj
+    (cond ((equal? obj-type 'link)
+           (get 'links obj-ID))
+          ((equal? obj-type 'node)
+           (get 'nodes obj-ID))))
+  
+  (define rule-lst (ask this-obj 'rule-lst))
+  
+  ;; action name is the symbol assigned to the primitive procedure (eg 'follow-link 'retract)
+  (define (find-action-helper in-rule-lst in-action-name)
+    (if (null? in-rule-lst)
+        #f
+        (begin
+          (define condition-satisfied? (check-rule-condition (car in-rule-lst)))
+          (define fall-through? (ask (get 'rules (car in-rule-lst)) 'fall-through?))
+          (define found-action?
+            (find (lambda (actionID) ;;find action in this rule
+                    (define action (get 'actions actionID))
+                    (define sexpr (ask action 'expr))
+                    (display "[action] ")(display (car sexpr))(newline)
+                    (equal? (car sexpr) in-action-name)
+                    ) (ask (get 'rules (car in-rule-lst)) 'actions)))
+
+ 
+          (display "[Search] ")(display in-action-name)(newline)
+          (display "action list ")(display (ask (get 'rules (car in-rule-lst)) 'actions))(newline)
+          (display "fall-through? ")(display fall-through?)(newline)
+          (display "condition-satisfied? ")(display condition-satisfied?)(newline)
+          (display "found-action? ")(display found-action?)(newline)(newline)
+          ;; if checking condition need to check take note not to fall through when condition satisfied
+          (if check-condition?
+              (if (and found-action? condition-satisfied?)
+                  #t
+                  (if (or (and condition-satisfied?
+                               fall-through?)
+                          (and (not condition-satisfied?)))
+                      (find-action-helper (cdr in-rule-lst) in-action-name)
+                      #f))
+              ;; if not checking just need to look through the whole in-rule-lst
+              (if found-action?
+                  #t
+                  (find-action-helper (cdr in-rule-lst) in-action-name))
+              )
+          ))) ;; end of helper
+
+  ;; start the helper
+  (find-action-helper rule-lst action-name)
+  )
+
 ; read-only hypertextpane
 (define (make-reader-pane
          w h
@@ -169,35 +231,32 @@
     ;; following links
 
     ;; check if a link can be followed
-    ;; if check-condition? true, we check whether the 
-    ;;   condition for the follow link action is satisfied
-    ;; if check-condition? false, we only check the existence 
-    ;; TODO : haven't taken into account whether the rules falls through or not
-    ;;        if the preceding rule is triggered and it does not fall through
-    ;;        is it true that follow link is never allowed to trigger?
     (define (follow-link-available? linkID check-condition?)
-      (let* ((thelink (get 'links linkID))
-             ;(ruleID (ask thelink 'rule))
-             (rule-lst (ask thelink 'rule-lst)))
-        
-        (define (find-follow-link-action rule-lst)
-          (if (null? rule-lst)
-              #f
-              (if (and (find (lambda (actionID) ;;find follow-link action
-                               (define action (get 'actions actionID))
-                               (define sexpr (ask action 'expr))
-                               (equal? (car sexpr) 'follow-link)
-                               ) (ask (get 'rules (car rule-lst)) 'actions))
-                       ;; condition for this action is satisfied
-                       (or (and check-condition? (check-rule-condition (car rule-lst)))
-                           (and (not check-condition?))))
-                  #t
-                  (find-follow-link-action (cdr rule-lst)))
-              ))
-        
-        (find-follow-link-action rule-lst)
-        ))
-
+;      (let* ((thelink (get 'links linkID))
+;             ;(ruleID (ask thelink 'rule))
+;             (rule-lst (ask thelink 'rule-lst)))
+;        
+;        (define (find-follow-link-action rule-lst)
+;          (if (null? rule-lst)
+;              #f
+;              (if (and (find (lambda (actionID) ;;find follow-link action
+;                               (define action (get 'actions actionID))
+;                               (define sexpr (ask action 'expr))
+;                               (equal? (car sexpr) 'follow-link)
+;                               ) (ask (get 'rules (car rule-lst)) 'actions))
+;                       ;; condition for this action is satisfied
+;                       (or (and check-condition? (check-rule-condition (car rule-lst)))
+;                           (and (not check-condition?))))
+;                  #t
+;                  (find-follow-link-action (cdr rule-lst)))
+;              ))
+;        
+;        (find-follow-link-action rule-lst)
+;        )
+      (display "calling follwo lik available? ")(display linkID)(display " ")(display check-condition?)(newline)
+      (find-action linkID 'link check-condition? 'follow-link)
+      )
+    
     ;; link actions
 
     ; get action from a link
@@ -332,53 +391,59 @@
               
               ; for each node, run through and check if it should be added to the anywhere node links
               (map (lambda (n)
-                     (let ((thisnodeID (car n))
-                           (thisnode (cdr n)))
+                     (let* ((thisnodeID (car n))
+                            (thisnode (cdr n))
+                            (rule-lst (ask thisnode 'rule-lst)))
                        ; if its an anywhere node, not the current node, and its rule is satisfied
-                       (if (and (ask thisnode 'anywhere?)
-                                (not (= thisnodeID (get-read-nodeID)))
-                                (check-rule-condition (ask thisnode 'rule)))
-                           (begin
-                             ; if its the first anywhere node, add divider
-                             (if (not first-link-added)
-                                 (begin
-                                   (add-anywherenode-divider nodereader-doc)
-                                   (set! first-link-added #t)))
+                       (map (lambda (ruleID)
+                              (if (and (ask thisnode 'anywhere?)
+                                       (not (= thisnodeID (get-read-nodeID)))
+                                       (find-action thisnodeID 'node #t 'add-anywhere-link)
+                                       ;(check-rule-condition ruleID) ;(ask thisnode 'rule)))
+                                       )
+                                  (begin
+                                        ; if its the first anywhere node, add divider
+                                    (if (not first-link-added)
+                                        (begin
+                                          (add-anywherenode-divider nodereader-doc)
+                                          (set! first-link-added #t)))
 
-                             ; add the link
-                             (let ((thisnodeName (ask thisnode 'name))
-                                   (thisStartPos (get-text-length nodereader-doc)))
-                               ; add text
-                               (set-text-insert nodereader-doc
-                                                (string-append "\n" thisnodeName)
-                                                thisStartPos)
+                                        ; add the link
+                                    (let ((thisnodeName (ask thisnode 'name))
+                                          (thisStartPos (get-text-length nodereader-doc)))
+                                        ; add text
+                                      (set-text-insert nodereader-doc
+                                                       (string-append "\n" thisnodeName)
+                                                       thisStartPos)
 
-                               ; highlight
-                               (if (> (ask thisnode 'visited?) 0)
-                                   ; already followed, so just underline
-                                   (set-text-style nodereader-doc
-                                                   style-followed-link
-                                                   (+ 1 thisStartPos)
-                                                   (- (get-text-length nodereader-doc) (+ 1 thisStartPos))
-                                                   #t)
-                                   ; otherwise underline and bold
-                                   (set-text-style nodereader-doc
-                                                   style-link
-                                                   (+ 1 thisStartPos)
-                                                   (- (get-text-length nodereader-doc) (+ 1 thisStartPos))
-                                                   #t))
+                                        ; highlight
+                                      (if (> (ask thisnode 'visited?) 0)
+                                        ; already followed, so just underline
+                                          (set-text-style nodereader-doc
+                                                          style-followed-link
+                                                          (+ 1 thisStartPos)
+                                                          (- (get-text-length nodereader-doc) (+ 1 thisStartPos))
+                                                          #t)
+                                        ; otherwise underline and bold
+                                          (set-text-style nodereader-doc
+                                                          style-link
+                                                          (+ 1 thisStartPos)
+                                                          (- (get-text-length nodereader-doc) (+ 1 thisStartPos))
+                                                          #t))
 
-                               ; and set clickback
-                               (let ((link-attribute-set (make-attribute-set)))
-                                 (set-attribute-linkAction link-attribute-set
-                                                           (lambda ()
-                                                             (goto-node thisnodeID #t)))
-                                 (set-attribute-linkID link-attribute-set thisnodeID)
-                                 (set-text-style nodereader-doc
-                                                 link-attribute-set
-                                                 (+ 1 thisStartPos)
-                                                 (- (get-text-length nodereader-doc) (+ 1 thisStartPos))
-                                                 #f)))))))
+                                        ; and set clickback
+                                      (let ((link-attribute-set (make-attribute-set)))
+                                        (set-attribute-linkAction link-attribute-set
+                                                                  (lambda ()
+                                                                    (goto-node thisnodeID #t)))
+                                        (set-attribute-linkID link-attribute-set thisnodeID)
+                                        (set-text-style nodereader-doc
+                                                        link-attribute-set
+                                                        (+ 1 thisStartPos)
+                                                        (- (get-text-length nodereader-doc) (+ 1 thisStartPos))
+                                                        #f)))))
+                              ) rule-lst)
+                       ))
                    node-list)
               (ask htpane-obj 'set-track-links! #t)))))
 

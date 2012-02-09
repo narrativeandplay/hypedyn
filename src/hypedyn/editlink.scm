@@ -101,16 +101,21 @@
          (rule-obj (get 'rules ruleID))
          (node-name (ask node-obj 'name))
          (anywhere? (ask node-obj 'anywhere?))
+         (new-ruleID (create-typed-rule2 "Enable link" 'node 'and #f nodeID))
          ;(conditions (ask rule-obj 'conditions))
          ;(actions (ask rule-obj 'actions))
          )
     
-    ;; for every action (only set fact actions are on pre 2.2 nodes)
-    ;; add a rule for it
+    ;; add the dummy add-anywhere-link action
+    ;; (does nothing, just a place holder to let it show up)
+    (if anywhere?
+        (create-action "Enable Link" 'entered-node
+                       (list 'add-anywhere-link)
+                       new-ruleID))
+    
+    ;; add all actions to the new rule (only set fact actions are on pre 2.2 nodes)
     (if rule-obj
         (begin
-          
-          (define conditions (ask rule-obj 'conditions))
           (define actions (ask rule-obj 'actions))
           (map (lambda (actionID)
                  (define action (get 'actions actionID))
@@ -123,9 +128,6 @@
                      (begin
                        (display "SEXPR ")(display action-sexpr)(newline)
                        (display "pair? ")(display (pair? action-sexpr))(newline)
-                       (define new-ruleID (create-typed-rule2 node-name 'node 'and #f nodeID))
-                       (display "new-ruleID ")(display new-ruleID)(newline)
-                       (display "node name ")(display node-name)(newline)
                        (define new-rule (get 'rules new-ruleID))
                        (create-action node-name 'entered-node
                                       action-sexpr
@@ -135,9 +137,19 @@
                        ;; add the conditions to the rules
                        ))
                  ) actions)
+          
+          ;; transfer the condition from the original old rule to the new rules
+        ;(create-typed-condition name type targetID operator ruleID . args)
+        (define old-conditions (ask rule-obj 'conditions))
+        (map (lambda (condition)
+               (define this-cond (get 'conditions condition))
+               (let ((type (ask this-cond 'type))
+                     (targetID (ask this-cond 'targetID))
+                     (operator (ask this-cond 'operator)))
+                 (create-typed-condition "Enable link" type targetID operator new-ruleID))
+               ) old-conditions)
           )
-          
-          
+          ;; no rule for node so no need to transfer anything to new rule
         (begin
           (display "no rule for node ")(display nodeID)(newline)
           ))
@@ -145,6 +157,7 @@
 
 ;; convertion of pre 2.2 links to 2.2 format
 ;; need to create 2 rules one for(if) and against(else) the condition in rule
+;; note old rules are still around in the datatable, just not invoked
 (define (convert-pre-2.2-links linkID link-obj)
   ;(display "CONVERT LINKS pre 2.2")(newline)
 
@@ -852,6 +865,9 @@
                   
                   (add-specific-action "update fact" the-action targetID the-value)
                   )
+                 ((equal? 'add-anywhere-link (car action-sexpr))
+                  (add-specific-action "enable links to this node from anywhere")
+                  )
                  )
                
                ) actions)
@@ -1445,6 +1461,7 @@
 ;  (add-component editnode-panel-then-buttons editnode-panel-then-buttons-delete)
 ;  )
 
+;; not used anymore
 (define (create-editnode-dialog parent)
   ; remember parent
   (set! editnode-dialog-parent parent)
@@ -1579,11 +1596,6 @@
 
     ; make sure the "None" entry is explicitly inserted at the start of the list
     (insert-comboboxwithdata-string-at link-list "<None>" -1 0)
-    
-    ; add action listener
-    (add-actionlistener link-list
-                        (make-actionlistener (lambda (source)
-                                               (in-callback source))))
     
     ; select the chosen link
     (set-comboboxwithdata-selection-bydata link-list linkID)
@@ -2025,7 +2037,7 @@
                                                ))
                                ((equal? fact-type 'text)
                                 (create-action link-name 'clicked-link
-                                               (list set-value!
+                                               (list 'set-value!
                                                      factID
                                                      (get-text comp3))
                                                new-ruleID)

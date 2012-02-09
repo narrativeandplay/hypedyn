@@ -81,7 +81,7 @@
                set-reader-background-image! clear-reader-background-image!
                play-audio loop-audio loop-audio-forever stop-audio
                
-               replace-link-text follow-link2)
+               replace-link-text follow-link2 add-anywhere-link)
 
 ;;
 ;; config flags
@@ -996,3 +996,8 @@
             )
         ))
   )
+
+;; dummy for anywhere link adding action
+;; not sure if we're going to use this or not
+(define (add-anywhere-link)
+  #f)
