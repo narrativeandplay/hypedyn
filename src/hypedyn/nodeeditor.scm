@@ -848,7 +848,7 @@
         (define thislink (get 'links new-linkID))
         (define old-start (ask thislink 'start-index))
         (define old-end (ask thislink 'end-index))
-        (display "[add-link] ")(display (list old-start old-end))(newline)
+        ;(display "[add-link] ")(display (list old-start old-end))(newline)
         (ask parent-obj 'add-object new-linkID display-name)))
 
     ; message handling

@@ -191,7 +191,6 @@
 
     ; add a link in the editor as an underline
     (define (addlink thislink)
-      (display "[addlink]")(newline)
       ;; cache the value of track-undoable-edits and set it back later
       (define original-track-undoable-edits track-undoable-edits)
       (set-track-undoable-edits! #f)
@@ -218,7 +217,6 @@
     
     ; set clickback on a range of text
     (define (set-clickback this-linkID start-index len)
-      (display "set-clicback! ***********")(display (list this-linkID start-index len))(newline)
       (let ((link-attribute-set (make-attribute-set)))
         (set-attribute-linkAction link-attribute-set
                                   (lambda ()

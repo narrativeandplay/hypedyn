@@ -744,23 +744,21 @@
     (put 'rules rule-ID new-rule)
     ;(format #t "New rule: ~a~%~!" new-rule)
 
-    ; set rule in parent
+    ; add rule in parent
     (if (eq? type 'doc)
-        
         ; document rule, so just set
         ;(set-document-ruleID! rule-ID)
         (add-document-ruleID rule-ID)
         
         ; otherwise, get the parent and set
-        (let* ((the-get-symbol (if (eq? type 'link) 
-                                   'links
-                                   'nodes))
-               (the-parent (get the-get-symbol actual-parentID)))
+        (let* ((get-symbol (case type 
+                                 ((link) 'links)
+                                 ((node) 'nodes)))
+               (the-parent (get get-symbol actual-parentID)))
+          (display "ADDING new ruleID to object ")(display rule-ID)(newline)
           (if the-parent
-              ;(ask the-parent 'set-rule! rule-ID)
-              (begin
-                (ask the-parent 'add-rule rule-ID))
-              )))
+              (ask the-parent 'add-rule rule-ID))
+          ))
     
     ; return the rule ID
     rule-ID))

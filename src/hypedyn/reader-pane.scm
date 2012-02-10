@@ -370,7 +370,10 @@
       (ask l 'use-destination))
 
     ; add links to anywhere nodes
-    ;; NOTE : decided not to make this an action
+    ;; NOTE : this is not called as an action like the others (just saving time because its troublesome but can be done)
+    ;;        however, find-action looks for add-anywhere-link action in the rules of 
+    ;;        the anywhere node and check its condition before it adds the anywhere link 
+    ;;        therefore deleting the action/rule containing add-anywhere-link action would cause the link to not be ever added
     (define (add-anywherenode-links)
       ;; add in the divider
       (define (add-anywherenode-divider nodereader-doc)

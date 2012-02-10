@@ -33,6 +33,7 @@
   (require "../kawa/ui/combobox.scm")
   (require "../kawa/ui/tabpanel.scm")
   (require "../kawa/ui/undo.scm") ;; debug compoundundomanager-updatelevel 
+  (require "../kawa/ui/menu.scm") ;; make-menu, make-menu-bar
   
   (require "../kawa/system.scm") ; is-windows?
   (require "../kawa/strings.scm") ;; to-string
@@ -424,7 +425,15 @@
 (define rules-manager-main-dialog #f)
 (define rmgr-rules-list-panel #f) ;; the panel that contain all the rule panels
 ;(define rmgr-rules-panel-list #f) ;; a list of all the rule panels (sigh sorry for the confusing names)
-(define rmgr-rule-lst (list))
+;(define rmgr-rule-lst (list))
+
+;; get rule-lst from currently edited object
+(define (rmgr-rule-lst)
+  (ask (rmgr-get-currently-edited) 'rule-lst))
+
+;; update rule position in object's rule-lst
+(define (rmgr-set-rule-lst new-lst)
+  (ask (rmgr-get-currently-edited) 'set-rule-lst new-lst))
 
 ;; get the child of rmgr-rules-list-panel and see which position
 ;; this rule-panel is in
@@ -464,16 +473,13 @@
                          (define pos (list-index (lambda (panel) (eq? top-panel panel)) sibling-lst))
                          (cond ((equal? edit-mode 'link)
                                 (define rule-position (rule-panel-position top-panel))
-                                (define ruleID (list-ref rmgr-rule-lst rule-position))
+                                (define ruleID (list-ref (rmgr-rule-lst) rule-position))
                                 
-;                                (display "rule-position ")(display rule-position)(newline)
-;                                (display "ruleID ")(display ruleID)(newline)
-;                                (display "rmgr-rule-lst ")(display rmgr-rule-lst)(newline)
                                 (doeditlink selected-linkID edited-nodeID update-link-display ruleID)
                                 )
                                ((equal? edit-mode 'node)
                                 (define rule-position (rule-panel-position top-panel))
-                                (define ruleID (list-ref rmgr-rule-lst rule-position))
+                                (define ruleID (list-ref (rmgr-rule-lst) rule-position))
                                 (doeditnoderule edited-nodeID ruleID)
                                 )
                                ((equal? edit-mode 'doc)
@@ -518,56 +524,34 @@
   (define (swap-left lst index)
     (swap-right lst (- index 1)))
   
-  ;; src and dest are index of the panel
-  ;; assuming positions makes any sense for the layout of container
-  ;; we want to move say the 1st panel to third (works with horizontal layout)
-  (define (shift-panel container src dest)
-;    (list-index (lambda (obj) (eq? rule-panel obj)) (get-container-children container) )
-    (if (and (not (= src dest)) ;; no need to do anything if src equals dest
-             (>= src 0)
-             (>= dest 0))
-        (begin
-          (define panel-lst (get-container-children container))
-          (define panel (list-ref panel-lst src))
-          (set! panel-lst (remove (lambda (o) (eq? o panel)) panel-lst))
-
-          ;; if src in front of dest, dest is affected and need to be shifted left by 1
-;          (if (< src dest)
-;              (set! panel-lst (list-insert panel-lst panel (- dest 1)))
-;              (set! panel-lst (list-insert panel-lst panel dest)))
-          (set! panel-lst (list-insert panel-lst panel dest))
-          
-          (clear-container container)
-          ;; add them all back in that order
-          (map-in-order (lambda (panel)
-                 (add-component container panel)
-                 ) panel-lst)
-          )))
-  
   (add-actionlistener
    shift-up-button
    (make-actionlistener
     (lambda (e)
       (display "UP ")(newline)
-      (define position (list-index (lambda (o) (equal? o ruleID)) rmgr-rule-lst))
+      (define position (list-index (lambda (o) (equal? o ruleID)) (rmgr-rule-lst)))
       ;; swap this rule panel up 
       ;; swap ruleID in rmgr-rule-lst leftwards
-      (display "b4 shift up ")(display rmgr-rule-lst)(newline)
-      (set! rmgr-rule-lst
-            (swap-left rmgr-rule-lst position))
-      (display "after shift up ")(display rmgr-rule-lst)(newline)
-
-      (shift-panel rmgr-rules-list-panel position (- position 1))
+      (display "b4 shift up ")(display (rmgr-rule-lst))(newline)
+;      (set! rmgr-rule-lst
+;            (swap-left rmgr-rule-lst position))
 
       ;; set the entire rule-lst in object 
-      (define parentID (ask rule-obj 'parentID))
-      (define parent-type (ask rule-obj 'type))
-      (define parent-obj
-        (case parent-type
-          ((link) (get 'links parentID))
-          ((node) (get 'nodes parentID))))
-      (ask parent-obj 'set-rule-lst (list-copy rmgr-rule-lst))
+;      (define parentID (ask rule-obj 'parentID))
+;      (define parent-type (ask rule-obj 'type))
+;      (define parent-obj
+;        (case parent-type
+;          ((link) (get 'links parentID))
+;          ((node) (get 'nodes parentID))))
+;      (ask parent-obj 'set-rule-lst (list-copy rmgr-rule-lst))
+      
+      ;; update rule position in object's rule-lst
+      (rmgr-set-rule-lst (swap-left (rmgr-rule-lst) position))
 
+      (shift-panel rmgr-rules-list-panel position (- position 1))
+      
+      (display "after shift up ")(display (rmgr-rule-lst))(newline)
+                                          
       ;; need to pack-frame for update?
       ;(pack-frame rules-manager-main-dialog)
       (validate-container rules-manager-main-dialog)
@@ -579,26 +563,28 @@
    (make-actionlistener
     (lambda (e)
       (display "DOWN ")(newline)
-      (define position (list-index (lambda (o) (equal? o ruleID)) rmgr-rule-lst))
+      (define position (list-index (lambda (o) (equal? o ruleID)) (rmgr-rule-lst)))
       (display "position ")(display position)(newline)
       ;; swap this rule panel up 
       ;; swap ruleID in rmgr-rule-lst leftwards
-      (set! rmgr-rule-lst
-            (swap-right rmgr-rule-lst position))
-
-      (display "after shift down ")(display rmgr-rule-lst)(newline)
-
-      (shift-panel rmgr-rules-list-panel position (+ position 1))
+;      (set! rmgr-rule-lst
+;            (swap-right rmgr-rule-lst position))
 
       ;; set the entire rule-lst in object 
-      (define parentID (ask rule-obj 'parentID))
-      (define parent-type (ask rule-obj 'type))
-      (define parent-obj
-        (case parent-type
-          ((link) (get 'links parentID))
-          ((node) (get 'nodes parentID))))
-      (ask parent-obj 'set-rule-lst (list-copy rmgr-rule-lst))
+;      (define parentID (ask rule-obj 'parentID))
+;      (define parent-type (ask rule-obj 'type))
+;      (define parent-obj
+;        (case parent-type
+;          ((link) (get 'links parentID))
+;          ((node) (get 'nodes parentID))))
+;      (ask parent-obj 'set-rule-lst (list-copy rmgr-rule-lst))
 
+      (shift-panel rmgr-rules-list-panel position (+ position 1))
+      
+      (rmgr-set-rule-lst (swap-right (rmgr-rule-lst) position))
+      
+      (display "after shift down ")(display rmgr-rule-lst)(newline)
+      
       ;; need to pack-frame for update?
       ;(pack-frame rules-manager-main-dialog)
       (validate-container rules-manager-main-dialog)
@@ -624,7 +610,9 @@
 ;;       creating new rules and adding it to the object
 
 ;; add rule (makes a rule panel inside rmgr-rules-list-panel)
-(define (add-rule-panel ruleID)
+;; when pos is added it adds the panel and the ruleID in that particular position
+;; NOTE: don't think i have any use for pos yet (thought i did)
+(define (add-rule-panel ruleID #!optional pos)
   (if (and rmgr-rules-list-panel
            rules-manager-main-dialog)
       (begin
@@ -632,17 +620,32 @@
         (if (equal? ruleID 'new)
             (begin
               (set! ruleID (create-typed-rule2 "new rule" edit-mode 'and #f
-                                                (case edit-mode
-                                                  ((link) edited-linkID)
-                                                  ((node) edited-nodeID)
-                                                  ((doc) -1))))
+                                                (rmgr-get-currently-edited-ID)))
+              ;; only need to add it when its a new ruleID
+              ;; TOFIX: when calling add-rule-panel to redo, we need to add to the rule-lst
+              ;;        whereas when we're 
+              (rmgr-set-rule-lst (append (rmgr-rule-lst) (list ruleID)))
               ))
         
-        (set! rmgr-rule-lst (append rmgr-rule-lst (list ruleID)))
+        ;; if position given use it (disabled for now)
+;        (if pos
+;            (begin
+;              (set! rmgr-rule-lst (list-insert rmgr-rule-lst ruleID pos))
+;              (add-component-at rmgr-rules-list-panel (make-rule-panel ruleID) pos))
+;            (begin
+;              (set! rmgr-rule-lst (append rmgr-rule-lst (list ruleID)))
+;              (add-component rmgr-rules-list-panel (make-rule-panel ruleID))))
+         
         (add-component rmgr-rules-list-panel (make-rule-panel ruleID))
+        
         (pack-frame rules-manager-main-dialog)
-        ))
-  )
+        
+        ;; return ruleID
+        ruleID)
+      ;;
+      (begin
+        (display "ERROR: in add-rule-panel")(newline)
+      -1)))
 
 ;; go through all the rule panels in rmgr-rules-list-panel
 ;; remove those with checkbox checked
@@ -673,10 +676,57 @@
              (begin
                (remove-component rmgr-rules-list-panel rule-panel)
                (pack-frame rules-manager-main-dialog)
-               (set! rmgr-rule-lst (remove (lambda (thisruleID) (= ruleID thisruleID)) rmgr-rule-lst))
+               ;(set! rmgr-rule-lst (remove (lambda (thisruleID) (= ruleID thisruleID)) rmgr-rule-lst))
+               (rmgr-set-rule-lst (remove (lambda (thisruleID) (= ruleID thisruleID)) (rmgr-rule-lst)))
                (ask rule-parent 'remove-rule ruleID)
                ))
-         ) rule-panel-lst rmgr-rule-lst)
+         ) rule-panel-lst (rmgr-rule-lst))
+  )
+
+;; assume rule manager is correctly loaded (rule-panel-lst correspond to rmgr-rule-lst)
+;; we're deleting a rule within rule manager 
+(define (check-rule-panel ruleID)
+  (define rule-panel-lst (get-container-children rmgr-rules-list-panel))
+  (map (lambda (rule-panel this-ruleID)
+         (define component-lst (get-container-children rule-panel))
+         (define this-checkbox (car component-lst))
+         ;; if checkbox checked remove
+         (if (= this-ruleID ruleID)
+             (set-checkbox-value this-checkbox #t))
+         ) rule-panel-lst (rmgr-rule-lst)))
+
+;; remove rule assumes that obj is the currently 
+;; edited object in the rule manager
+;; TODO: remove rules from 'rules list when deleting
+;;       but this would mean when we delete and undo, we have to recreate
+;;       the same rule (which should be the right thing to do)
+(define (rmgr-remove-rule ruleID)
+  (define index (list-index (lambda (rid) (= rid ruleID)) (rmgr-rule-lst)))    ;; get the index in rmgr-rule-lst and rmgr-rules-list-panel
+;  (display "find ")(display ruleID)(newline)
+;  (display "rmgr-rule-lst ")(display (rmgr-rule-lst))(newline)
+;  (display "edited ID ")(display (rmgr-get-currently-edited-ID))(newline)
+  
+;  (set! rmgr-rule-lst (remove (lambda (rid) (= rid ruleID)) rmgr-rule-lst))
+  (rmgr-set-rule-lst (remove (lambda (rid) (= rid ruleID)) (rmgr-rule-lst)))
+  (define comp-lst (get-container-children rmgr-rules-list-panel))
+  (define panel-to-remove (list-ref comp-lst index))
+  (remove-component rmgr-rules-list-panel panel-to-remove)
+  (pack-frame rules-manager-main-dialog)
+  ;(ask (rmgr-get-currently-edited) 'set-rule-lst rmgr-rule-lst)
+  )
+
+;; get the object current edited by rule manager
+(define (rmgr-get-currently-edited)
+  (case edit-mode
+    ((link) (get 'links edited-linkID))
+    ((node) (get 'nodes edited-nodeID))
+    ((doc) -1)))
+
+(define (rmgr-get-currently-edited-ID)
+  (case edit-mode
+    ((link) edited-linkID)
+    ((node) edited-nodeID)
+    ((doc) -1))
   )
 
 ;; target type might be 'link 'node 'doc
@@ -693,6 +743,19 @@
   (define rules-manager-main-panel (make-panel))
   (set-container-layout rules-manager-main-panel 'border)
   (add-component rules-manager-main-dialog rules-manager-main-panel)
+  
+  (define rules-menu-bar (make-menu-bar))
+  (define rules-menu (make-menu "Edit"))
+  (if (is-undo-enabled?)
+      (begin
+        (add-menu-action rules-menu undo-action)
+        (add-menu-action rules-menu redo-action)
+
+        ;; adding edit menu to rules manager but it is not visible
+        ;; this is the only way I know to get the undo working on rules manager
+        (add-component rules-manager-main-panel rules-menu-bar)
+        (add-component rules-menu-bar rules-menu)
+        ))
   
   ;; label display
   (define rules-label (make-label-with-title "Rules"))
@@ -727,12 +790,29 @@
   (add-component rules-dialog-button-panel rules-dialog-close)
   ;(add-component rules-dialog-button-panel rules-dialog-cancel)
   
+  
+  ;; TODO: rules manager and edit node pane should pop up
+  ;;       when we undo and redo
+  
+  ;; TOFIX: look into why the name of the new rule changes after undo redo to the name of the node/link
+  ;;        from its original "new rule"
   (add-actionlistener add-rule-button 
                       (make-actionlistener
                        (lambda (e)
-                         (add-rule-panel 'new)
-;                         (add-component rules-list-panel (make-rule-panel))
-;                         (pack-frame rules-manager-main-dialog)
+                         (define new-rule-ID (add-rule-panel 'new))
+                         
+                         ;; post undo
+                         (compoundundomanager-postedit
+                          undo-manager
+                          (make-undoable-edit "Add Rule"
+                                              (lambda () ;; undo
+                                                (rmgr-remove-rule new-rule-ID)
+                                                )
+                                              (lambda () ;; redo
+                                                (add-rule-panel new-rule-ID)
+                                                (rmgr-set-rule-lst (append (rmgr-rule-lst) (list new-rule-ID)))
+                                                ;(ask (rmgr-get-currently-edited) 'set-rule-lst rmgr-rule-lst)
+                                                )))
                          )))
   
   (add-actionlistener delete-rule-button 
@@ -748,7 +828,9 @@
                          )))
   
   ;; empty the rule ID list (corresponds to the rule list in rmgr) 
-  (set! rmgr-rule-lst '())
+  ;; NOTE: rmgr-rule-lst is not longer a separate list caching the object's rule-lst
+  ;;       but it is now a function that returns the object's rule-lst
+  ;(set! rmgr-rule-lst '())
   
   ;; populate the rule manager
   (cond ((equal? target-type 'link)
@@ -982,7 +1064,7 @@
   (set! editlink-panel-main-buttons-add (make-button "Add condition"))
   (add-actionlistener editlink-panel-main-buttons-add
                       (make-actionlistener (lambda (source)
-                                             (editlink-dialog-add))))
+                                             (editlink-dialog-add-condition))))
   (add-component editlink-panel-main-buttons editlink-panel-main-buttons-add)
 
   ;; Add DELETE button
@@ -1173,6 +1255,7 @@
   )
 
 ;; called when delete action button is pressed
+;; TODO: does not remove the action at all from the rule object
 (define (delete-action-callback source)
   (map (lambda (action-panel)
          (define comp-lst (get-container-children action-panel))
@@ -1769,9 +1852,13 @@
   )
 
 ; add a condition
-(define (editlink-dialog-add)
+(define (editlink-dialog-add-condition)
   (create-condition-panel 0 -1 0 -1)
   (pack-frame editlink-dialog))
+
+; delete selected condition
+(define (editlink-dialog-delete-conditions)
+  (editlink-dialog-delete condition-list-panel))
 
 ; get expression from position
 (define (get-rule-exp pos)
@@ -2053,8 +2140,11 @@
            ;;       and implement a extra replace rule command for links and node objects
            (ask the-link 'remove-rule edited-ruleID)
            (del 'rules edited-ruleID)
-           (define old-ruleID-index (list-index (lambda (obj) (= edited-ruleID obj)) rmgr-rule-lst))
-           (set! rmgr-rule-lst (list-replace rmgr-rule-lst old-ruleID-index new-ruleID))
+           
+           ;; no need to remove it rmgr-rule-lst
+           ;(define old-ruleID-index (list-index (lambda (obj) (= edited-ruleID obj)) (rmgr-rule-lst)))
+           ;(set! rmgr-rule-lst (list-replace rmgr-rule-lst old-ruleID-index new-ruleID))
+           ;(rmgr-set-rule-lst (list-replace (rmgr-rule-lst) old-ruleID-index new-ruleID))
            
            ;; now we remove the old action ID
            ;(create-action name type expr ruleID . args)
@@ -2302,10 +2392,6 @@
 ;      (set-combobox-selection editlink-panel-else-text-typechoice 0))
 
   (set-combobox-selection editlink-dialog-andor-operator 0))
-
-; delete selected condition
-(define (editlink-dialog-delete-conditions)
-  (editlink-dialog-delete condition-list-panel))
 
 ; delete selected entries in a container, used by conditions and facts
 ;; TODO take this out as misc or replace with a suitable procedure from container

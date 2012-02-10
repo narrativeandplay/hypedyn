@@ -264,7 +264,8 @@
     (if (is-undo-enabled?)
         (begin
           (add-menu-action m-edit undo-action)
-          (add-menu-action m-edit redo-action)))
+          (add-menu-action m-edit redo-action))
+        )
 
     ; view menu
     (add-component main-menu m-view)

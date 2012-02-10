@@ -133,8 +133,6 @@
   (eval-sexpr redo-sexpr)
   ;(display "redo-sexpr in delete-link-undo ")(display redo-sexpr)(newline)
 
-  (display "diid redo sexpr ")(display redo-sexpr)(newline)
-  
   (display "[delete-link-undo]")(newline)
   (define from-node (get 'nodes from-nodeID)) 
   
