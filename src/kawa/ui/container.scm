@@ -20,6 +20,8 @@
 ; require
 (require "../arrays.scm") ; for array-to-list
 (require "component.scm") ;; remove-component (not sure if clear-container should be calling this)
+(require 'list-lib)
+(require "../../common/list-helpers.scm") ;; list-insert
 
 ; export
 (module-export set-container-layout 
@@ -29,6 +31,7 @@
                clear-container
                clear-container-from-index-onwards
                add-component-at
+               shift-panel
                )
 
 ;;

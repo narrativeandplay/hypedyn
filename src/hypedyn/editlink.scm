@@ -524,37 +524,49 @@
   (define (swap-left lst index)
     (swap-right lst (- index 1)))
   
+  ;; shift this rule panel up, shift the rule as well
+  (define (shift-rule-up)
+    (display "UP ")(newline)
+    (define position (list-index (lambda (o) (equal? o ruleID)) (rmgr-rule-lst)))
+
+    (shift-panel rmgr-rules-list-panel position (- position 1))
+
+    ;; update rule position in object's rule-lst
+    (rmgr-set-rule-lst (swap-left (rmgr-rule-lst) position))
+
+    ;; need to pack-frame for update?
+    ;(pack-frame rules-manager-main-dialog)
+    (validate-container rules-manager-main-dialog)
+    )
+  
+  ;; shift this rule panel down, shift the rule as well
+  (define (shift-rule-down)
+    (display "DOWN ")(newline)
+    (define position (list-index (lambda (o) (equal? o ruleID)) (rmgr-rule-lst)))
+
+    (shift-panel rmgr-rules-list-panel position (+ position 1))
+
+    ;; update rule position in object's rule-lst
+    (rmgr-set-rule-lst (swap-right (rmgr-rule-lst) position))
+
+    ;; need to pack-frame for update?
+    ;(pack-frame rules-manager-main-dialog)
+    (validate-container rules-manager-main-dialog))
+  
+  
   (add-actionlistener
    shift-up-button
    (make-actionlistener
     (lambda (e)
-      (display "UP ")(newline)
-      (define position (list-index (lambda (o) (equal? o ruleID)) (rmgr-rule-lst)))
-      ;; swap this rule panel up 
-      ;; swap ruleID in rmgr-rule-lst leftwards
-      (display "b4 shift up ")(display (rmgr-rule-lst))(newline)
-;      (set! rmgr-rule-lst
-;            (swap-left rmgr-rule-lst position))
-
-      ;; set the entire rule-lst in object 
-;      (define parentID (ask rule-obj 'parentID))
-;      (define parent-type (ask rule-obj 'type))
-;      (define parent-obj
-;        (case parent-type
-;          ((link) (get 'links parentID))
-;          ((node) (get 'nodes parentID))))
-;      (ask parent-obj 'set-rule-lst (list-copy rmgr-rule-lst))
-      
-      ;; update rule position in object's rule-lst
-      (rmgr-set-rule-lst (swap-left (rmgr-rule-lst) position))
-
-      (shift-panel rmgr-rules-list-panel position (- position 1))
-      
-      (display "after shift up ")(display (rmgr-rule-lst))(newline)
-                                          
-      ;; need to pack-frame for update?
-      ;(pack-frame rules-manager-main-dialog)
-      (validate-container rules-manager-main-dialog)
+      (shift-rule-up)
+      (compoundundomanager-postedit
+       undo-manager
+       (make-undoable-edit "Shift Rule Up"
+                           (lambda () ;; undo
+                             (shift-rule-down)
+                             )
+                           (lambda () ;; undo
+                             (shift-rule-up))))
       )
     ))
   
@@ -562,32 +574,15 @@
    shift-down-button
    (make-actionlistener
     (lambda (e)
-      (display "DOWN ")(newline)
-      (define position (list-index (lambda (o) (equal? o ruleID)) (rmgr-rule-lst)))
-      (display "position ")(display position)(newline)
-      ;; swap this rule panel up 
-      ;; swap ruleID in rmgr-rule-lst leftwards
-;      (set! rmgr-rule-lst
-;            (swap-right rmgr-rule-lst position))
-
-      ;; set the entire rule-lst in object 
-;      (define parentID (ask rule-obj 'parentID))
-;      (define parent-type (ask rule-obj 'type))
-;      (define parent-obj
-;        (case parent-type
-;          ((link) (get 'links parentID))
-;          ((node) (get 'nodes parentID))))
-;      (ask parent-obj 'set-rule-lst (list-copy rmgr-rule-lst))
-
-      (shift-panel rmgr-rules-list-panel position (+ position 1))
-      
-      (rmgr-set-rule-lst (swap-right (rmgr-rule-lst) position))
-      
-      (display "after shift down ")(display rmgr-rule-lst)(newline)
-      
-      ;; need to pack-frame for update?
-      ;(pack-frame rules-manager-main-dialog)
-      (validate-container rules-manager-main-dialog)
+      (shift-rule-down)
+      (compoundundomanager-postedit
+       undo-manager
+       (make-undoable-edit "Shift Rule Down"
+                           (lambda () ;; undo
+                             (shift-rule-up)
+                             )
+                           (lambda () ;; undo
+                             (shift-rule-down))))
       )
     ))
   
@@ -663,6 +658,8 @@
       ((link) (display "came in link ")(newline) (get 'links edited-linkID))
       ((node) (display "came in node ")(newline) (get 'nodes edited-nodeID))))
   
+  (define deleted-ID-lst '())
+  
   (map (lambda (rule-panel ruleID)
          ;(display "rule panel ")(display rule-panel)(newline)
          ;(display "rule ID ")(display ruleID)(newline)
@@ -678,10 +675,13 @@
                (pack-frame rules-manager-main-dialog)
                ;(set! rmgr-rule-lst (remove (lambda (thisruleID) (= ruleID thisruleID)) rmgr-rule-lst))
                (rmgr-set-rule-lst (remove (lambda (thisruleID) (= ruleID thisruleID)) (rmgr-rule-lst)))
-               (ask rule-parent 'remove-rule ruleID)
+               ;(ask rule-parent 'remove-rule ruleID)
+               (set! deleted-ID-lst (append deleted-ID-lst (list ruleID)))
                ))
          ) rule-panel-lst (rmgr-rule-lst))
-  )
+  
+  ;; return a list of the deleted ID
+  deleted-ID-lst)
 
 ;; assume rule manager is correctly loaded (rule-panel-lst correspond to rmgr-rule-lst)
 ;; we're deleting a rule within rule manager 
@@ -818,7 +818,28 @@
   (add-actionlistener delete-rule-button 
                       (make-actionlistener
                        (lambda (e)
-                         (remove-selected-rule-panel)
+                         (define deleted-ID-lst (remove-selected-rule-panel))
+                         
+                         ;; post undo
+                         (compoundundomanager-postedit
+                          undo-manager
+                          (make-undoable-edit "Delete Rule"
+                                              (lambda () ;; undo
+                                                ;(rmgr-remove-rule new-rule-ID)
+                                                (map (lambda (ruleID)
+                                                       (add-rule-panel ruleID)
+                                                       (rmgr-set-rule-lst (append (rmgr-rule-lst) (list ruleID)))
+                                                       ) deleted-ID-lst)
+                                                )
+                                              (lambda () ;; redo
+                                                ;(add-rule-panel new-rule-ID)
+                                                ;(rmgr-set-rule-lst (append (rmgr-rule-lst) (list new-rule-ID)))
+                                                ;(ask (rmgr-get-currently-edited) 'set-rule-lst rmgr-rule-lst)
+                                                (map (lambda (ruleID)
+                                                       (rmgr-remove-rule ruleID)
+                                                       ) deleted-ID-lst)
+                                                )))
+                         
                          )))
   
   (add-actionlistener rules-dialog-close
