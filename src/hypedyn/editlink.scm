@@ -487,16 +487,25 @@
                                 ))
                          )))
 
+  (define (set-fall value :: <boolean>)
+    (if value
+        (begin
+          (ask rule-obj 'set-fall-through? #t)
+          (set-button-label fall-through-button "Fall")
+          )
+        (begin
+          (ask rule-obj 'set-fall-through? #f)
+          (set-button-label fall-through-button "Stop")
+          ))
+    )
   (define (fall-through-button-callback e)
     ;; alternate button display between "Fall" and "Stop"
     (if (equal? (get-button-label fall-through-button) "Fall")
         (begin
-          (ask rule-obj 'set-fall-through? #f)
-          (set-button-label fall-through-button "Stop")
+          (set-fall #t)
           )
         (begin
-          (ask rule-obj 'set-fall-through? #t)
-          (set-button-label fall-through-button "Fall")
+          (set-fall #f)
           ))
     (pack-frame rules-manager-main-dialog))
   
@@ -563,12 +572,10 @@
        undo-manager
        (make-undoable-edit "Shift Rule Up"
                            (lambda () ;; undo
-                             (shift-rule-down)
-                             )
+                             (shift-rule-down))
                            (lambda () ;; undo
                              (shift-rule-up))))
-      )
-    ))
+      )))
   
   (add-actionlistener 
    shift-down-button
@@ -579,12 +586,10 @@
        undo-manager
        (make-undoable-edit "Shift Rule Down"
                            (lambda () ;; undo
-                             (shift-rule-up)
-                             )
+                             (shift-rule-up))
                            (lambda () ;; undo
                              (shift-rule-down))))
-      )
-    ))
+      )))
   
   (add-component top-panel rule-checkbox)
   (add-component top-panel rule-name-label)
