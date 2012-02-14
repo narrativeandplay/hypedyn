@@ -240,6 +240,8 @@
         ))
   )
 
+;; TOFIX: in rule edit, action deletion and undo does not bring up the rule editor (previously called editlink)
+;; TOFIX: undoing edits to the rule would change the name of the rule to the link/node obj's name
 (define (post-editlink-undoable-event)
   (define unedited-link-cache (list-copy unedited-link-data))
   (define edited-link-cache (list-copy edited-link-data))

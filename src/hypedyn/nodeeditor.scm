@@ -47,7 +47,8 @@
 (require "config-options.scm")
 (require "datastructure.scm")
 (require "hteditor.scm")
-(require "editlink.scm")
+;(require "editlink.scm") ;; rules-manager-main-dialog
+(require "rules-manager.scm") ;; rules-manager-main-dialog create-rules-manager
 (require "htfileio.scm")
 ;(load-relative "highlighter.scm")
 (require "hypedyn-undo.scm")
@@ -93,6 +94,9 @@
 
 ; close the node editor
 (define (close-nodeeditor)
+  ;; rules manager only created when we edit rules
+  (if rules-manager-main-dialog
+      (set-component-visible rules-manager-main-dialog #f))
   (nodeeditor-close)
   (set-component-visible nodeeditor-frame #f))
 

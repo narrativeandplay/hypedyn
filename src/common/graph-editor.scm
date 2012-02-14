@@ -1642,7 +1642,6 @@
                             ; need to remove from links list as well - alex
                             (if (pair? args)
                                   (set! links (remove (lambda (a) (equal? (car a) (caar args))) links)))
-                            (display "in [line-del] line ")(display line)(newline)
                             (ask line 'hide)
                             ;; no after-line-del in ioblocks's callback
                             (if callback

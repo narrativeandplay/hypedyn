@@ -755,7 +755,6 @@
                                  ((link) 'links)
                                  ((node) 'nodes)))
                (the-parent (get get-symbol actual-parentID)))
-          (display "ADDING new ruleID to object ")(display rule-ID)(newline)
           (if the-parent
               (ask the-parent 'add-rule rule-ID))
           ))

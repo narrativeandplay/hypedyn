@@ -192,6 +192,7 @@
   ;; in the middle of an undo or redo
   ((get-lock) :: <boolean>
    undoing-redoing-lock)
+  
   ((lock) 
    (set! undoing-redoing-lock #t))
   ((unlock) 

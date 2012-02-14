@@ -567,6 +567,24 @@
   normalized-sum
   )
 
+;; TODO: need testing to replace the above
+(define (weighted-sum2 . weight-value-pairs)
+  (define total-sum 0)
+  (define total-weight 0)
+  (define (helper wv-lst)
+    (if (> (length wv-lst) 2)
+        (begin
+          (set! total-sum (+ total-sum (* (car wv-lst) (cadr wv-lst))))
+          (set! total-weight (+ total-weight (car wv-lst)))))
+    (helper (cddr wv-lst)))
+  (helper weight-value-pairs)
+  
+  ;; prevent division by 0
+  (if (not (= total-weight 0))
+      (/ total-sum total-weight)
+      0) ;; all weight 0 just return 0
+  )
+
 ;; vec-list is a list of 2d vector 
 (define (vector2d-average vec-list)
   (define avg-vector (vector 0 0))

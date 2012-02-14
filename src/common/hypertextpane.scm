@@ -993,7 +993,6 @@
     ; after-delete
     ; returns #t if need to manually clean up after link deletion
     (define (after-delete start len)
-      (set-dirty!)
       ;(display " [after delete] ")(newline)
       (if track-links 
           (begin
@@ -1020,7 +1019,6 @@
     ; after-insert
     (define (after-insert start len can-undo)
       ;(display "[after insert] ")(newline)
-      (set-dirty!)
       (if (and track-links
                can-undo)
           (begin

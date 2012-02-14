@@ -353,21 +353,20 @@
                      ))
              (ask thisnode 'links))))
 
+    
     ; check if link has alternate link, and if it was enabled
-    ;; TODO: outdated
+    ;; TODO: altlink? alttext? uselink? all outdated
     (define (altlink? l)
       (and (ask l 'use-alt-destination)
            (not (= -1 (ask l 'alt-destination)))))
-
     ; check if link has alternate text, and if it was enabled
-    ;; TODO : outdated
     (define (alttext? l)
       (ask l 'use-alt-text))
-
     ; check if link is enabled
-    ;; TODO : outdated
     (define (uselink? l)
       (ask l 'use-destination))
+    
+    
 
     ; add links to anywhere nodes
     ;; NOTE : this is not called as an action like the others (just saving time because its troublesome but can be done)

@@ -207,7 +207,6 @@
         (display "fromnodeID ")(display fromnodeID)(newline)
         (display "tonodeID ")(display tonodeID)(newline)
                                                     
-        (display "[line passed to line-del] ")(display link)(newline)
         (ask c 'line-del link c-fromtab c-totab line-ID)))
 
     ; rename a line in graph

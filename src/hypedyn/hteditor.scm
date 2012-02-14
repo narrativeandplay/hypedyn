@@ -823,7 +823,7 @@
   )
 
 ; delete currently selected node
-;; TODO: [undo] deletion of start node when undone does not restore start node status 
+;; TOFIX: [undo] deletion of start node when undone does not restore start node status (already in bug report)
 (define (dodelnode)
   ; first save the node contents if its being edited
   (if (= (get-edited-nodeID) selected-nodeID)
@@ -871,8 +871,13 @@
           ; if node is open in editor or reader, close them
           (if (= (get-edited-nodeID) nodeID)
               (begin
+                (display "nodeID match so close it ")(display (get-edited-nodeID))(newline)
                 (close-nodeeditor)
-                (set-edited-nodeID! '())))
+                (set-edited-nodeID! '()))
+              (begin
+                (display "nodeID DOESNOT match so dont close it ")(display (get-edited-nodeID))(newline)
+                )
+              )
           (if (= (get-read-nodeID) nodeID)
               (begin
                 (nodereader-stop)

@@ -49,7 +49,7 @@
                dosave-wrapper confirm-save ht-save-to-file
                ht-build-sexpr-from-object-with-rule ht-build-sexpr-from-rule
                clear-loaded-file-version ;; used by clear-data in hteditor.scm
-               loaded-file-version
+               loaded-file-version obj-convertion-2.2
                )
 
 ; set fileformat version and type
@@ -474,3 +474,158 @@
      
      ; run through all facts and generate sexpr
      (ht-build-sexpr-from-objectlist the-facts))))
+
+;;  ==============================
+;;;; pre 2.2 save file conversion
+;;  ==============================
+(define (obj-convertion-2.2)
+  (if (<= loaded-file-version 2.1)
+      (begin
+        (table-map 'links convert-pre-2.2-links)
+        (table-map 'nodes convert-pre-2.2-nodes)
+        ;(table-map 'actions convert-pre-2.2-actions)
+        )))
+
+(define (convert-pre-2.2-nodes nodeID node-obj)
+  ;; convert standard node
+  (let* ((ruleID (ask node-obj 'rule))
+         (rule-obj (get 'rules ruleID))
+         (node-name (ask node-obj 'name))
+         (anywhere? (ask node-obj 'anywhere?))
+         (new-ruleID (create-typed-rule2 "Set fact" 'node 'and #f nodeID))
+         ;(conditions (ask rule-obj 'conditions))
+         ;(actions (ask rule-obj 'actions))
+         )
+    
+    ;; add the dummy add-anywhere-link action
+    ;; (does nothing, just a place holder to let it show up)
+    (if anywhere?
+        (create-action "Enable Link" 'entered-node
+                       (list 'add-anywhere-link)
+                       new-ruleID))
+    
+    ;; add all actions to the new rule (only set fact actions are on pre 2.2 nodes)
+    (if rule-obj
+        (begin
+          (define actions (ask rule-obj 'actions))
+          (map (lambda (actionID)
+                 (define action (get 'actions actionID))
+                 (define action-string (ask action 'expr))
+                 
+                 (define action-input-port (open-input-string action-string))
+                 (define action-sexpr (read action-input-port))
+                 
+                 (if (not (eof-object? action-sexpr))
+                     (begin
+                       (display "SEXPR ")(display action-sexpr)(newline)
+                       (display "pair? ")(display (pair? action-sexpr))(newline)
+                       (define new-rule (get 'rules new-ruleID))
+                       (create-action node-name 'entered-node
+                                      action-sexpr
+                                      new-ruleID)
+                       
+                       ;;(create-condition name nodeID operator ruleID . args)
+                       ;; add the conditions to the rules
+                       ))
+                 ) actions)
+          
+          ;; transfer the condition from the original old rule to the new rules
+        ;(create-typed-condition name type targetID operator ruleID . args)
+        (define old-conditions (ask rule-obj 'conditions))
+        (map (lambda (condition)
+               (define this-cond (get 'conditions condition))
+               (let ((type (ask this-cond 'type))
+                     (targetID (ask this-cond 'targetID))
+                     (operator (ask this-cond 'operator)))
+                 (create-typed-condition "Enable link" type targetID operator new-ruleID))
+               ) old-conditions)
+          )
+          ;; no rule for node so no need to transfer anything to new rule
+        (begin
+          ;(display "no rule for node ")(display nodeID)(newline)
+          #f
+          ))
+  ))
+
+;; convertion of pre 2.2 links to 2.2 format
+;; need to create 2 rules one for(if) and against(else) the condition in rule
+;; note old rules are still around in the datatable, just not invoked
+(define (convert-pre-2.2-links linkID link-obj)
+  ;(display "CONVERT LINKS pre 2.2")(newline)
+
+  (define selected-rule-ID (ask link-obj 'rule))
+  (if (not (eq? selected-rule-ID 'not-set))
+      (begin
+
+        (define selected-rule (get 'rules selected-rule-ID))
+        (define link-name (ask link-obj 'name))
+        (define link-dest1 (ask link-obj 'destination))
+        (define link-uselink (ask link-obj 'use-destination))
+        (define link-usealtlink (ask link-obj 'use-alt-destination))
+        (define link-usealttext (ask link-obj 'use-alt-text))
+        (define link-dest2 (ask link-obj 'alt-destination))
+        (define link-alttext (ask link-obj 'alt-text))
+        (define link-start-index (ask link-obj 'start-index))
+        (define link-end-index (ask link-obj 'end-index))
+        
+        (define if-rule-ID (create-typed-rule2 "THEN" 'link (ask selected-rule 'expression) #f linkID))
+        (define else-rule-ID (create-typed-rule2 "ELSE" 'link (ask selected-rule 'expression) #t linkID))
+        (define if-rule (get 'rules if-rule-ID))
+        (define else-rule (get 'rules else-rule-ID))
+                                        ;)
+        ;; alt-text (text and fact)
+        (if link-usealttext
+            (if (eq? link-usealttext #t)
+                (begin ;; show alt text
+                  ;; add a new action panel
+                  (create-action link-name 'displayed-node
+                                 (list 'replace-link-text
+                                       (list 'quote 'text)
+                                       link-alttext
+                                       ;(string-append "\"" link-alttext "\"")
+                                       linkID)
+                                 else-rule-ID
+                                 )
+                  )
+                (begin ;; show fact text
+                  (create-action link-name 'displayed-node
+                                 (list 'replace-link-text
+                                       (list 'quote 'text)
+                                        ;(string-append "\"" link-alttext "\"")
+                                       link-alttext ;; this is actually factID
+                                       linkID)
+                                 else-rule-ID)
+                  )))
+
+        ;; default destination
+        (if (not (equal? link-dest1 -1))
+            (create-action link-name 'clicked-link
+                           (list 'follow-link
+                                 linkID
+                                 (ask if-rule 'ID)
+                                 (list 'quote 'default)
+                                 link-dest1)
+                           if-rule-ID))
+
+        ;; link-dest2 is used in the else so it should be in the not rules instead
+        (if (not (equal? link-dest2 -1))
+            (create-action link-name 'clicked-link
+                           (list 'follow-link
+                                 linkID
+                                 (ask else-rule 'ID)
+                                 (list 'quote 'default)
+                                 link-dest2)
+                           else-rule-ID))
+
+        ;; transfer the condition from the original old rule to the new rules
+        ;(create-typed-condition name type targetID operator ruleID . args)
+        (define old-conditions (ask selected-rule 'conditions))
+        (map (lambda (condition)
+               (define this-cond (get 'conditions condition))
+               (let ((type (ask this-cond 'type))
+                     (targetID (ask this-cond 'targetID))
+                     (operator (ask this-cond 'operator)))
+                 (create-typed-condition "If-rule" type targetID operator if-rule-ID )
+                 (create-typed-condition "else-rule" type targetID operator else-rule-ID ))
+               ) old-conditions)
+        )))
