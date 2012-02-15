@@ -47,8 +47,7 @@
 (require "config-options.scm")
 (require "datastructure.scm")
 (require "hteditor.scm")
-;(require "editlink.scm") ;; rules-manager-main-dialog
-(require "rules-manager.scm") ;; rules-manager-main-dialog create-rules-manager
+(require "rules-manager.scm") ;; rmgr-close rmgr-edit
 (require "htfileio.scm")
 ;(load-relative "highlighter.scm")
 (require "hypedyn-undo.scm")
@@ -56,7 +55,7 @@
 
 ; export
 (module-export update-nodeeditor-frame-title
-               close-nodeeditor create-nodeeditor
+               nodeeditor-close create-nodeeditor
                get-nodeeditor-frame
                nodeeditor-edit nodeeditor-save
                get-edited-nodeID set-edited-nodeID!
@@ -86,18 +85,14 @@
 ; shutdown procedure (called as closing)
 ; should test whether contents have changed before saving to node
 ; should also have an "ok" button?
-(define (nodeeditor-close)
-  (display "[closing nodeeditor] ")(newline)
-  (nodeeditor-save)
-  (set-edited-nodeID! '())
-  (remove-from-window-menu nodeeditor-frame))
 
 ; close the node editor
-(define (close-nodeeditor)
-  ;; rules manager only created when we edit rules
-  (if rules-manager-main-dialog
-      (set-component-visible rules-manager-main-dialog #f))
-  (nodeeditor-close)
+;; this seems to be called when deleting node
+(define (nodeeditor-close)
+  (rmgr-close)
+  (nodeeditor-save)
+  (set-edited-nodeID! '())
+  (remove-from-window-menu nodeeditor-frame)
   (set-component-visible nodeeditor-frame #f))
 
 ; edit the node; checks if we are already editing it first (for undo)
@@ -147,6 +142,9 @@
 
         ; clear selected link 
         (set! selected-linkID '())
+        
+        ;; hide rules-manager (if visible, it isn't relevant anymore)
+        (rmgr-close)
 
         ; clear then populate links list
         (ask link-list 'populate-list selected-node #t)
@@ -209,11 +207,11 @@
 (define (nodeeditor-window-opened o)
   (format #t "nodeeditor-window-opened~%~!"))
 (define (nodeeditor-window-closing o)
-  (format #t "nodeeditor-window-closing~%~!")
-  (nodeeditor-close))
+  (format #t "nodeeditor-window-closing~%~!"))
 (define (nodeeditor-window-closed o)
   (format #t "nodeeditor-window-closed~%~!")
-  (remove-from-window-menu nodeeditor-frame))
+  (nodeeditor-close))
+
 (define (nodeeditor-window-iconified o)
   (format #t "nodeeditor-window-iconified~%~!"))
 (define (nodeeditor-window-deiconified o)
@@ -223,6 +221,7 @@
   ; update undo menu items in case anything added when we didn't have the focus
   (update-undo-action undo-action)
   (update-redo-action redo-action))
+
 (define (nodeeditor-window-deactivated o)
   (format #t "nodeeditor-window-deactivated~%~!"))
 
@@ -307,7 +306,7 @@
 ;                                              (get-edited-nodeID)
 ;                                              update-link-display-callback
 ;                                              (get-link-text selected-linkID))
-                                             (create-rules-manager 'link selected-linkID)
+                                             (rmgr-edit 'link selected-linkID)
                                              )))
   (set-menu-item-accelerator m-edit1-editlink #\E)
   (set-menuitem-component m-edit1-editlink #f)
@@ -345,7 +344,7 @@
         (add-actionlistener m-edit1-editnoderule
                             (make-actionlistener (lambda (source) 
                                                    ;(doeditnoderule (get-edited-nodeID))
-                                                   (create-rules-manager 'node (get-edited-nodeID))
+                                                   (rmgr-edit 'node (get-edited-nodeID))
                                                    )))
         (set-menuitem-component m-edit1-editnoderule #t)))
 
@@ -388,7 +387,7 @@
 ;                                                         (get-edited-nodeID)
 ;                                                         update-link-display-callback
 ;                                                         (get-link-text selected-linkID))
-                                             (create-rules-manager 'link selected-linkID)
+                                             (rmgr-edit 'link selected-linkID)
                                              )))
 
   ; button to rename link
@@ -419,7 +418,7 @@
         (add-actionlistener nodeeditor-toolbar-button-editnoderule
                             (make-actionlistener (lambda (source) 
                                                    ;(doeditnoderule (get-edited-nodeID))
-                                                   (create-rules-manager 'node (get-edited-nodeID))
+                                                   (rmgr-edit 'node (get-edited-nodeID))
                                                    )))))
   
   ;; add a splitpanel for link list and text editor
@@ -639,9 +638,9 @@
             (newlink-undoable-postedit newlink-name newlink-ID)
             
             ; show edit link dialogue
-            ;; TODO: show rule manager when link is created (just uncomment create-rules-manager line and see if it works)
+            ;; TODO: show rule manager when link is created (just uncomment rmgr-edit line and see if it works)
             ;(doeditlink newlink-ID (get-edited-nodeID) update-link-display-callback (get-link-text newlink-ID))
-            ;(create-rules-manager 'link)
+            ;(rmgr-edit 'link newlink-ID)
             
             ))))
   
@@ -649,8 +648,6 @@
   (if (and (procedure? create-newlink)
            (not (is-null? newlink-name)))
       (create-newlink newlink-name))
-  
-  
   )
 
 ; delete a link
@@ -679,21 +676,16 @@
             
             (display "[redo sexpr created] ")(display redo-sexpr)(newline) 
             
-            
-            
             (define (delete-link-and-update-node-graph)
                ; delete the link - not sure about del-in-nodeeditor?
                 (delete-link-action linkID thelink from-nodeID to-nodeID to-alt-nodeID
                                     name usedest usealtdest
                                     del-in-nodeeditor node-graph update-node-style-callback)
-                ;(display "!! after delete-link-action ")(newline)
                 ;; draw the line in node-graph
                 (if usedest
                     (ask node-graph 'del-line (number->string linkID) from-nodeID to-nodeID))
-                ;(display "after usedest del line ")(newline)
                 (if usealtdest
                     (ask node-graph 'del-line (string-append "~" (number->string linkID)) from-nodeID to-alt-nodeID))
-                ;(display "!!!!!!!! after redo delete link ")(newline)
               )
             
             (compoundundomanager-postedit
@@ -921,7 +913,7 @@
 ;               update-link-display-callback
 ;               (get-link-text selected-linkID))
               (begin
-                (create-rules-manager 'link selected-linkID)
+                (newlink-ID 'link selected-linkID)
                 )
               )))))
 

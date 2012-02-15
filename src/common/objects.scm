@@ -238,7 +238,7 @@
       (begin
         (newline)
         (display "NOT PROC ")(display gotten-attr)(newline)
-        (display "obj ")(display obj)(newline)
+        ;(display "obj ")(display obj)(newline)
         (display "prop ")(display prop)(newline)
         (display "argv ")(display argv)(newline)
         (display "class ")(display (invoke gotten-attr 'get-class))(newline)

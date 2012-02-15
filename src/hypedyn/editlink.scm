@@ -76,6 +76,8 @@
 ; are we editing a link (default) or just a rule?
 (define-private edit-mode 'link)
 
+;; TOFIX : undo of rules edit breaks undo, cannot undo after undoing a rule edit
+
 ;;;; doedit
 
 ; edit a link - called from hteditor.scm
@@ -88,7 +90,7 @@
   (before-editlink selected-linkID)
   
   ; set editing mode
-  ;; NOTE: done in create-rules-manager now
+  ;; NOTE: done in rmgr-edit now
   ;(set! edit-mode 'link)
   
   ; set titles
@@ -157,7 +159,7 @@
   (format #t "doeditrule: in-edited-nodeID: ~a~%~!" in-edited-nodeID)
 
   ; set edit mode to rule
-  ;; NOTE: done in create-rules-manager now
+  ;; NOTE: done in rmgr-edit now
   ;(set! edit-mode 'node)
   
   (nodeeditor-save) ;; save text content before create sexpr in before-editnode
@@ -216,7 +218,7 @@
   (format #t "doeditdocrule~%~!")
   
   ; set edit mode to rule
-  ;; NOTE: done in create-rules-manager now
+  ;; NOTE: done in rmgr-edit now
   ;(set! edit-mode 'doc)
   
   ; set titles
@@ -1141,44 +1143,6 @@
                            (create-typed-condition new-rulename the-type targetID operator new-ruleID)))
          all-conditions)
     
-    ;; run through all the actions and add to rule
-    
-    
-    ; run through facts and add to rule - this will eventually generalize to actions
-    (format #t "saving facts~%~!")
-;    (map (lambda (panel) (let* ((children (get-container-children panel))
-;                                (select-type (cadr children))
-;                                (select-target (caddr children))
-;                                (set-value (cadddr children))
-;                                (the-type (get-combobox-selectedindex select-type))
-;                                (the-value 
-;                                 (if (= the-type 0)
-;                                     (get-combobox-selectedindex set-value)
-;                                     (get-text set-value)))
-;                                (targetID (get-comboboxwithdata-selecteddata select-target))
-;                                ; build the expression: 
-;                                ; (assert targetID) or
-;                                ; (retract targetID) or
-;                                ; (set-value! targetID the-value)
-;                                (the-action-expr 
-;                                 (string-append
-;                                  "("
-;                                  (if (= the-type 0)
-;                                      (if (= the-value 0)
-;                                          "assert"
-;                                          "retract")
-;                                      "set-value!")
-;                                  " "
-;                                  (number->string targetID)
-;                                  (if (= the-type 1)
-;                                      (string-append " \"" the-value "\"")
-;                                      "")
-;                                  ")")))
-;                           (format #t "fact: ~a~%~!" the-action-expr)
-;                           (create-action new-rulename 'fact the-action-expr new-ruleID)))
-;         all-facts)
-    (format #t "after saving facts, actions: ~a~%~!" (ask (get 'rules new-ruleID) 'actions))
-    
     ; if there's an action, add the action to the rule
     ; need to read the string and break in to s-expressions; should eventually
     ; be able to plug in an improved version of definition-editor here
@@ -1208,18 +1172,6 @@
                                         ; update use-alt, alt-destination and alt-text
            (define the-link the-rule-object)
            (define link-name (ask the-rule-object 'name))
-           
-;           (define olduselink (ask the-link 'use-destination))
-;           (define olddestID (ask the-link 'destination))
-;           (define usealtlink (get-checkbox-value editlink-panel-else-link-check))
-;           (define usealttext (get-checkbox-value editlink-panel-else-text-check))
-;           (define altdestID (get-comboboxwithdata-selecteddata editlink-panel-else-link-choice))
-;           (define oldusealtlink (ask the-link 'use-alt-destination))
-;           (define oldaltdestID (ask the-link 'alt-destination))
-;           (define alttext (get-text editlink-panel-else-text-message1))
-;           (define alttext-fact (if (show-facts?)
-;                                    (eq? (get-combobox-selectedindex editlink-panel-else-text-typechoice) 1)
-;                                    #f))
            
            ;; an action panel always has a checkbox as first component then a label with the name
            ;; which identifies which kind of action it represents
@@ -1288,7 +1240,8 @@
                          (define fact-panel-children (get-container-children action-panel))
                          ;; the components that follows the update fact label in the action panel
                          (define component-list (get-container-children (caddr fact-panel-children)))
-                         
+
+                         ;; dd - dropdown
                          (define dd1 (car component-list))
                          (define dd2 (cadr component-list))
                          ;; component 3 can be a textfield or dropdown depending on what is selected in dd2
@@ -1350,7 +1303,46 @@
 ;                                uselink destID
 ;                                usealtlink altdestID
 ;                                edited-linkID))
-
+           
+;           (define (update-link-display name fromnodeID
+;                                        oldusetonode oldtonodeID
+;                                        oldusetoaltnode oldtoaltnodeID
+;                                        usetonode tonodeID
+;                                        usetoaltnode toaltnodeID
+;                                        new-linkID)
+;             (let ((the-node (get 'nodes fromnodeID)))
+;               (if the-node
+;                   (let* ((anywhere (ask the-node 'anywhere?))
+;                          (the-graph (if anywhere anywhere-graph node-graph)))
+;                     (ask the-graph 'update-link-display
+;                          name fromnodeID
+;                          oldusetonode oldtonodeID
+;                          oldusetoaltnode oldtoaltnodeID
+;                          usetonode tonodeID
+;                          usetoaltnode toaltnodeID
+;                          new-linkID)))))
+           
+           ;; also when removed action is a follow link action delete that line
+           ;; only update node-graph (assume anywhere-graph dont have links)
+           
+           ;; remove all line coming from the edited node in the graph
+           (ask node-graph 'clear-node-outlinks edited-nodeID)
+           
+           ;; add a line for every rule with a follow link
+           (define new-rule (get 'rules new-ruleID))
+           (map (lambda (actionID)
+                  (define action (get 'actions actionID))
+                  (define expr (ask action 'expr))
+                  (if (eq? (car expr) 'follow-link)
+                      (begin
+                        (define dest-nodeID (list-ref expr 4))
+                        (ask node-graph 'create-line 
+                             (ask the-link 'name)
+                             edited-linkID
+                             edited-nodeID dest-nodeID)
+                        ))
+                  ) (ask new-rule 'actions))
+           
            ;; cache the information of the edited link in the form of a lambda object
            (after-editlink edited-linkID)
            

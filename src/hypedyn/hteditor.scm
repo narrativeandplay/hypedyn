@@ -57,6 +57,7 @@
 (require 'srfi-1)
 (require "hypedyn-undo.scm")
 (require "about-hypedyn.scm")
+(require "rules-manager.scm") ;; rmgr-init
 
 ; export
 (module-export close-hteditor-subwindows update-node-emphasis do-selectnode-list do-selectnode-graph
@@ -145,7 +146,7 @@
 ; shutdown procedure, called in close-hteditor-ui
 (define (close-hteditor-subwindows)
   ; need to close node editor and any other dialogs if necessary
-  (close-nodeeditor)
+  (nodeeditor-close)
   (nodereader-close)
   (close-inspectors))
 
@@ -506,6 +507,7 @@
     ;(create-then-action-panel)
     ;(create-facts-main-panel)
     (create-actions-main-panel)
+    (rmgr-init)
     
     (create-update-text-action-panel)
     
@@ -872,7 +874,7 @@
           (if (= (get-edited-nodeID) nodeID)
               (begin
                 (display "nodeID match so close it ")(display (get-edited-nodeID))(newline)
-                (close-nodeeditor)
+                (nodeeditor-close)
                 (set-edited-nodeID! '()))
               (begin
                 (display "nodeID DOESNOT match so dont close it ")(display (get-edited-nodeID))(newline)

@@ -236,27 +236,6 @@
 
     ;; check if a link can be followed
     (define (follow-link-available? linkID check-condition?)
-;      (let* ((thelink (get 'links linkID))
-;             ;(ruleID (ask thelink 'rule))
-;             (rule-lst (ask thelink 'rule-lst)))
-;        
-;        (define (find-follow-link-action rule-lst)
-;          (if (null? rule-lst)
-;              #f
-;              (if (and (find (lambda (actionID) ;;find follow-link action
-;                               (define action (get 'actions actionID))
-;                               (define sexpr (ask action 'expr))
-;                               (equal? (car sexpr) 'follow-link)
-;                               ) (ask (get 'rules (car rule-lst)) 'actions))
-;                       ;; condition for this action is satisfied
-;                       (or (and check-condition? (check-rule-condition (car rule-lst)))
-;                           (and (not check-condition?))))
-;                  #t
-;                  (find-follow-link-action (cdr rule-lst)))
-;              ))
-;        
-;        (find-follow-link-action rule-lst)
-;        )
       (display "calling follwo lik available? ")(display linkID)(display " ")(display check-condition?)(newline)
       (find-action linkID 'link check-condition? 'follow-link)
       )

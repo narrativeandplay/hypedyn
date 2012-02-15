@@ -37,10 +37,12 @@
 (require "config-options.scm") ;; is-undo-enabled?
 (require "hypedyn-undo.scm") ;; undo-action
 (require "editlink.scm") ;; doeditlink
+(require "datastructure.scm") ;; create-typed-rule2
 (require 'srfi-1) ;; remove
 
-(module-export create-rules-manager
-               rules-manager-main-dialog)
+(module-export rmgr-init
+               rmgr-edit
+               rmgr-close)
 
 ;;  ===============
 ;;;; rule manager
@@ -49,7 +51,6 @@
 ;; rmgr stands for rule manager
 (define rules-manager-main-dialog #f)
 (define rmgr-rules-list-panel #f) ;; the panel that contain all the rule panels
-;(define rmgr-rule-lst (list))
 
 ;; get rule-lst from currently edited object
 (define (rmgr-rule-lst)
@@ -392,19 +393,14 @@
 
 ;; target type might be 'link 'node 'doc
 ;; display the dialog with the list of rules attached to the object (which can be any of the target-type)
-(define (create-rules-manager target-type obj-ID . args)
-  (display "CREATE RULES MAN")(newline)
-  
-  ;;set edit-mode
-  (display "target-type ")(display target-type)(newline)
-  (set! edit-mode target-type)
-  
+(define (rmgr-init)
   (set! rules-manager-main-dialog (make-dialog (get-nodeeditor-frame) "Rule Editor" #f)) ;; debug used to be #t
   
   (define rules-manager-main-panel (make-panel))
   (set-container-layout rules-manager-main-panel 'border)
   (add-component rules-manager-main-dialog rules-manager-main-panel)
   
+  ;; adding menu bar just to activate undo in this dialog box
   (define rules-menu-bar (make-menu-bar))
   (define rules-menu (make-menu "Edit"))
   (if (is-undo-enabled?)
@@ -447,10 +443,7 @@
   
   ;; dialog button
   (define rules-dialog-close (make-button "Close"))
-  ;(define rules-dialog-cancel (make-button "Cancel"))
   (add-component rules-dialog-button-panel rules-dialog-close)
-  ;(add-component rules-dialog-button-panel rules-dialog-cancel)
-  
   
   ;; TODO: rules manager and edit node pane should pop up
   ;;       when we undo and redo
@@ -500,7 +493,6 @@
                                                        (rmgr-remove-rule ruleID)
                                                        ) deleted-ID-lst)
                                                 )))
-                         
                          )))
   
   (add-actionlistener rules-dialog-close
@@ -509,12 +501,14 @@
                          (set-component-visible rules-manager-main-dialog #f)
                          )))
   
-  ;; empty the rule ID list (corresponds to the rule list in rmgr) 
-  ;; NOTE: rmgr-rule-lst is not longer a separate list caching the object's rule-lst
-  ;;       but it is now a function that returns the object's rule-lst
-  ;(set! rmgr-rule-lst '())
+  ;(populate-rules-manager target-type obj-ID)
+  ;(set-component-visible rules-manager-main-dialog #t)
+  )
+
+(define (populate-rules-manager target-type obj-ID)
   
-  ;; populate the rule manager
+  (clear-container rmgr-rules-list-panel)
+  
   (cond ((equal? target-type 'link)
          (set! edited-linkID obj-ID)
          (define in-link (get 'links obj-ID))
@@ -532,10 +526,15 @@
          (map (lambda (ruleID)
                 (add-rule-panel ruleID)
                 ) rule-lst)
-         )
-        )
+         ))
   
-  (pack-frame rules-manager-main-dialog)
-  (set-component-visible rules-manager-main-dialog #t)
-  (display "SHOWED rules manager main dialog")(newline)
-  )
+  (pack-frame rules-manager-main-dialog))
+
+(define (rmgr-edit target-type obj-ID)
+  (set! edit-mode target-type)
+  (populate-rules-manager target-type obj-ID)
+  (set-component-visible rules-manager-main-dialog #t))
+
+(define (rmgr-close)
+  (if rules-manager-main-dialog
+      (set-component-visible rules-manager-main-dialog #f)))

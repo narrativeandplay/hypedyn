@@ -180,33 +180,7 @@
              (c-totab (ask c-tonode 'tab-in-ref 0))
              ;(link (ask c 'get-line-by-ID line-ID))
              )
-        
         (define link (ask c 'get-line-by-ID line-ID))
-        
-        
-;;        (display "in del-line ")(display c)(newline)
-;;        (display "link ")(display link)(newline)
-;;        (display "c-fromtab ")(display c-fromtab)(newline)
-;;        (display "c-totab ")(display c-totab)(newline)
-;;        (display "line-ID ")(display line-ID)(newline)
-;;        
-;;        (define data (car (cadr (ask c 'get-links))))
-;;        (display "data class type ")(display (invoke line-ID 'get-class))(newline)
-;;        
-;;        (display "links ")(display (ask c 'get-links))(newline)
-;;        (display "line-ID class type ")(display (invoke line-ID 'get-class))(newline)
-        
-;        (display "c-fromnode ")(display c-fromnode)(newline)
-;        (display "c-tonode ")(display c-tonode)(newline)
-;        (display "c-fromtab ")(display c-fromtab)(newline)
-;        (display "c-totab ")(display c-totab)(newline)
-        (newline)
-        (display "line-ID ")(display line-ID)(newline)
-        (display "line ID type ")(display (invoke line-ID 'get-class))(newline)
-        
-        (display "fromnodeID ")(display fromnodeID)(newline)
-        (display "tonodeID ")(display tonodeID)(newline)
-                                                    
         (ask c 'line-del link c-fromtab c-totab line-ID)))
 
     ; rename a line in graph
@@ -278,37 +252,16 @@
             (ask c 'set-zoomfactor! in-zoom)
             (ask c 'on-size))))
 
-    ; message handling                  
-;    (lambda (message)
-;      (cond ((eq? message 'init)
-;             (lambda (self)
-;               (init)))
+    ;; object messages
     (obj-put this-obj 'init
              (lambda (self) (init)))
-;            ((eq? message 'get-component)
-;             (lambda (self)
-;               (if c
-;                   (ask c 'get-canvas)
-;                   #f)))
     (obj-put this-obj 'get-component
              (lambda (self)
                (if c
                    (ask c 'get-canvas)
                    #f)))
-;            ((eq? message 'get-graph-editor)
-;             (lambda (self)
-;               c))
     (obj-put this-obj 'get-graph-editor 
              (lambda (self) c))
-;            ((eq? message 'update-link-display)
-;             (lambda (self name
-;                           fromnodeID
-;                           tonodeID
-;                           new-linkID)
-;               (update-link-display name
-;                                    fromnodeID
-;                                    tonodeID
-;                                    new-linkID)))
     (obj-put this-obj 'update-link-display
              (lambda (self name
                            fromnodeID
@@ -318,15 +271,6 @@
                                     fromnodeID
                                     tonodeID
                                     new-linkID)))
-;            ((eq? message 'create-line)
-;             (lambda (self name
-;                           fromnodeID
-;                           tonodeID
-;                           new-linkID-string)
-;               (create-line name
-;                            fromnodeID
-;                            tonodeID
-;                            new-linkID-string)))
     (obj-put this-obj 'create-line
              (lambda (self name
                            fromnodeID
@@ -336,138 +280,68 @@
                             fromnodeID
                             tonodeID
                             new-linkID-string)))
-;            ((eq? message 'rename-line)
-;             (lambda (self line-ID newname)
-;               (rename-line line-ID newname)))
     (obj-put this-obj 'rename-line
              (lambda (self line-ID newname)
                (rename-line line-ID newname)))
-;            ((eq? message 'del-line)
-;             (lambda (self line-ID fromnodeID tonodeID)
-;               (del-line line-ID fromnodeID tonodeID)))
     (obj-put this-obj 'del-line
              (lambda (self line-ID fromnodeID tonodeID)
                (del-line line-ID fromnodeID tonodeID)))
-;            ((eq? message 'add-node)
-;             (lambda (self new-nodeID name x y)
-;               (add-node new-nodeID name x y)))
     (obj-put this-obj 'add-node
              (lambda (self new-nodeID name x y)
                (add-node new-nodeID name x y)))
-;            ((eq? message 'rename-node)
-;             (lambda (self in-nodeID)
-;               (rename-node in-nodeID)))
     (obj-put this-obj 'rename-node
              (lambda (self in-nodeID)
                (rename-node in-nodeID)))
-;            ((eq? message 'set-make-displayname-callback!)
-;             (lambda (self in-callback)
-;               (set! make-displayname in-callback)))
     (obj-put this-obj 'set-make-displayname-callback!
              (lambda (self in-callback)
                (set! make-displayname in-callback)))
-;            ((eq? message 'del-node)
-;             (lambda (self in-nodeID)
-;               (del-node in-nodeID)))
     (obj-put this-obj 'del-node
              (lambda (self in-nodeID)
                (del-node in-nodeID)))
-;            ((eq? message 'select-node)
-;             (lambda (self in-nodeID)
-;               (select-node in-nodeID)))
     (obj-put this-obj 'select-node
              (lambda (self in-nodeID)
                (select-node in-nodeID)))
-;            ((eq? message 'set-node-colour)
-;             (lambda (self in-nodeID in-colour)
-;               (set-node-colour in-nodeID in-colour)))
     (obj-put this-obj 'set-node-colour
              (lambda (self in-nodeID in-colour)
                (set-node-colour in-nodeID in-colour)))
-;            ((eq? message 'clear)
-;             (lambda (self)
-;               (if c (ask c 'clear))))
     (obj-put this-obj 'clear
              (lambda (self) (if c (ask c 'clear))))
-;            ((eq? message 'populate-graph)
-;             (lambda (self)
-;               (populate-graph)))
     (obj-put this-obj 'populate-graph
              (lambda (self) (populate-graph)))
-;            ((eq? message 'store-node-positions)
-;             (lambda (self)
-;               (store-node-positions)))
     (obj-put this-obj 'store-node-positions
              (lambda (self) (store-node-positions)))
-;            ((eq? message 'store-node-position)
-;             (lambda (self in-nodeID in-node)
-;               (store-node-position in-nodeID in-node)))
     (obj-put this-obj 'store-node-position
              (lambda (self in-nodeID in-node)
                (store-node-position in-nodeID in-node)))
-;            ((eq? message 'allow-overlap?)
-;             (lambda (self)
-;               (and c (ask c 'allow-overlap?))))
     (obj-put this-obj 'allow-overlap?
              (lambda (self)
                (and c (ask c 'allow-overlap?))))
-;            ((eq? message 'set-allow-overlap!)
-;             (lambda (self in-flag)
-;               (if c (ask c 'set-allow-overlap! in-flag))))
     (obj-put this-obj 'set-allow-overlap!
              (lambda (self in-flag)
                (if c (ask c 'set-allow-overlap! in-flag))))
-;            ((eq? message 'snap-to-grid?)
-;             (lambda (self)
-;               (and c (ask c 'snap-to-grid?))))
     (obj-put this-obj 'snap-to-grid?
              (lambda (self)
                (and c (ask c 'snap-to-grid?))))
-;            ((eq? message 'set-snap-to-grid!)
-;             (lambda (self in-flag)
-;               (if c (ask c 'set-snap-to-grid! in-flag))))
     (obj-put this-obj 'set-snap-to-grid!
              (lambda (self in-flag)
                (if c (ask c 'set-snap-to-grid! in-flag))))
-;            ((eq? message 'get-zoomfactor)
-;             (lambda (self)
-;               (get-zoomfactor)))
     (obj-put this-obj 'get-zoomfactor
              (lambda (self) (get-zoomfactor)))
-;            ((eq? message 'set-zoomfactor!)
-;             (lambda (self in-zoom)
-;               (set-zoomfactor! in-zoom)))
     (obj-put this-obj 'set-zoomfactor!
              (lambda (self in-zoom)
                (set-zoomfactor! in-zoom)))
-;            ((eq? message 'set-allow-repaint!)
-;             (lambda (self in-flag)
-;               (if c (ask c 'set-allow-repaint! in-flag))))
     (obj-put this-obj 'set-allow-repaint!
              (lambda (self in-flag)
                (if c (ask c 'set-allow-repaint! in-flag))))
-;            ((eq? message 'refresh)
-;             (lambda (self)
-;               (if c (ask c 'my-on-paint))))
     (obj-put this-obj 'refresh
              (lambda (self)
                (if c (ask c 'my-on-paint))))
-;            ((eq? message 'layout-all)
-;             (lambda (self)
-;               (if c (ask c 'layout-all))))
     (obj-put this-obj 'layout-all
              (lambda (self)
                (if c (ask c 'layout-all))))
-;            ((eq? message 'set-line-draw-proc!)
-;             (lambda (self in-proc)
-;               (set! line-draw-proc in-proc)))
     (obj-put this-obj 'set-line-draw-proc!
              (lambda (self in-proc)
                (set! line-draw-proc in-proc)))
-;            ((eq? message 'get-line-draw-proc)
-;             (lambda (self)
-;               line-draw-proc))
     (obj-put this-obj 'get-line-draw-proc
              (lambda (self) line-draw-proc))
-;            (else (get-method named-obj message))))
     this-obj))
