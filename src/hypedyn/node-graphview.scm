@@ -27,10 +27,14 @@
 (require "datastructure.scm")
 (require "hypedyn-graphed-mouse.scm")
 
+;; temp debug
+(require "editlink.scm") ;; add-link-display
+
 (module-export make-node-graphview
                generate-link-name)
 
 ; generate the link name
+; TODO: remove outdated
 (define (generate-link-name in-name in-linkID in-alt?)
   (string-append
    (if in-alt? "~" "")
@@ -94,20 +98,23 @@
         (if (not is-anywhere)
             (if the-links
                 (map (lambda (l)
-                       (let* ((this-link (cdr l))
-                              (sourceID (ask this-link 'source))
-                              (destinationID (ask this-link 'destination))
-                              (alt-destinationID (ask this-link 'alt-destination))
-                              (use-destination (ask this-link 'use-destination))
-                              (use-alt-destination (ask this-link 'use-alt-destination))
-                              (this-link-ID(ask this-link 'ID))
-                              (this-link-name (ask this-link 'name)))
-                         (update-link-display this-link-name sourceID
-                                              #f -1
-                                              #f -1
-                                              use-destination destinationID
-                                              use-alt-destination alt-destinationID
-                                              this-link-ID)))
+;                       (let* ((this-link (cdr l))
+;                              (sourceID (ask this-link 'source))
+;                              (destinationID (ask this-link 'destination))
+;                              (alt-destinationID (ask this-link 'alt-destination))
+;                              (use-destination (ask this-link 'use-destination))
+;                              (use-alt-destination (ask this-link 'use-alt-destination))
+;                              (this-link-ID(ask this-link 'ID))
+;                              (this-link-name (ask this-link 'name)))
+;                         (update-link-display this-link-name sourceID
+;                                              #f -1
+;                                              #f -1
+;                                              use-destination destinationID
+;                                              use-alt-destination alt-destinationID
+;                                              this-link-ID))
+                       (let ((linkID (car l)))
+                         (add-link-display linkID))
+                       )
                      the-links)))
             
         
@@ -235,6 +242,7 @@
     ; update a link in the graph; used as a callback from doeditlink
     ; if oldtonodeID or oldtoaltnodeID not -1 then delete old line first
     ; if tonodeID or toaltnodeID is -1 then don't show line
+    ;; TODO remove this (outdated)
     (define (update-link-display name fromnodeID
                                  oldusetonode oldtonodeID
                                  oldusetoaltnode oldtoaltnodeID
@@ -292,6 +300,8 @@
             #f)))
 
     ; update node style
+    ;; TODO: to get back to this, unsure what this is doing
+    ;;       however this is definitely outdated since has-alt-text? isnt working
     (define (update-node-style nodeID)
       (let ((graph-node (ask the-graph-editor 'node-get-by-data (number->string nodeID))))
         (if graph-node
@@ -426,8 +436,10 @@
                       (ask graph-ed 'line-del line src-tab target-tab line-name)
                       ) line-lst)
                ))
-    (obj-put this-obj 'create-line 
-             (lambda (self name line-ID fromnodeID tonodeID)
-               (ask parent-obj 'create-line name line-ID fromnodeID tonodeID)))
+    
+    ;; no need to do this since we inherited parent-obj
+;    (obj-put this-obj 'create-line 
+;             (lambda (self name line-ID fromnodeID tonodeID)
+;               (ask parent-obj 'create-line name line-ID fromnodeID tonodeID)))
                
     this-obj))

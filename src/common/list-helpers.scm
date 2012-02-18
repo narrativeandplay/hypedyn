@@ -27,6 +27,8 @@
 (module-export list-head 
                list-replace 
                list-append 
+               list-swap
+               
                strip-void 
                shuffle-list
                
@@ -207,6 +209,19 @@
   toret
   )
 
+;; swap index n to m / m to n
+(define (list-swap lst n m)
+  (define nth (list-ref lst n))
+  (define mth (list-ref lst m))
+  ;; n to m
+  (set! lst (remove (lambda (o) (eq? nth o)) lst))
+  (set! lst (list-insert lst nth m))
+
+  ;; m to n 
+  (set! lst (remove (lambda (o) (eq? mth o)) lst))
+  (set! lst (list-insert lst mth n))
+  lst)
+  
 ;; returns index for element of first match, #f otherwise
 ;;(define (list-index lst ele . equal-op)
 ;;  (define result #f)

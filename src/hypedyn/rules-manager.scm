@@ -32,7 +32,7 @@
 (require "../common/datatable.scm") ;; get
 (require "../common/objects.scm") ;; ask
 
-(require "hteditor.scm") ;update-link-display
+;(require "hteditor.scm") ;update-link-display
 (require "nodeeditor.scm") ;get-nodeeditor-frame
 (require "config-options.scm") ;; is-undo-enabled?
 (require "hypedyn-undo.scm") ;; undo-action
@@ -100,7 +100,7 @@
                                 (define rule-position (rule-panel-position top-panel))
                                 (define ruleID (list-ref (rmgr-rule-lst) rule-position))
                                 
-                                (doeditlink selected-linkID edited-nodeID update-link-display ruleID)
+                                (doeditlink selected-linkID edited-nodeID ruleID)
                                 )
                                ((equal? edit-mode 'node)
                                 (define rule-position (rule-panel-position top-panel))
@@ -189,14 +189,15 @@
   
   ;; swap object at index with the object right of it
   (define (swap-right lst index)
-    (if (>= index 0) 
-        (append (take lst index) ;; take first (index) number of object in front (left) 
-                (swap-first-two (drop lst index)))
-        lst)) ;; if already left most then do nothing
+    (append (take lst index) ;; take first (index) number of object in front (left) 
+            (swap-first-two (drop lst index)))
+    ) ;; if already left most then do nothing
   
   ;; the same thing just a positional difference
   (define (swap-left lst index)
-    (swap-right lst (- index 1)))
+    (if (>= index 0)
+        (swap-right lst (- index 1))
+        lst))
   
   ;; shift this rule panel up, shift the rule as well
   (define (shift-rule-up)

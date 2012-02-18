@@ -899,8 +899,7 @@
           (map (lambda (l)
                  (let ((thislink (get 'links l)))
                    (delete-link l #t node-graph
-                                update-node-style
-                                update-link-display)))
+                                update-node-style)))
                (ask thenode 'links))
 
           ; also need to delete all links that have this node as destination!
@@ -933,8 +932,7 @@
                  (if (= destNodeID thisDestID) 
                      (delete-link l #t 
                                   node-graph
-                                  update-node-style
-                                  update-link-display))))))
+                                  update-node-style))))))
        (ask thenode 'links)))
 
 ;;
@@ -1384,6 +1382,7 @@
 ; need to direct update-link-display to the correct graph
 ;; note this does del-line and create-line so there is no need for anymore
 ;; manual del-line on our part
+;; TODO: outdated
 (define (update-link-display name fromnodeID
                              oldusetonode oldtonodeID
                              oldusetoaltnode oldtoaltnodeID

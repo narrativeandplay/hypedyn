@@ -53,6 +53,8 @@
 (require "hypedyn-undo.scm")
 (require "node-graphview.scm") ;; generate-link-name
 
+(require "editlink.scm") ;; remove-link-display
+
 ; export
 (module-export update-nodeeditor-frame-title
                nodeeditor-close create-nodeeditor
@@ -292,7 +294,7 @@
   (add-component m-edit1 m-edit1-newlink)
   (add-actionlistener m-edit1-newlink
                       (make-actionlistener 
-                       (lambda (source) (donewlink node-graph update-link-display-callback update-node-style-callback))))
+                       (lambda (source) (donewlink node-graph update-node-style-callback))))
   (set-menu-item-accelerator m-edit1-newlink #\L)
   (set-menuitem-component m-edit1-newlink  #f)
 
@@ -304,7 +306,6 @@
 ;                                             (doeditlink
 ;                                              selected-linkID
 ;                                              (get-edited-nodeID)
-;                                              update-link-display-callback
 ;                                              (get-link-text selected-linkID))
                                              (rmgr-edit 'link selected-linkID)
                                              )))
@@ -324,8 +325,7 @@
   (add-component m-edit1 m-edit1-dellink)
   (add-actionlistener m-edit1-dellink
                       (make-actionlistener (lambda (source) (dodellink node-graph
-                                                                       update-node-style-callback
-                                                                       update-link-display-callback))))
+                                                                       update-node-style-callback))))
   (set-menu-item-accelerator m-edit1-dellink #\D)
   (set-menuitem-component m-edit1-dellink #f)
 
@@ -376,7 +376,7 @@
   (set! nodeeditor-toolbar-button-newlink (make-button "New link"))
   (add-component nodeeditor-toolbar-panel nodeeditor-toolbar-button-newlink )
   (add-actionlistener nodeeditor-toolbar-button-newlink
-                      (make-actionlistener (lambda (source) (donewlink node-graph update-link-display-callback update-node-style-callback))))
+                      (make-actionlistener (lambda (source) (donewlink node-graph update-node-style-callback))))
 
   ; button to edit link rule/conditions
   (set! nodeeditor-toolbar-button-editlink (make-button "Edit Link"))
@@ -385,7 +385,6 @@
                       (make-actionlistener (lambda (source)
 ;                                             (doeditlink selected-linkID
 ;                                                         (get-edited-nodeID)
-;                                                         update-link-display-callback
 ;                                                         (get-link-text selected-linkID))
                                              (rmgr-edit 'link selected-linkID)
                                              )))
@@ -401,8 +400,7 @@
   (add-component nodeeditor-toolbar-panel nodeeditor-toolbar-button-dellink )
   (add-actionlistener nodeeditor-toolbar-button-dellink
                       (make-actionlistener (lambda (source) (dodellink node-graph
-                                                                       update-node-style-callback
-                                                                       update-link-display-callback))))
+                                                                       update-node-style-callback))))
 
   ;; button to set this node as the start node
   (set! nodeeditor-toolbar-button-setstartnode (make-button "Set start node"))
@@ -464,8 +462,7 @@
                                           (delete-link del-linkID
                                                        #f
                                                        node-graph
-                                                       update-node-style-callback
-                                                       update-link-display-callback))
+                                                       update-node-style-callback))
                                         enable-newlink-button
                                         'content
                                         'links
@@ -553,7 +550,7 @@
     (populate-nodes-list-callback)))
 
 ; create a new link
-(define (donewlink node-graph update-link-display-callback update-node-style-callback)
+(define (donewlink node-graph update-node-style-callback)
   
   ;(define newlink-name (make-input-dialogbox-check-empty nodeeditor-frame "" "Link name" "New link"))
   (define newlink-name (make-input-dialogbox-custom nodeeditor-frame "" "New link" "Link name"))
@@ -580,9 +577,11 @@
             (lambda () ; undo
               (display "[undo add new link]")(newline)
               ; delete the link - not sure about del-in-nodeeditor?
-              (delete-link-action newlink-ID thelink from-nodeID to-nodeID to-alt-nodeID
-                                  name usedest usealtdest
-                                  #t node-graph update-node-style-callback))
+              (delete-link-action newlink-ID from-nodeID #t update-node-style-callback)
+;              (delete-link-action newlink-ID thelink from-nodeID to-nodeID to-alt-nodeID
+;                                  name usedest usealtdest
+;                                  #t node-graph update-node-style-callback)
+              )
             
             (lambda () ;;redo
               (display "[REDO add new link]")(newline)
@@ -594,10 +593,12 @@
                          #t update-node-style-callback))(newline)
               
                ; restore the link
-              (delete-link-undo redo-sexpr
-                                newlink-ID thelink from-nodeID to-nodeID to-alt-nodeID
-                                name usedest usealtdest
-                                #t node-graph update-node-style-callback))))
+;              (delete-link-undo redo-sexpr
+;                                newlink-ID thelink from-nodeID to-nodeID to-alt-nodeID
+;                                name usedest usealtdest
+;                                #t node-graph update-node-style-callback)
+              (delete-link-undo redo-sexpr newlink-ID from-nodeID update-node-style-callback #t)
+              )))
             ))
     (compoundundomanager-endupdate undo-manager undo-action redo-action)
     
@@ -639,7 +640,7 @@
             
             ; show edit link dialogue
             ;; TODO: show rule manager when link is created (just uncomment rmgr-edit line and see if it works)
-            ;(doeditlink newlink-ID (get-edited-nodeID) update-link-display-callback (get-link-text newlink-ID))
+            ;(doeditlink newlink-ID (get-edited-nodeID) (get-link-text newlink-ID))
             ;(rmgr-edit 'link newlink-ID)
             
             ))))
@@ -651,41 +652,51 @@
   )
 
 ; delete a link
-(define (dodellink node-graph update-node-style-callback update-link-display-callback)
-  (delete-link selected-linkID #t node-graph update-node-style-callback update-link-display-callback))
+(define (dodellink node-graph update-node-style-callback)
+  (delete-link selected-linkID #t node-graph update-node-style-callback))
 
-; delete a link
-; only deletes from nodeeditor if del-in-nodeeditor is #t, to 
-; avoid deadlocks after deleting the link text
-(define (delete-link linkID del-in-nodeeditor node-graph update-node-style-callback update-link-display-callback)
+;; delete a link
+;; Note: used of del-in-nodeeditor helps avoid deadlocks after deleting the link text 
+;;      deletes from nodeeditor if del-in-nodeeditor is #t
+;; update-link-display-callback is not used anymore
+;; 
+(define (delete-link linkID del-in-nodeeditor node-graph update-node-style-callback)
   (display "[delete-link] ")(newline)
-  (display "[args] ")(display (list linkID del-in-nodeeditor 'not-shown
-                                    update-node-style-callback update-link-display-callback))(newline)
   (let ((thelink (get 'links linkID)))
     (if thelink
         (begin
           ; store the action for undoing
-          (let* ((redo-sexpr (ht-build-sexpr-from-object-with-rule thelink))
-                 (from-nodeID (ask thelink 'source))
-                 (to-nodeID (ask thelink 'destination))
-                 (to-alt-nodeID (ask thelink 'alt-destination))
-                 (name (ask thelink 'name))
-                 (from-node (get 'nodes from-nodeID))
-                 (usedest (ask thelink 'use-destination))
-                 (usealtdest (ask thelink 'use-alt-destination)))
+;          (let* ((redo-sexpr (ht-build-sexpr-from-object-with-rule thelink))
+;                 (from-nodeID (ask thelink 'source))
+;                 (to-nodeID (ask thelink 'destination))
+;                 (to-alt-nodeID (ask thelink 'alt-destination))
+;                 (name (ask thelink 'name))
+;                 (from-node (get 'nodes from-nodeID))
+;                 (usedest (ask thelink 'use-destination))
+;                 (usealtdest (ask thelink 'use-alt-destination)))
             
-            (display "[redo sexpr created] ")(display redo-sexpr)(newline) 
+            ;(display "[redo sexpr created] ")(display redo-sexpr)(newline)
             
+          (define from-nodeID (ask thelink 'source))
+          (define redo-sexpr (ht-build-sexpr-from-object-with-rule thelink))
+          
             (define (delete-link-and-update-node-graph)
                ; delete the link - not sure about del-in-nodeeditor?
-                (delete-link-action linkID thelink from-nodeID to-nodeID to-alt-nodeID
-                                    name usedest usealtdest
-                                    del-in-nodeeditor node-graph update-node-style-callback)
+;                (delete-link-action linkID thelink from-nodeID to-nodeID to-alt-nodeID
+;                                    name usedest usealtdest
+;                                    del-in-nodeeditor node-graph update-node-style-callback)
+              (delete-link-action linkID from-nodeID del-in-nodeeditor update-node-style-callback)
                 ;; draw the line in node-graph
-                (if usedest
-                    (ask node-graph 'del-line (number->string linkID) from-nodeID to-nodeID))
-                (if usealtdest
-                    (ask node-graph 'del-line (string-append "~" (number->string linkID)) from-nodeID to-alt-nodeID))
+;                (if usedest
+;                    (ask node-graph 'del-line (number->string linkID) from-nodeID to-nodeID))
+;                (if usealtdest
+;                    (ask node-graph 'del-line (string-append "~" (number->string linkID)) from-nodeID to-alt-nodeID))
+              
+              ;; delete the lines associated with this link
+              ;; each one line corresponds to each rule in the link with a follow link action
+              (define the-link (get 'links linkID))
+              (display "[delete link and update node graph] ")(newline)
+              (remove-link-display linkID)
               )
             
             (compoundundomanager-postedit
@@ -694,30 +705,17 @@
               "Delete Link"
               ; undo
               (lambda ()
-                (display "[restoring link] ")(newline)
-                (display "del-in-nodeeditor ")(display del-in-nodeeditor)(newline)
                 ; restore the link
-                (display (list linkID from-nodeID to-nodeID to-alt-nodeID name usedest usealtdest
-                               del-in-nodeeditor))
-                (display " linkID thelink from-nodeID to-nodeID to-alt-nodeID
-                                  name usedest usealtdest
-                                  del-in-nodeeditor")(newline)
-                
-                (delete-link-undo redo-sexpr
-                                  linkID thelink from-nodeID to-nodeID to-alt-nodeID
-                                  name usedest usealtdest
-                                  del-in-nodeeditor node-graph update-node-style-callback)
-             
-;                (display "[undo link proc] ")(newline)
-;                (display "node-graph ")(display node-graph)(newline)
-;                (display "other args ")(display (list name linkID from-nodeID to-nodeID))(newline)
+;                (delete-link-undo redo-sexpr
+;                                  linkID thelink from-nodeID to-nodeID to-alt-nodeID
+;                                  name usedest usealtdest
+;                                  del-in-nodeeditor node-graph update-node-style-callback)
+                (delete-link-undo redo-sexpr linkID from-nodeID update-node-style-callback del-in-nodeeditor)
                 ;; draw the link in the node graph
-                
                 (display "linkID class ")(display (invoke linkID 'get-class))(newline)
-                (ask node-graph 'create-line (generate-link-name name linkID #f) linkID from-nodeID to-nodeID)
-                (ask node-graph 'create-line (generate-link-name name linkID #t) (string-append "~" (to-string linkID)) from-nodeID to-alt-nodeID)
-                
-                
+;                (ask node-graph 'create-line (generate-link-name name linkID #f) linkID from-nodeID to-nodeID)
+;                (ask node-graph 'create-line (generate-link-name name linkID #t) (string-append "~" (to-string linkID)) from-nodeID to-alt-nodeID)
+                (add-link-display linkID)
                 )
               ; redo
               (lambda ()
@@ -726,7 +724,8 @@
 
             ; and actually delete the link
             (delete-link-and-update-node-graph)
-            ))))
+            )))
+    ;)
   )
 
 ; evaluate an s-expression
@@ -902,6 +901,7 @@
               (enable-link-buttons #t))))))
 
 ; mouse event in link list - for double-clicking
+;; QUESTION how does this work? (newlink-ID 'link selected-linkID)
 (define (linklist-onmouse e update-link-display-callback)
   (let ((event-type (get-mouseevent-type e)))
     (if (eq? event-type 'left-clicked)
@@ -910,7 +910,6 @@
 ;              (doeditlink
 ;               selected-linkID
 ;               (get-edited-nodeID)
-;               update-link-display-callback
 ;               (get-link-text selected-linkID))
               (begin
                 (newlink-ID 'link selected-linkID)

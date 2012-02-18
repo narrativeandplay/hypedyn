@@ -1398,7 +1398,6 @@
                             (display (map (lambda (link)
                                             (car link)) links))(newline)
                             
-                            (display "SIGH LA ")(display (car links))(newline)
                             ;(display "testing name ")(display (ask (cadr (car links)) 'get-data))(newline)
                             (display (map (lambda (link)
                                             (ask (cadr link) 'get-data)) (cdr links)))(newline)

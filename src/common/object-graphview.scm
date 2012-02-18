@@ -181,6 +181,7 @@
              ;(link (ask c 'get-line-by-ID line-ID))
              )
         (define link (ask c 'get-line-by-ID line-ID))
+        ;(display "link here ")(display link)(newline)
         (ask c 'line-del link c-fromtab c-totab line-ID)))
 
     ; rename a line in graph

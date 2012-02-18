@@ -24,6 +24,7 @@
   (require "../common/objects.scm")
   (require "../common/datatable.scm") ;;get, del, put
   (require "../common/fileio.scm")
+  (require "../common/list-helpers.scm") ;; list-replace
   ;(require "../common/inspector.scm")
   (require "hteditor.scm")
   (require 'list-lib))
@@ -57,14 +58,46 @@
 ;  (set-dirty!)
 ;  (update-dirty-state))
 
+;; inherited by both make-link and make node
+;; just keeps track of a list of ruleIDs
+(define-private (rule-containing-object)
+  (let ((rule 'not-set) ;; legacy attribute (dont think we use it anymore)
+        (rule-lst '())
+        (this-obj (new-object)))
+    ;; TODO: objects with rules can be made into an object
+    ;;       and inherited
+    (obj-put this-obj 'rule (lambda (self) rule))
+    (obj-put this-obj 'rule-lst (lambda (self) rule-lst))
+    (obj-put this-obj 'set-rule!
+             (lambda (self new-rule)
+               (set! rule new-rule)
+                                        ;(ht-set-dirty!)
+               ))
+    (obj-put this-obj 'add-rule
+             (lambda (self new-rule-ID)
+               (set! rule-lst (append rule-lst (list new-rule-ID)))))
+    (obj-put this-obj 'remove-rule
+             (lambda (self ruleID)
+               (set! rule-lst (remove (lambda (this-ruleID) (= this-ruleID ruleID)) rule-lst))))
+    (obj-put this-obj 'replace-rule
+             (lambda (self ruleID new-rule-ID)
+               (display "replace rule ")(display rule-lst)(newline)
+               (set! rule-lst (list-replace rule-lst (list-index (lambda (this-ruleID) (= ruleID this-ruleID)) rule-lst) new-rule-ID))
+               (display "after replace rule ")(display rule-lst)(newline)
+               ))
+    (obj-put this-obj 'set-rule-lst
+             (lambda (self new-rule-lst)
+               (set! rule-lst new-rule-lst)
+               ))
+    this-obj))
+
 ;; node;
 ;; overloaded to allow passing in of a predetermined uniqueID, for loading from file
 (define-private (make-node name content x y anywhere . args)
                 (let* ((links '()) ; just a list of IDs, actual data is in data-table
                        (uniqueID-obj (make-uniqueID-object name (if (pair? args) (car args))))
-                       (this-obj (new-object uniqueID-obj))
-                       (rule 'not-set)
-                       (rule-lst '())
+                       (rule-container (rule-containing-object))
+                       (this-obj (new-object uniqueID-obj rule-container))
                        (visited? 0)
                        (inspectable-fields (list (list 'visited? 'number "visited: "))))
                   (obj-put this-obj 'content
@@ -95,23 +128,6 @@
                   (obj-put this-obj 'dellink
                            (lambda (self link)
                              (set! links (delete! link links))))
-                  (obj-put this-obj 'rule (lambda (self) rule))
-                  (obj-put this-obj 'rule-lst (lambda (self) rule-lst))
-                  (obj-put this-obj 'set-rule!
-                           (lambda (self new-rule)
-                             (set! rule new-rule)
-                             ;(ht-set-dirty!)
-                             ))
-                  (obj-put this-obj 'add-rule
-                           (lambda (self new-rule-ID)
-                             (set! rule-lst (append rule-lst (list new-rule-ID)))))
-                  (obj-put this-obj 'remove-rule
-                           (lambda (self ruleID)
-                             (set! rule-lst (remove (lambda (this-ruleID) (= this-ruleID ruleID)) rule-lst))))
-                  (obj-put this-obj 'set-rule-lst
-                           (lambda (self new-rule-lst)
-                             (set! rule-lst new-rule-lst)
-                             ))
                   
                   (obj-put this-obj 'to-save-sexpr
                            (lambda (self)
@@ -141,9 +157,8 @@
 (define-private (make-link name source destination start-index end-index use-destination
                            use-alt-destination use-alt-text alt-destination alt-text . args)
                 (let* ((uniqueID-obj (make-uniqueID-object name (if (pair? args) (car args))))
-                       (this-obj (new-object uniqueID-obj))
-                       (rule 'not-set) ; 'not-set or the ruleID
-                       (rule-lst '())
+                       (rule-container (rule-containing-object))
+                       (this-obj (new-object uniqueID-obj rule-container))
                        (followed? 0) ; 0 = not followed, 1 = followed
                        (link-type 'default) ; 'default or 'hover
                        (custom-cursor-image #f) ; filename of custom cursor for this link, if any
@@ -202,27 +217,6 @@
                              (set! alt-text new-text)
                              ;(ht-set-dirty!)
                              ))
-                  (obj-put this-obj 'rule (lambda (self) rule))
-                  (obj-put this-obj 'rule-lst (lambda (self) rule-lst))
-                  
-                  (obj-put this-obj 'set-rule!
-                           (lambda (self new-rule)
-                             (set! rule new-rule)
-                             ;(ht-set-dirty!)
-                             ))
-                  
-                  (obj-put this-obj 'add-rule
-                           (lambda (self new-rule-ID)
-                             (set! rule-lst (append rule-lst (list new-rule-ID)))
-                             ))
-                  (obj-put this-obj 'remove-rule
-                           (lambda (self ruleID)
-                             (set! rule-lst (remove (lambda (this-ruleID) (= this-ruleID ruleID)) rule-lst))))
-                  (obj-put this-obj 'set-rule-lst
-                           (lambda (self new-rule-lst)
-                             (set! rule-lst new-rule-lst)
-                             ))
-                  
                   (obj-put this-obj 'followed?
                            (lambda (self)
                              followed?))

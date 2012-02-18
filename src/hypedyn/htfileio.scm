@@ -171,8 +171,8 @@
                         (if (load-from-file newfilename)
                             (begin
                               (add-recent-file newfilename)  ;; add to recent menu
-                              (populate-display)             ;; populate the display
                               (obj-convertion-2.2)           ;; if loading pre 2.2 objects convert to post 2.2 format
+                              (populate-display)             ;; populate the display (important to convert first)
                               ))
                         )))
                  ;; older app opening newer file
@@ -386,7 +386,7 @@
            the-object-list)
       '()))
 
-; build sexpression for an object that has an attached rule: 
+; build sexpression for an object and the sexpr of all the attached rules 
 ; will build both the object's s-expr and the rule's s-expr, plus any
 ; conditions and actions
 (define (ht-build-sexpr-from-object-with-rule the-object)

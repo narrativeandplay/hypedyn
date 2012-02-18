@@ -57,7 +57,15 @@
                create-update-text-action-panel
                ;create-facts-main-panel
                ;create-then-action-panel
-               get-edited-linkID)
+               get-edited-linkID
+               ;update-nodegraph-display
+               
+               remove-follow-link-rule-display
+               add-follow-link-rule-display
+               
+               add-link-display
+               remove-link-display
+               )
                
 
 ; remember which link we're editing
@@ -70,9 +78,6 @@
 ; remember currently edited node
 ;(define-private edited-nodeID '()) ;; now using nodeeditor.scm's edited-nodeID
 
-; callback for updating links in graph
-(define-private update-callback #f)
-
 ; are we editing a link (default) or just a rule?
 (define-private edit-mode 'link)
 
@@ -84,10 +89,11 @@
 ;; in-default-link-text not used any more
 ;; NOTE: this should be renamed as doeditrule now
 ;;       since it targets one rule inside the link
-(define (doeditlink selected-linkID in-edited-nodeID in-callback in-ruleID);in-default-link-text)
+(define (doeditlink selected-linkID in-edited-nodeID in-ruleID);in-default-link-text)
   
   ;; cache a version of the unedited link for creation of undo
-  (before-editlink selected-linkID)
+  ;(before-editlink selected-linkID)
+  (before-edit-rule in-ruleID)
   
   ; set editing mode
   ;; NOTE: done in rmgr-edit now
@@ -110,9 +116,6 @@
   
   ;; remember which rule we're editing
   (set! edited-ruleID in-ruleID)
-  
-  ; remember callback
-  (set! update-callback in-callback)
   
   ; get all the details from the link object
   (let* ((link-obj (get 'links edited-linkID))
@@ -182,10 +185,6 @@
   ;; remember the rule we're editing
   (set! edited-ruleID in-ruleID)
   
-  ; remember callback ie. none
-  ;; why do update-callback #f?
-  (set! update-callback #f)
-  
   ; get the rule from the node
   (let* ((edited-node (get 'nodes edited-nodeID))
          ;;(selected-rule (ask edited-node 'rule))
@@ -236,9 +235,6 @@
   ; remember which node we're editing ie. none
   (set! edited-nodeID '())
   
-  ; remember callback ie. none
-  (set! update-callback #f)
-  
   ; get the rule
   (let ((selected-rule (get-document-ruleID)))
     ; show node name
@@ -251,10 +247,6 @@
   (pack-frame editlink-dialog)
   (center-frame-in-parent editlink-dialog (get-main-ui-frame))
   (set-component-visible editlink-dialog #t))
-
-;(doeditlink selected-linkID in-edited-nodeID in-callback in-default-link-text)
-;(doeditnoderule in-edited-nodeID)
-;(doeditdocrule)
 
 ;;
 ;;;; build the UI
@@ -1083,6 +1075,87 @@
     ('and 0)
     ('or 1))) ; ('or exp 1))) alex xxx
 
+;; remove or add the line display associated with the follow link action of this rule
+(define (remove-follow-link-rule-display ruleID)
+  (update-follow-link-rule-display ruleID 'remove))
+(define (add-follow-link-rule-display ruleID)
+  (update-follow-link-rule-display ruleID 'add))
+
+(define-private (update-follow-link-rule-display ruleID add-or-remove)
+  (define rule (get 'rules ruleID))
+  (if rule
+      (begin
+        ;; assumes its a rule of a link
+        (define parent-link-ID (ask rule 'parentID))
+        (define parent-link (get 'links parent-link-ID))
+        (if parent-link
+            (begin
+              (define source-nodeID (ask parent-link 'source))
+              ;; go through every action in this rule and look for follow-link action
+              (map (lambda (actionID)
+                     (define action (get 'actions actionID))
+                     (define expr (ask action 'expr))
+                     (if (eq? (car expr) 'follow-link)
+                         (begin
+                           (define dest-nodeID (list-ref expr 4))
+                           
+                           (case add-or-remove
+                             ((add) ;; draw a line in the node-graph from the edited-node to the dest-node
+                              (ask node-graph 'create-line
+                                   (ask parent-link 'name)
+                                   (number->string ruleID) ;; use ruleID as the display ID of line for the moment
+                                   source-nodeID
+                                   dest-nodeID))
+                             ((remove) ;; remove the line in the node-graph 
+                              (ask node-graph 'del-line
+;                                   (ask node-graph 'get-line-by-ID
+;                                        (number->string ruleID))
+                                   (number->string ruleID)
+                                   source-nodeID
+                                   dest-nodeID)
+                              ))
+                           )))
+                   (ask rule 'actions)) ;; end of map
+              ))
+        ))
+  )
+
+;; add or remove the line display from the rules of linkID
+(define (remove-link-display linkID)
+  (update-link-display2 linkID 'remove))
+(define (add-link-display linkID)
+  (update-link-display2 linkID 'add))
+
+;; if add-remove is 'add we draw all the lines in linkID
+;; if add-remove is 'remove we remove all the lines in linkID
+(define-private (update-link-display2 linkID add-or-remove)
+    (define the-link (get 'links linkID))
+    (if the-link
+        (begin
+          (define rule-lst (ask the-link 'rule-lst))
+          (map
+           ;; choose the lambda
+           (case add-or-remove
+            ((add) add-follow-link-rule-display)
+            ((remove) remove-follow-link-rule-display))
+               rule-lst))))
+
+;(define (update-nodegraph-display nodeID)
+;  ;; also when removed action is a follow link action delete that line
+;  ;; only update node-graph (assume anywhere-graph dont have links)
+
+;  ;; remove all line coming from the edited node in the graph
+;  ;; NOTE: not sure if we can avoid removing all the links from the node like that
+;  ;; TODO: improve this
+;  (ask node-graph 'clear-node-outlinks nodeID)
+;  (define the-node (get 'nodes nodeID))
+;  
+;  (if the-node
+;      (map (lambda (linkID)
+;             (update-link-display linkID 'add)) 
+;           (ask the-node 'links)))
+;  )
+
 ; user clicked "ok" button
 ;; used by editlink dialog
 
@@ -1102,7 +1175,11 @@
                                 ((eq? edit-mode 'doc) #f)))
          (new-rulename (if (eq? edit-mode 'doc)
                            "document"
-                           (ask the-rule-object 'name)))
+                           ;(ask the-rule-object 'name)
+                           (let ((edited-rule (get 'rules edited-ruleID)))
+                             (if edited-rule 
+                                 (ask edited-rule 'name)))
+                           ))
 
          ; get boolean expression
          (new-ruleexpression-pos (get-combobox-selectedindex editlink-dialog-andor-operator))
@@ -1128,7 +1205,7 @@
          ;(then-action-string (get-text editlink-dialog-then-actiontext))
          ;(else-action-string (get-text editlink-dialog-else-actiontext))
          )
-    
+
     (display "and-or ")(display new-ruleexpression)(newline)
     (display "negate? ")(display negate?)(newline)
     
@@ -1278,76 +1355,34 @@
                          )) ;; end of action-type cond
                   ) (get-container-children action-list-panel))
            
+           ;; update links in graph 
+           ;(update-nodegraph-display)
+            
+           ;; cache the information of the edited link in the form of a lambda object
+           ;(after-editlink edited-linkID)
+           (after-edit-rule new-ruleID)
+           
+           ;; added an undoable event 
+           ;(post-editlink-undoable-event)
+           (post-edit-rule-undoable-event edited-linkID edited-ruleID new-ruleID)
+           
+           ;; update the display on node-graph
+           (remove-follow-link-rule-display edited-ruleID)  ;; remove the line display from the previous edited-ruleID
+           (add-follow-link-rule-display new-ruleID)        ;; add the line-display from the new-ruleID
+
            ;; now we replace the old rule with a completely new one
            ;; clean up old rule ID in manager and in object
            ;; create-typed-rule2 has already added new rule to the-link
            ;; TODO: if it was the first rule attached to this link, it will no longer be in that order
            ;;       need to remove the implicit add rule from within create-typed-rule2
            ;;       and implement a extra replace rule command for links and node objects
-           (ask the-link 'remove-rule edited-ruleID)
-           (del 'rules edited-ruleID)
-           
-           ;; no need to remove it rmgr-rule-lst
-           ;(define old-ruleID-index (list-index (lambda (obj) (= edited-ruleID obj)) (rmgr-rule-lst)))
-           ;(set! rmgr-rule-lst (list-replace rmgr-rule-lst old-ruleID-index new-ruleID))
-           ;(rmgr-set-rule-lst (list-replace (rmgr-rule-lst) old-ruleID-index new-ruleID))
 
-           ;; update links in graph if callback provided
-           ;; note: if uselink/usealtlink is false, then pass -1 ie. don't draw line
-           ;; similar for old links
-           ;; TODO: get the information from the action needed to update the link drawing 
-;           (if update-callback
-;               (update-callback new-rulename edited-nodeID
-;                                olduselink olddestID
-;                                oldusealtlink oldaltdestID
-;                                uselink destID
-;                                usealtlink altdestID
-;                                edited-linkID))
-           
-;           (define (update-link-display name fromnodeID
-;                                        oldusetonode oldtonodeID
-;                                        oldusetoaltnode oldtoaltnodeID
-;                                        usetonode tonodeID
-;                                        usetoaltnode toaltnodeID
-;                                        new-linkID)
-;             (let ((the-node (get 'nodes fromnodeID)))
-;               (if the-node
-;                   (let* ((anywhere (ask the-node 'anywhere?))
-;                          (the-graph (if anywhere anywhere-graph node-graph)))
-;                     (ask the-graph 'update-link-display
-;                          name fromnodeID
-;                          oldusetonode oldtonodeID
-;                          oldusetoaltnode oldtoaltnodeID
-;                          usetonode tonodeID
-;                          usetoaltnode toaltnodeID
-;                          new-linkID)))))
-           
-           ;; also when removed action is a follow link action delete that line
-           ;; only update node-graph (assume anywhere-graph dont have links)
-           
-           ;; remove all line coming from the edited node in the graph
-           (ask node-graph 'clear-node-outlinks edited-nodeID)
-           
-           ;; add a line for every rule with a follow link
-           (define new-rule (get 'rules new-ruleID))
-           (map (lambda (actionID)
-                  (define action (get 'actions actionID))
-                  (define expr (ask action 'expr))
-                  (if (eq? (car expr) 'follow-link)
-                      (begin
-                        (define dest-nodeID (list-ref expr 4))
-                        (ask node-graph 'create-line 
-                             (ask the-link 'name)
-                             edited-linkID
-                             edited-nodeID dest-nodeID)
-                        ))
-                  ) (ask new-rule 'actions))
-           
-           ;; cache the information of the edited link in the form of a lambda object
-           (after-editlink edited-linkID)
-           
-           ;; added an undoable event 
-           (post-editlink-undoable-event)
+           ;;; make sure new-ruleID is in the position where edited-ruleID used to be
+           (ask the-link 'remove-rule new-ruleID)  ;; remove the new-ruleID create-type-rule2 added
+           (ask the-link 'replace-rule edited-ruleID new-ruleID)  ;; place new-ruleID in the spot of edited-ruleID
+
+           ;; delete edited-ruleID
+           (del 'rules edited-ruleID)
                                         ;(display "[editlink-dialog-ok] ")(display (compoundundomanager-updatelevel undo-manager))(newline)
 
            ;; if updatelevel is more than 0 it doeditlink was called right after donewlink

@@ -50,6 +50,7 @@
                (set! dirty #f)
                (save-point-reset)))
     
+    ;; Note: careful putting into the same ID would overwrite the previous value
     (obj-put this-obj 'put
              (lambda (self lst-sym-ID value-ID value)
                (define hash (hash-table-get local-table lst-sym-ID 'not-found)) 

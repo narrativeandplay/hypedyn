@@ -993,8 +993,7 @@
 ;                        (dispatch-mouseevent (ask nodereader-pane 'getcomponent) e)
 ;                        (dispatch-mouseevent (ask nodereader-pane 'getcomponent) e)
 ;                        )))
-            )
-        ))
+            )))
   )
 
 ;; dummy for anywhere link adding action

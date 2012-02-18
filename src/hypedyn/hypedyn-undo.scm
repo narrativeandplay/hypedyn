@@ -23,10 +23,12 @@
 (require "nodeeditor.scm") ;; nodeeditor-set-dirty! nodeeditor-clear-dirty!
 (require "hteditor.scm") ;; update-dirty-state, update-node-style, update-link-display
 (require "htfileio.scm") ;; ht-build-sexpr-from-object-with-rule, update-dirty-state
+(require "editlink.scm") ;; update-nodegraph-display
 (require 'list-lib) ;; list-copy
 
 (module-export delete-link-action
                delete-link-undo
+               
                before-editlink
                after-editlink
                post-editlink-undoable-event
@@ -34,6 +36,10 @@
                before-editnode
                after-editnode
                post-edit-noderule-undoable-event
+               
+               before-edit-rule
+               after-edit-rule
+               post-edit-rule-undoable-event
                
                undo-manager init-undo-system
                undo-action redo-action
@@ -65,22 +71,20 @@
   )
 
 ; delete link action (do and redo)
-(define (delete-link-action linkID thelink from-nodeID to-nodeID to-alt-nodeID
-                            name usedest usealtdest
-                            del-in-nodeeditor node-graph update-node-style-callback)
+(define (delete-link-action 
+         linkID from-nodeID del-in-nodeeditor update-node-style-callback)
+                                        ;         linkID thelink from-nodeID to-nodeID to-alt-nodeID
+                                        ;                            name usedest usealtdest
+                                        ;                            del-in-nodeeditor node-graph update-node-style-callback)
   
-  (display "delete link action ")(newline)
   (define from-node (get 'nodes from-nodeID))
   (set! thelink (get 'links linkID))
-  ;(display "thelink in [delete-link-action] ")(display thelink)(newline)
   
   ; delete link from the from-node and from links-list
   (if from-node
       (begin
         ; delete from from-node
-        (display "just before dellink from-node ")(newline)
         (ask from-node 'dellink linkID)
-        (display "after dellink from node ")(newline)
 
         ; remove from UI - cheat by just repopulating the list
         (if (= from-nodeID edited-nodeID)
@@ -90,32 +94,18 @@
               (display "from-nodeID edited-nodeID different so did not add to link-list ")(newline)
               ))
 
-        ; remove from nodeeditor
+        ; remove from nodeeditor (remove underlining)
         (if del-in-nodeeditor
             (ask node-editor 'removelink thelink))
 
         ; disable link-related buttons in node editor
         (enable-link-buttons #f)
 
-        ; should check if there's a selection, and if so, enable newlink button
+        ; TODO: should check if there's a selection, and if so, enable newlink button
 
         ; update node style, in case this was an alt-text link
         (update-node-style-callback from-nodeID)
-
-        ; also delete from graph
-        ;; no need anymore if we're doing update-link-display
-;;        (if usedest
-;;            (begin
-;;              (display "del line called from usedest ")(newline)
-;;            (ask node-graph 'del-line (number->string linkID) from-nodeID to-nodeID))
-;;            )
-;;        (if usealtdest
-;;            (begin
-;;              (display "del line called from usealtdest ")(newline)
-;;            (ask node-graph 'del-line (string-append "~" (number->string linkID)) from-nodeID to-alt-nodeID))
-;;            )
-        
-            ))
+        ))
 
   ; delete link from data-table
   (del 'links linkID)
@@ -124,19 +114,16 @@
   (update-dirty-state))
 
 ; delete link undo action
-(define (delete-link-undo redo-sexpr
-                          linkID thelink from-nodeID to-nodeID to-alt-nodeID
-                          name usedest usealtdest
-                          del-in-nodeeditor node-graph update-node-style-callback)
+(define (delete-link-undo redo-sexpr linkID from-nodeID update-node-style-callback del-in-nodeeditor)
+  ;         redo-sexpr
+;         linkID thelink from-nodeID to-nodeID to-alt-nodeID
+;         name usedest usealtdest
+;         del-in-nodeeditor node-graph update-node-style-callback)
   ; first need to recreate the link in data structure: this recreates the link
   ; and any contained rules, conditions and actions, and adds them to the data table
   (eval-sexpr redo-sexpr)
-  ;(display "redo-sexpr in delete-link-undo ")(display redo-sexpr)(newline)
 
-  (display "[delete-link-undo]")(newline)
   (define from-node (get 'nodes from-nodeID)) 
-  
-  ;(display "[thelink] in [delete-link-undo] ")(display thelink)(newline)
   
   ;; retrieve the newly recreated link
   (set! thelink (get 'links linkID))
@@ -148,8 +135,6 @@
   
   ;; when should we not do this? when should del-in-nodeeditor be false? and why?
   ;; undoing a deletion of link text (whole link) seem to not underline the text properly
-  
-      
   
   ; and the link list - cheat by just repopulating the list (this updates the left list in the node editor)
   (if (= from-nodeID edited-nodeID)
@@ -164,20 +149,111 @@
         )
       )
   
-  ; link button states?
+  ; TODO: link button states?
 
   ; update node style, in case this was an alt-text link
   (update-node-style-callback from-nodeID)
 
-  ; and the graph editor
-;;  (ask node-graph 'update-link-display (ask thelink 'name) from-nodeID
-;;       #f -1
-;;       #f -1
-;;       usedest to-nodeID
-;;       usealtdest to-alt-nodeID
-;;       linkID)
   )
 
+;;;; new caching for edit rule
+
+;; rule cache
+(define unedited-rule-sexpr #f)
+(define edited-rule-sexpr #f)
+
+(define (before-edit-rule ruleID)
+  (cache-rule ruleID #f))
+(define (after-edit-rule ruleID)
+  (cache-rule ruleID #t))
+
+(define (cache-rule rule-ID edited?)
+  (define rule-obj (get 'rules rule-ID))
+  (if rule-obj
+      (begin
+        (define actions (ask rule-obj 'actions))
+        (define conditions (ask rule-obj 'conditions))
+        (define rule-sexpr (ask rule-obj 'to-save-sexpr))
+        (define combine-sexpr
+          (append (list 'begin
+                        rule-sexpr)
+                  ;; a list of all the sexpr from the actions
+                  (map (lambda (actionID)
+                         (define action (get 'actions actionID))
+                         (if action
+                             (begin
+                               (ask action 'to-save-sexpr)
+                               ))
+                         ) actions)
+                  (map (lambda (conditionID)
+                         (define condition (get 'conditions conditionID))
+                         (if condition
+                             (begin
+                               (ask condition 'to-save-sexpr)
+                               ))
+                         ) conditions)
+                  ))
+        (display "cache rule ")(display combine-sexpr)(newline)
+        (if edited?
+            (set! edited-rule-sexpr combine-sexpr)
+            (set! unedited-rule-sexpr combine-sexpr))
+        )))
+
+;; reason I can get away with using unedited-rule-sexpr and edited-rule-sepxr
+;; is because list are passed by reference
+;; when i created a pair of unedited-rule-sexpr and edited-rule-sexpr 
+;; it is only ever referenced by one undoable-event
+;; no matter how many time unedited-rule-sexpr and edited-rule-sexpr had been re-set!
+(define (post-edit-rule-undoable-event linkID old-ruleID new-ruleID)
+  
+  (compoundundomanager-postedit
+   undo-manager
+   (make-undoable-edit
+    "Edit Rule"
+    (lambda ()  ; undo
+      ;; recreate the unedited version of the rule and all its actions
+      (display "undo ")(display unedited-rule-sexpr)(newline)
+      
+;      (let ((thelink (get 'links linkID)))
+;        (ask thelink 'remove-rule ruleID))
+      
+      (remove-follow-link-rule-display new-ruleID)
+      (eval-sexpr unedited-rule-sexpr)
+      (add-follow-link-rule-display old-ruleID)
+      
+      ;; put old ruleID in the right place
+      (let ((the-link (get 'links linkID)))
+        ;; make sure new-ruleID is in the position where edited-ruleID used to be
+        (ask the-link 'remove-rule old-ruleID)  ;; remove the old-ruleID create-type-rule2 added
+        (ask the-link 'replace-rule new-ruleID old-ruleID))  ;; place new-ruleID in the spot of edited-ruleID
+      
+      ;; delete new-ruleID
+      (del 'rules new-ruleID)
+      ;(update-nodegraph-display)
+      )
+    (lambda () ;; redo
+       (display "redo ")(display edited-rule-sexpr)(newline)
+      
+;      (let ((thelink (get 'links linkID)))
+;        (ask thelink 'remove-rule old-ruleID))
+      
+      (remove-follow-link-rule-display old-ruleID)
+      (eval-sexpr edited-rule-sexpr)
+      (add-follow-link-rule-display new-ruleID)
+     
+      ;; put new-ruleID in the right place
+      (let ((the-link (get 'links linkID)))
+        ;; make sure new-ruleID is in the position where edited-ruleID used to be
+        (ask the-link 'remove-rule new-ruleID)  ;; remove the new-ruleID create-type-rule2 added
+        (ask the-link 'replace-rule old-ruleID new-ruleID))  ;; place new-ruleID in the spot of edited-ruleID
+      ;(update-nodegraph-display)
+      ;; delete old-ruleID
+      (del 'rules old-ruleID)
+      )
+    ))
+  )
+
+;;;; OLD caching for editlink/editnoderule
 ;; set by before-editlink
 (define unedited-link-data (list))
 (define unedited-link-data2 (list))
@@ -190,8 +266,7 @@
   (cache-link link-ID #f))
 
 (define (after-editlink link-ID)
-  (cache-link link-ID #t)
-  )
+  (cache-link link-ID #t))
 
 
 ;; cache the information of the link to 2 lambda object

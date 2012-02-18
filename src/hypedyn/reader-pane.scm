@@ -55,8 +55,7 @@
                start-indices
                end-indices
                
-               do-rule-action
-               )
+               do-rule-action)
 
 (define start-indices (make-hash-table))
 (define end-indices (make-hash-table))
