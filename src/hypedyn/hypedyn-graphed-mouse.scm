@@ -46,7 +46,7 @@
   
 ;; for node drag #t 
   (define (node-drag-mouse-event x y click-count clicked)
-
+    (display "node drag ")(newline)
     (ask graph-ed-obj 'begin-paint)
     (if (ask clicked 'is-shown?)
         (ask clicked 'hide #f))
@@ -124,8 +124,6 @@
       (ask mhm-instant 'set-prev-y #f)
       )
     )
-  
-
 
 ;; 'line 'left-up #t (line selecting)
   (define (line-onclick-mouse-event x y click-count clicked)
@@ -220,9 +218,8 @@
             (callback 'editnode clicked))) ;edit-node
       )))
 
-
   (ask mhm-instant 'set-event-func 'node 'drag #t node-drag-mouse-event)
-  (ask mhm-instant 'set-event-func 'node 'left-up #t node-after-drag-mouse-event)
+  ;(ask mhm-instant 'set-event-func 'node 'left-up #t node-after-drag-mouse-event) ;; why left up triggers drag as well?
   (ask mhm-instant 'set-event-func 'line 'left-up #t line-onclick-mouse-event)
   (ask mhm-instant 'set-event-func #f 'left-down #f deselecting-mouse-event)
   (ask mhm-instant 'set-event-func 'node 'left-clicked #t node-left-clicked-mouse-event)

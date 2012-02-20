@@ -1680,7 +1680,9 @@
                               (click-count (get-mouseevent-click-count event))
                               (find-clicked-trigger-list (list 'left-down 'right-down 'motion)))
                           
-                          
+                          (if (not (eq? 'motion mouse-event-type))
+                              (begin
+                                (display "mouse event type ")(display mouse-event-type)(newline)))
                           ;; only check what is clicked when a left 
                           ;; or right down is registered
                           (if ;(or (equal? mouse-event-type 'left-down)
@@ -1692,14 +1694,13 @@
 
                                 ;; set internal-clicked so we know what is clicked
                                 (set! internal-clicked (find-clicked mouse-event-type x y))
-                                ;(display "internal-clicked set to : ")(display internal-clicked)(newline)
-                                
+                                        ;(display "internal-clicked set to : ")(display internal-clicked)(newline)
+
                                 (if internal-clicked
                                     (set! clicked-type (ask internal-clicked 'obj-type)) ; can be 'node 'tab 'line
                                     (set! clicked-type #f))
-
                                 )
-                          )
+                              )
                           
                           ;;debugging code
 ;                          (if (not (equal? mouse-event-type 'motion))

@@ -64,8 +64,6 @@
   (let ((rule 'not-set) ;; legacy attribute (dont think we use it anymore)
         (rule-lst '())
         (this-obj (new-object)))
-    ;; TODO: objects with rules can be made into an object
-    ;;       and inherited
     (obj-put this-obj 'rule (lambda (self) rule))
     (obj-put this-obj 'rule-lst (lambda (self) rule-lst))
     (obj-put this-obj 'set-rule!
@@ -713,7 +711,8 @@
 ;; expression from version 1 takes either 'and or 'or (thus i renamed it as so and-or)
 ;; version 2 has a new argument negate? which takes in a boolean 
 ;; it duplicates most of the code except that it uses make-rule2 
-;; TODO: combine create-typed-rule with this
+;; also it adds to the rule-lst instead of setting the one and only rule
+;; NOTE: this cannot replace create-typed-rule because we need to keep the first version for compatibility
 (define (create-typed-rule2 name type and-or negate? parentID . args)
   (let* ((actual-parentID (if (importing?)
                               (+ parentID import-offset-ID)

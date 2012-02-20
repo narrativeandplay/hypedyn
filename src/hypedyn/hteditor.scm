@@ -69,7 +69,6 @@
                ;; needed by hypedyn-undo.scm
                node-graph 
                update-node-style
-               update-link-display
                
                ;; for datastructure.scm (create-node hack)
                update-display-nodes
@@ -492,8 +491,7 @@
     ; callbacks for updating link display in graph, populating nodes list,
     ; renaming a line, (the node graph for deleting), and updating node style
     ; should be safe to assume rename-line and del-line are only called for node-graph?
-    (create-nodeeditor update-link-display
-                       (lambda () (ask node-list 'populate-nodes-list))
+    (create-nodeeditor (lambda () (ask node-list 'populate-nodes-list))
                        (lambda (line-ID newname) (ask node-graph 'rename-line line-ID newname))
                        node-graph
                        update-node-style
@@ -725,7 +723,6 @@
 
 ; edit a node
 (define (doeditnode)
-  (display "ne here 3")(newline)
   (nodeeditor-edit selected-nodeID))
 
 ; read a node
@@ -1022,7 +1019,6 @@
         (let ((event-click-count (get-mouseevent-click-count e)))
           (if (= 2 event-click-count)
               (begin
-                (display "dne here 2")(newline)
                 (doeditnode)
                 )
               )))))
@@ -1365,7 +1361,6 @@
         ((eq? action 'deselect)
          (do-deselectnode-graph (string->number (ask object 'get-data))))
         ((eq? action 'editnode)
-         (display "dne here 1")(newline)
          (doeditnode))))
 
 ; selected a node in the graph
@@ -1384,28 +1379,6 @@
 (define (do-deselectnode-graph nodeID)
   (deselectnode)
   (ask node-list 'deselect-node))
-
-; need to direct update-link-display to the correct graph
-;; note this does del-line and create-line so there is no need for anymore
-;; manual del-line on our part
-;; TODO: outdated
-(define (update-link-display name fromnodeID
-                             oldusetonode oldtonodeID
-                             oldusetoaltnode oldtoaltnodeID
-                             usetonode tonodeID
-                             usetoaltnode toaltnodeID
-                             new-linkID)
-  (let ((the-node (get 'nodes fromnodeID)))
-    (if the-node
-        (let* ((anywhere (ask the-node 'anywhere?))
-               (the-graph (if anywhere anywhere-graph node-graph)))
-          (ask the-graph 'update-link-display
-               name fromnodeID
-               oldusetonode oldtonodeID
-               oldusetoaltnode oldtoaltnodeID
-               usetonode tonodeID
-               usetoaltnode toaltnodeID
-               new-linkID)))))
 
 ; store the node positions for saving
 (define (store-node-positions)

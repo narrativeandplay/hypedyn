@@ -53,7 +53,7 @@
 (require "hypedyn-undo.scm")
 (require "node-graphview.scm") ;; generate-link-name
 
-(require "editlink.scm") ;; remove-link-display
+(require "editlink.scm") ;; remove-link-display, get-edited-linkID
 
 ; export
 (module-export update-nodeeditor-frame-title
@@ -269,8 +269,7 @@
 ; takes callbacks to update links in graph, populate nodes list,
 ; rename a line, and (node graph to delete a line), update the node style; and
 ; a reference to the global undo manager
-(define (create-nodeeditor update-link-display-callback
-                           populate-nodes-list-callback
+(define (create-nodeeditor populate-nodes-list-callback
                            rename-line-callback
                            node-graph
                            update-node-style-callback
@@ -444,7 +443,7 @@
   ;; make a list for links
   (set! link-list (make-link-listview do-selectlink 
                                       (lambda (e)
-                                        (linklist-onmouse e update-link-display-callback))))
+                                        (linklist-onmouse e))))
   (ask link-list 'init)
   (add-component nodeeditor-lists-panel (ask link-list 'get-component))
 
@@ -651,7 +650,6 @@
 ;; delete a link
 ;; Note: used of del-in-nodeeditor helps avoid deadlocks after deleting the link text 
 ;;      deletes from nodeeditor if del-in-nodeeditor is #t
-;; update-link-display-callback is not used anymore
 ;; 
 (define (delete-link linkID del-in-nodeeditor node-graph update-node-style-callback)
   (display "[delete-link] ")(newline)
@@ -668,63 +666,26 @@
 ;                 (usedest (ask thelink 'use-destination))
 ;                 (usealtdest (ask thelink 'use-alt-destination)))
             
-            ;(display "[redo sexpr created] ")(display redo-sexpr)(newline)
-            
           (define from-nodeID (ask thelink 'source))
           (define redo-sexpr (ht-build-sexpr-from-object-with-rule thelink))
           
-            (define (delete-link-and-update-node-graph)
-               ; delete the link - not sure about del-in-nodeeditor?
-;                (delete-link-action linkID thelink from-nodeID to-nodeID to-alt-nodeID
-;                                    name usedest usealtdest
-;                                    del-in-nodeeditor node-graph update-node-style-callback)
-              
-              ;; need to remove display before delete-link-action which removes the rules with follow link action
-              (remove-link-display linkID)
-              
-              (delete-link-action linkID from-nodeID del-in-nodeeditor update-node-style-callback)
-              
-                ;; draw the line in node-graph
-;                (if usedest
-;                    (ask node-graph 'del-line (number->string linkID) from-nodeID to-nodeID))
-;                (if usealtdest
-;                    (ask node-graph 'del-line (string-append "~" (number->string linkID)) from-nodeID to-alt-nodeID))
-              
-              ;; delete the lines associated with this link
-              ;; each one line corresponds to each rule in the link with a follow link action
-              
-;              (define the-link (get 'links linkID))
-;              (display "[delete link and update node graph] ")(display linkID)(newline)
-              
+          (compoundundomanager-postedit
+           undo-manager
+           (make-undoable-edit
+            "Delete Link"
+            ;; undo
+            (lambda () ;; restore the link
+              (delete-link-undo redo-sexpr linkID from-nodeID update-node-style-callback del-in-nodeeditor)
               )
-            
-            (compoundundomanager-postedit
-             undo-manager
-             (make-undoable-edit
-              "Delete Link"
-              ; undo
-              (lambda ()
-                ; restore the link
-;                (delete-link-undo redo-sexpr
-;                                  linkID thelink from-nodeID to-nodeID to-alt-nodeID
-;                                  name usedest usealtdest
-;                                  del-in-nodeeditor node-graph update-node-style-callback)
-                (delete-link-undo redo-sexpr linkID from-nodeID update-node-style-callback del-in-nodeeditor)
-                
-                ;; draw the link in the node graph (must do after delete-link-undo which restores the rule with follow link action) 
-                (add-link-display linkID)
-                
-;                (ask node-graph 'create-line (generate-link-name name linkID #f) linkID from-nodeID to-nodeID)
-;                (ask node-graph 'create-line (generate-link-name name linkID #t) (string-append "~" (to-string linkID)) from-nodeID to-alt-nodeID)
-                
-                )
-              ; redo
-              (lambda ()
-                (delete-link-and-update-node-graph)
-                )))
+            ;; redo
+            (lambda () ;; delete the link - not sure about del-in-nodeeditor?
+              (delete-link-action linkID from-nodeID del-in-nodeeditor update-node-style-callback)
+              )))
 
             ; and actually delete the link
-            (delete-link-and-update-node-graph)
+            (delete-link-action linkID from-nodeID del-in-nodeeditor update-node-style-callback)
+          
+        
             )))
     ;)
   )
@@ -903,7 +864,7 @@
 
 ; mouse event in link list - for double-clicking
 ;; QUESTION how does this work? (newlink-ID 'link selected-linkID)
-(define (linklist-onmouse e update-link-display-callback)
+(define (linklist-onmouse e)
   (let ((event-type (get-mouseevent-type e)))
     (if (eq? event-type 'left-clicked)
         (let ((event-click-count (get-mouseevent-click-count e)))
@@ -913,8 +874,7 @@
 ;               (get-edited-nodeID)
 ;               (get-link-text selected-linkID))
               (begin
-                (newlink-ID 'link selected-linkID)
-                )
+                (newlink-ID 'link selected-linkID))
               )))))
 
 ; get the text of the specified link, used by editlink

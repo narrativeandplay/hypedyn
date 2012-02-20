@@ -263,6 +263,7 @@
                    #f)))
     (obj-put this-obj 'get-graph-editor 
              (lambda (self) c))
+    
     (obj-put this-obj 'update-link-display
              (lambda (self name
                            fromnodeID

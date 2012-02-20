@@ -498,7 +498,7 @@
          )
     
     ;; add the dummy add-anywhere-link action
-    ;; (does nothing, just a place holder to let it show up)
+    ;; (does nothing, just a place holder to let it show up in the rule editor)
     (if anywhere?
         (create-action "Enable Link" 'entered-node
                        (list 'add-anywhere-link)
@@ -557,14 +557,22 @@
   (if (not (eq? selected-rule-ID 'not-set))
       (begin
 
+        ;; NOTE: rule, destination, use-destination, use-alt-destination,
+        ;;       use-alt-text, alt-destination, alt-text
+        ;;       should not be removed but should be kept as a compatibility layer so that the 
+        ;;       older version of the object still works
+        ;; TODO: move these attributes out to a separate object type inherited by the new link
         (define selected-rule (get 'rules selected-rule-ID))
         (define link-name (ask link-obj 'name))
+        
+        ;; old attributes
         (define link-dest1 (ask link-obj 'destination))
         (define link-uselink (ask link-obj 'use-destination))
         (define link-usealtlink (ask link-obj 'use-alt-destination))
         (define link-usealttext (ask link-obj 'use-alt-text))
         (define link-dest2 (ask link-obj 'alt-destination))
         (define link-alttext (ask link-obj 'alt-text))
+        
         (define link-start-index (ask link-obj 'start-index))
         (define link-end-index (ask link-obj 'end-index))
         
@@ -575,7 +583,7 @@
                                         ;)
         ;; alt-text (text and fact)
         (if link-usealttext
-            (if (eq? link-usealttext #t)
+            (if (eq? link-usealttext #t) ;; if use-alt-text is just #t use alt-text
                 (begin ;; show alt text
                   ;; add a new action panel
                   (create-action link-name 'displayed-node
@@ -584,10 +592,9 @@
                                        link-alttext
                                        ;(string-append "\"" link-alttext "\"")
                                        linkID)
-                                 else-rule-ID
-                                 )
-                  )
-                (begin ;; show fact text
+                                 else-rule-ID))
+                ;; if use-alt-text is a factID use fact text
+                (begin ;; show fact text 
                   (create-action link-name 'displayed-node
                                  (list 'replace-link-text
                                        (list 'quote 'text)

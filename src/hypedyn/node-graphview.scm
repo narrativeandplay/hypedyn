@@ -34,10 +34,10 @@
                generate-link-name)
 
 ; generate the link name
-; TODO: remove outdated
-(define (generate-link-name in-name in-linkID in-alt?)
+; TODO: outdated
+(define (generate-link-name in-name in-linkID)
   (string-append
-   (if in-alt? "~" "")
+   ;(if in-alt? "~" "")
    in-name
    (if (show-IDs?) (string-append "(" (number->string in-linkID) ")") "")))
 
@@ -98,23 +98,8 @@
         (if (not is-anywhere)
             (if the-links
                 (map (lambda (l)
-;                       (let* ((this-link (cdr l))
-;                              (sourceID (ask this-link 'source))
-;                              (destinationID (ask this-link 'destination))
-;                              (alt-destinationID (ask this-link 'alt-destination))
-;                              (use-destination (ask this-link 'use-destination))
-;                              (use-alt-destination (ask this-link 'use-alt-destination))
-;                              (this-link-ID(ask this-link 'ID))
-;                              (this-link-name (ask this-link 'name)))
-;                         (update-link-display this-link-name sourceID
-;                                              #f -1
-;                                              #f -1
-;                                              use-destination destinationID
-;                                              use-alt-destination alt-destinationID
-;                                              this-link-ID))
                        (let ((linkID (car l)))
-                         (add-link-display linkID))
-                       )
+                         (add-link-display linkID)))
                      the-links)))
             
         
@@ -233,59 +218,8 @@
                 black-color 'solid)
       )
 
-    ;; there are no alternate links anymore
-    ;; there are only links that get activated based on different conditions
-;    (define (update-link-display2 srcnodeID linkID) ;; linkID is just used for naming the line
-;      
-;      )
-    
-    ; update a link in the graph; used as a callback from doeditlink
-    ; if oldtonodeID or oldtoaltnodeID not -1 then delete old line first
-    ; if tonodeID or toaltnodeID is -1 then don't show line
-    ;; TODO remove this (outdated)
-    (define (update-link-display name fromnodeID
-                                 oldusetonode oldtonodeID
-                                 oldusetoaltnode oldtoaltnodeID
-                                 usetonode tonodeID
-                                 usetoaltnode toaltnodeID
-                                 new-linkID)
-      ; update links
-      (let ((line-ID-base (number->string new-linkID)))
-        ; if link
-        (update-link-display-helper (generate-link-name name new-linkID #f)
-                                    fromnodeID
-                                    oldusetonode oldtonodeID
-                                    usetonode tonodeID
-                                    line-ID-base)
-
-        ; else link
-        (update-link-display-helper (generate-link-name name new-linkID #t)
-                                    fromnodeID
-                                    oldusetoaltnode oldtoaltnodeID
-                                    usetoaltnode toaltnodeID
-                                    (string-append "~" line-ID-base)))
-      ; also update node style in case a link is/isn't using alt text
-      (update-node-style fromnodeID))
-    
-    ; helper function - update one link (if or else)
-    (define (update-link-display-helper name fromnodeID
-                                        oldusetonode oldtonodeID
-                                        usetonode tonodeID
-                                        line-ID)
-      
-      ; only update if there's a change
-      (if (or (not (= oldtonodeID tonodeID)) (not (eq? oldusetonode usetonode)))
-          (begin
-            ; first delete any existing links with same ID
-            (if (and oldusetonode (not (= -1 oldtonodeID)))
-                (begin
-                  (ask parent-obj 'del-line line-ID fromnodeID oldtonodeID)))
-            ; then add new line
-            (if (and usetonode (not (= -1 tonodeID)))
-                (begin
-                  (ask parent-obj 'create-line name line-ID fromnodeID tonodeID))))))
-
     ; helper to check if node has any alt text
+    ;; TODO: remove outdated
     (define (has-alt-text? thisnodeID)
       (let ((thisnode (get 'nodes thisnodeID))
             (has-alt #f))
@@ -358,20 +292,24 @@
             (if the-links
                 (map (lambda (l)
                        (let* ((this-link (cdr l))
-                              (use-destination (ask this-link 'use-destination))
-                              (use-alt-destination (ask this-link 'use-alt-destination))
+                              ;(use-destination (ask this-link 'use-destination))
+                              ;(use-alt-destination (ask this-link 'use-alt-destination))
                               (this-link-ID(ask this-link 'ID))
                               (this-link-name (ask this-link 'name)))
-                         ; if using destination, then refresh to link line's label
-                         (if use-destination
-                             (ask parent-obj 'rename-line 
-                                  (number->string this-link-ID)
-                                  (generate-link-name this-link-name this-link-ID #f)))
-                         ; if using alt-destination, then refresh alt link line's label
-                         (if use-alt-destination
-                             (ask parent-obj 'rename-line 
-                                  (string-append "~" (number->string this-link-ID))
-                                  (generate-link-name this-link-name this-link-ID #t)))))
+;                         ; if using destination, then refresh to link line's label
+;                         (if use-destination
+;                             (ask parent-obj 'rename-line 
+;                                  (number->string this-link-ID)
+;                                  (generate-link-name this-link-name this-link-ID #f)))
+;                         ; if using alt-destination, then refresh alt link line's label
+;                         (if use-alt-destination
+;                             (ask parent-obj 'rename-line 
+;                                  (string-append "~" (number->string this-link-ID))
+;                                  (generate-link-name this-link-name this-link-ID #t))))
+                         (ask parent-obj 'rename-line
+                              (number->string this-link-ID)
+                              (generate-link-name this-link-name this-link-ID))
+                       ))
                      the-links)))
         
         ; allow repaint
@@ -392,19 +330,6 @@
     (obj-put this-obj 'update-node-emphasis
              (lambda (self nodeID)
                (update-node-emphasis nodeID)))
-    (obj-put this-obj 'update-link-display
-             (lambda (self name fromnodeID
-                           oldusetonode oldtonodeID
-                           oldusetoaltnode oldtoaltnodeID
-                           usetonode tonodeID
-                           usetoaltnode toaltnodeID
-                           new-linkID)
-               (update-link-display name fromnodeID
-                                    oldusetonode oldtonodeID
-                                    oldusetoaltnode oldtoaltnodeID
-                                    usetonode tonodeID
-                                    usetoaltnode toaltnodeID
-                                    new-linkID)))
              
     (obj-put this-obj 'get-max-node-positions
              (lambda (self)

@@ -32,7 +32,6 @@
 (require "../common/datatable.scm") ;; get
 (require "../common/objects.scm") ;; ask
 
-;(require "hteditor.scm") ;update-link-display
 (require "nodeeditor.scm") ;get-nodeeditor-frame
 (require "config-options.scm") ;; is-undo-enabled?
 (require "hypedyn-undo.scm") ;; undo-action
@@ -137,11 +136,9 @@
       ((link) 
        (set! edited-linkID parentID)
        (define parent-nodeID (ask (get 'links edited-linkID) 'source))
-       (display "ne here 1")(newline)
        (nodeeditor-edit parent-nodeID)  ;; pop nodeeditor out again
        )
       ((node)
-       (display "ne here 2")(newline)
        (nodeeditor-edit parentID) ;; pop nodeeditor out again
        )
       )
@@ -320,8 +317,8 @@
   (define rule-parent
     (case edit-mode
       ;; note: link and node are read as 'link 'node in the special case syntax 
-      ((link) (display "came in link ")(newline) (get 'links edited-linkID))
-      ((node) (display "came in node ")(newline) (get 'nodes edited-nodeID))))
+      ((link) (get 'links edited-linkID))
+      ((node) (get 'nodes edited-nodeID))))
   
   (define deleted-ID-lst '())
   
@@ -514,6 +511,7 @@
   
   (cond ((equal? target-type 'link)
          (set! edited-linkID obj-ID)
+         (display "edited-linkID set ")(display obj-ID)(newline)
          (define in-link (get 'links obj-ID))
          (define rule-lst (ask in-link 'rule-lst))
          (display "rule lst ")(display rule-lst)(newline)

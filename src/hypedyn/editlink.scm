@@ -57,7 +57,6 @@
                create-update-text-action-panel
                ;create-facts-main-panel
                ;create-then-action-panel
-               get-edited-linkID
                ;update-nodegraph-display
                
                remove-follow-link-rule-display
@@ -71,8 +70,7 @@
                
 
 ; remember which link we're editing
-(define-private edited-linkID '())
-(define (get-edited-linkID) edited-linkID)
+(define edited-linkID '())
 
 ;; keep track of which rule we're editing
 (define edited-ruleID '())
@@ -1076,6 +1074,7 @@
     ('and 0)
     ('or 1))) ; ('or exp 1))) alex xxx
 
+;;;; update node graph lines
 ;; remove or add the line display associated with the follow link action of this rule
 (define (remove-follow-link-rule-display ruleID)
   (update-follow-link-rule-display ruleID 'remove))
