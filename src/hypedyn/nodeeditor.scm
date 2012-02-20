@@ -94,6 +94,7 @@
   (rmgr-close)
   (nodeeditor-save)
   (set-edited-nodeID! '())
+  (display "set edited-nodeID to '() ")(newline)
   (remove-from-window-menu nodeeditor-frame)
   (set-component-visible nodeeditor-frame #f))
 
@@ -104,6 +105,10 @@
   (do-selectnode-graph in-nodeID)
 
   ; edit if necessary
+  ;; Question: this assumes that closing node-editor should reset edited-nodeID?
+  ;;           because I had to make it visible in the case where i closed the node 
+  ;;           editor and open the same previous node
+  (display "node editor edit ")(display (get-edited-nodeID))(newline)
   (if (not (equal? in-nodeID (get-edited-nodeID)))
       ; not editing this node, so edit it
       (let* ((selected-node (get 'nodes in-nodeID))
@@ -171,6 +176,7 @@
       (begin
         (display "editing same node ")(newline)
         ; already editing, so just bring to front and get focus
+        (set-component-visible nodeeditor-frame #t)
         (bring-to-front nodeeditor-frame)
         (request-focus (ask node-editor 'getcomponent)))))
 
@@ -209,10 +215,10 @@
 (define (nodeeditor-window-opened o)
   (format #t "nodeeditor-window-opened~%~!"))
 (define (nodeeditor-window-closing o)
-  (format #t "nodeeditor-window-closing~%~!"))
-(define (nodeeditor-window-closed o)
-  (format #t "nodeeditor-window-closed~%~!")
+  (format #t "nodeeditor-window-closing~%~!")
   (nodeeditor-close))
+(define (nodeeditor-window-closed o)
+  (format #t "nodeeditor-window-closed~%~!"))
 
 (define (nodeeditor-window-iconified o)
   (format #t "nodeeditor-window-iconified~%~!"))
@@ -563,12 +569,12 @@
           ; store the action for redoing
           (define redo-sexpr (ht-build-sexpr-from-object-with-rule thelink))
           (define from-nodeID (ask thelink 'source))
-          (define to-nodeID (ask thelink 'destination))
-          (define to-alt-nodeID (ask thelink 'alt-destination))
-          (define name (ask thelink 'name))
-          (define from-node (get 'nodes from-nodeID))
-          (define usedest (ask thelink 'use-destination))
-          (define usealtdest (ask thelink 'use-alt-destination))
+          ;; (define to-nodeID (ask thelink 'destination))
+          ;; (define to-alt-nodeID (ask thelink 'alt-destination))
+          ;; (define name (ask thelink 'name))
+          ;; (define from-node (get 'nodes from-nodeID))
+          ;; (define usedest (ask thelink 'use-destination))
+          ;; (define usealtdest (ask thelink 'use-alt-destination))
           (compoundundomanager-postedit 
            undo-manager
            (make-undoable-edit
@@ -578,25 +584,11 @@
               (display "[undo add new link]")(newline)
               ; delete the link - not sure about del-in-nodeeditor?
               (delete-link-action newlink-ID from-nodeID #t update-node-style-callback)
-;              (delete-link-action newlink-ID thelink from-nodeID to-nodeID to-alt-nodeID
-;                                  name usedest usealtdest
-;                                  #t node-graph update-node-style-callback)
               )
             
             (lambda () ;;redo
               (display "[REDO add new link]")(newline)
-              (display " newlink-ID from-nodeID to-nodeID to-alt-nodeID 
-                         name usedest usealtdest
-                         #t update-node-style-callback ")(newline)
-              (display (list newlink-ID from-nodeID to-nodeID to-alt-nodeID 
-                         name usedest usealtdest
-                         #t update-node-style-callback))(newline)
-              
                ; restore the link
-;              (delete-link-undo redo-sexpr
-;                                newlink-ID thelink from-nodeID to-nodeID to-alt-nodeID
-;                                name usedest usealtdest
-;                                #t node-graph update-node-style-callback)
               (delete-link-undo redo-sexpr newlink-ID from-nodeID update-node-style-callback #t)
               )))
             ))
@@ -635,20 +627,21 @@
             ; update main window label to show file is dirty
             (update-dirty-state)
 
-            (compoundundomanager-beginupdate undo-manager)
+            ;; used to need to add the editlink part as well to this action
+            ;(compoundundomanager-beginupdate undo-manager)
+            
             (newlink-undoable-postedit newlink-name newlink-ID)
             
-            ; show edit link dialogue
-            ;; TODO: show rule manager when link is created (just uncomment rmgr-edit line and see if it works)
+            ; show edit rule dialog
             ;(doeditlink newlink-ID (get-edited-nodeID) (get-link-text newlink-ID))
-            ;(rmgr-edit 'link newlink-ID)
+            (rmgr-edit 'link newlink-ID)
             
             ))))
   
   ;; cancel return #!null (dont do anything if null)
   (if (and (procedure? create-newlink)
            (not (is-null? newlink-name)))
-      (create-newlink newlink-name))
+        (create-newlink newlink-name))
   )
 
 ; delete a link
@@ -685,7 +678,12 @@
 ;                (delete-link-action linkID thelink from-nodeID to-nodeID to-alt-nodeID
 ;                                    name usedest usealtdest
 ;                                    del-in-nodeeditor node-graph update-node-style-callback)
+              
+              ;; need to remove display before delete-link-action which removes the rules with follow link action
+              (remove-link-display linkID)
+              
               (delete-link-action linkID from-nodeID del-in-nodeeditor update-node-style-callback)
+              
                 ;; draw the line in node-graph
 ;                (if usedest
 ;                    (ask node-graph 'del-line (number->string linkID) from-nodeID to-nodeID))
@@ -694,9 +692,10 @@
               
               ;; delete the lines associated with this link
               ;; each one line corresponds to each rule in the link with a follow link action
-              (define the-link (get 'links linkID))
-              (display "[delete link and update node graph] ")(newline)
-              (remove-link-display linkID)
+              
+;              (define the-link (get 'links linkID))
+;              (display "[delete link and update node graph] ")(display linkID)(newline)
+              
               )
             
             (compoundundomanager-postedit
@@ -711,11 +710,13 @@
 ;                                  name usedest usealtdest
 ;                                  del-in-nodeeditor node-graph update-node-style-callback)
                 (delete-link-undo redo-sexpr linkID from-nodeID update-node-style-callback del-in-nodeeditor)
-                ;; draw the link in the node graph
-                (display "linkID class ")(display (invoke linkID 'get-class))(newline)
+                
+                ;; draw the link in the node graph (must do after delete-link-undo which restores the rule with follow link action) 
+                (add-link-display linkID)
+                
 ;                (ask node-graph 'create-line (generate-link-name name linkID #f) linkID from-nodeID to-nodeID)
 ;                (ask node-graph 'create-line (generate-link-name name linkID #t) (string-append "~" (to-string linkID)) from-nodeID to-alt-nodeID)
-                (add-link-display linkID)
+                
                 )
               ; redo
               (lambda ()

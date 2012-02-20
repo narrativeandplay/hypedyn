@@ -725,6 +725,7 @@
 
 ; edit a node
 (define (doeditnode)
+  (display "ne here 3")(newline)
   (nodeeditor-edit selected-nodeID))
 
 ; read a node
@@ -1020,7 +1021,11 @@
     (if (eq? event-type 'left-clicked)
         (let ((event-click-count (get-mouseevent-click-count e)))
           (if (= 2 event-click-count)
-              (doeditnode))))))
+              (begin
+                (display "dne here 2")(newline)
+                (doeditnode)
+                )
+              )))))
 
 
 ;;
@@ -1360,6 +1365,7 @@
         ((eq? action 'deselect)
          (do-deselectnode-graph (string->number (ask object 'get-data))))
         ((eq? action 'editnode)
+         (display "dne here 1")(newline)
          (doeditnode))))
 
 ; selected a node in the graph

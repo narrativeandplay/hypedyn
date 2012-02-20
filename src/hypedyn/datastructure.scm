@@ -640,16 +640,7 @@
                      use-alt-destination use-alt-text alt-destination alt-text
                      update-display . args)
   ;(format #t "Creating link: ~a~%~!" name)
-;  (display "create link args name ")(newline)
-;  (display " ")(display "create-link name fromnodeID tonodeID start-index end-index use-destination
-;                     use-alt-destination use-alt-text alt-destination alt-text
-;                     update-display . args")(newline)
-;  (display "create link ")(display (list name fromnodeID tonodeID start-index end-index
-;                                         use-destination use-alt-destination))(newline)
-;  (display "args2 ")(display (list use-alt-text alt-destination alt-text))(newline)
-;  (display "name type ")(display (invoke name 'get-class))(newline) 
-;  (display "fromnodeID ")(display (invoke fromnodeID 'get-class))(newline)
-;  (display "tonodeID ")(display (invoke tonodeID 'get-class))(newline)
+
   (let* ((actual-fromnodeID (if (importing?)
                                 (+ fromnodeID import-offset-ID)
                                 fromnodeID))

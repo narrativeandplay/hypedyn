@@ -100,24 +100,13 @@
         )
       ))
 
-;; 2d-vect-pair is a cons-pair
-;; NOTE TOFIX (or not) this procedure doesnt have any side effects
+;; 2d-vect-pair is a vector
 (define (vector2d-normalize vect2d)
-;;  (let* ((length (sqrt (+ (* (car 2d-vect-pair)
-;;                             (car 2d-vect-pair))
-;;                          (* (cdr 2d-vect-pair)
-;;                             (cdr 2d-vect-pair)))))
-;;         (x-comp (/ (car 2d-vect-pair) length))
-;;         (y-comp (/ (cdr 2d-vect-pair) length))
-;;         (pair-to-return (cons x-comp y-comp)))
-;;    pair-to-return
-;;    )
   (let* ((length (vector-magnitude vect2d))
          (x-comp (/ (vector-ref vect2d 0) length))
          (y-comp (/ (vector-ref vect2d 1) length))
          (to-return (vector x-comp y-comp)))
-    to-return)
-  )
+    to-return))
 
 ;; assuming we have a purely numerical vector
 ;; changes the vector too

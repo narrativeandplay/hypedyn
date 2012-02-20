@@ -36,7 +36,7 @@
 (require "nodeeditor.scm") ;get-nodeeditor-frame
 (require "config-options.scm") ;; is-undo-enabled?
 (require "hypedyn-undo.scm") ;; undo-action
-(require "editlink.scm") ;; doeditlink
+(require "editlink.scm") ;; doeditlink, set-edit-mode
 (require "datastructure.scm") ;; create-typed-rule2
 (require 'srfi-1) ;; remove
 
@@ -137,9 +137,11 @@
       ((link) 
        (set! edited-linkID parentID)
        (define parent-nodeID (ask (get 'links edited-linkID) 'source))
+       (display "ne here 1")(newline)
        (nodeeditor-edit parent-nodeID)  ;; pop nodeeditor out again
        )
-      ((node) 
+      ((node)
+       (display "ne here 2")(newline)
        (nodeeditor-edit parentID) ;; pop nodeeditor out again
        )
       )
@@ -533,8 +535,11 @@
 
 (define (rmgr-edit target-type obj-ID)
   (set! edit-mode target-type)
+  (display "[SETTING editmode] ")(display target-type)(newline)
   (populate-rules-manager target-type obj-ID)
-  (set-component-visible rules-manager-main-dialog #t))
+  (set-component-visible rules-manager-main-dialog #t)
+  (display "edit mode here ")(display target-type)(newline)
+  )
 
 (define (rmgr-close)
   (if rules-manager-main-dialog

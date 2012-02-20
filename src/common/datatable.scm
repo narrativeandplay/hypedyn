@@ -61,7 +61,7 @@
                      (hash-table-put! (hash-table-get local-table lst-sym-ID) value-ID value)) ;; put content into new hashtable
                    )))
     
-    ;; TOFIX we shouldn't be returning #f. what if we were putting booleans into the hashtable?
+    ;; TODO: Fix: we shouldn't be returning #f. what if we were putting booleans into the hashtable?
     (obj-put this-obj 'get
              (lambda (self lst-sym-ID value-ID)
                (let ((hash (hash-table-get local-table lst-sym-ID 'not-found)))

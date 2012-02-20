@@ -65,6 +65,8 @@
                
                add-link-display
                remove-link-display
+               
+               edit-mode ;; used by rules-manager so far
                )
                
 
@@ -79,9 +81,7 @@
 ;(define-private edited-nodeID '()) ;; now using nodeeditor.scm's edited-nodeID
 
 ; are we editing a link (default) or just a rule?
-(define-private edit-mode 'link)
-
-;; TOFIX : undo of rules edit breaks undo, cannot undo after undoing a rule edit
+(define edit-mode 'link)
 
 ;;;; doedit
 
@@ -160,13 +160,14 @@
 ; edit a node rule - removes the link-specific portions of the editor
 (define (doeditnoderule in-edited-nodeID in-ruleID)
   (format #t "doeditrule: in-edited-nodeID: ~a~%~!" in-edited-nodeID)
-
+  (display "doeditnoderule in rule ")(display in-ruleID)(newline)
   ; set edit mode to rule
   ;; NOTE: done in rmgr-edit now
   ;(set! edit-mode 'node)
   
   (nodeeditor-save) ;; save text content before create sexpr in before-editnode
-  (before-editnode in-edited-nodeID)
+  ;(before-editnode in-edited-nodeID)
+  (before-edit-rule in-ruleID)
   
   ; set titles
 ;  (set-tabpanel-label-at editlink-dialog-tabpanel 0 "Rule")
@@ -1140,22 +1141,6 @@
             ((remove) remove-follow-link-rule-display))
                rule-lst))))
 
-;(define (update-nodegraph-display nodeID)
-;  ;; also when removed action is a follow link action delete that line
-;  ;; only update node-graph (assume anywhere-graph dont have links)
-
-;  ;; remove all line coming from the edited node in the graph
-;  ;; NOTE: not sure if we can avoid removing all the links from the node like that
-;  ;; TODO: improve this
-;  (ask node-graph 'clear-node-outlinks nodeID)
-;  (define the-node (get 'nodes nodeID))
-;  
-;  (if the-node
-;      (map (lambda (linkID)
-;             (update-link-display linkID 'add)) 
-;           (ask the-node 'links)))
-;  )
-
 ; user clicked "ok" button
 ;; used by editlink dialog
 
@@ -1170,17 +1155,17 @@
 
 (define (editlink-dialog-ok)
   (format #t "editlink-dialog-ok: ~a~%~!" edit-mode)
-  (let* ((the-rule-object (cond ((eq? edit-mode 'link) (get 'links edited-linkID))
+  (let* ((rule-parent-obj (cond ((eq? edit-mode 'link) (get 'links edited-linkID))
                                 ((eq? edit-mode 'node) (get 'nodes edited-nodeID))
                                 ((eq? edit-mode 'doc) #f)))
          (new-rulename (if (eq? edit-mode 'doc)
                            "document"
-                           ;(ask the-rule-object 'name)
+                           ;(ask rule-parent-obj 'name)
                            (let ((edited-rule (get 'rules edited-ruleID)))
                              (if edited-rule 
                                  (ask edited-rule 'name)))
                            ))
-
+         
          ; get boolean expression
          (new-ruleexpression-pos (get-combobox-selectedindex editlink-dialog-andor-operator))
          (new-ruleexpression (get-rule-exp new-ruleexpression-pos))
@@ -1209,6 +1194,7 @@
     (display "and-or ")(display new-ruleexpression)(newline)
     (display "negate? ")(display negate?)(newline)
     
+    ;; Conditions
     ; run through conditions and add to rule
     (map (lambda (panel) (let* ((children (get-container-children panel))
                                 (select-type (cadr children))  ;; link node fact combobox
@@ -1219,6 +1205,8 @@
                                 (operator (get-combobox-selectedindex select-operator)))
                            (create-typed-condition new-rulename the-type targetID operator new-ruleID)))
          all-conditions)
+    
+    ;; then-action-string, else-action-string
     
     ; if there's an action, add the action to the rule
     ; need to read the string and break in to s-expressions; should eventually
@@ -1244,162 +1232,144 @@
 ;;        (let ((explist (open-input-string else-action-string)))
 ;;          (read-action-expr 'else explist new-rulename new-ruleID)))
 
-    ; if we're editing a link, then retrieve the link details
-    (cond ((eq? edit-mode 'link)
-                                        ; update use-alt, alt-destination and alt-text
-           (define the-link the-rule-object)
-           (define link-name (ask the-rule-object 'name))
-           
-           ;; an action panel always has a checkbox as first component then a label with the name
-           ;; which identifies which kind of action it represents
-           (define (get-action-panel-type action-panel)
-             (define children (get-container-children action-panel))
-             (define action-label (cadr children))
-             (get-text action-label))
-           
-           ;; for processing "update text using" action-panel
-;           (define (get-update-text-using-type uts-action-panel)
-;             (define children (get-container-children uts-action-panel))
-;             
-;             )
-           
-           ;; map through the list of action panel
-           (map (lambda (action-panel)
-                  (define action-type (get-action-panel-type action-panel))
-                  (cond ((equal? action-type "update text using")
-                         (display "I see a UPDATE TEXT ")(newline)
-                         ;; text of fact?
-                         (define text-or-fact (get-combobox-selecteditem action-type-combobox))
-                         
-                         (define text-type #f)
-                         (define text-value #f)
-                         (case (to-string text-or-fact)
-                           (("alternative text") 
-                            (set! text-type "text")
-                            (set! text-value (get-text alt-text-textfield)))
-                           (("string fact") 
-                            (set! text-type "fact")
-                            ;; TOFIX: get fact string during runtime instead of from the start
-                            ;; (might not need to) just need to store factID
-                            ;; problem is fact is not accessible to our interpreter since it is in a different environment
-                            (define factID (get-comboboxwithdata-selecteddata fact-string-choice-combobox))
-                            (display "factID ")(display factID)(newline)
-                            ;(define fact-text (ask (get 'facts factID) 'get-value))
-                            ;(set! text-value (to-string factID))
-                            (set! text-value factID)
-                            )
-                           )
-                         
-                         (create-action link-name 'displayed-node
-                                        (list 'replace-link-text
-                                              (list 'quote 'text)
-                                              text-value ;; this is actually factID
-                                              edited-linkID)
-                                        new-ruleID)
-                         )
-                        ((equal? action-type "follow link to")
-                         ;(display "I see FOLLOW LINK ")(newline)
-                         ;node-choice-combobox
-                         (define dest-nodeID (get-comboboxwithdata-selecteddata node-choice-combobox))
-                         
-                         (create-action link-name 'clicked-link
-                                        (list 'follow-link
-                                              edited-linkID
-                                              new-ruleID
-                                              (list 'quote 'default)
-                                              dest-nodeID)
+    ;;=========
+    ;; Actions
+    ;;=========
+    (define obj-name (ask rule-parent-obj 'name))
+
+    ;; an action panel always has a checkbox as first component then a label with the name
+    ;; which identifies which kind of action it represents
+    (define (get-action-panel-type action-panel)
+      (define children (get-container-children action-panel))
+      (define action-label (cadr children))
+      (get-text action-label))
+
+    ;; map through the list of action panel
+    (map (lambda (action-panel)
+           (define action-type (get-action-panel-type action-panel))
+           ;; Update Text Action
+           (cond ((equal? action-type "update text using")
+                  ;; text of fact?
+                  (define text-or-fact (get-combobox-selecteditem action-type-combobox))
+
+                  (define text-type #f)
+                  (define text-value #f)
+                  (case (to-string text-or-fact)
+                    (("alternative text")
+                     (set! text-type "text")
+                     (set! text-value (get-text alt-text-textfield)))
+                    (("string fact")
+                     (set! text-type "fact")
+                     ;; TOFIX: get fact string during runtime instead of from the start
+                     ;; (might not need to) just need to store factID
+                     ;; problem is fact is not accessible to our interpreter since it is in a different environment
+                     (define factID (get-comboboxwithdata-selecteddata fact-string-choice-combobox))
+                     (display "factID ")(display factID)(newline)
+                                        ;(define fact-text (ask (get 'facts factID) 'get-value))
+                                        ;(set! text-value (to-string factID))
+                     (set! text-value factID)
+                     ))
+
+                  (create-action obj-name 'displayed-node
+                                 (list 'replace-link-text
+                                       (list 'quote 'text)
+                                       text-value ;; this is actually factID
+                                       edited-linkID)
+                                 new-ruleID))
+                 ;; Follow Link action
+                 ((equal? action-type "follow link to")
+                  (define dest-nodeID (get-comboboxwithdata-selecteddata node-choice-combobox))
+
+                  (create-action obj-name 'clicked-link
+                                 (list 'follow-link
+                                       edited-linkID
+                                       new-ruleID
+                                       (list 'quote 'default)
+                                       dest-nodeID)
+                                 new-ruleID))
+                 ;; Update Fact action
+                 ((equal? action-type "update fact")
+                  (display "I see UPDATE FACT ")(newline)
+
+                  (define fact-panel-children (get-container-children action-panel))
+                  ;; the components that follows the update fact label in the action panel
+                  (define component-list (get-container-children (caddr fact-panel-children)))
+
+                  ;; dd - dropdown
+                  (define dd1 (car component-list))
+                  (define dd2 (cadr component-list))
+                  ;; component 3 can be a textfield or dropdown depending on what is selected in dd2
+                  (define comp3 (caddr component-list))
+
+                  (define fact-type
+                    (case (to-string (get-combobox-selecteditem dd1))
+                      (("True/False") 'boolean)
+                      (("Text") 'text)
+                      (else 'error)))
+
+                  (define factID (get-comboboxwithdata-selecteddata dd2))
+                  (display "factID ")(display factID)(newline)
+
+                  ;; node rule and link rule share only update fact action for now
+                  ;; update fact is triggered by different event in the two kinds of rules
+                  (define event-type (case edit-mode
+                                       ((link) 'clicked-link)
+                                       ((node) 'entered-node)))
+
+                  (cond ((equal? fact-type 'boolean)
+                         (define bool-val-selected (to-string (get-combobox-selecteditem comp3)))
+
+                         (define bool-operator
+                           (cond ((equal? bool-val-selected "True") 'assert)
+                                 ((equal? bool-val-selected "True") 'retract)))
+
+                         (create-action obj-name event-type
+                                        (list bool-operator
+                                              factID)
                                         new-ruleID
-                                        )
-                         )
-                        ((equal? action-type "update fact")
-                         (display "I see UPDATE FACT ")(newline)
-                         
-                         (define fact-panel-children (get-container-children action-panel))
-                         ;; the components that follows the update fact label in the action panel
-                         (define component-list (get-container-children (caddr fact-panel-children)))
+                                        ))
+                        ((equal? fact-type 'text)
+                         (create-action obj-name event-type
+                                        (list 'set-value!
+                                              factID
+                                              (get-text comp3))
+                                        new-ruleID)
+                         )) ;; end of fact-type cond
+                  )) ;; end of action-type cond
+           ) (get-container-children action-list-panel))
 
-                         ;; dd - dropdown
-                         (define dd1 (car component-list))
-                         (define dd2 (cadr component-list))
-                         ;; component 3 can be a textfield or dropdown depending on what is selected in dd2
-                         (define comp3 (caddr component-list))
-                         
-                         (define fact-type 
-                           (case (to-string (get-combobox-selecteditem dd1))
-                             (("True/False") 'boolean)
-                             (("Text") 'text)
-                             (else 'error)))
-                         
-                         (define factID (get-comboboxwithdata-selecteddata dd2))
-                         (display "factID ")(display factID)(newline)
-                         
-                         (cond ((equal? fact-type 'boolean)
-                                (define bool-val-selected (to-string (get-combobox-selecteditem comp3)))
+    ;; cache the information of the edited link in the form of a lambda object
+    ;(after-editlink edited-linkID)
+    (after-edit-rule new-ruleID)
 
-                                (define bool-operator
-                                  (cond ((equal? bool-val-selected "True") 'assert)
-                                        ((equal? bool-val-selected "True") 'retract)))
+    ;; added an undoable event 
+    (post-edit-rule-undoable-event
+     edit-mode
+     (case edit-mode
+       ((link) edited-linkID)
+       ((node) edited-nodeID))
+     edited-ruleID new-ruleID)
 
-                                (create-action link-name 'clicked-link
-                                               (list bool-operator
-                                                     factID)
-                                               new-ruleID
-                                               ))
-                               ((equal? fact-type 'text)
-                                (create-action link-name 'clicked-link
-                                               (list 'set-value!
-                                                     factID
-                                                     (get-text comp3))
-                                               new-ruleID)
-                                )) ;; end of fact-type cond
-                         )) ;; end of action-type cond
-                  ) (get-container-children action-list-panel))
-           
-           ;; update links in graph 
-           ;(update-nodegraph-display)
-            
-           ;; cache the information of the edited link in the form of a lambda object
-           ;(after-editlink edited-linkID)
-           (after-edit-rule new-ruleID)
-           
-           ;; added an undoable event 
-           ;(post-editlink-undoable-event)
-           (post-edit-rule-undoable-event edited-linkID edited-ruleID new-ruleID)
-           
-           ;; update the display on node-graph
-           (remove-follow-link-rule-display edited-ruleID)  ;; remove the line display from the previous edited-ruleID
-           (add-follow-link-rule-display new-ruleID)        ;; add the line-display from the new-ruleID
+    ;; update the display on node-graph (only need to do for links that have follow link actions)
+    (if (eq? edit-mode 'link)
+        (begin
+          (remove-follow-link-rule-display edited-ruleID)  ;; remove the line display from the previous edited-ruleID
+          (add-follow-link-rule-display new-ruleID)))        ;; add the line-display from the new-ruleID
+          
 
-           ;; now we replace the old rule with a completely new one
-           ;; clean up old rule ID in manager and in object
-           ;; create-typed-rule2 has already added new rule to the-link
-           ;; TODO: if it was the first rule attached to this link, it will no longer be in that order
-           ;;       need to remove the implicit add rule from within create-typed-rule2
-           ;;       and implement a extra replace rule command for links and node objects
+    ;;; make sure new-ruleID is in the position where edited-ruleID used to be
+    (display "removing new rule ID")(display (ask rule-parent-obj 'rule-lst))(newline)
+    
+    (ask rule-parent-obj 'remove-rule new-ruleID)  ;; remove the new-ruleID create-type-rule2 added
+    (display "replacing old with new ")(newline)
+    (ask rule-parent-obj 'replace-rule edited-ruleID new-ruleID)  ;; place new-ruleID in the spot of edited-ruleID
 
-           ;;; make sure new-ruleID is in the position where edited-ruleID used to be
-           (ask the-link 'remove-rule new-ruleID)  ;; remove the new-ruleID create-type-rule2 added
-           (ask the-link 'replace-rule edited-ruleID new-ruleID)  ;; place new-ruleID in the spot of edited-ruleID
-
-           ;; delete edited-ruleID
-           (del 'rules edited-ruleID)
-                                        ;(display "[editlink-dialog-ok] ")(display (compoundundomanager-updatelevel undo-manager))(newline)
-
-           ;; if updatelevel is more than 0 it doeditlink was called right after donewlink
-           ;; in that case a beginupdate had been called so close the compound undoable edit
-           ;; by calling endupdate to close it
-           (if (> (compoundundomanager-updatelevel undo-manager) 0)
-               (compoundundomanager-endupdate undo-manager undo-action redo-action))
-                                        ;(display "[editlink-dialog-ok] ")(display (compoundundomanager-updatelevel undo-manager))(newline)
-           )
-          ((eq? edit-mode 'node)
-           (define the-node the-rule-object)
-           (define nodeID (ask the-node 'ID))
-           (after-editnode nodeID)
-           (post-edit-noderule-undoable-event)
-           )
-          )
-
+    ;; delete edited-ruleID
+    (del 'rules edited-ruleID)
+    ;;===============
+    ;; End of Actions
+    ;;===============
+    
     ; hide link editor, and reset (for next time)
     (set-component-visible editlink-dialog #f)
     (reset-rule-editor)

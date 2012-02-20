@@ -202,6 +202,7 @@
     
     ; follow a link's then or else behaviour:
     ; mark as followed, perform the-action (if any), and if use-link=#t then follow to dest-nodeID
+    ;; TODO: not used anymore (remove) (but keep hover link code in follow-link2 of reader-pane.scm)
     (define (follow-link the-link the-action use-link link-type dest-nodeID)
       ; increment followed count
       (ask the-link 'set-followed!

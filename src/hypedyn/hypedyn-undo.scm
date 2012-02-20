@@ -29,13 +29,13 @@
 (module-export delete-link-action
                delete-link-undo
                
-               before-editlink
-               after-editlink
-               post-editlink-undoable-event
+               ;before-editlink
+               ;after-editlink
+               ;post-editlink-undoable-event
                
-               before-editnode
-               after-editnode
-               post-edit-noderule-undoable-event
+               ;before-editnode
+               ;after-editnode
+               ;post-edit-noderule-undoable-event
                
                before-edit-rule
                after-edit-rule
@@ -73,9 +73,6 @@
 ; delete link action (do and redo)
 (define (delete-link-action 
          linkID from-nodeID del-in-nodeeditor update-node-style-callback)
-                                        ;         linkID thelink from-nodeID to-nodeID to-alt-nodeID
-                                        ;                            name usedest usealtdest
-                                        ;                            del-in-nodeeditor node-graph update-node-style-callback)
   
   (define from-node (get 'nodes from-nodeID))
   (set! thelink (get 'links linkID))
@@ -88,20 +85,15 @@
 
         ; remove from UI - cheat by just repopulating the list
         (if (= from-nodeID edited-nodeID)
-            (ask link-list 'populate-list from-node #f)
-            (begin
-              (display "in delete-link-action ")(newline)
-              (display "from-nodeID edited-nodeID different so did not add to link-list ")(newline)
-              ))
+            (ask link-list 'populate-list from-node #f))
 
         ; remove from nodeeditor (remove underlining)
         (if del-in-nodeeditor
             (ask node-editor 'removelink thelink))
 
+        ; TODO: should check if there's a selection, and if so, enable newlink button
         ; disable link-related buttons in node editor
         (enable-link-buttons #f)
-
-        ; TODO: should check if there's a selection, and if so, enable newlink button
 
         ; update node style, in case this was an alt-text link
         (update-node-style-callback from-nodeID)
@@ -115,19 +107,12 @@
 
 ; delete link undo action
 (define (delete-link-undo redo-sexpr linkID from-nodeID update-node-style-callback del-in-nodeeditor)
-  ;         redo-sexpr
-;         linkID thelink from-nodeID to-nodeID to-alt-nodeID
-;         name usedest usealtdest
-;         del-in-nodeeditor node-graph update-node-style-callback)
-  ; first need to recreate the link in data structure: this recreates the link
-  ; and any contained rules, conditions and actions, and adds them to the data table
+  ;; first need to recreate the link in data structure: this recreates the link
+  ;; and any contained rules, conditions and actions, and adds them to the data table
   (eval-sexpr redo-sexpr)
 
-  (define from-node (get 'nodes from-nodeID)) 
-  
   ;; retrieve the newly recreated link
   (set! thelink (get 'links linkID))
-  (display " del-in-nodeeditor ")(display del-in-nodeeditor)(newline)
   
   ;; now need to update the node editor
 ;;  (if del-in-nodeeditor
@@ -139,6 +124,7 @@
   ; and the link list - cheat by just repopulating the list (this updates the left list in the node editor)
   (if (= from-nodeID edited-nodeID)
       (begin
+        (define from-node (get 'nodes from-nodeID))
         ;; all these only makes sense if we are editing the node in the node editor
         (ask link-list 'populate-list from-node #f)
         (ask node-editor 'addlink thelink)
@@ -199,12 +185,12 @@
             (set! unedited-rule-sexpr combine-sexpr))
         )))
 
-;; reason I can get away with using unedited-rule-sexpr and edited-rule-sepxr
-;; is because list are passed by reference
-;; when i created a pair of unedited-rule-sexpr and edited-rule-sexpr 
-;; it is only ever referenced by one undoable-event
-;; no matter how many time unedited-rule-sexpr and edited-rule-sexpr had been re-set!
-(define (post-edit-rule-undoable-event linkID old-ruleID new-ruleID)
+;; TOFIX: in rule edit, action deletion and undo does not bring up the rule editor (previously called editlink)
+(define (post-edit-rule-undoable-event type obj-ID old-ruleID new-ruleID)
+  
+  ;; copy the cache and store in this context (the cache would be reused for other edits)
+  (define unedited-sexpr-copy (list-copy unedited-rule-sexpr))
+  (define edited-sexpr-copy (list-copy edited-rule-sexpr))
   
   (compoundundomanager-postedit
    undo-manager
@@ -212,40 +198,51 @@
     "Edit Rule"
     (lambda ()  ; undo
       ;; recreate the unedited version of the rule and all its actions
-      (display "undo ")(display unedited-rule-sexpr)(newline)
+      (display "undo ")(display unedited-sexpr-copy)(newline)
       
-;      (let ((thelink (get 'links linkID)))
-;        (ask thelink 'remove-rule ruleID))
-      
-      (remove-follow-link-rule-display new-ruleID)
-      (eval-sexpr unedited-rule-sexpr)
-      (add-follow-link-rule-display old-ruleID)
+      (case type
+        ((link) ;; link need to update node graph display (follow link action)
+         (remove-follow-link-rule-display new-ruleID)
+         (eval-sexpr unedited-sexpr-copy)
+         (add-follow-link-rule-display old-ruleID))
+        ((node)
+         (eval-sexpr unedited-sexpr-copy)))
       
       ;; put old ruleID in the right place
-      (let ((the-link (get 'links linkID)))
+      (let ((the-obj (case type
+                       ((link) (get 'links obj-ID))
+                       ((node) (get 'nodes obj-ID)))))
+        (display "old new ruleID ")(display (list old-ruleID new-ruleID))(newline)
         ;; make sure new-ruleID is in the position where edited-ruleID used to be
-        (ask the-link 'remove-rule old-ruleID)  ;; remove the old-ruleID create-type-rule2 added
-        (ask the-link 'replace-rule new-ruleID old-ruleID))  ;; place new-ruleID in the spot of edited-ruleID
+        (display "[undo] b4 remove ")(display (ask the-obj 'rule-lst))(newline)
+        (ask the-obj 'remove-rule old-ruleID)  ;; remove the old-ruleID create-type-rule2 added
+        (display "[undo] aft remove ")(display (ask the-obj 'rule-lst))(newline)
+        (ask the-obj 'replace-rule new-ruleID old-ruleID)  ;; place new-ruleID in the spot of edited-ruleID
+        (display "[undo] aft replace ")(display (ask the-obj 'rule-lst))(newline)
+        )
       
       ;; delete new-ruleID
       (del 'rules new-ruleID)
       ;(update-nodegraph-display)
       )
     (lambda () ;; redo
-       (display "redo ")(display edited-rule-sexpr)(newline)
+       (display "redo ")(display edited-sexpr-copy)(newline)
       
-;      (let ((thelink (get 'links linkID)))
-;        (ask thelink 'remove-rule old-ruleID))
-      
-      (remove-follow-link-rule-display old-ruleID)
-      (eval-sexpr edited-rule-sexpr)
-      (add-follow-link-rule-display new-ruleID)
+      (case type
+        ((link)
+         (remove-follow-link-rule-display old-ruleID)
+         (eval-sexpr edited-sexpr-copy)
+         (add-follow-link-rule-display new-ruleID))
+        ((node)
+         (eval-sexpr edited-sexpr-copy)))
      
       ;; put new-ruleID in the right place
-      (let ((the-link (get 'links linkID)))
+      (let ((the-obj (case type
+                       ((link) (get 'links obj-ID))
+                       ((node) (get 'nodes obj-ID)))))
         ;; make sure new-ruleID is in the position where edited-ruleID used to be
-        (ask the-link 'remove-rule new-ruleID)  ;; remove the new-ruleID create-type-rule2 added
-        (ask the-link 'replace-rule old-ruleID new-ruleID))  ;; place new-ruleID in the spot of edited-ruleID
+        (ask the-obj 'remove-rule new-ruleID)  ;; remove the new-ruleID create-type-rule2 added
+        (ask the-obj 'replace-rule old-ruleID new-ruleID))  ;; place new-ruleID in the spot of edited-ruleID
       ;(update-nodegraph-display)
       ;; delete old-ruleID
       (del 'rules old-ruleID)
@@ -253,135 +250,137 @@
     ))
   )
 
+(define (post-edit-node-rule-undoable-event linkID old-ruleID new-ruleID)
+  (compoundundomanager-postedit
+   undo-manager
+   (make-undoable-edit
+    "Edit Node Rule"
+    (lambda () ;; restore the node before edit (undo)
+      (eval-sexpr unedited-rule-sexpr))
+    (lambda () ;; restore the node before edit (redo)
+      (eval-sexpr edited-rule-sexpr))
+    )))
+
 ;;;; OLD caching for editlink/editnoderule
 ;; set by before-editlink
-(define unedited-link-data (list))
-(define unedited-link-data2 (list))
-(define edited-link-data (list))
-(define edited-link-data2 (list))
+;(define unedited-link-data (list))
+;(define unedited-link-data2 (list))
+;(define edited-link-data (list))
+;(define edited-link-data2 (list))
 
-(define editlink-common-data (list))
+;(define editlink-common-data (list))
 
-(define (before-editlink link-ID)
-  (cache-link link-ID #f))
+;(define (before-editlink link-ID)
+;  (cache-link link-ID #f))
 
-(define (after-editlink link-ID)
-  (cache-link link-ID #t))
+;(define (after-editlink link-ID)
+;  (cache-link link-ID #t))
 
 
 ;; cache the information of the link to 2 lambda object
 ;; unedited-link-lambda restores the link to unedited state
 ;; edited-link-lambda does otherwise
-(define (cache-link link-ID edited?)
-  (define thelink (get 'links link-ID))
-  (if thelink
-      (begin
-        ; store the action for redoing
-        (define redo-sexpr (ht-build-sexpr-from-object-with-rule thelink))
-        (define from-nodeID (ask thelink 'source))
-        (define to-nodeID (ask thelink 'destination))
-        (define to-alt-nodeID (ask thelink 'alt-destination))
-        (define name (ask thelink 'name))
-        (define from-node (get 'nodes from-nodeID))
-        (define usedest (ask thelink 'use-destination))
-        (define usealtdest (ask thelink 'use-alt-destination))
-        
-;;        (display "[CACHE LINK] ")(display (list redo-sexpr from-nodeID to-nodeID))(newline)
-;;        (display (list to-alt-nodeID name from-node))(newline)
-;;        (display (list usedest usealtdest))(newline)
-        
-        (if (not edited?)
-            (begin
-              ;; used for both delete-link-action and delete-link-undo
-              (set! unedited-link-data
-                    (list redo-sexpr
-                          link-ID thelink from-nodeID to-nodeID to-alt-nodeID
-                          name usedest usealtdest
-                          #t node-graph update-node-style))
-              (set! unedited-link-data2
-                    (list usedest to-nodeID usealtdest to-alt-nodeID))
-              (set! editlink-common-data (list name from-nodeID link-ID))
-              )
-            (begin
-              ;; used for both delete-link-action and delete-link-undo
-              (set! edited-link-data
-                    (list redo-sexpr
-                          link-ID thelink from-nodeID to-nodeID to-alt-nodeID
-                          name usedest usealtdest
-                          #t node-graph update-node-style))
-              (set! edited-link-data2
-                    (list usedest to-nodeID usealtdest to-alt-nodeID))
-              ))
-        ))
-  )
+;(define (cache-link link-ID edited?)
+;  (define thelink (get 'links link-ID))
+;  (if thelink
+;      (begin
+;        ; store the action for redoing
+;        (define redo-sexpr (ht-build-sexpr-from-object-with-rule thelink))
+;        (define from-nodeID (ask thelink 'source))
+;        (define to-nodeID (ask thelink 'destination))
+;        (define to-alt-nodeID (ask thelink 'alt-destination))
+;        (define name (ask thelink 'name))
+;        (define from-node (get 'nodes from-nodeID))
+;        (define usedest (ask thelink 'use-destination))
+;        (define usealtdest (ask thelink 'use-alt-destination))
+;        
+;        (if (not edited?)
+;            (begin
+;              ;; used for both delete-link-action and delete-link-undo
+;              (set! unedited-link-data
+;                    (list redo-sexpr
+;                          link-ID thelink from-nodeID to-nodeID to-alt-nodeID
+;                          name usedest usealtdest
+;                          #t node-graph update-node-style))
+;              (set! unedited-link-data2
+;                    (list usedest to-nodeID usealtdest to-alt-nodeID))
+;              (set! editlink-common-data (list name from-nodeID link-ID))
+;              )
+;            (begin
+;              ;; used for both delete-link-action and delete-link-undo
+;              (set! edited-link-data
+;                    (list redo-sexpr
+;                          link-ID thelink from-nodeID to-nodeID to-alt-nodeID
+;                          name usedest usealtdest
+;                          #t node-graph update-node-style))
+;              (set! edited-link-data2
+;                    (list usedest to-nodeID usealtdest to-alt-nodeID))
+;              ))
+;        ))
+;  )
 
-;; TOFIX: in rule edit, action deletion and undo does not bring up the rule editor (previously called editlink)
-;; TOFIX: undoing edits to the rule would change the name of the rule to the link/node obj's name
-(define (post-editlink-undoable-event)
-  (define unedited-link-cache (list-copy unedited-link-data))
-  (define edited-link-cache (list-copy edited-link-data))
-  
-  (define unedited-link-cache2 (list-copy unedited-link-data2))
-  (define edited-link-cache2 (list-copy edited-link-data2))
-  
-  (define editlink-common-cache (list-copy editlink-common-data))
-  
-;;  (if (and unedited-link-lambda
-;;           edited-link-lambda)
-;;      (begin
-  (compoundundomanager-postedit
-   undo-manager
-   (make-undoable-edit
-    ;; if compound edit on means that it is a new link operation
-    (if (> (compoundundomanager-updatelevel undo-manager) 0)
-        "New Link"
-        "Edit Link")
-    ;; undo
-    (lambda () ;; restore the link before edit
-               ;(unedited-link-lambda)
-      (apply delete-link-action
-             (cdr unedited-link-cache))
-      (apply delete-link-undo unedited-link-cache)
-      (apply update-link-display
-             (append
-              (list (list-ref editlink-common-cache 0)
-                    (list-ref editlink-common-cache 1))
-              edited-link-cache2
-              unedited-link-cache2
-              (list (list-ref editlink-common-cache 2)))))
-    (lambda () ;; restore the link before edit
-               ;(edited-link-lambda)
-      (apply delete-link-action
-             (cdr edited-link-cache))
-      (apply delete-link-undo edited-link-cache)
-      (apply update-link-display
-             (append
-              (list (list-ref editlink-common-cache 0)
-                    (list-ref editlink-common-cache 1))
-              unedited-link-cache2
-              edited-link-cache2
-              (list (list-ref editlink-common-cache 2)))))
-    ))
-  )
+;(define (post-editlink-undoable-event)
+;  (display "edit link undoable event")(newline)
+;  (define unedited-link-cache (list-copy unedited-link-data))
+;  (define edited-link-cache (list-copy edited-link-data))
+;  
+;  (define unedited-link-cache2 (list-copy unedited-link-data2))
+;  (define edited-link-cache2 (list-copy edited-link-data2))
+;  
+;  (define editlink-common-cache (list-copy editlink-common-data))
+;  
+;  (compoundundomanager-postedit
+;   undo-manager
+;   (make-undoable-edit
+;    ;; if compound edit on means that it is a new link operation
+;    (if (> (compoundundomanager-updatelevel undo-manager) 0)
+;        "New Link"
+;        "Edit Link")
+;    ;; undo
+;    (lambda () ;; restore the link before edit
+;               ;(unedited-link-lambda)
+;      (apply delete-link-action
+;             (cdr unedited-link-cache))
+;      (apply delete-link-undo unedited-link-cache)
+;      (apply update-link-display
+;             (append
+;              (list (list-ref editlink-common-cache 0)
+;                    (list-ref editlink-common-cache 1))
+;              edited-link-cache2
+;              unedited-link-cache2
+;              (list (list-ref editlink-common-cache 2)))))
+;    (lambda () ;; restore the link before edit
+;               ;(edited-link-lambda)
+;      (apply delete-link-action
+;             (cdr edited-link-cache))
+;      (apply delete-link-undo edited-link-cache)
+;      (apply update-link-display
+;             (append
+;              (list (list-ref editlink-common-cache 0)
+;                    (list-ref editlink-common-cache 1))
+;              unedited-link-cache2
+;              edited-link-cache2
+;              (list (list-ref editlink-common-cache 2)))))
+;    )))
 
-(define (before-editnode node-ID)
-  (cache-node node-ID #f))
-(define (after-editnode node-ID)
-  (cache-node node-ID #t))
+;(define (before-editnode node-ID)
+;  (cache-node node-ID #f))
+;(define (after-editnode node-ID)
+;  (cache-node node-ID #t))
 
-(define unedited-node-sexpr #f)
-(define edited-node-sexpr #f)
+;(define unedited-node-sexpr #f)
+;(define edited-node-sexpr #f)
 
-(define (cache-node node-ID edited?)
-  (define thenode (get 'nodes node-ID))
-  (if thenode
-      (begin
-        (display "cached node sexpr ")(display (ht-build-sexpr-from-object-with-rule thenode))(newline)
-        ; store the sexpr for redoing
-        (if (not edited?)
-            (set! unedited-node-sexpr (ht-build-sexpr-from-object-with-rule thenode))
-            (set! edited-node-sexpr (ht-build-sexpr-from-object-with-rule thenode)))
-        )))
+;(define (cache-node node-ID edited?)
+;  (define thenode (get 'nodes node-ID))
+;  (if thenode
+;      (begin
+;        (display "cached node sexpr ")(display (ht-build-sexpr-from-object-with-rule thenode))(newline)
+;        ; store the sexpr for redoing
+;        (if (not edited?)
+;            (set! unedited-node-sexpr (ht-build-sexpr-from-object-with-rule thenode))
+;            (set! edited-node-sexpr (ht-build-sexpr-from-object-with-rule thenode)))
+;        )))
 
 (define (post-edit-noderule-undoable-event)
   (define unedited-node-sexpr-cache (list-copy unedited-node-sexpr))
@@ -395,8 +394,7 @@
       (eval-sexpr unedited-node-sexpr-cache))
     (lambda () ;; restore the node before edit (redo)
       (eval-sexpr edited-node-sexpr-cache))
-    ))
-  )
+    )))
 
 ; hypedyn's wrapper around compoundundomanager-postedit
 ;(define (ht-undoable-postedit in-undo-manager :: <compoundundomanager>

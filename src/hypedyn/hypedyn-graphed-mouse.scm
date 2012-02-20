@@ -188,8 +188,11 @@
 
 ;; selecting node (left clicked on node)
 ; node left-clicked #t
+  ;; TODO: fix mouse-handler-mould seem to fire twice on left click
+  ;;        when dragging node, left up also fire left click once
+  ;;        so i suspect left click is fired when going down and coming up
   (define (node-left-clicked-mouse-event x y click-count clicked)
-
+    (display "node left clicked ")(newline)
     (let ((px (ask mhm-instant 'get-prev-x))
           (py (ask mhm-instant 'get-prev-y))
           (selected-line (ask graph-ed-obj 'get-selected-line)))
@@ -223,5 +226,4 @@
   (ask mhm-instant 'set-event-func 'line 'left-up #t line-onclick-mouse-event)
   (ask mhm-instant 'set-event-func #f 'left-down #f deselecting-mouse-event)
   (ask mhm-instant 'set-event-func 'node 'left-clicked #t node-left-clicked-mouse-event)
-
   )

@@ -331,8 +331,10 @@
   (object (<java.awt.event.WindowListener>)
     ((window-opened e :: <java.awt.event.WindowEvent>) :: <void>
      (opened e))
+    ;; Invoked when the user attempts to close the window from the window's system menu.
     ((window-closing e :: <java.awt.event.WindowEvent>) :: <void>
      (close e))
+    ;; Invoked when a window has been closed as the result of calling dispose on the window.
     ((window-closed e :: <java.awt.event.WindowEvent>) :: <void>
      (closed e))
     ((window-iconified e :: <java.awt.event.WindowEvent>) :: <void>
