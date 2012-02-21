@@ -20,8 +20,6 @@
 ; reader pane
 ; subclass of hypertextpane with hypedyn-specific functionality
 
-; requires
-
 (require "../kawa/ui/events.scm")
 (require "../kawa/ui/text.scm")
 (require "../kawa/ui/cursor.scm")
@@ -42,8 +40,6 @@
 (require 'hash-table)
 (require 'srfi-1) ;; find 
 
-
-
 ;; TODO: ticket #143: remove CHI study hacks:
 ;; - hover-links - requires global link mouseover + click action and get-active-linkID
 ;; - custom cursors - requires global link mouseover action and get-active-linkID
@@ -63,25 +59,14 @@
     ;; if check-condition? true, we check whether the 
     ;;   condition for the follow link action is satisfied
     ;; if check-condition? false, we only check the existence 
-    ;; TODO : haven't taken into account whether the rules falls through or not
-    ;;        if the preceding rule is triggered and it is as if the condition isn't met 
-    ;;        and follow link is not allowed to trigger
 (define (find-action obj-ID obj-type check-condition? action-name)
-;  (display "find action ")(display "( obj-ID obj-type check-cond action-name) ")(newline)
-;  (display (list obj-ID obj-type check-cond action-name))(newline)
-;  (define this-obj
-;    (case obj-type
-;      ((link) (get 'links obj-ID))
-;      ((node) (get 'nodes obj-ID))))
   (define this-obj
-    (cond ((equal? obj-type 'link)
-           (get 'links obj-ID))
-          ((equal? obj-type 'node)
-           (get 'nodes obj-ID))))
+    (case obj-type
+      ((link) (get 'links obj-ID))
+      ((node) (get 'nodes obj-ID))))
   
   ;; for debug (delete later)
   (define obj-name (ask this-obj 'name))
-  (display "[obj-name] ")(display obj-name)(newline)
   
   (define rule-lst (ask this-obj 'rule-lst))
   
@@ -96,16 +81,9 @@
             (find (lambda (actionID) ;;find action in this rule
                     (define action (get 'actions actionID))
                     (define sexpr (ask action 'expr))
-                    (display "[action] ")(display (car sexpr))(newline)
                     (equal? (car sexpr) in-action-name)
                     ) (ask (get 'rules (car in-rule-lst)) 'actions)))
 
- 
-          (display "[Search] ")(display in-action-name)(newline)
-          (display "action list ")(display (ask (get 'rules (car in-rule-lst)) 'actions))(newline)
-          (display "fall-through? ")(display fall-through?)(newline)
-          (display "condition-satisfied? ")(display condition-satisfied?)(newline)
-          (display "found-action? ")(display found-action?)(newline)(newline)
           ;; if checking condition need to check take note not to fall through when condition satisfied
           (if check-condition?
               (if (and found-action? condition-satisfied?)
@@ -200,45 +178,10 @@
             (rule-check-trigger 'clicked-link 'links clicked-linkID)
             )))
     
-    ; follow a link's then or else behaviour:
-    ; mark as followed, perform the-action (if any), and if use-link=#t then follow to dest-nodeID
-    ;; TODO: not used anymore (remove) (but keep hover link code in follow-link2 of reader-pane.scm)
-    (define (follow-link the-link the-action use-link link-type dest-nodeID)
-      ; increment followed count
-      (ask the-link 'set-followed!
-           (+ (ask the-link 'followed?) 1))
-
-      ; perform action, if any, before going to destination
-      (if the-action
-          (do-action the-action))
-
-      ; and go to destination node if link is active
-      (if use-link
-          (if (or (not hover-links)
-                  (equal? link-type 'default))
-              (begin
-                ; goto node
-                (goto-node dest-nodeID #t))
-              
-              (if hover-links
-                  ; show the hover link 
-                  (let ((e (ask htpane-obj 'get-lastmousemove)))
-                    (set-tooltip-text (ask the-link 'ID))
-                    ; dispatch a mouseevent to trick tooltipmanager into displaying tooltip
-                    (if e 
-                        (begin ;; QUESTION: why do it twice here?
-                          (dispatch-mouseevent (ask htpane-obj 'getcomponent) e)
-                          (dispatch-mouseevent (ask htpane-obj 'getcomponent) e)
-                          ))))
-              )))
-    
-    ;; following links
-
-    ;; check if a link can be followed
+    ;; check if a link can be followed (check-condition #t)
+    ;; check if a link is available (check-condition #f)
     (define (follow-link-available? linkID check-condition?)
-      (display "calling follwo lik available? ")(display linkID)(display " ")(display check-condition?)(newline)
-      (find-action linkID 'link check-condition? 'follow-link)
-      )
+      (find-action linkID 'link check-condition? 'follow-link))
     
     ;; link actions
 
@@ -565,11 +508,17 @@
              (+ (ask the-link 'followed?) 1))
         
         ; and execute action, if any
-        (if (follow-link? linkID)
-            (do-action then-action)
-            (do-action else-action))))
+        ;; TODO: follow-link? outdated, then-action else action not working
+;        (if (follow-link? linkID)
+;            (do-action then-action)
+;            (do-action else-action))
+        ))
       
     ; set the tooltip text on rollover for links which only show tooltips
+    ;; TODO: get-destnode-text and get-destnode-text is outdated
+    ;;       use of follow-link?,  uselink?, ask 'destination, altlink?, alt-destination 
+    ;;       are all from the old framework
+    ;;       set-tooltip-text not used at the moment so no problems yet
     (define (set-tooltip-text linkID)
       (let ((the-destnode-text (get-destnode-text linkID))
             (nodereader-text (ask htpane-obj 'getcomponent)))
@@ -684,7 +633,7 @@
 ;; only do the actions relevant to the event-type
 ;; Note: do-action should really be triggered through this function
 ;;       if we want to govern the triggering of actions with the right event-type
-;; TODO: clean up do-action to all go through this odo-rule-action
+;; TODO: clean up do-action to all go through this do-rule-action
 (define (do-rule-action event-type ruleID)
   (display "do-rule-action ")(display event-type)(newline)
   (define action-lst (ask (get 'rules ruleID) 'actions))
@@ -703,7 +652,7 @@
   )
 
 ;; obj can be a link or node..
-;; TODO: doc should fit into this somehow
+;; TODO: doc rule should fit into this somehow
 ;; obj-type is either 'links or 'nodes for now
 (define (rule-check-trigger event-type obj-type obj-ID)
   
@@ -730,8 +679,6 @@
 ;; goes through all the links of this node and 
 ;; check for rule triggers
 (define (rule-check-trigger-links event-type nodeID)
-  (display "[rule check trigger links] ")(newline)
-  (display "  event-type ")(display event-type)(newline)
   (map (lambda (linkID)
          (rule-check-trigger event-type 'links linkID))
        (ask (get 'nodes nodeID) 'links))

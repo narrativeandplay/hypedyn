@@ -83,6 +83,17 @@
                (set! rule-lst (list-replace rule-lst (list-index (lambda (this-ruleID) (= ruleID this-ruleID)) rule-lst) new-rule-ID))
                (display "after replace rule ")(display rule-lst)(newline)
                ))
+    ;; remove the last rule on the lst (right most)
+    (obj-put this-obj 'remove-last-rule
+             (lambda (self)
+               ;; this changes the lst getting passed in
+               (define (remove-last! lst)
+                 (if (not (= (length (cdr lst)) 1))
+                     (remove-last! (cdr lst))
+                     (set-cdr! lst '())))
+               (remove-last! rule-lst))
+               )
+               
     (obj-put this-obj 'set-rule-lst
              (lambda (self new-rule-lst)
                (set! rule-lst new-rule-lst)
@@ -360,31 +371,34 @@
                   ;; convert rule into an s-expr that can be eval-ed by our evaluator
                   (obj-put this-obj 'rule-expr
                            (lambda (self)
-                             (define to-return
-                               (cons expression
+                             (cons expression
                                    (map (lambda (c)
                                           (let* ((thiscondition (get 'conditions c))
                                                  (targetID (ask thiscondition 'targetID))
                                                  (operator (ask thiscondition 'operator))
                                                  (type (ask thiscondition 'type)))
-                                            (cond 
+                                            (cond
                                              ((eq? type 0)
-                                                ; node
-                                                (cond ((eq? operator 0) (list 'not (list 'visited? targetID)))
-                                                      ((eq? operator 1) (list 'visited? targetID))
-                                                      ((eq? operator 2) (list 'previous? targetID))))
+                                              ;; node
+                                              (cond ((eq? operator 0) (list 'not (list 'visited? targetID)))
+                                                    ((eq? operator 1) (list 'visited? targetID))
+                                                    ((eq? operator 2) (list 'previous? targetID))))
                                              ((eq? type 1)
-                                                ; link
-                                                (cond ((eq? operator 0) (list 'not (list 'followed? targetID)))
-                                                      ((eq? operator 1) (list 'followed? targetID))))
+                                              ;; link
+                                              (cond ((eq? operator 0) (list 'not (list 'followed? targetID)))
+                                                    ((eq? operator 1) (list 'followed? targetID))))
                                              ((eq? type 2)
-                                                ; fact
-                                                (cond ((eq? operator 0) (list 'not (list 'holds? targetID)))
-                                                      ((eq? operator 1) (list 'holds? targetID)))))))
-                                        conditions)))
-                             ;(display "rule-expr returning ")(newline)
-                             ;(display to-return)(newline)
-                             to-return
+                                              ;; fact
+                                              (cond ((eq? operator 0) (list 'not (list 'holds? targetID)))
+                                                    ((eq? operator 1) (list 'holds? targetID)))))))
+                                        conditions))
+                             ))
+                  (obj-put this-obj 'empty-rule
+                           (lambda (self)
+                             ;; TODO: should remove conditions and
+                             ;;       actions that were in there as well
+                             (set! actions '())
+                             (set! conditions '())
                              ))
                   (obj-put this-obj 'to-save-sexpr
                            (lambda (self)
@@ -816,7 +830,6 @@
 ;          (ask the-rule 'set-then-action! (ask new-action 'ID)))
 ;         ((eq? type 'init)
 ;          (ask the-rule 'set-else-action! (ask new-action 'ID)))
-;         
 ;         )
           (ask the-rule 'add-action! (ask new-action 'ID))
         )

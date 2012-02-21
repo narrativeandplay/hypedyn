@@ -34,7 +34,6 @@
                generate-link-name)
 
 ; generate the link name
-; TODO: outdated
 (define (generate-link-name in-name in-linkID)
   (string-append
    ;(if in-alt? "~" "")

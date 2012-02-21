@@ -1296,7 +1296,7 @@
                   ; it returns the line object
                   ;; node ID-str must be a string 
                   ;; TODO: get rid of the annoying (ID line) pair format (use data table or hashtable)
-                  ;; TODO !!!priority get rid of the first ('ID line) entry in links, it was a hack or some sort for something that was long forgotten 
+                  ;; TODO: get rid of the first ('ID line) entry in links, it was a hack or some sort for something that was long forgotten 
                   (define (line-add-with-name-and-ID g-editor in-name ID-str src-tab dst-tab in-custom-draw)
                     
                     (let
@@ -1680,18 +1680,10 @@
                               (click-count (get-mouseevent-click-count event))
                               (find-clicked-trigger-list (list 'left-down 'right-down 'motion)))
                           
-                          (if (not (eq? 'motion mouse-event-type))
-                              (begin
-                                (display "mouse event type ")(display mouse-event-type)(newline)))
                           ;; only check what is clicked when a left 
                           ;; or right down is registered
-                          (if ;(or (equal? mouse-event-type 'left-down)
-                              ;    (equal? mouse-event-type 'right-down)
-                              ;    (equal? mouse-event-type 'motion)
-                              ;   )
-                              (member mouse-event-type find-clicked-trigger-list)
+                          (if (member mouse-event-type find-clicked-trigger-list)
                               (begin
-
                                 ;; set internal-clicked so we know what is clicked
                                 (set! internal-clicked (find-clicked mouse-event-type x y))
                                         ;(display "internal-clicked set to : ")(display internal-clicked)(newline)
@@ -1699,22 +1691,7 @@
                                 (if internal-clicked
                                     (set! clicked-type (ask internal-clicked 'obj-type)) ; can be 'node 'tab 'line
                                     (set! clicked-type #f))
-                                )
-                              )
-                          
-                          ;;debugging code
-;                          (if (not (equal? mouse-event-type 'motion))
-;                              (begin
-;                                (newline)
-;                                ;(display (list clicked-type mouse-event-type (if internal-clicked #t #f)))(newline)(newline)
-;                                ;(display mouse-func-slot-set)(newline)
-;                                (display "my clicked-typed ")(display clicked-type)(newline)
-;                                (display "mouse-event-type ")(display  mouse-event-type)(newline)
-;                                (display "internal-clicked ")(display internal-clicked)(newline)
-;                                (display "query list ")(display (list clicked-type mouse-event-type (if internal-clicked #t #f)))(newline)
-;                                
-;                                )
-;                              )
+                                ))
                           
                           ;; actual mouse event handling
                           ;; retrieve and carry out mouse-event behavior if it's existent
@@ -1722,14 +1699,7 @@
                               (begin ;(display "carrying out mouse behavior")(newline)
                                 ((hash-table-get func-hashtable (list clicked-type mouse-event-type (if internal-clicked #t #f)) ) 
                                  x y click-count internal-clicked)) ; added click-count - alex
-                              ;(begin (display "mouse behavior not set ")(newline))
                               )
-                          
-                          ;;debug code
-;                          (if (not (equal? mouse-event-type 'motion))
-;                              (begin
-;                                (display "selected node ")(display selected-node)(newline)
-;                                ))
                           
                           ; used to tell the difference between a drag and a clicked event
                           ; drag event has a drag right before a left-up

@@ -124,6 +124,7 @@
   (cdr point))
 (define (print-point p)
   (newline)
+  (display "print point ")(newline)
   (display "(")
   (display (x-point p))
   (display ",")

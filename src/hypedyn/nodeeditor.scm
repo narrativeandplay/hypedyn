@@ -64,6 +64,7 @@
                delete-link refresh-link-list
                nodeeditor-dirty?
                selected-linkID
+               do-selectlink ;; rules-manager.scm
                
                ;; needed by hypedyn-undo.scm
                enable-link-buttons
@@ -108,13 +109,12 @@
   ;; Question: this assumes that closing node-editor should reset edited-nodeID?
   ;;           because I had to make it visible in the case where i closed the node 
   ;;           editor and open the same previous node
-  (display "node editor edit ")(display (get-edited-nodeID))(newline)
   (if (not (equal? in-nodeID (get-edited-nodeID)))
       ; not editing this node, so edit it
       (let* ((selected-node (get 'nodes in-nodeID))
              (anywhere (ask selected-node 'anywhere?)))
         
-        (display "[DOEDITNODE] node editing changed to other node")(newline)
+        (display "[nodeeditor-edit] node editing changed to other node ")(display in-nodeID)(newline)
         ; is it already open?
         (if (not (eq? '() (get-edited-nodeID)))
             ; yes, so save any content in nodeeditor
@@ -308,10 +308,6 @@
   (add-component m-edit1 m-edit1-editlink)
   (add-actionlistener m-edit1-editlink
                       (make-actionlistener (lambda (source)
-;                                             (doeditlink
-;                                              selected-linkID
-;                                              (get-edited-nodeID)
-;                                              (get-link-text selected-linkID))
                                              (rmgr-edit 'link selected-linkID)
                                              )))
   (set-menu-item-accelerator m-edit1-editlink #\E)
@@ -348,25 +344,17 @@
         (add-component m-edit1 m-edit1-editnoderule)
         (add-actionlistener m-edit1-editnoderule
                             (make-actionlistener (lambda (source) 
-                                                   ;(doeditnoderule (get-edited-nodeID))
                                                    (rmgr-edit 'node (get-edited-nodeID))
                                                    )))
         (set-menuitem-component m-edit1-editnoderule #t)))
 
+  ;; TODO: what does this do?
   ;(append-editor-operation-menu-items m-edit1)
   ; what is equivalent? - alex xxx
   
   ; window menu
   (add-component m-bar1 (add-window-menu nodeeditor-frame))
   
-  ; remember the global undo manager
-;  (set! undo-manager in-undo-manager) 
-  
-  ; create undo and redo actions, and add to the edit menu
-;  (set! undo-action (make-undo-action undo-manager))
-;  (set! redo-action (make-redo-action undo-manager))
-;  (set-associated-redoaction! undo-action redo-action)
-;  (set-associated-undoaction! redo-action undo-action)
   (if (is-undo-enabled?)
       (begin
         (add-menu-action m-edit1 undo-action)
@@ -477,9 +465,6 @@
   (add-splitpane-component nodeeditor-frame-panel
                            (make-scrollpane
                             (ask node-editor 'getcomponent)) #f)
-  
-  ;; tl's addition DEBUG (try to make sure that default document style is set to style-nolink)
-  ;(ask node-editor 'clear-content!)
   
   ; tell the editor about our undo manager
   (ask node-editor 'set-undo-manager! undo-manager undo-action redo-action nodeeditor-edit)
@@ -656,18 +641,8 @@
   (let ((thelink (get 'links linkID)))
     (if thelink
         (begin
-          ; store the action for undoing
-;          (let* ((redo-sexpr (ht-build-sexpr-from-object-with-rule thelink))
-;                 (from-nodeID (ask thelink 'source))
-;                 (to-nodeID (ask thelink 'destination))
-;                 (to-alt-nodeID (ask thelink 'alt-destination))
-;                 (name (ask thelink 'name))
-;                 (from-node (get 'nodes from-nodeID))
-;                 (usedest (ask thelink 'use-destination))
-;                 (usealtdest (ask thelink 'use-alt-destination)))
-            
           (define from-nodeID (ask thelink 'source))
-          (define redo-sexpr (ht-build-sexpr-from-object-with-rule thelink))
+          (define redo-sexpr (ht-build-sexpr-from-object-with-rule thelink)) ; store the action for undoing
           
           (compoundundomanager-postedit
            undo-manager
@@ -685,9 +660,7 @@
             ; and actually delete the link
             (delete-link-action linkID from-nodeID del-in-nodeeditor update-node-style-callback)
           
-        
             )))
-    ;)
   )
 
 ; evaluate an s-expression
@@ -809,38 +782,21 @@
         (ask parent-obj 'add-object new-linkID display-name)))
 
     ; message handling
-;    (lambda (message)
-;      (cond ((eq? message 'init)
-;             (lambda (self)
-;               (init)))
     (obj-put this-obj 'init
              (lambda (self)
                (init)))
-;            ((eq? message 'populate-list)
-;             (lambda (self in-node in-flag)
-;               (populate-list in-node in-flag)))
     (obj-put this-obj 'populate-list
              (lambda (self in-node in-flag)
                (populate-list in-node in-flag)))
-;            ((eq? message 'add-link)
-;             (lambda (self new-linkID name)
-;               (add-link new-linkID name)))
     (obj-put this-obj 'add-link
              (lambda (self new-linkID name)
                (add-link new-linkID name)))
-;            ((eq? message 'select-link)
-;             (lambda (self in-linkID)
-;               (ask parent-obj 'select-object in-linkID)))
     (obj-put this-obj 'select-link
              (lambda (self in-linkID)
                (ask parent-obj 'select-object in-linkID)))
-;            ((eq? message 'deselect-link)
-;             (lambda (self)
-;               (ask parent-obj 'deselect-object)))
     (obj-put this-obj 'deselect-link
              (lambda (self)
                (ask parent-obj 'deselect-object)))
-;            (else (get-method parent-obj message))))
     this-obj))
 
 
@@ -853,8 +809,6 @@
                   (destination (ask link 'destination)))
               ; remember selected link
               (set! selected-linkID linkID)
-              ;(format #t "link details: name:~a, destination:~a, start:~a, end:~a~%~!"
-              ;        name destination (ask link 'start-index) (ask link 'end-index))
 
               ; show selection in text
               (ask node-editor 'setselection (ask link 'start-index) (ask link 'end-index))
@@ -869,12 +823,7 @@
     (if (eq? event-type 'left-clicked)
         (let ((event-click-count (get-mouseevent-click-count e)))
           (if (= 2 event-click-count)
-;              (doeditlink
-;               selected-linkID
-;               (get-edited-nodeID)
-;               (get-link-text selected-linkID))
-              (begin
-                (newlink-ID 'link selected-linkID))
+              (rmgr-edit 'link selected-linkID)
               )))))
 
 ; get the text of the specified link, used by editlink
@@ -907,7 +856,6 @@
   (ask node-editor 'clear-dirty!)
   (update-dirty-state))
 (define (nodeeditor-set-dirty!)
-  (display "[NODEEDITOR SET DIRTY]")(newline)
   (ask node-editor 'set-dirty!)
   (update-dirty-state))
 

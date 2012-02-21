@@ -1184,7 +1184,7 @@
 
 
 ;;
-;; zooming
+;;;; zooming
 ;; 
 
 ; zoom delta: how much it zooms in/out each time
@@ -1221,6 +1221,8 @@
     (set-menuitem-component m-view-zoomin (< current-zoom min-zoom))
     (set-menuitem-component m-view-zoomout (> current-zoom max-zoom))
     (set-menuitem-component m-view-zoomreset (not (= current-zoom default-zoom)))))
+
+;;;; operation
 
 ; toggle show IDs
 (define (doshowIDs)
@@ -1270,7 +1272,7 @@
   (ask anywhere-graph 'layout-all))
 
 ;;
-;; fact list
+;;;; fact list
 ;; 
 
 (define (make-fact-listview selectfact-callback onmouse-callback)
@@ -1351,7 +1353,7 @@
               (dorenamefact))))))
 
 ;;
-;; graph editor
+;;;; graph editor
 ;;
 
 ; callback from graph editor
@@ -1411,10 +1413,11 @@
     (values max-x max-y max-anywhere-x max-anywhere-y)))
 
 ;; 
-;; file I/O
+;;;;  file I/O
 ;;
 
-; clear the data
+
+;; clear the data
 (define (clear-data)
   (reset-table)
   (reset-uniqueID)
@@ -1477,6 +1480,8 @@
   (if (not (is-basic-mode?))
       (ask anywhere-graph 'refresh-display)))
 
+;;;; populate  
+
 ; populate lists
 (define (populate-lists)
     (ask node-list 'populate-nodes-list)
@@ -1527,7 +1532,7 @@
 
 ;;text window frame
 
-;window callback ; future work
+;;;; window callback ; future work
 (define (nodereader-window-opened o)
   (format #t "nodereader-window-opened~%~!")
   ())
@@ -1552,6 +1557,7 @@
   (format #t "nodereader-window-deactivated~%~!")
   ())                                                    
 
+;;;; nodereader operation
 ; shutdown procedure - called as closing
 (define (nodereader-close)
   (remove-from-window-menu nrf)
@@ -1593,8 +1599,9 @@
     (add-menu-bar nrf mb)
     (add-component mb (add-window-menu nrf))))
 
-
 ;;
+;;;; main ui hook 
+;; 
 ;; hook into main-ui.scm
 ;;
 

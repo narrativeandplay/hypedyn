@@ -24,6 +24,7 @@
 (require "hteditor.scm") ;; update-dirty-state, update-node-style
 (require "htfileio.scm") ;; ht-build-sexpr-from-object-with-rule, update-dirty-state
 (require "editlink.scm") ;; update-nodegraph-display, remove-link-display, add-link-display
+(require "rules-manager.scm") ;; rmgr-close
 (require 'list-lib) ;; list-copy
 
 (module-export delete-link-action
@@ -31,6 +32,8 @@
                
                before-edit-rule
                after-edit-rule
+               cache-rule
+               
                post-edit-rule-undoable-event
                
                undo-manager init-undo-system
@@ -148,18 +151,19 @@
 (define edited-rule-sexpr #f)
 
 (define (before-edit-rule ruleID)
-  (cache-rule ruleID #f))
+  (set! unedited-rule-sexpr (cache-rule ruleID)))
 (define (after-edit-rule ruleID)
-  (cache-rule ruleID #t))
+  (set! edited-rule-sexpr (cache-rule ruleID)))
 
-(define (cache-rule rule-ID edited?)
+;; create the sexpr of the rule complete with actions and conditions
+(define (cache-rule rule-ID)
   (define rule-obj (get 'rules rule-ID))
   (if rule-obj
       (begin
         (define actions (ask rule-obj 'actions))
         (define conditions (ask rule-obj 'conditions))
         (define rule-sexpr (ask rule-obj 'to-save-sexpr))
-        (define combine-sexpr
+        (define combined-sexpr
           (append (list 'begin
                         rule-sexpr)
                   ;; a list of all the sexpr from the actions
@@ -178,14 +182,10 @@
                                ))
                          ) conditions)
                   ))
-        (display "cache rule ")(display combine-sexpr)(newline)
-        (if edited?
-            (set! edited-rule-sexpr combine-sexpr)
-            (set! unedited-rule-sexpr combine-sexpr))
-        )))
+        combined-sexpr)))
 
-;; TOFIX: in rule edit, action deletion and undo does not bring up the rule editor (previously called editlink)
-(define (post-edit-rule-undoable-event type obj-ID old-ruleID new-ruleID)
+;; NOTE: undoing/redoing of rule edit does not bring up the rule editor UI
+(define (post-edit-rule-undoable-event type obj-ID ruleID)
   
   ;; copy the cache and store in this context (the cache would be reused for other edits)
   (define unedited-sexpr-copy (list-copy unedited-rule-sexpr))
@@ -197,13 +197,11 @@
     "Edit Rule"
     (lambda ()  ; undo
       ;; recreate the unedited version of the rule and all its actions
-      (display "undo ")(display unedited-sexpr-copy)(newline)
-      
       (case type
         ((link) ;; link need to update node graph display (follow link action)
-         (remove-follow-link-rule-display new-ruleID)
+         (remove-follow-link-rule-display ruleID)
          (eval-sexpr unedited-sexpr-copy)
-         (add-follow-link-rule-display old-ruleID))
+         (add-follow-link-rule-display ruleID))
         ((node)
          (eval-sexpr unedited-sexpr-copy)))
       
@@ -211,27 +209,16 @@
       (let ((the-obj (case type
                        ((link) (get 'links obj-ID))
                        ((node) (get 'nodes obj-ID)))))
-        (display "old new ruleID ")(display (list old-ruleID new-ruleID))(newline)
-        ;; make sure new-ruleID is in the position where edited-ruleID used to be
-        (display "[undo] b4 remove ")(display (ask the-obj 'rule-lst))(newline)
-        (ask the-obj 'remove-rule old-ruleID)  ;; remove the old-ruleID create-type-rule2 added
-        (display "[undo] aft remove ")(display (ask the-obj 'rule-lst))(newline)
-        (ask the-obj 'replace-rule new-ruleID old-ruleID)  ;; place new-ruleID in the spot of edited-ruleID
-        (display "[undo] aft replace ")(display (ask the-obj 'rule-lst))(newline)
-        )
-      
-      ;; delete new-ruleID
-      (del 'rules new-ruleID)
-      ;(update-nodegraph-display)
+        ;; remove the extra ruleID that was added to the-obj 
+        ;; when the create-typed-rule2 in sexpr was run 
+        (ask the-obj 'remove-last-rule))
       )
     (lambda () ;; redo
-       (display "redo ")(display edited-sexpr-copy)(newline)
-      
       (case type
         ((link)
-         (remove-follow-link-rule-display old-ruleID)
+         (remove-follow-link-rule-display ruleID)
          (eval-sexpr edited-sexpr-copy)
-         (add-follow-link-rule-display new-ruleID))
+         (add-follow-link-rule-display ruleID))
         ((node)
          (eval-sexpr edited-sexpr-copy)))
      
@@ -239,23 +226,7 @@
       (let ((the-obj (case type
                        ((link) (get 'links obj-ID))
                        ((node) (get 'nodes obj-ID)))))
-        ;; make sure new-ruleID is in the position where edited-ruleID used to be
-        (ask the-obj 'remove-rule new-ruleID)  ;; remove the new-ruleID create-type-rule2 added
-        (ask the-obj 'replace-rule old-ruleID new-ruleID))  ;; place new-ruleID in the spot of edited-ruleID
-      ;(update-nodegraph-display)
-      ;; delete old-ruleID
-      (del 'rules old-ruleID)
+        (ask the-obj 'remove-last-rule))
       )
     ))
   )
-
-(define (post-edit-node-rule-undoable-event linkID old-ruleID new-ruleID)
-  (compoundundomanager-postedit
-   undo-manager
-   (make-undoable-edit
-    "Edit Node Rule"
-    (lambda () ;; restore the node before edit (undo)
-      (eval-sexpr unedited-rule-sexpr))
-    (lambda () ;; restore the node before edit (redo)
-      (eval-sexpr edited-rule-sexpr))
-    )))

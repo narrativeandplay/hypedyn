@@ -46,7 +46,6 @@
   
 ;; for node drag #t 
   (define (node-drag-mouse-event x y click-count clicked)
-    (display "node drag ")(newline)
     (ask graph-ed-obj 'begin-paint)
     (if (ask clicked 'is-shown?)
         (ask clicked 'hide #f))
@@ -79,7 +78,6 @@
 
 ; node 'left-up #t
   (define (node-after-drag-mouse-event x y click-count clicked)
-    (display "after drag")(newline)
     (let
         ((dc (ask graph-ed-obj 'get-buffer))
          (px (ask mhm-instant 'get-prev-x))
@@ -190,7 +188,6 @@
   ;;        when dragging node, left up also fire left click once
   ;;        so i suspect left click is fired when going down and coming up
   (define (node-left-clicked-mouse-event x y click-count clicked)
-    (display "node left clicked ")(newline)
     (let ((px (ask mhm-instant 'get-prev-x))
           (py (ask mhm-instant 'get-prev-y))
           (selected-line (ask graph-ed-obj 'get-selected-line)))

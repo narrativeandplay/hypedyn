@@ -28,6 +28,8 @@
                list-replace 
                list-append 
                list-swap
+               swap-left
+               swap-right
                
                strip-void 
                shuffle-list
@@ -221,6 +223,36 @@
   (set! lst (remove (lambda (o) (eq? mth o)) lst))
   (set! lst (list-insert lst mth n))
   lst)
+
+;; to be side by side
+;(define (swap-first-two lst)
+;  (list-insert (cdr lst) (car lst) 1))
+
+; swap object at index with the object right of it
+;(define (swap-right lst index)
+;  (if (not (= index (length lst))) 
+;      (append (take lst index) ;; take first (index) number of object in front (left) 
+;              (swap-first-two (drop lst index)))
+;      lst) ;; if right most do nothing
+;  )
+
+; the same thing just a positional difference
+;(define (swap-left lst index)
+;  (if (>= index 0)
+;      (swap-right lst (- index 1))
+;      lst))  ;; if already left most then do nothing
+
+(define (swap-right lst index)
+  ;; right element must be last index or below 
+  (if (<= (+ index 1) (- (length lst) 1))
+      (list-swap lst index (+ index 1))
+      lst))
+
+(define (swap-left lst index)
+  ;; left element must be 0 or up
+  (if (>= (- index 1) 0) 
+      (list-swap lst (- index 1) index)
+      lst))
   
 ;; returns index for element of first match, #f otherwise
 ;;(define (list-index lst ele . equal-op)
