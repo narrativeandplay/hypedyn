@@ -842,6 +842,9 @@
   (define actual-x (ask node-to-del 'get-x))
   (define actual-y (ask node-to-del 'get-y))
   
+  ; remember if this was the start node
+  (define was-start-node (= (get-start-node) cached-nodeID))
+  
   ;; wrap delete link and delete node in one operation
   ;; delete-node invokes delete-link which has its own compoundundomanager-postedit
   (compoundundomanager-beginupdate undo-manager)
@@ -853,8 +856,9 @@
    undo-manager
    (make-undoable-edit
     "Delete Node"
-    (lambda () ;; redo new node is undo for delnode
+    (lambda () ;; redo new node is undo for delnode - not quite, also need to restore the start node if necessary
       (newnode-redo nodename node-anywhere cached-nodeID node-sexpr)
+      (if was-start-node (set-start-node! cached-nodeID))
       (update-display-nodes cached-nodeID nodename
                                     actual-x actual-y
                                     node-anywhere))
