@@ -1041,7 +1041,7 @@
     (map (lambda (panel)
            (define this-checkbox (car (get-container-children panel)))
            (if (get-checkbox-value this-checkbox)
-               (remove-component in-container panel)))
+               (remove-component condition-list-panel panel)))
          all-children)
 
     (pack-frame editlink-dialog)))
