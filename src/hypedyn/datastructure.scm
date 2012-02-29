@@ -326,6 +326,7 @@
                   
                   (obj-put this-obj 'parentID (lambda (self) parentID))
                   (obj-put this-obj 'expression (lambda (self) expression))
+                  (obj-put this-obj 'type (lambda (self) type))
 
                   ;; conditions
                   (obj-put this-obj 'conditions (lambda (self) conditions))
@@ -377,20 +378,23 @@
                                                  (targetID (ask thiscondition 'targetID))
                                                  (operator (ask thiscondition 'operator))
                                                  (type (ask thiscondition 'type)))
-                                            (cond
-                                             ((eq? type 0)
-                                              ;; node
-                                              (cond ((eq? operator 0) (list 'not (list 'visited? targetID)))
-                                                    ((eq? operator 1) (list 'visited? targetID))
-                                                    ((eq? operator 2) (list 'previous? targetID))))
-                                             ((eq? type 1)
-                                              ;; link
-                                              (cond ((eq? operator 0) (list 'not (list 'followed? targetID)))
-                                                    ((eq? operator 1) (list 'followed? targetID))))
-                                             ((eq? type 2)
-                                              ;; fact
-                                              (cond ((eq? operator 0) (list 'not (list 'holds? targetID)))
-                                                    ((eq? operator 1) (list 'holds? targetID)))))))
+                                            
+                                            (ask this-condition 'expr)
+;                                            (cond
+;                                             ((eq? type 0)
+;                                              ;; node
+;                                              (cond ((eq? operator 0) (list 'not (list 'visited? targetID)))
+;                                                    ((eq? operator 1) (list 'visited? targetID))
+;                                                    ((eq? operator 2) (list 'previous? targetID))))
+;                                             ((eq? type 1)
+;                                              ;; link
+;                                              (cond ((eq? operator 0) (list 'not (list 'followed? targetID)))
+;                                                    ((eq? operator 1) (list 'followed? targetID))))
+;                                             ((eq? type 2)
+;                                              ;; fact
+;                                              (cond ((eq? operator 0) (list 'not (list 'holds? targetID)))
+;                                                    ((eq? operator 1) (list 'holds? targetID)))))
+                                            ))
                                         conditions))
                              ))
                   (obj-put this-obj 'empty-rule
@@ -418,6 +422,8 @@
 ;;     for links: not followed (0) or followed (1)
 ;;     for facts: false (0) or true (1)
 ;; ruleID: the ID of the containing rule
+;; TODO: when free, we should convert this to sexpr.
+;;       the operator and type is too troublesome to process mentally
 (define-private (make-condition name type targetID operator ruleID . args)
                 (let* ((uniqueID-obj (make-uniqueID-object name (if (pair? args) (car args))))
                        (this-obj (new-object uniqueID-obj)))
@@ -425,6 +431,24 @@
                   (obj-put this-obj 'targetID (lambda (self) targetID))
                   (obj-put this-obj 'ruleID (lambda (self) ruleID))
                   (obj-put this-obj 'operator (lambda (self) operator))
+                  
+                  ;; new needs testing TODO in progress
+                  (obj-put this-obj 'expr (lambda (self) 
+                                            (cond
+                                             ((eq? type 0)
+                                              ;; node
+                                              (cond ((eq? operator 0) (list 'not (list 'visited? targetID)))
+                                                    ((eq? operator 1) (list 'visited? targetID))
+                                                    ((eq? operator 2) (list 'previous? targetID))))
+                                             ((eq? type 1)
+                                              ;; link
+                                              (cond ((eq? operator 0) (list 'not (list 'followed? targetID)))
+                                                    ((eq? operator 1) (list 'followed? targetID))))
+                                             ((eq? type 2)
+                                              ;; fact
+                                              (cond ((eq? operator 0) (list 'not (list 'holds? targetID)))
+                                                    ((eq? operator 1) (list 'holds? targetID)))))))
+                  
                   (obj-put this-obj 'to-save-sexpr
                            (lambda (self)
                              (list 'create-typed-condition
@@ -441,6 +465,9 @@
 ;; when written to file it becomes (do-action 'text "string" 1)
 ;; however if we want the original form to be kept in data structure 
 ;;  it needs to be written as (list 'list 'do-action (list 'list 'quote 'text) "\"\""string"\"\"" 1)
+
+;; reason we need this is because we are suppose to create the sexpr in actions ( and whatever stores sexpr) when we are loading 
+;; from a saved file
 
 ;; general rule
 ;; 1) add 'list in from of all list
@@ -801,7 +828,7 @@
                                           (+ (car args) import-offset-ID)
                                           (car args)))))
          (the-rule (get 'rules actual-ruleID))
-         (new-action-ID (ask new-action 'ID)) 
+         (new-action-ID (ask new-action 'ID))
          )
     ; add to action list
     (put 'actions new-action-ID new-action)

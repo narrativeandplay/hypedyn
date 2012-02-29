@@ -348,7 +348,7 @@
 
 ;;;; rule edit UI
 (define actions-main-panel #f)
-(define action-list-panel #f) 
+(define action-list-panel #f)
 (define action-type-choice #f)
 
 (define condition-list-panel #f)
