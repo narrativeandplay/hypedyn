@@ -216,8 +216,8 @@
       )))
 
   (ask mhm-instant 'set-event-func 'node 'drag #t node-drag-mouse-event)
-  ;(ask mhm-instant 'set-event-func 'node 'left-up #t node-after-drag-mouse-event) ;; why left up triggers drag as well?
-  (ask mhm-instant 'set-event-func 'line 'left-up #t line-onclick-mouse-event)
+  (ask mhm-instant 'set-event-func 'node 'left-up #t node-after-drag-mouse-event) ;; end the drag
+  ;(ask mhm-instant 'set-event-func 'line 'left-up #t line-onclick-mouse-event) ; this is handled by 'left-clicked
   (ask mhm-instant 'set-event-func #f 'left-down #f deselecting-mouse-event)
   (ask mhm-instant 'set-event-func 'node 'left-clicked #t node-left-clicked-mouse-event)
   )
