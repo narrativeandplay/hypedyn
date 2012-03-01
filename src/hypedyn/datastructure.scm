@@ -290,6 +290,9 @@
                 
                 ;; add new features and override rule-expr and to-save-sexpr
                 (obj-put this-obj 'negate? (lambda (self) negate?)) 
+                (obj-put this-obj 'set-negate!
+                         (lambda (self in-negate)
+                           (set! negate? in-negate)))
                 (obj-put this-obj 'rule-expr
                            (lambda (self)
                              (if negate?
@@ -303,7 +306,7 @@
                              (list 'create-typed-rule2
                                    (ask self 'name)                        ; name (string)
                                    (list 'quote type)                      ; type ('link/'node)
-                                   (list 'quote and-or)                ; expression ('and/'or)
+                                   (list 'quote (ask self 'and-or))        ; and-or ('and/'or)
                                    negate?
                                    parentID                                  ; used to be linkID (int)
                                    (ask self 'ID))))
@@ -311,7 +314,7 @@
 
 ;; rule
 ; type: 'link or 'node
-(define-private (make-rule name type expression parentID #!rest args)
+(define-private (make-rule name type and-or parentID #!rest args)
                 (let* ((uniqueID-obj (make-uniqueID-object name (if (pair? args) (car args))))
                        (this-obj (new-object uniqueID-obj))
                        ;; note: these actions are actually "before" and "after" for nodes, and
@@ -320,12 +323,13 @@
                        (then-action #f) ; action to take when rule is satisfied
                        (else-action #f) ; action to take when rule is not satisfied
                        (conditions '()) ; list of conditions which must be satisfied
-                       (actions '())   ; generalized actions, currently used for updating facts in node rules
-                       (negate? #f))   ;; not the whole condition
-                  
+                       (actions '()))   ; generalized actions, currently used for updating facts in node rules
                   
                   (obj-put this-obj 'parentID (lambda (self) parentID))
-                  (obj-put this-obj 'expression (lambda (self) expression))
+                  (obj-put this-obj 'and-or (lambda (self) and-or))
+                  (obj-put this-obj 'set-and-or! 
+                           (lambda (self in-and-or) 
+                             (set! and-or in-and-or)))
                   (obj-put this-obj 'type (lambda (self) type))
 
                   ;; conditions
@@ -372,7 +376,7 @@
                   ;; convert rule into an s-expr that can be eval-ed by our evaluator
                   (obj-put this-obj 'rule-expr
                            (lambda (self)
-                             (cons expression
+                             (cons and-or
                                    (map (lambda (c)
                                           (let* ((thiscondition (get 'conditions c))
                                                  (targetID (ask thiscondition 'targetID))
@@ -409,7 +413,7 @@
                              (list 'create-typed-rule
                                    (ask self 'name)                        ; name (string)
                                    (list 'quote type)                      ; type ('link/'node)
-                                   (list 'quote expression)                ; expression ('and/'or)
+                                   (list 'quote and-or)                    ; and-or ('and/'or)
                                    parentID                                ; parent obj's ID (int)
                                    (ask self 'ID))))                       ; ruleID
                   this-obj))
@@ -711,18 +715,18 @@
     new-linkID))
 
 ; create a rule - for links, retained for backwards compatibility
-(define (create-rule name expression linkID . args)
-  (create-typed-rule name 'link expression linkID (if (pair? args) (car args))))
+(define (create-rule name and-or linkID . args)
+  (create-typed-rule name 'link and-or linkID (if (pair? args) (car args))))
 
 ; create a typed rule
 ; type: 'link or 'node
 ;; this is preserved to load older file format of hypedyn
-(define (create-typed-rule name type expression parentID . args)
+(define (create-typed-rule name type and-or parentID . args)
   ;(format #t "Creating rule: ~a~%~!" name)
   (let* ((actual-parentID (if (importing?)
                               (+ parentID import-offset-ID)
                               parentID))
-         (new-rule (make-rule name type expression actual-parentID
+         (new-rule (make-rule name type and-or actual-parentID
                               (if (pair? args)
                                   (if (importing?)
                                       (+ (car args) import-offset-ID)
