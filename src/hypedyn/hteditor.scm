@@ -107,6 +107,7 @@
 (define m-file-export-web #f)
 (define m-file-export-standalone #f)
 (define m-file-export-text #f)
+(define m-file-export-js #f)
 (define m-file-separator #f)
 (define m-edit-docrule #f)
 (define m-view-zoomin #f)
@@ -159,6 +160,7 @@
         (mf-export-web (make-menu-item "Export for Web..."))
         (mf-export-standalone (make-menu-item "Export Standalone..."))
         (mf-export-text (make-menu-item "Export as Text..."))
+        (mf-export-js (make-menu-item "Export as JS"))
         
         ; edit menu
         (m-edit (make-menu "Edit"))
@@ -248,7 +250,12 @@
           (add-component m-file mf-export-standalone)
           (add-actionlistener mf-export-standalone (make-actionlistener
                                                     (lambda (source)
-                                                      (doexport-standalone))))))
+                                                      (doexport-standalone))))
+          (add-component m-file mf-export-js)
+          (add-actionlistener mf-export-js (make-actionlistener
+                                            (lambda (source)
+                                              (doexport-js))))
+          ))
 
     ; edit menu
     (add-component main-menu m-edit)
@@ -522,6 +529,7 @@
     (set! m-file-export-text mf-export-text)
     (set! m-file-export-web mf-export-web)
     (set! m-file-export-standalone mf-export-standalone)
+    (set! m-file-export-js mf-export-js)
     (set! m-file-separator mf-separator)
     (set! m-file-openrecent mf-openrecent)
     (set! m-edit-menu m-edit)

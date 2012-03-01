@@ -45,7 +45,7 @@
 ; export
 (module-export set-ht-build-sexpr-callback!
                donew doopen open-file-by-name 
-               doimport doexport-hypedyn-web doexport-standalone doexport-text
+               doimport doexport-hypedyn-web doexport-standalone doexport-text doexport-js
                dosave-wrapper confirm-save ht-save-to-file
                ht-build-sexpr-from-object-with-rule ht-build-sexpr-from-rule
                clear-loaded-file-version ;; used by clear-data in hteditor.scm
@@ -638,43 +638,79 @@
                ) old-conditions)
         )))
 
-;;=====================
-;;;; javascript export
-;;=====================
-
-(define (js-export) 
-  (write-jscode-to "dynfile.js" (generate-jscode)))
+;; ============================
+;;;; string processing helper
+;; ============================
 
 ;; add "\"" to start and end
 (define (quote-nest str)
   (string-append "\"" str "\""))
 
+;; preserves \n when we print out the string,
+;; replaces "\n" with "\\n"
+(define (preserve-newline str)
+  (replace-char str #\newline "\\n"))
+
+(define (preserve-quotes str)
+  ;; escaping both \ and " here so that 
+  ;; \" shows up in the printed display
+  (replace-char str #\" "\\\""))
+
+;; can consider changing this to use (<string> #\a #\p #\p #\l #\e) to form the final string
+;; need a helper to get the list of char
+;; then apply <string> to the list of char
+;; idea is to replace the char we are looking for with two char #\\  and original char 
+;; so that the char we want to preserve is escaped
+(define (replace-char str :: <string>
+                      char :: <char>
+                      char-str :: <string>)
+  (if (= (string-length str) 0)
+      "" ;; terminate
+      (begin
+        (string-append
+         (if (equal? (string-ref str 0) char)
+             char-str
+             ;; cast original char to string
+             (<string> (string-ref str 0)))
+         (replace-char (substring str 1 (string-length str)) char char-str))
+        )))
+
+;;=====================
+;;;; javascript export
+;;=====================
+
+(define (doexport-js) 
+  (write-jscode-to "dynfile.js" (generate-jscode)))
+
 ;; createNode (content, id)
 (define (js-node-code nodeID)
-  (let ((node (get 'nodes nodeID))
-        (links (ask node 'links))
-        (rule-lst (ask node 'rule-lst)))
-    (apply string-append 
-           (append 
-            (list "createNode(" 
-                   (quote-nest (ask node 'content)) ", " 
-                   (ask node 'ID) ");\n")
+  (define node (get 'nodes nodeID))  
+  (define links (ask node 'links))
+  (define rule-lst (ask node 'rule-lst))
+  
+    (apply string-append
+           (append
+            (list "\tcreateNode("
+                  (quote-nest 
+                   (preserve-newline 
+                    (preserve-quotes (ask node 'content)))) ", "
+                  (to-string (ask node 'ID)) ");\n")
             (map js-link-code links)     ;; convert its links
             (map js-rule-code rule-lst)   ;; convert its rules
             (list "\n") ;; leave a blank line between each node's code block
-            ))))
+            )))
 
 ;; createLink(nodeID, start, end, id)
 (define (js-link-code linkID)
-  (let ((link (get 'links linkID))
-        (rule-lst (ask link 'rule-lst)))
+  (let* ((link (get 'links linkID))
+         (rule-lst (ask link 'rule-lst)))
     (apply string-append 
            (append 
-            (list "createLink("
-                  (ask link 'source) ", "
-                  (ask link 'start-index) ", "
-                  (ask link 'end-index) ", "
-                  (ask link 'ID) ");\n")
+            (list "\tcreateLink("
+                  (to-string (ask link 'source)) ", "
+                  (to-string (ask link 'start-index)) ", "
+                  (to-string (ask link 'end-index)) ", "
+                  (to-string (ask link 'ID)) ");\n")
             (map js-rule-code rule-lst)
             ))))
 
@@ -683,22 +719,30 @@
   (let* ((rule (get 'rules ruleID))
          (actions (ask rule 'actions))
          (conditions (ask rule 'conditions))
-         (if-not (if (ask rule 'negate) "not" "if"))
+         (parent-type (case (ask rule 'type)
+                        ((link) "link")
+                        ((node) "node")))
+         (if-not (if (ask rule 'negate?) "not" "if"))
          (and-or (cond ((equal? (ask rule 'expression) 'and) "and")
                        ((equal? (ask rule 'expression) 'or) "or")))
-         (fall-through  (if (ask rule 'fall-through) "true" "false")))
-    (apply string-append 
-           (append 
-            (list "createRule("
-                  (ask rule 'parentID) ", "
-                  (ask rule 'type) ", "
-                  (quote-nest if-not) ", "
-                  (quote-nest and-or) ", "
-                  (quote-nest fall-through) ", "
-                  (ask rule 'ID) ");\n")
-            (map js-condition-code conditions)
-            (map js-action-code actions)
-            ))))
+         (fall-through  (if (ask rule 'fall-through?) "true" "false")))
+    
+    ;; skip rules with no actions 
+    (if (not (null? actions))
+        (apply string-append
+               (append
+                (list "\t\tcreateRule("
+                      (to-string (ask rule 'parentID)) ", "
+                      (quote-nest parent-type) ", "
+                      (quote-nest if-not) ", "
+                      (quote-nest and-or) ", "
+                      fall-through ", "
+                      (to-string (ask rule 'ID)) ");\n")
+                (map js-condition-code conditions)
+                (map js-action-code actions)
+                ))
+        "")
+    ))
 
 ;; createAction(eventType, parentRuleID, func, args, id)
 (define (js-action-code actionID)
@@ -708,6 +752,7 @@
                        ((entered-node displayed-node) "enteredNode")
                        ((clicked-link) "clickedLink")))
          (parent-rule-id (ask action 'ruleID))
+         
          ;; follow-link (follow-link2 linkID parent-ruleID link-type dest-nodeID) , gotoNode(nodeID)
          ;; (replace-link-text text-type value linkID) replaceText(linkID, altcontent)
          ;; set-value! (set-fact-value! in-factID in-value), (assert factID), (retract factID) setFact( id, value)
@@ -716,22 +761,39 @@
                      ((equal? (car expr) 'replace-link-text)
                       "replaceText")
                      ((member (car expr) (list 'set-value! 'assert 'retract))
-                     "setFact")))
+                     "setFact")
+                     ((equal? (car expr) 'add-anywhere-link)
+                      "addAnywhereLink")
+                     ))
          (args (cond ((equal? (car expr) 'follow-link)
-                      (string-append "[" (list-ref expr 2) "]"))
+                      (string-append "[" (to-string (list-ref expr 4)) "]"))
                      ((equal? (car expr) 'replace-link-text)
-                      (string-append "[" (list-ref expr 2) ", "
-                                     (list-ref expr 1) "]"))
-                     ((member (car expr) (list 'set-value! 'assert 'retract)))
-                     (string-append "[" (list-ref expr 1) "]"))))
+                      (string-append "[" 
+                                     (to-string (list-ref expr 3)) ", "
+                                     (quote-nest 
+                                      (preserve-newline 
+                                       (preserve-quotes (list-ref expr 2)))) "]"))
+                     ((member (car expr) (list 'set-value! 'assert 'retract))
+                      (string-append "[" (to-string (list-ref expr 2)) "]"))
+                     ((equal? (car expr) 'add-anywhere-link)
+                      (string-append "[" "false" "]")) ;; TODO add anywhere link not implemented
+                     )))
     
+;    (display "actionID ")(display actionID)(newline)
+;    (display "class? ")(display (invoke actionID 'get-class))(newline)
+;    (display "event type ")(display event-type)(newline)
+;    (display "parent rule id ")(display parent-rule-id)(newline)
+;    (display "func ")(display func)(newline)
+;    (display "args ")(display args)(newline)
+;    (display "expr ")(display expr)(newline)
+;    (display "car expr ")(display (car expr))(newline)
     ;; return string
-    (string-append "createAction(" 
+    (string-append "\t\t\tcreateAction(" 
                    (quote-nest event-type) ", "
-                   parent-rule-id ", "
+                   (to-string parent-rule-id) ", "
                    func ", "
                    args ", "
-                   actionID ");\n")
+                   (to-string actionID) ");\n")
   ))
 ;;(make-condition name type targetID operator ruleID . args)
 ;; createCondition(func, func_target_ID, ruleID, not, id)
@@ -752,29 +814,40 @@
 ;        ((eq? operator 1) (list 'holds? targetID)))))
                        
 (define (js-condition-code conditionID)
-  (let ((condition (get 'conditions conditionID))
-        (ruleID (ask condition 'ruleID))
-        (func (case (ask condition 'type)
-                ((0) "nodeVisited");; node TODO: previous not done in js
-                ((1) "linkFollowed") ;; link
-                ((2) "checkBoolFact"))) ;; boolean fact 
-        (func-target-id (ask condition 'targetID))
-        (negate (case (ask condition 'operator)
-                  ((0) "true")
-                  ((1) "false"))))
+  (let* ((condition (get 'conditions conditionID))
+         (ruleID (ask condition 'ruleID))
+         (func (case (ask condition 'type)
+                 ((0) "nodeVisited");; node TODO: previous not done in js
+                 ((1) "linkFollowed") ;; link
+                 ((2) "checkBoolFact"))) ;; boolean fact 
+         (func-target-id (ask condition 'targetID))
+         (negate (case (ask condition 'operator)
+                   ((0) "true")
+                   ((1) "false"))))
     ;; return string
-    (string-append "createCondition("
+    (string-append "\t\t\tcreateCondition("
                    func ", "
-                   func-target-id ", "
-                   ruleID ", "
+                   (to-string func-target-id) ", "
+                   (to-string ruleID) ", "
                    negate ", "
-                   conditionID ");\n")
-  ))
+                   (to-string conditionID) ");\n")
+    ))
 
 (define (generate-jscode)
+  (display "node list ")(display (map (lambda (e) (car e)) (get-list 'nodes)))(newline)
   ;; go through all the nodes
   (apply string-append
-         (map js-node-code (get-list 'nodes))))
+         (append 
+          (list "function loadStory() {\n")
+          ;; add this only if start node is set
+          (if (get-start-node)
+              (list "\tsetStartNode(" (to-string (get-start-node)) ");\n")
+              '())
+          (map js-node-code
+               ;; get a list of the node ID
+               (map (lambda (e) (car e)) (get-list 'nodes)))
+          (list "}")
+          )))
 
 (define (write-jscode-to filename jscode)
   (display "write jscode to ")(display filename);
@@ -818,7 +891,8 @@
                 (if safetoproceed
                     (begin
                       (format #t "writing~%~!")
-                      (write jscode output-port)
+                      ;(write jscode output-port)
+                      (with-output-to-file filename (lambda () (display jscode)))
                       (close-output-port output-port)
                       #t)
                     #f)))))))

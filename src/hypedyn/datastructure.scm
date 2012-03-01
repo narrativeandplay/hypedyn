@@ -379,7 +379,7 @@
                                                  (operator (ask thiscondition 'operator))
                                                  (type (ask thiscondition 'type)))
                                             
-                                            (ask this-condition 'expr)
+                                            (ask thiscondition 'expr)
 ;                                            (cond
 ;                                             ((eq? type 0)
 ;                                              ;; node
