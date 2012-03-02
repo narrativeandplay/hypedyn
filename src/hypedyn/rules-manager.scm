@@ -265,55 +265,57 @@
   (define rule-lst-before-deletion (list-copy (rmgr-rule-lst)))
   (define deleted-ID-lst (remove-selected-rule-panel))
 
-  ;; cache these edited obj ID and edit-mode
-  (define edited-obj-ID (rmgr-get-currently-edited-ID))
-  (define curr-edit-mode edit-mode) ;; cache the value of edit-mode at this moment
+  (if (not (null? deleted-ID-lst))
+      (begin
+        ;; cache these edited obj ID and edit-mode
+        (define edited-obj-ID (rmgr-get-currently-edited-ID))
+        (define curr-edit-mode edit-mode) ;; cache the value of edit-mode at this moment
 
-  (define deleted-sexpr-lst
-    (map cache-rule deleted-ID-lst))
+        (define deleted-sexpr-lst
+          (map cache-rule deleted-ID-lst))
 
-  (map (lambda (ruleID)
-         ;; update rule-lst
-         (rmgr-set-rule-lst (remove (lambda (thisruleID) (= ruleID thisruleID)) (rmgr-rule-lst)))
-         ;; delete from 'rules 
-         (del 'rules ruleID)
-         ) deleted-ID-lst)
+        (map (lambda (ruleID)
+               ;; update rule-lst
+               (rmgr-set-rule-lst (remove (lambda (thisruleID) (= ruleID thisruleID)) (rmgr-rule-lst)))
+               ;; delete from 'rules 
+               (del 'rules ruleID)
+               ) deleted-ID-lst)
 
-  ;; post undo
-  (compoundundomanager-postedit
-   undo-manager
-   (make-undoable-edit
-    "Delete Rule"
-    (lambda () ;; undo
+        ;; post undo
+        (compoundundomanager-postedit
+         undo-manager
+         (make-undoable-edit
+          "Delete Rule"
+          (lambda () ;; undo
 
-      (rmgr-edit curr-edit-mode edited-obj-ID)
+            (rmgr-edit curr-edit-mode edited-obj-ID)
 
-      ;; restore the rules
-      (map (lambda (rule-sexpr)
-             (eval-sexpr rule-sexpr)
-             ) deleted-sexpr-lst)
+            ;; restore the rules
+            (map (lambda (rule-sexpr)
+                   (eval-sexpr rule-sexpr)
+                   ) deleted-sexpr-lst)
 
-      ;; make sure the order of rule-lst is the same as before deletion
-      (rmgr-set-rule-lst rule-lst-before-deletion)
+            ;; make sure the order of rule-lst is the same as before deletion
+            (rmgr-set-rule-lst rule-lst-before-deletion)
 
-      ;; reorder the panels according to the rule-lst
-      (populate-rules-manager curr-edit-mode edited-obj-ID)
-      )
-    (lambda () ;; redo
-      (rmgr-edit curr-edit-mode edited-obj-ID)
+            ;; reorder the panels according to the rule-lst
+            (populate-rules-manager curr-edit-mode edited-obj-ID)
+            )
+          (lambda () ;; redo
+            (rmgr-edit curr-edit-mode edited-obj-ID)
 
-      (display "deleted-ID-lst ")(display deleted-ID-lst)(newline)
-      ;; remove panel first (important to do before remove rule-lst)
-      (map (lambda (ruleID)
-             (rmgr-remove-rule-panel ruleID)
-             (rmgr-set-rule-lst (remove (lambda (thisruleID) (= ruleID thisruleID)) (rmgr-rule-lst)))
-             ) deleted-ID-lst)
-      ;; remove from rule-lst and 'rules 
-      (map (lambda (ruleID)
-             ;; delete from 'rules 
-             (del 'rules ruleID)
-             ) deleted-ID-lst)
-      ))))
+            (display "deleted-ID-lst ")(display deleted-ID-lst)(newline)
+            ;; remove panel first (important to do before remove rule-lst)
+            (map (lambda (ruleID)
+                   (rmgr-remove-rule-panel ruleID)
+                   (rmgr-set-rule-lst (remove (lambda (thisruleID) (= ruleID thisruleID)) (rmgr-rule-lst)))
+                   ) deleted-ID-lst)
+            ;; remove from rule-lst and 'rules 
+            (map (lambda (ruleID)
+                   ;; delete from 'rules 
+                   (del 'rules ruleID)
+                   ) deleted-ID-lst)
+            ))))))
 
 ;;;; rule swapping 
 
