@@ -962,24 +962,23 @@
   (display "follow-link2 ")(newline)
   (if nodereader-pane 
       (begin
-        
         (define the-link (get 'links linkID))
-                                        ; increment followed count
-        (ask the-link 'set-followed!
-             (+ (ask the-link 'followed?) 1))
-
-                                        ; perform action, if any, before going to destination
+        ; perform action, if any, before going to destination
 ;        (if the-action
 ;            (do-action the-action))
 
-                                        ; and go to destination node if link is active
+        ; and go to destination node if link is active
         ;(if use-link
 ;            (if (and (or (not hover-links)
 ;                         (equal? link-type 'default))
-;                     (check-rule-condition parent-ruleID))
-        (if (check-rule-condition parent-ruleID)
+;                     (check-rule-condition parent-ruleID)) ; Note: this check was only for hover-links - Alex
+        (if (check-rule-condition parent-ruleID) ; I don't think this check is necessary - Alex
             (begin
-                                        ; goto node
+              ; increment followed count
+              (ask the-link 'set-followed!
+                   (+ (ask the-link 'followed?) 1))
+
+              ; goto node
               (goto-node dest-nodeID #t))
 
 ;                ;; else
