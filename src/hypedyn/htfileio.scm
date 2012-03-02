@@ -499,9 +499,10 @@
     
     ;; add the dummy add-anywhere-link action
     ;; (does nothing, just a place holder to let it show up in the rule editor)
+    ;; Note: this however is important in the export to js 
     (if anywhere?
-        (create-action "Enable Link" 'entered-node
-                       (list 'add-anywhere-link)
+        (create-action "Enable Link" 'anywhere-check
+                       (list 'add-anywhere-link nodeID)
                        new-ruleID))
     
     ;; add all actions to the new rule (only set fact actions are on pre 2.2 nodes)
@@ -685,15 +686,19 @@
 ;; createNode (content, id)
 (define (js-node-code nodeID)
   (define node (get 'nodes nodeID))  
+  (define name (ask node 'name))
   (define links (ask node 'links))
   (define rule-lst (ask node 'rule-lst))
+  (define anywhere? (ask node 'anywhere?))
   
     (apply string-append
            (append
             (list "\tcreateNode("
+                  (quote-nest name) ", " ;; assume no funny characters in these names
                   (quote-nest 
                    (preserve-newline 
                     (preserve-quotes (ask node 'content)))) ", "
+                  (to-string anywhere?) ", "
                   (to-string (ask node 'ID)) ");\n")
             (map js-link-code links)     ;; convert its links
             (map js-rule-code rule-lst)   ;; convert its rules
@@ -750,34 +755,47 @@
          (expr (ask action 'expr))
          (event-type (case (ask action 'type)
                        ((entered-node displayed-node) "enteredNode")
-                       ((clicked-link) "clickedLink")))
+                       ((clicked-link) "clickedLink")
+                       ((anywhere-check) "anywhereCheck")
+                       (else "ERROR EVENT")))
          (parent-rule-id (ask action 'ruleID))
          
          ;; follow-link (follow-link2 linkID parent-ruleID link-type dest-nodeID) , gotoNode(nodeID)
          ;; (replace-link-text text-type value linkID) replaceText(linkID, altcontent)
          ;; set-value! (set-fact-value! in-factID in-value), (assert factID), (retract factID) setFact( id, value)
-         (func (cond ((equal? (car expr) 'follow-link)
-                      "gotoNode")
-                     ((equal? (car expr) 'replace-link-text)
-                      "replaceText")
-                     ((member (car expr) (list 'set-value! 'assert 'retract))
-                     "setFact")
-                     ((equal? (car expr) 'add-anywhere-link)
-                      "addAnywhereLink")
-                     ))
-         (args (cond ((equal? (car expr) 'follow-link)
-                      (string-append "[" (to-string (list-ref expr 4)) "]"))
-                     ((equal? (car expr) 'replace-link-text)
-                      (string-append "[" 
-                                     (to-string (list-ref expr 3)) ", "
-                                     (quote-nest 
-                                      (preserve-newline 
-                                       (preserve-quotes (list-ref expr 2)))) "]"))
-                     ((member (car expr) (list 'set-value! 'assert 'retract))
-                      (string-append "[" (to-string (list-ref expr 2)) "]"))
-                     ((equal? (car expr) 'add-anywhere-link)
-                      (string-append "[" "false" "]")) ;; TODO add anywhere link not implemented
-                     )))
+         (func (case (car expr) 
+                 ((follow-link) "gotoNode")
+                 ((replace-link-text) "replaceText")
+                 ((set-value! assert retract) "setFact")
+                 ((add-anywhere-link) "addAnywhereLink")))
+         (args (case (car expr)
+                 ((follow-link)
+                  (string-append "[" (to-string (list-ref expr 4)) "]"))
+                 ((assert)
+                  (string-append "[" (to-string (list-ref expr 1)) ", "
+                                 "true]"))
+                 ((retract)
+                  (string-append "[" (to-string (list-ref expr 1)) ", "
+                                 "false]"))
+                 ((set-value!)
+                  (string-append "["
+                                 (to-string (list-ref expr 1)) ", "
+                                 (quote-nest (list-ref expr 2)) "]"))
+                 ((add-anywhere-link)
+                  (string-append "[" (to-string (list-ref expr 1)) "]")) ;; TODO add anywhere link not implemented
+                 ((replace-link-text)
+                  (string-append
+                   "[" (to-string (list-ref expr 3)) ", "
+                   ;; differentiate between fact text or just alt text
+                   (let ((val (list-ref expr 2)))
+                     (cond ((string? val)
+                            (quote-nest
+                             (preserve-newline
+                              (preserve-quotes val))))
+                           ((number? val)
+                            (to-string val))))
+                   "]"))
+                 )))
     
 ;    (display "actionID ")(display actionID)(newline)
 ;    (display "class? ")(display (invoke actionID 'get-class))(newline)
@@ -812,7 +830,7 @@
 ;  ;; fact
 ;  (cond ((eq? operator 0) (list 'not (list 'holds? targetID)))
 ;        ((eq? operator 1) (list 'holds? targetID)))))
-                       
+
 (define (js-condition-code conditionID)
   (let* ((condition (get 'conditions conditionID))
          (ruleID (ask condition 'ruleID))
@@ -833,19 +851,48 @@
                    (to-string conditionID) ");\n")
     ))
 
+;createFact(name, type, id)
+(define (js-fact-code factID)
+  (display "factID ")(display factID)(newline)
+  (let* ((fact (get 'facts factID))
+         (value (ask fact 'get-value))
+         (name (ask fact 'name))
+         (type (ask fact 'type)))
+    
+    (display "name ")(display name)(newline)
+    (display "type ")(display type)(newline)
+    (string-append "\tcreateFact("
+                   (quote-nest name) ", "
+                   (quote-nest (to-string type)) ", "
+                   (to-string factID) ");\n")
+  ))
+
 (define (generate-jscode)
   (display "node list ")(display (map (lambda (e) (car e)) (get-list 'nodes)))(newline)
+  (display "fact list ")(display (map (lambda (e) (car e)) (get-list 'facts)))(newline)
   ;; go through all the nodes
   (apply string-append
          (append 
           (list "function loadStory() {\n")
+          
+          ;; Set start node
           ;; add this only if start node is set
           (if (get-start-node)
               (list "\tsetStartNode(" (to-string (get-start-node)) ");\n")
               '())
+          
+          ;; generate createNode code that would in turn generate all the children
+          ;; object associated with it
           (map js-node-code
                ;; get a list of the node ID
                (map (lambda (e) (car e)) (get-list 'nodes)))
+          
+          ;(list "\n") ;; leave a space before fact code
+          
+          ;; generate createFact code
+          (map js-fact-code
+               (map (lambda (e) (car e)) (get-list 'facts)))
+          
           (list "}")
           )))
 

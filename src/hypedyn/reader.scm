@@ -998,5 +998,5 @@
 
 ;; dummy for anywhere link adding action
 ;; not sure if we're going to use this or not
-(define (add-anywhere-link)
+(define (add-anywhere-link nodeID)
   #f)
