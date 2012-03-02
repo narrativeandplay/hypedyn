@@ -576,7 +576,7 @@
         (define actions (ask rule-obj 'actions))
         (define facts (ask rule-obj 'actions))
         (define rule-name (ask rule-obj 'name))
-        (define expr (ask rule-obj 'expression))
+        (define expr (ask rule-obj 'and-or))
         
         ;;(define then-action-ID (ask rule-obj 'then-action))
         ;;(define else-action-ID (ask rule-obj 'else-action))
@@ -1150,9 +1150,9 @@
                                  (ask edited-rule 'name)))
                            ))
          
-         ; get boolean expression
-         (new-ruleexpression-pos (get-combobox-selectedindex editlink-dialog-andor-operator))
-         (new-ruleexpression (get-rule-exp new-ruleexpression-pos))
+         ; get boolean operator
+         (new-rule-and-or-pos (get-combobox-selectedindex editlink-dialog-andor-operator))
+         (new-rule-and-or (get-rule-exp new-rule-and-or-pos))
          
          ; get conditions
          (all-conditions (get-container-children condition-list-panel))
@@ -1165,7 +1165,7 @@
                     ((0) #f)
                     ((1) #t)))
          ; create the rule
-;         (new-ruleID (create-typed-rule2 new-rulename edit-mode new-ruleexpression negate?
+;         (new-ruleID (create-typed-rule2 new-rulename edit-mode new-rule-and-or negate?
 ;                                       (cond ((eq? edit-mode 'link) edited-linkID)
 ;                                             ((eq? edit-mode 'node) edited-nodeID)
 ;                                             ((eq? edit-mode 'doc) -1))))
@@ -1175,7 +1175,7 @@
          ;(else-action-string (get-text editlink-dialog-else-actiontext))
          )
 
-    (display "and-or ")(display new-ruleexpression)(newline)
+    (display "and-or ")(display new-rule-and-or)(newline)
     (display "negate? ")(display negate?)(newline)
     
     ;; remove the line associated with this rule before we edit it
@@ -1186,6 +1186,13 @@
     (let ((the-rule (get 'rules edited-ruleID)))
       (if the-rule
           (ask the-rule 'empty-rule)))
+    
+    ;; set the and-or and negate? properties
+    (let ((the-rule (get 'rules edited-ruleID)))
+      (if the-rule
+          (begin
+            (ask the-rule 'set-and-or! new-rule-and-or)
+            (ask the-rule 'set-negate! negate?))))
     
     ;; Conditions
     ; run through conditions and add to rule

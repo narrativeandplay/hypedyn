@@ -578,8 +578,8 @@
         (define link-start-index (ask link-obj 'start-index))
         (define link-end-index (ask link-obj 'end-index))
         
-        (define if-rule-ID (create-typed-rule2 "THEN" 'link (ask selected-rule 'expression) #f linkID))
-        (define else-rule-ID (create-typed-rule2 "ELSE" 'link (ask selected-rule 'expression) #t linkID))
+        (define if-rule-ID (create-typed-rule2 "THEN" 'link (ask selected-rule 'and-or) #f linkID))
+        (define else-rule-ID (create-typed-rule2 "ELSE" 'link (ask selected-rule 'and-or) #t linkID))
         (define if-rule (get 'rules if-rule-ID))
         (define else-rule (get 'rules else-rule-ID))
                                         ;)
@@ -728,8 +728,8 @@
                         ((link) "link")
                         ((node) "node")))
          (if-not (if (ask rule 'negate?) "not" "if"))
-         (and-or (cond ((equal? (ask rule 'expression) 'and) "and")
-                       ((equal? (ask rule 'expression) 'or) "or")))
+         (and-or (cond ((equal? (ask rule 'and-or) 'and) "and")
+                       ((equal? (ask rule 'and-or) 'or) "or")))
          (fall-through  (if (ask rule 'fall-through?) "true" "false")))
     
     ;; skip rules with no actions 
