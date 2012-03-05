@@ -4,6 +4,7 @@
 <body>
 	<div id="node_display"></div>
 	<div id="fact_debug"></div>
+	<center><canvas id="myCanvas" width="250" height="60"></center>
 </body>
 </html>
 
@@ -15,6 +16,7 @@
 <script language="javascript">
 	
 	var startNodeID;
+	var currNodeID;
 	function gotoNode(nodeID) {
 		//var node = nodelist.get(nodeID);
 		var node = nodelist[nodeID];
@@ -25,7 +27,9 @@
 			for (var i in node.links) {
 				eventTrigger("enteredNode", node.links[i]); 
 			}
+			
 			node.visited = true;
+			currNodeID = nodeID;
 			
 			trigger_anywhere_check ();
 			
@@ -73,18 +77,18 @@
 	
 	// anywhere link stub TODO:
 	function addAnywhereLink(anywhereNodeID) {
-		console.log ("add anywhere link ");
 		activated_anywhere_nodes[activated_anywhere_nodes.length] = nodelist[anywhereNodeID];
 	}
 	
 	function anywherelink_htmlcode () {
 		var result = "";
 		for ( i in activated_anywhere_nodes ) {
-			result += "<a href='javascript:void(0)' onClick='gotoNode(" 
-				+ activated_anywhere_nodes[i].id + ")'>"
-				+ activated_anywhere_nodes[i].name + "</a><br>"
+			if (activated_anywhere_nodes[i].id != currNodeID) {
+				result += "<a href='javascript:void(0)' onClick='gotoNode(" 
+					+ activated_anywhere_nodes[i].id + ")'>"
+					+ activated_anywhere_nodes[i].name + "</a><br>"
+			}
 		}
-		console.log("result "+result);
 		return result;
 	}
 	
@@ -99,6 +103,11 @@
 	
 	function setStartNode(snodeID) {
 		startNodeID = snodeID;
+	}
+	
+	// look for \n char and attach a </text><br><text>
+	function processNewline( str ) {
+		
 	}
 
 	// here we need to add anywhere node 
@@ -126,7 +135,7 @@
 					linktext = content.substring(start, end);
 				else 
 					linktext = altcontent;
-				//var linktext = currLink.content;
+
 				// NOTE: there is no rules with no actions, 
 				// the export process to javascript code will makes sure that's true
 				if (currLink.rules.length > 0)
@@ -148,10 +157,52 @@
 		else gotoNode(startNodeID);
 	}
 	
+	//
+	//    Canvas Drawing
+	//
+	
+	function drawPageIndicator(pagenum) {
+		var canvas = document.getElementById("myCanvas");
+		var gcontext = canvas.getContext("2d");
+		
+		var half_height = canvas.height / 2;
+		var width = canvas.width;
+		var radius = half_height * 0.15;
+		
+		
+		function drawCircle(context, cx, cy, r) {
+			context.beginPath();
+			context.arc(cx, cy, r, 0, 2 * Math.PI, false);
+			context.closePath();
+			
+			context.fillStyle = "#8ED6FF";
+			context.fill();
+		
+			//context.lineWidth = 2;
+			//context.strokeStyle = "black";
+			//context.stroke();
+		}
+		
+		// tl - top left, br - btm right
+		function drawRect(context, tlx, tly, brx, bry) {
+			context.beginPath();
+			context.rect(tlx, tly, brx, bry);
+			context.lineWidth = 1;
+			context.strokeStyle = "black";
+			context.stroke();
+		}
+		
+		drawCircle(gcontext, width/4 *1, half_height, radius);
+		drawCircle(gcontext, width/4 *2, half_height, radius);
+		drawCircle(gcontext, width/4 *3, half_height, radius);
+		drawRect(gcontext, 0, 0, canvas.width, canvas.height);
+	}	
+	
 	window.onload = function() {
 		loadStory();
 		runhypedyn();
 		factsDebug();
+		drawPageIndicator(0);
 	}
 
 </script>

@@ -459,7 +459,7 @@
   ;; return this callback
   (lambda (e)
     (cond ((equal? edit-mode 'link)
-           (doeditlink selected-linkID edited-nodeID ruleID)
+           (doeditlink edited-linkID edited-nodeID ruleID)
            )
           ((equal? edit-mode 'node)
            (doeditnoderule edited-nodeID ruleID)
