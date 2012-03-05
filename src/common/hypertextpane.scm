@@ -364,7 +364,6 @@
              (ask edited-node getlinks-method))
         
         (display "  deleted link-bound ")(display deleted-link-bound)(newline)
-        (display "undo-manager ")(display undo-manager)(newline)
         
         ;; undo-manager for read-only (reader-pane) is not set
         (if undo-manager

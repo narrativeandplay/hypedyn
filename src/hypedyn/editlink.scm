@@ -66,6 +66,7 @@
                remove-link-display
                
                edit-mode ;; used by rules-manager so far
+               delete-action ;; just for ht-editor.scm's dodelnode
                )
                
 
@@ -484,6 +485,47 @@
          ) (action-panel-list))
   (pack-frame editlink-dialog))
 
+;; remove an action from the parent rule so that it is never 
+;; used anymore. 
+;; NOTE: this is used by dodelnode to remove any follow link 
+;;       action that has the deleted node as dest node
+(define (delete-action actionID)
+  
+  (define action (get 'actions actionID))
+  (define ruleID (ask action 'ruleID))
+  (define rule (get 'rules ruleID))
+  (define action-sexpr (ask action 'to-save-sexpr))
+  
+  ;; in case it is a follow link action, we need to update the link display
+  (remove-follow-link-rule-display ruleID)
+  
+  (ask rule 'delaction actionID)
+  (del 'actions actionID)
+  
+  ;; in case it is NOT a follow link action, we need to add the link back
+  (add-follow-link-rule-display ruleID)
+  
+  (compoundundomanager-postedit 
+   undo-manager
+   (make-undoable-edit 
+    "Delete Action"
+    (lambda () ;;undo
+      (remove-follow-link-rule-display ruleID)
+      (eval-sexpr action-sexpr)
+      (add-follow-link-rule-display ruleID)
+      )
+    (lambda () ;; redo
+      (define action (get 'actions actionID))
+      (define ruleID (ask action 'ruleID))
+      (define rule (get 'rules ruleID))
+      (define action-sexpr (ask action 'to-save-sexpr))
+      (remove-follow-link-rule-display ruleID)
+      (ask rule 'delaction actionID)
+      (del 'actions actionID)
+      (add-follow-link-rule-display ruleID)
+      )))
+  )
+
 (define (create-actions-main-panel)
   
   (set! actions-main-panel (make-panel))
@@ -621,8 +663,12 @@
 
                (cond
                 ((equal? 'follow-link (car action-sexpr))
-                 (display "inside follow link")(newline)
                  (define dest-nodeID (list-ref action-sexpr 4))
+                 (display "[inside follow link] ")(display dest-nodeID)(newline)
+                 ;; debug
+                 (define dest-node (get 'nodes dest-nodeID))
+                 (display "dest node name ")(display (ask dest-node 'name))(newline)
+                
                  (add-specific-action "follow link to" dest-nodeID))
 
                 ((equal? 'replace-link-text (car action-sexpr))  ;(replace-link-text text-type value linkID)
@@ -1112,6 +1158,7 @@
 
 ;; if add-remove is 'add we draw all the lines in linkID
 ;; if add-remove is 'remove we remove all the lines in linkID
+;; there is an update-link-display in object-graphview, therefore the 2 at the back
 (define-private (update-link-display2 linkID add-or-remove)
     (define the-link (get 'links linkID))
     (if the-link

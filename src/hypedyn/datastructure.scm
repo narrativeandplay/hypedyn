@@ -370,8 +370,9 @@
                              ;(ht-set-dirty!)
                              ))
                   (obj-put this-obj 'delaction
-                           (lambda (self action)
-                             (set! s (delete! action actions))))
+                           (lambda (self actionID)
+                             (set! actions (delete actionID actions))
+                             ))
 
                   ;; convert rule into an s-expr that can be eval-ed by our evaluator
                   (obj-put this-obj 'rule-expr

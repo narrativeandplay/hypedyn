@@ -58,6 +58,7 @@
 (require "hypedyn-undo.scm")
 (require "about-hypedyn.scm")
 (require "rules-manager.scm") ;; rmgr-init
+(require "reader-pane.scm") ;; find-action2 ;;TODO move this find-action2 elsewhere
 
 ; export
 (module-export close-hteditor-subwindows update-node-emphasis do-selectnode-list do-selectnode-graph
@@ -722,7 +723,7 @@
           )) ;; end of if
     ))
 
-; update both node displays
+; update node displays
 (define (update-display-nodes new-nodeID name x y anywhere)
   (ask node-list 'add-node new-nodeID name)
   (if anywhere
@@ -853,9 +854,24 @@
   ; remember if this was the start node
   (define was-start-node (= (get-start-node) cached-nodeID))
   
+  ;; find action that has this node as dest
+  (define actionID-lst
+    (find-action2
+     (lambda (actionID) ;;find action in this rule
+       (define action (get 'actions actionID))
+       (define sexpr (ask action 'expr))
+       (and (equal? (car sexpr) 'follow-link)
+            (equal? (list-ref sexpr 4) selected-nodeID))
+       )))
+  (display "[ACTION lst] ")(display actionID-lst)(newline)
+  
+ 
+  
   ;; wrap delete link and delete node in one operation
   ;; delete-node invokes delete-link which has its own compoundundomanager-postedit
   (compoundundomanager-beginupdate undo-manager)
+  
+  (map delete-action actionID-lst) 
   
   (delete-node selected-nodeID)
   

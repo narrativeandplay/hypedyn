@@ -51,10 +51,43 @@
                start-indices
                end-indices
                
-               do-rule-action)
+               do-rule-action
+               find-action2
+               )
 
 (define start-indices (make-hash-table))
 (define end-indices (make-hash-table))
+
+
+;; action name is the symbol assigned to the primitive procedure (eg 'follow-link 'retract)
+(define (find-action-helper in-rule-lst in-action-name)
+  (if (null? in-rule-lst)
+      #f
+      (begin
+        (define condition-satisfied? (check-rule-condition (car in-rule-lst)))
+        (define fall-through? (ask (get 'rules (car in-rule-lst)) 'fall-through?))
+        (define found-action?
+          (find (lambda (actionID) ;;find action in this rule
+                  (define action (get 'actions actionID))
+                  (define sexpr (ask action 'expr))
+                  (equal? (car sexpr) in-action-name)
+                  ) (ask (get 'rules (car in-rule-lst)) 'actions)))
+
+        ;; if checking condition need to check take note not to fall through when condition satisfied
+        (if check-condition?
+            (if (and found-action? condition-satisfied?)
+                #t
+                (if (or (and condition-satisfied?
+                             fall-through?)
+                        (and (not condition-satisfied?)))
+                    (find-action-helper (cdr in-rule-lst) in-action-name)
+                    #f))
+            ;; if not checking just need to look through the whole in-rule-lst
+            (if found-action?
+                #t
+                (find-action-helper (cdr in-rule-lst) in-action-name))
+            )
+        ))) ;; end of helper
 
     ;; if check-condition? true, we check whether the 
     ;;   condition for the follow link action is satisfied
@@ -69,40 +102,18 @@
   (define obj-name (ask this-obj 'name))
   
   (define rule-lst (ask this-obj 'rule-lst))
-  
-  ;; action name is the symbol assigned to the primitive procedure (eg 'follow-link 'retract)
-  (define (find-action-helper in-rule-lst in-action-name)
-    (if (null? in-rule-lst)
-        #f
-        (begin
-          (define condition-satisfied? (check-rule-condition (car in-rule-lst)))
-          (define fall-through? (ask (get 'rules (car in-rule-lst)) 'fall-through?))
-          (define found-action?
-            (find (lambda (actionID) ;;find action in this rule
-                    (define action (get 'actions actionID))
-                    (define sexpr (ask action 'expr))
-                    (equal? (car sexpr) in-action-name)
-                    ) (ask (get 'rules (car in-rule-lst)) 'actions)))
-
-          ;; if checking condition need to check take note not to fall through when condition satisfied
-          (if check-condition?
-              (if (and found-action? condition-satisfied?)
-                  #t
-                  (if (or (and condition-satisfied?
-                               fall-through?)
-                          (and (not condition-satisfied?)))
-                      (find-action-helper (cdr in-rule-lst) in-action-name)
-                      #f))
-              ;; if not checking just need to look through the whole in-rule-lst
-              (if found-action?
-                  #t
-                  (find-action-helper (cdr in-rule-lst) in-action-name))
-              )
-          ))) ;; end of helper
 
   ;; start the helper
   (find-action-helper rule-lst action-name)
   )
+
+;; a more powerful generic version of find-action
+;; returns a list of actionID that satisfy this pred
+;; NOTE: pred should work on actionID
+(define (find-action2 pred)
+  (filter pred
+        ;; get list of action
+        (map (lambda (o) (car o)) (get-list 'actions))))
 
 ; read-only hypertextpane
 (define (make-reader-pane
