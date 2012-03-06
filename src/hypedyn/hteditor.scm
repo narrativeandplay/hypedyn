@@ -698,6 +698,15 @@
             (create-node new-nodename ""
                          80 45
                          anywhere update-display-nodes))
+          
+          ;; if anywhere add a rule with add-anywhere-link action
+          (if anywhere
+              (begin
+                (define new-ruleID (create-typed-rule2 "Add Anywhere Link" 'node 'and #f newnode-ID))
+                (create-action "Enable Link" 'anywhere-check
+                               (list 'add-anywhere-link newnode-ID)
+                               new-ruleID)))
+          
           (define newnode (get 'nodes newnode-ID))
           (define newnode-sexpr (ask newnode 'to-save-sexpr))
 

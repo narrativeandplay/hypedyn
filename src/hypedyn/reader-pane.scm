@@ -364,6 +364,8 @@
     ;;        the anywhere node and check its condition before it adds the anywhere link 
     ;;        therefore deleting the action/rule containing add-anywhere-link action would cause the link to not be ever added
     (define (add-anywherenode-links)
+      
+      (display "add anywhere node links ")(newline)
       ;; add in the divider
       (define (add-anywherenode-divider nodereader-doc)
         ; leave a line before anywhere nodes
@@ -377,25 +379,27 @@
                         #t))
       
       ; add in anywhere node links, if any (and if condition for it is satisfied)
-      (let ((node-list (get-list 'nodes))
+      (let ((anywhere-node-list (get-anywhere-nodes))
             (nodereader-doc (ask htpane-obj 'getdocument))
             (first-link-added #f))
-        (if node-list
+        (if (and anywhere-node-list
+                 (not (null? anywhere-node-list)))
             (begin
               ; disable link tracking
               (ask htpane-obj 'set-track-links! #f)
               
+              
               (add-anywherenode-divider nodereader-doc)
               
               (map (lambda (n)
-                     (let* ((thisnodeID (car n))
-                            (thisnode (cdr n))
+                     (let* ((thisnodeID n)
+                            (thisnode (get 'nodes thisnodeID))
                             (rule-lst (ask thisnode 'rule-lst))
                             (anywhere? (ask thisnode 'anywhere?)))
                        (if (and anywhere?
                                 (not (= thisnodeID (get-read-nodeID)))) ;; dont add link to itself
                            (rule-check-trigger 'anywhere-check 'nodes thisnodeID))))
-                   node-list)
+                   anywhere-node-list)
 
               
               ; for each node, run through and check if it should be added to the anywhere node links
@@ -748,6 +752,7 @@
 (define (rule-check-trigger event-type obj-type obj-ID)
   
   (define obj (get obj-type obj-ID))
+  (display "args to rule check trigger ")(display (list event-type obj-type obj-ID))(newline) 
   (define rule-lst (ask obj 'rule-lst))
  
   ;; enforce rule fall through checking
@@ -757,6 +762,7 @@
           (if (check-rule-condition (car rule-lst))
               (begin
                 (define action-fired? (do-rule-action event-type (car rule-lst)))
+                
                 ;; if this rule triggered, check whether we allow fall through, if not just check next rule
                 (if (or (not action-fired?)
                         (and action-fired?

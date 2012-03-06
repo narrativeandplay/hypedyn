@@ -83,6 +83,8 @@
                set-reader-background-image! clear-reader-background-image!
                play-audio loop-audio loop-audio-forever stop-audio
                
+               get-anywhere-nodes
+               
                replace-link-text follow-link2 add-anywhere-link)
 
 ;;
@@ -593,6 +595,9 @@
 
 ;; called when we set fact
 ;; a subset of goto-node (refresh the display of the node)
+;; TODO: the mechanism to refresh a node's display after fact is update is problematic
+;;       because if we replace text of a link first then set fact, we would replace that newly replaced text with old content
+;;       this is commented out of set-fact procedures for now
 (define (refresh-node)
   (define current-node (get 'nodes (get-read-nodeID)))
   
@@ -608,7 +613,8 @@
         (ask nodereader-pane 'highlight-links)
 
         ;; add anywhere nodes
-        (ask nodereader-pane 'add-anywherenode-links))))
+        (ask nodereader-pane 'add-anywherenode-links)
+        )))
 
 
 ;;;; conditions
@@ -695,7 +701,8 @@
     (if target-fact
         (begin
           (ask target-fact 'assert)
-          (refresh-node)))))
+          ;(refresh-node)
+          ))))
 
 ; retract an fact
 (define (retract in-factID)
@@ -703,7 +710,8 @@
     (if target-fact
         (begin
           (ask target-fact 'retract)
-          (refresh-node)))))
+          ;(refresh-node)
+          ))))
 
 ; set the value of an fact
 (define (set-fact-value! in-factID in-value)
@@ -713,7 +721,7 @@
     (if target-fact
         (begin
           (ask target-fact 'set-value! in-value)
-          (refresh-node)
+          ;(refresh-node)
           ))))
 
 ; check if an fact holds
