@@ -1373,7 +1373,7 @@
 
                          (define bool-operator
                            (cond ((equal? bool-val-selected "True") 'assert)
-                                 ((equal? bool-val-selected "True") 'retract)))
+                                 ((equal? bool-val-selected "False") 'retract)))
 
                          (create-action obj-name event-type
                                         (list bool-operator
