@@ -52,7 +52,6 @@
                end-indices
                
                do-rule-action
-               find-action2
                )
 
 (define start-indices (make-hash-table))
@@ -60,60 +59,114 @@
 
 
 ;; action name is the symbol assigned to the primitive procedure (eg 'follow-link 'retract)
-(define (find-action-helper in-rule-lst in-action-name)
-  (if (null? in-rule-lst)
-      #f
-      (begin
-        (define condition-satisfied? (check-rule-condition (car in-rule-lst)))
-        (define fall-through? (ask (get 'rules (car in-rule-lst)) 'fall-through?))
-        (define found-action?
-          (find (lambda (actionID) ;;find action in this rule
-                  (define action (get 'actions actionID))
-                  (define sexpr (ask action 'expr))
-                  (equal? (car sexpr) in-action-name)
-                  ) (ask (get 'rules (car in-rule-lst)) 'actions)))
+;(define (find-action-helper in-rule-lst in-action-name event-type)
+;  (if (null? in-rule-lst)
+;      #f
+;      (begin
+;        (define condition-satisfied? (check-rule-condition (car in-rule-lst)))
+;        (define fall-through? (ask (get 'rules (car in-rule-lst)) 'fall-through?))
+;        (define found-action?
+;          (filter (lambda (actionID) ;;find action in this rule
+;                    (define action (get 'actions actionID))
+;                    (define sexpr (ask action 'expr))
+;                    (define type (ask action 'type))
+;                    (and (equal? type event-type)
+;                         (equal? (car sexpr) in-action-name))
+;                    ) (ask (get 'rules (car in-rule-lst)) 'actions)))
 
-        ;; if checking condition need to check take note not to fall through when condition satisfied
-        (if check-condition?
-            (if (and found-action? condition-satisfied?)
-                #t
-                (if (or (and condition-satisfied?
-                             fall-through?)
-                        (and (not condition-satisfied?)))
-                    (find-action-helper (cdr in-rule-lst) in-action-name)
-                    #f))
-            ;; if not checking just need to look through the whole in-rule-lst
-            (if found-action?
-                #t
-                (find-action-helper (cdr in-rule-lst) in-action-name))
-            )
-        ))) ;; end of helper
+;        ;; if checking condition need to check take note not to fall through when condition satisfied
+;        (if check-condition?
+;            (if (and found-action? condition-satisfied?)
+;                #t
+;                (if (or (and condition-satisfied?
+;                             fall-through?)
+;                        (and (not condition-satisfied?)))
+;                    (find-action-helper (cdr in-rule-lst) in-action-name event-type)
+;                    #f))
+;            ;; if not checking just need to look through the whole in-rule-lst
+;            (if found-action?
+;                #t
+;                (find-action-helper (cdr in-rule-lst) in-action-name event-type))
+;            )
+;        ))) ;; end of helper
+
+;(define (find-action-helper2 in-rule-lst in-action-name event-type)
+;  (filter (lambda (ruleID)
+;            (define rule (get 'rules ruleID))
+;            (define action-lst (ask rule 'actions))
+;            (find (lambda (actionID)
+;                    (define action (get 'actions actionID))
+;                    (define sexpr (ask action 'expr))
+;                    (define type (ask action 'type))
+;                    (and (equal? type event-type)
+;                         (equal? (car sexpr) in-action-name))
+;                    ) action-lst)
+;            ) in-rule-lst))
 
     ;; if check-condition? true, we check whether the 
     ;;   condition for the follow link action is satisfied
     ;; if check-condition? false, we only check the existence 
-(define (find-action obj-ID obj-type check-condition? action-name)
-  (define this-obj
-    (case obj-type
-      ((link) (get 'links obj-ID))
-      ((node) (get 'nodes obj-ID))))
-  
-  ;; for debug (delete later)
-  (define obj-name (ask this-obj 'name))
-  
-  (define rule-lst (ask this-obj 'rule-lst))
+;(define (find-action obj-ID obj-type check-condition? action-name event-type)
+;  (define this-obj
+;    (case obj-type
+;      ((link) (get 'links obj-ID))
+;      ((node) (get 'nodes obj-ID))))
+;  
+;  ;; for debug (delete later)
+;  (define obj-name (ask this-obj 'name))
+;  
+;  (define rule-lst (ask this-obj 'rule-lst))
 
-  ;; start the helper
-  (find-action-helper rule-lst action-name)
+;  ;; start the helper
+;  (find-action-helper rule-lst action-name event-type)
+;  )
+
+;; checks for actions in the rules of this link that has conditions satisfied
+
+(define (link-has-action? linkID check-condition?)
+  (define link (get 'links linkID))
+  (define rule-lst (ask link 'rule-lst))
+  (define result (filter
+                  (lambda (ruleID)
+                    (define rule (get 'rules ruleID))
+                    (define actions (ask rule 'actions))
+                    (display "link has action debug ")(newline)
+                    (display "  not null: ")(display (not (null? actions)))(newline)
+                    (display "  check condition ")
+                    (display (or check-condition?
+                                 (and (not check-condition?)
+                                      (check-rule-condition ruleID))))(newline)
+                    (display "  action found ")(display (find-action 'clicked-link ruleID))(newline)
+                    (and (not (null? actions))            ;; has action
+                         (or (not check-condition?)
+                             (and check-condition?
+                                  (check-rule-condition ruleID)))   ;; and condition satisfied
+                         (find-action 'clicked-link ruleID))
+                    ) rule-lst))
+  (display "link has action result ")(display result)(newline)
+  (not (null? result)))
+
+;; find an action with action-name inside rule
+(define (find-action action-name ruleID)
+  (define rule (get 'rules ruleID))
+  (define actions (ask rule 'actions))
+  (define search-result
+    (filter
+     (lambda (actionID)
+       (define action (get 'actions actionID))
+       (display "action type ")(display (ask action 'type))(newline)
+       (equal? (ask action 'type) action-name)
+       ) actions))
+  (display "search-result ")(display search-result)(newline)
+  (not (null? search-result))
   )
-
 ;; a more powerful generic version of find-action
 ;; returns a list of actionID that satisfy this pred
 ;; NOTE: pred should work on actionID
-(define (find-action2 pred)
-  (filter pred
-        ;; get list of action
-        (map (lambda (o) (car o)) (get-list 'actions))))
+;(define (find-action2 pred)
+;  (filter pred
+;        ;; get list of action
+;        (map (lambda (o) (car o)) (get-list 'actions))))
 
 ; read-only hypertextpane
 (define (make-reader-pane
@@ -191,8 +244,10 @@
     
     ;; check if a link can be followed (check-condition #t)
     ;; check if a link is available (check-condition #f)
-    (define (follow-link-available? linkID check-condition?)
-      (find-action linkID 'link check-condition? 'follow-link))
+;    (define (follow-link-available? linkID check-condition?)
+;      ;(find-action linkID 'link check-condition? 'follow-link)
+;      #f
+;      )
     
     ;; link actions
 
@@ -237,7 +292,8 @@
                       (end-index (hash-table-get end-indices l #f)))
                  
                  ;; check whether follow link action exists and its condition satisfied
-                 (if (follow-link-available? l #t) ;; check whether I should underline it
+                 (if ;(follow-link-available? l #t) ;; check whether I should underline it
+                     (link-has-action? l #t)
                      (begin ;; (substring (ask htpane-obj 'gettext) (ask thislink 'start-index) (ask thislink 'end-index))
 
                        ;; check whether we should bold it
@@ -267,7 +323,8 @@
                                          (- end-index start-index)
                                          #f)))
                      ;; check for follow link action available but with conditions not satisfied
-                     (if (follow-link-available? l #f)
+                     (if ;(follow-link-available? l #f)
+                         (link-has-action? l #f)
                          (begin
                            (if (followed? this-linkID)
                                ;; strange to be followed and yet condition unmet?
@@ -318,7 +375,7 @@
                         (- (get-text-length nodereader-doc) 5)
                         5
                         #t))
-        
+      
       ; add in anywhere node links, if any (and if condition for it is satisfied)
       (let ((node-list (get-list 'nodes))
             (nodereader-doc (ask htpane-obj 'getdocument))
@@ -328,62 +385,81 @@
               ; disable link tracking
               (ask htpane-obj 'set-track-links! #f)
               
-              ; for each node, run through and check if it should be added to the anywhere node links
+              (add-anywherenode-divider nodereader-doc)
+              
               (map (lambda (n)
                      (let* ((thisnodeID (car n))
                             (thisnode (cdr n))
-                            (rule-lst (ask thisnode 'rule-lst)))
-                       ; if its an anywhere node, not the current node, and its rule is satisfied
-                       (map (lambda (ruleID)
-                              (if (and (ask thisnode 'anywhere?)
-                                       (not (= thisnodeID (get-read-nodeID)))
-                                       (find-action thisnodeID 'node #t 'add-anywhere-link)
-                                       ;(check-rule-condition ruleID) ;(ask thisnode 'rule)))
-                                       )
-                                  (begin
-                                        ; if its the first anywhere node, add divider
-                                    (if (not first-link-added)
-                                        (begin
-                                          (add-anywherenode-divider nodereader-doc)
-                                          (set! first-link-added #t)))
-
-                                        ; add the link
-                                    (let ((thisnodeName (ask thisnode 'name))
-                                          (thisStartPos (get-text-length nodereader-doc)))
-                                        ; add text
-                                      (set-text-insert nodereader-doc
-                                                       (string-append "\n" thisnodeName)
-                                                       thisStartPos)
-
-                                        ; highlight
-                                      (if (> (ask thisnode 'visited?) 0)
-                                        ; already followed, so just underline
-                                          (set-text-style nodereader-doc
-                                                          style-followed-link
-                                                          (+ 1 thisStartPos)
-                                                          (- (get-text-length nodereader-doc) (+ 1 thisStartPos))
-                                                          #t)
-                                        ; otherwise underline and bold
-                                          (set-text-style nodereader-doc
-                                                          style-link
-                                                          (+ 1 thisStartPos)
-                                                          (- (get-text-length nodereader-doc) (+ 1 thisStartPos))
-                                                          #t))
-
-                                        ; and set clickback
-                                      (let ((link-attribute-set (make-attribute-set)))
-                                        (set-attribute-linkAction link-attribute-set
-                                                                  (lambda ()
-                                                                    (goto-node thisnodeID #t)))
-                                        (set-attribute-linkID link-attribute-set thisnodeID)
-                                        (set-text-style nodereader-doc
-                                                        link-attribute-set
-                                                        (+ 1 thisStartPos)
-                                                        (- (get-text-length nodereader-doc) (+ 1 thisStartPos))
-                                                        #f)))))
-                              ) rule-lst)
-                       ))
+                            (rule-lst (ask thisnode 'rule-lst))
+                            (anywhere? (ask thisnode 'anywhere?)))
+                       (if (and anywhere?
+                                (not (= thisnodeID (get-read-nodeID)))) ;; dont add link to itself
+                           (rule-check-trigger 'anywhere-check 'nodes thisnodeID))))
                    node-list)
+
+              
+              ; for each node, run through and check if it should be added to the anywhere node links
+;              (map (lambda (n)
+;                     (let* ((thisnodeID (car n))
+;                            (thisnode (cdr n))
+;                            (rule-lst (ask thisnode 'rule-lst))
+;                            (anywhere? (ask thisnode 'anywhere?)))
+;                       
+;                       (if anywhere?
+;                           (rule-check-trigger 'anywhere-check 'node thisnodeID))
+;                       
+;                       ; if its an anywhere node, not the current node, and its rule is satisfied
+;                       (map (lambda (ruleID)
+;                              (if (and (ask thisnode 'anywhere?)
+;                                       (not (= thisnodeID (get-read-nodeID)))
+;                                       ;(find-action thisnodeID 'node #t 'add-anywhere-link)
+;                                       ;(check-rule-condition ruleID) ;(ask thisnode 'rule)))
+;                                       )
+;                                  (begin
+;                                        ; if its the first anywhere node, add divider
+;                                    (if (not first-link-added)
+;                                        (begin
+;                                          (add-anywherenode-divider nodereader-doc)
+;                                          (set! first-link-added #t)))
+
+;                                        ; add the link
+;                                    (let ((thisnodeName (ask thisnode 'name))
+;                                          (thisStartPos (get-text-length nodereader-doc)))
+;                                        ; add text
+;                                      (set-text-insert nodereader-doc
+;                                                       (string-append "\n" thisnodeName)
+;                                                       thisStartPos)
+
+;                                        ; highlight
+;                                      (if (> (ask thisnode 'visited?) 0)
+;                                        ; already followed, so just underline
+;                                          (set-text-style nodereader-doc
+;                                                          style-followed-link
+;                                                          (+ 1 thisStartPos)
+;                                                          (- (get-text-length nodereader-doc) (+ 1 thisStartPos))
+;                                                          #t)
+;                                        ; otherwise underline and bold
+;                                          (set-text-style nodereader-doc
+;                                                          style-link
+;                                                          (+ 1 thisStartPos)
+;                                                          (- (get-text-length nodereader-doc) (+ 1 thisStartPos))
+;                                                          #t))
+
+;                                        ; and set clickback
+;                                      (let ((link-attribute-set (make-attribute-set)))
+;                                        (set-attribute-linkAction link-attribute-set
+;                                                                  (lambda ()
+;                                                                    (goto-node thisnodeID #t)))
+;                                        (set-attribute-linkID link-attribute-set thisnodeID)
+;                                        (set-text-style nodereader-doc
+;                                                        link-attribute-set
+;                                                        (+ 1 thisStartPos)
+;                                                        (- (get-text-length nodereader-doc) (+ 1 thisStartPos))
+;                                                        #f)))
+;                                    ))
+;                              ) rule-lst)
+;                       ))
+;                   node-list)
               (ask htpane-obj 'set-track-links! #t)))))
 
     ; add "nodes-in-hand" links - card shark stuff
@@ -648,19 +724,23 @@
 (define (do-rule-action event-type ruleID)
   (display "do-rule-action ")(display event-type)(newline)
   (define action-lst (ask (get 'rules ruleID) 'actions))
-
+  (define action-fired? #f)
   (map (lambda (actionID)
          ;; if relevant to this event type, do action
          (define action-event-type (ask (get 'actions actionID) 'type))
+         (display "actionID ")(display actionID)(newline)
+         (display "action-event-type ")(display action-event-type)(newline)
          ;(display "action and event ")(display action-event-type)(display " ")(display event-type)(newline)
          ;(display "action expr ")(display (ask (get 'actions actionID) 'expr))(newline)
          (if (equal? action-event-type event-type)
                  ;(equal? action-event-type 'goto-node)) ;; testing goto-node event type
              (begin
                ;(display "event type matched ")(display event-type)(newline)
-             (do-action actionID)))
+               (do-action actionID)
+               (set! action-fired? #t)
+               ))
          ) (ask (get 'rules ruleID) 'actions))
-  )
+  action-fired?)
 
 ;; obj can be a link or node..
 ;; TODO: doc rule should fit into this somehow
@@ -676,9 +756,11 @@
         (begin
           (if (check-rule-condition (car rule-lst))
               (begin
-                (do-rule-action event-type (car rule-lst))
-                ;; if this rule triggered, check whether we allow fall through
-                (if (ask (get 'rules (car rule-lst)) 'fall-through?)
+                (define action-fired? (do-rule-action event-type (car rule-lst)))
+                ;; if this rule triggered, check whether we allow fall through, if not just check next rule
+                (if (or (not action-fired?)
+                        (and action-fired?
+                             (ask (get 'rules (car rule-lst)) 'fall-through?)))
                     (traverse-rule (cdr rule-lst))))
               ;; check next ruleID
               (traverse-rule (cdr rule-lst)))

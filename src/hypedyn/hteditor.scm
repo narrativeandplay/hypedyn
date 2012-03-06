@@ -58,7 +58,6 @@
 (require "hypedyn-undo.scm")
 (require "about-hypedyn.scm")
 (require "rules-manager.scm") ;; rmgr-init
-(require "reader-pane.scm") ;; find-action2 ;;TODO move this find-action2 elsewhere
 
 ; export
 (module-export close-hteditor-subwindows update-node-emphasis do-selectnode-list do-selectnode-graph
@@ -854,15 +853,16 @@
   ; remember if this was the start node
   (define was-start-node (= (get-start-node) cached-nodeID))
   
-  ;; find action that has this node as dest
   (define actionID-lst
-    (find-action2
-     (lambda (actionID) ;;find action in this rule
-       (define action (get 'actions actionID))
-       (define sexpr (ask action 'expr))
-       (and (equal? (car sexpr) 'follow-link)
-            (equal? (list-ref sexpr 4) selected-nodeID))
-       )))
+    (filter (lambda (actionID) ;;find action in this rule
+              (define action (get 'actions actionID))
+              (define sexpr (ask action 'expr))
+              (and (equal? (car sexpr) 'follow-link)
+                   (equal? (list-ref sexpr 4) selected-nodeID))
+              )
+        ;; get list of action
+        (map (lambda (o) (car o)) (get-list 'actions))))
+  
   (display "[ACTION lst] ")(display actionID-lst)(newline)
   
  

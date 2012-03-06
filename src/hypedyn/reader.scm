@@ -48,6 +48,8 @@
   (require "../common/list-helpers.scm")
   (require "../common/runcode.scm")
   (require "../common/myhashtable.scm") ;;hash-table-for-each
+  (require "../common/links.scm") ;; for style-link 
+  (require "../common/hypertextpane.scm") ;; set-attribute-linkAction
   
   (require "config-options.scm")
   (require "datastructure.scm")
@@ -589,6 +591,26 @@
         #f))
   (update-inspectors))
 
+;; called when we set fact
+;; a subset of goto-node (refresh the display of the node)
+(define (refresh-node)
+  (define current-node (get 'nodes (get-read-nodeID)))
+  
+  (if current-node
+      (begin
+        ;; set contents - need to enable editing temporarily
+        (ask nodereader-pane 'set-node! current-node)
+
+        ;; trigger rules
+        (rule-check-trigger-links 'displayed-node (get-read-nodeID)) ;; trigger links text display
+
+        ;; highlight links
+        (ask nodereader-pane 'highlight-links)
+
+        ;; add anywhere nodes
+        (ask nodereader-pane 'add-anywherenode-links))))
+
+
 ;;;; conditions
 
 ; was a node visited?
@@ -671,13 +693,17 @@
 (define (assert in-factID)
   (let ((target-fact (get 'facts in-factID)))
     (if target-fact
-        (ask target-fact 'assert))))
+        (begin
+          (ask target-fact 'assert)
+          (refresh-node)))))
 
 ; retract an fact
 (define (retract in-factID)
   (let ((target-fact (get 'facts in-factID)))
     (if target-fact
-        (ask target-fact 'retract))))
+        (begin
+          (ask target-fact 'retract)
+          (refresh-node)))))
 
 ; set the value of an fact
 (define (set-fact-value! in-factID in-value)
@@ -685,7 +711,10 @@
     (format #t "set-fact-value!: fact: ~a, value: ~a, target fact: ~a~%~!\n" 
             in-factID in-value target-fact)
     (if target-fact
-        (ask target-fact 'set-value! in-value))))
+        (begin
+          (ask target-fact 'set-value! in-value)
+          (refresh-node)
+          ))))
 
 ; check if an fact holds
 (define (holds? target-factID)
@@ -998,4 +1027,42 @@
 ;; dummy for anywhere link adding action
 ;; not sure if we're going to use this or not
 (define (add-anywhere-link nodeID)
-  #f)
+
+  (display "add anywhere link ")(newline)
+  (let* ((thisnode (get 'nodes nodeID))
+         (thisnodeName (ask thisnode 'name))
+         (nodereader-doc (ask nodereader-pane 'getdocument))
+         (thisStartPos (get-text-length nodereader-doc)))
+    ;; add text
+    (set-text-insert nodereader-doc
+                     (string-append "\n" thisnodeName)
+                     thisStartPos)
+
+    (display "test ")(display (> (ask thisnode 'visited?) 0))(newline) 
+    ;; highlight
+    (if (> (ask thisnode 'visited?) 0)
+        ;; already followed, so just underline
+        (set-text-style nodereader-doc
+                        style-followed-link
+                        (+ 1 thisStartPos)
+                        (- (get-text-length nodereader-doc) (+ 1 thisStartPos))
+                        #t)
+        ;; otherwise underline and bold
+        (set-text-style nodereader-doc
+                        style-link
+                        (+ 1 thisStartPos)
+                        (- (get-text-length nodereader-doc) (+ 1 thisStartPos))
+                        #t))
+
+    ;; and set clickback
+    (let ((link-attribute-set (make-attribute-set)))
+      (set-attribute-linkAction link-attribute-set
+                                (lambda ()
+                                  (goto-node nodeID #t)))
+      (set-attribute-linkID link-attribute-set nodeID)
+      (set-text-style nodereader-doc
+                      link-attribute-set
+                      (+ 1 thisStartPos)
+                      (- (get-text-length nodereader-doc) (+ 1 thisStartPos))
+                      #f)))
+)

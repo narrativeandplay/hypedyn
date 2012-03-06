@@ -666,8 +666,8 @@
                  (define dest-nodeID (list-ref action-sexpr 4))
                  (display "[inside follow link] ")(display dest-nodeID)(newline)
                  ;; debug
-                 (define dest-node (get 'nodes dest-nodeID))
-                 (display "dest node name ")(display (ask dest-node 'name))(newline)
+;                 (define dest-node (get 'nodes dest-nodeID))
+;                 (display "dest node name ")(display (ask dest-node 'name))(newline)
                 
                  (add-specific-action "follow link to" dest-nodeID))
 
@@ -1129,21 +1129,26 @@
                          (begin
                            (define dest-nodeID (list-ref expr 4))
                            
-                           (case add-or-remove
-                             ((add) ;; draw a line in the node-graph from the edited-node to the dest-node
-                              (ask node-graph 'create-line
-                                   (ask parent-link 'name)
-                                   (number->string ruleID) ;; use ruleID as the display ID of line for the moment
-                                   source-nodeID
-                                   dest-nodeID))
-                             ((remove) ;; remove the line in the node-graph 
-                              (ask node-graph 'del-line
-;                                   (ask node-graph 'get-line-by-ID
-;                                        (number->string ruleID))
-                                   (number->string ruleID)
-                                   source-nodeID
-                                   dest-nodeID)
-                              ))
+                           ;; Question: should we not allow the user to press ok
+                           ;; when the dest node is set to none?
+                           
+                           (if (not (= dest-nodeID -1))
+                               (case add-or-remove
+                                 ((add) ;; draw a line in the node-graph from the edited-node to the dest-node
+                                  (ask node-graph 'create-line
+                                       (ask parent-link 'name)
+                                       (number->string ruleID) ;; use ruleID as the display ID of line for the moment
+                                       source-nodeID
+                                       dest-nodeID))
+                                 ((remove) ;; remove the line in the node-graph 
+                                  (ask node-graph 'del-line
+                                        ;                                   (ask node-graph 'get-line-by-ID
+                                        ;                                        (number->string ruleID))
+                                       (number->string ruleID)
+                                       source-nodeID
+                                       dest-nodeID)
+                                  )))
+                           
                            )))
                    (ask rule 'actions)) ;; end of map
               ))
