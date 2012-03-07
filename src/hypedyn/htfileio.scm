@@ -732,8 +732,8 @@
                        ((equal? (ask rule 'and-or) 'or) "or")))
          (fall-through  (if (ask rule 'fall-through?) "true" "false")))
     
-    ;; skip rules with no actions 
-    (if (not (null? actions))
+    ;; skip rules with no actions (commenting out skipping null actions for now) 
+    ;;(if (not (null? actions))
         (apply string-append
                (append
                 (list "\t\tcreateRule("
@@ -746,7 +746,7 @@
                 (map js-condition-code conditions)
                 (map js-action-code actions)
                 ))
-        "")
+     ;;   "")
     ))
 
 ;; createAction(eventType, parentRuleID, func, args, id)

@@ -757,14 +757,11 @@
 ; perform an action
 ; this version assumes stored as a string
 (define (do-action actionID)
-  (display "in do action ")(display actionID)(newline)
   (define in-action (get 'actions actionID))
-  (display "ruleID ")(display (ask in-action 'ruleID))(newline)
   
   ;; debug code block
   (define ruleID (ask in-action 'ruleID))
   (define rule (get 'rules ruleID))
-  (display "rule actions ")(display (ask rule 'actions))(newline)
   
   (if in-action
       (let ((this-expr (ask in-action 'expr)))

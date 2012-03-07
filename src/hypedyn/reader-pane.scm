@@ -162,7 +162,6 @@
 
     ; highlight links in reader
     (define (highlight-links)
-      (display "[HIGHLIGHT]")(newline)
       (let ((thisnode (get 'nodes (ask htpane-obj 'get-nodeID))))
 
         ; second pass - highlight links, update text, and set clickbacks
@@ -247,7 +246,6 @@
     ;;        therefore deleting the action/rule containing add-anywhere-link action would cause the link to not be ever added
     (define (add-anywherenode-links)
       
-      (display "add anywhere node links ")(newline)
       ;; add in the divider
       (define (add-anywherenode-divider nodereader-doc)
         ; leave a line before anywhere nodes
@@ -649,7 +647,7 @@
           (define rule (get 'rules ruleID))
           (define actions (ask rule 'actions))
 
-          (and (not (null? actions))            ;; has action
+          (and ;(not (null? actions))            ;; has action (commented out, we do not skip pass empty rules now)
                (or (not check-condition?)       ;; filter out those that dont have condition satisfied
                    (and check-condition?        ;; if check-condition? #t
                         (check-rule-condition ruleID)))   ;; and condition satisfied
@@ -679,7 +677,7 @@
                            (list ruleID)))
                       ((and block-on-action
                             (not (has-action-triggered-by event-type ruleID)))
-                       (fall-through-simulate (cdr rule-lst) event-type)))
+                       (select-for-firing (cdr rule-lst) event-type)))
                 )))
 
         ;; return the list of rules that would be triggered

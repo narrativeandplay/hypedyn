@@ -790,7 +790,6 @@
     
     ; handle insert string
     (define (document-filter-insert-string-handler fb offset string attr)
-      (display "INSERT FILTER ")(display (list offset string))(newline)(newline)
       (set! replace-event #f)
       (set! insert-cache (list offset string (string-length string) attr))
       (start-compound-undoable-event "Typing") ;(insert) compound") ; start compound event
@@ -805,7 +804,6 @@
     ; handle remove
     ; note: extra parameter (callback) is added when doc filter is created
     (define (document-filter-remove-handler fb offset len)
-      (display "REMOVE FILTER ")(display (list offset len))(newline)
       (start-compound-undoable-event "Typing") ;(remove) compound") ; start compound event
       (define string (substring (get-text the-editor) offset (+ offset len)))
       ;; if locked then we are in the middle of an undo
@@ -824,7 +822,6 @@
     ; handle replace (called when we do inserts or replaces operations)
     ; note: extra parameter (callback) is added when doc filter is created
     (define (document-filter-replace-handler fb offset len string attr)
-      (display "REPLACE FILTER ")(display (list offset len string))(newline)
       (start-compound-undoable-event "Typing") ;(replace) compound") ; start compound event
       (if (or (not undo-manager) 
               (not (compoundundomanager-locked? undo-manager)))
@@ -853,8 +850,6 @@
     ; note: DON'T make changes to the document from these handlers!
 
     (define (insert-undo event-offset event-string event-len)
-      (display "insert-undo")(newline)
-      (display "track undo here ")(display track-undoable-edits)(newline)
       (set-text-delete the-doc event-offset event-len)
       ;;(textpane-remove the-editor event-offset event-len)
       (set-cursor-pos the-editor event-offset)

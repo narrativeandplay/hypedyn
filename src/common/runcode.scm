@@ -137,9 +137,8 @@
 
 (define (runcode-just-sexpr sexpr)
   (let ((output
-             (try-catch (begin 
-                          (display sexpr)(newline)
-                          (myeval sexpr))
+             (try-catch 
+                 (myeval sexpr)
                        
                ; catch errors
                ; should actually stop here and show error line to user
