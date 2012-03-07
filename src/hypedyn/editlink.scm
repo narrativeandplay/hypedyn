@@ -1387,7 +1387,14 @@
                                               (get-text comp3))
                                         edited-ruleID)
                          )) ;; end of fact-type cond
-                  )) ;; end of action-type cond
+                  )
+;                 
+                 ;; no parameter from the ui
+                 ((equal? action-type "enable links to this node from anywhere")
+                  (create-action "Enable Link" 'anywhere-check
+                               (list 'add-anywhere-link edited-nodeID)
+                               edited-ruleID))
+                 ) ;; end of action-type cond
            ) (get-container-children action-list-panel))
 
     ;; cache the information of the edited link in the form of a lambda object
