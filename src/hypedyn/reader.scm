@@ -1036,7 +1036,6 @@
 ;; not sure if we're going to use this or not
 (define (add-anywhere-link nodeID)
 
-  (display "add anywhere link ")(newline)
   (let* ((thisnode (get 'nodes nodeID))
          (thisnodeName (ask thisnode 'name))
          (nodereader-doc (ask nodereader-pane 'getdocument))
@@ -1046,7 +1045,13 @@
                      (string-append "\n" thisnodeName)
                      thisStartPos)
 
-    (display "test ")(display (> (ask thisnode 'visited?) 0))(newline) 
+    ;; no format for \n char
+    ;; Note: this fixed the clickable area beyond anywhere links to the right
+    (set-text-style nodereader-doc
+                        style-nolink
+                        thisStartPos 1
+                        #t)
+    
     ;; highlight
     (if (> (ask thisnode 'visited?) 0)
         ;; already followed, so just underline

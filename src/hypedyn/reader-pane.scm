@@ -57,117 +57,6 @@
 (define start-indices (make-hash-table))
 (define end-indices (make-hash-table))
 
-
-;; action name is the symbol assigned to the primitive procedure (eg 'follow-link 'retract)
-;(define (find-action-helper in-rule-lst in-action-name event-type)
-;  (if (null? in-rule-lst)
-;      #f
-;      (begin
-;        (define condition-satisfied? (check-rule-condition (car in-rule-lst)))
-;        (define fall-through? (ask (get 'rules (car in-rule-lst)) 'fall-through?))
-;        (define found-action?
-;          (filter (lambda (actionID) ;;find action in this rule
-;                    (define action (get 'actions actionID))
-;                    (define sexpr (ask action 'expr))
-;                    (define type (ask action 'type))
-;                    (and (equal? type event-type)
-;                         (equal? (car sexpr) in-action-name))
-;                    ) (ask (get 'rules (car in-rule-lst)) 'actions)))
-
-;        ;; if checking condition need to check take note not to fall through when condition satisfied
-;        (if check-condition?
-;            (if (and found-action? condition-satisfied?)
-;                #t
-;                (if (or (and condition-satisfied?
-;                             fall-through?)
-;                        (and (not condition-satisfied?)))
-;                    (find-action-helper (cdr in-rule-lst) in-action-name event-type)
-;                    #f))
-;            ;; if not checking just need to look through the whole in-rule-lst
-;            (if found-action?
-;                #t
-;                (find-action-helper (cdr in-rule-lst) in-action-name event-type))
-;            )
-;        ))) ;; end of helper
-
-;(define (find-action-helper2 in-rule-lst in-action-name event-type)
-;  (filter (lambda (ruleID)
-;            (define rule (get 'rules ruleID))
-;            (define action-lst (ask rule 'actions))
-;            (find (lambda (actionID)
-;                    (define action (get 'actions actionID))
-;                    (define sexpr (ask action 'expr))
-;                    (define type (ask action 'type))
-;                    (and (equal? type event-type)
-;                         (equal? (car sexpr) in-action-name))
-;                    ) action-lst)
-;            ) in-rule-lst))
-
-    ;; if check-condition? true, we check whether the 
-    ;;   condition for the follow link action is satisfied
-    ;; if check-condition? false, we only check the existence 
-;(define (find-action obj-ID obj-type check-condition? action-name event-type)
-;  (define this-obj
-;    (case obj-type
-;      ((link) (get 'links obj-ID))
-;      ((node) (get 'nodes obj-ID))))
-;  
-;  ;; for debug (delete later)
-;  (define obj-name (ask this-obj 'name))
-;  
-;  (define rule-lst (ask this-obj 'rule-lst))
-
-;  ;; start the helper
-;  (find-action-helper rule-lst action-name event-type)
-;  )
-
-;; checks for actions in the rules of this link that has conditions satisfied
-
-(define (link-has-action? linkID check-condition?)
-  (define link (get 'links linkID))
-  (define rule-lst (ask link 'rule-lst))
-  (define result (filter
-                  (lambda (ruleID)
-                    (define rule (get 'rules ruleID))
-                    (define actions (ask rule 'actions))
-                    (display "link has action debug ")(newline)
-                    (display "  not null: ")(display (not (null? actions)))(newline)
-                    (display "  check condition ")
-                    (display (or check-condition?
-                                 (and (not check-condition?)
-                                      (check-rule-condition ruleID))))(newline)
-                    (display "  action found ")(display (find-action 'clicked-link ruleID))(newline)
-                    (and (not (null? actions))            ;; has action
-                         (or (not check-condition?)
-                             (and check-condition?
-                                  (check-rule-condition ruleID)))   ;; and condition satisfied
-                         (find-action 'clicked-link ruleID))
-                    ) rule-lst))
-  (display "link has action result ")(display result)(newline)
-  (not (null? result)))
-
-;; find an action with action-name inside rule
-(define (find-action action-name ruleID)
-  (define rule (get 'rules ruleID))
-  (define actions (ask rule 'actions))
-  (define search-result
-    (filter
-     (lambda (actionID)
-       (define action (get 'actions actionID))
-       (display "action type ")(display (ask action 'type))(newline)
-       (equal? (ask action 'type) action-name)
-       ) actions))
-  (display "search-result ")(display search-result)(newline)
-  (not (null? search-result))
-  )
-;; a more powerful generic version of find-action
-;; returns a list of actionID that satisfy this pred
-;; NOTE: pred should work on actionID
-;(define (find-action2 pred)
-;  (filter pred
-;        ;; get list of action
-;        (map (lambda (o) (car o)) (get-list 'actions))))
-
 ; read-only hypertextpane
 (define (make-reader-pane
          w h
@@ -241,13 +130,6 @@
                  (link-type (get-link-type clicked-linkID)))
             (rule-check-trigger 'clicked-link 'links clicked-linkID)
             )))
-    
-    ;; check if a link can be followed (check-condition #t)
-    ;; check if a link is available (check-condition #f)
-;    (define (follow-link-available? linkID check-condition?)
-;      ;(find-action linkID 'link check-condition? 'follow-link)
-;      #f
-;      )
     
     ;; link actions
 
@@ -374,8 +256,8 @@
         ; make sure line isn't formatted by an adjacent link
         (set-text-style nodereader-doc
                         style-nolink
-                        (- (get-text-length nodereader-doc) 5)
-                        5
+                        (- (get-text-length nodereader-doc) 6)
+                        6
                         #t))
       
       ; add in anywhere node links, if any (and if condition for it is satisfied)
@@ -718,67 +600,118 @@
                (set-bg-change! in-flag)))
     this-obj))
 
-;; RULE HANDLING
+;;;; RULE HANDLING
 
 ;; carry out the action from this rule
 ;; only do the actions relevant to the event-type
 ;; Note: do-action should really be triggered through this function
 ;;       if we want to govern the triggering of actions with the right event-type
-;; TODO: clean up do-action to all go through this do-rule-action
+;; TODO: clean up any calls to do-action to all go through this do-rule-action
 (define (do-rule-action event-type ruleID)
-  (display "do-rule-action ")(display event-type)(newline)
   (define action-lst (ask (get 'rules ruleID) 'actions))
   (define action-fired? #f)
   (map (lambda (actionID)
          ;; if relevant to this event type, do action
          (define action-event-type (ask (get 'actions actionID) 'type))
-         (display "actionID ")(display actionID)(newline)
-         (display "action-event-type ")(display action-event-type)(newline)
-         ;(display "action and event ")(display action-event-type)(display " ")(display event-type)(newline)
-         ;(display "action expr ")(display (ask (get 'actions actionID) 'expr))(newline)
          (if (equal? action-event-type event-type)
-                 ;(equal? action-event-type 'goto-node)) ;; testing goto-node event type
              (begin
-               ;(display "event type matched ")(display event-type)(newline)
                (do-action actionID)
                (set! action-fired? #t)
                ))
          ) (ask (get 'rules ruleID) 'actions))
   action-fired?)
 
+;; get rules-triggered-by
+;; check if event-type occur, which rule would fire
+
+;; if check-condition? is false, we dont check condition.
+;; link when not condition satisfied should still be bold.
+;; so we need to know that there are rules triggered by clicked-link 
+;; but still not active yet using check-condition? #f
+
+;; if block-on-action we only consider rules that have actions reacting to event-type for firing
+;; meaning even if a certain rule is satisfied and blocking, it would not block if it does not have any action
+;; firing to this event-type
+(define (get-rules-triggered-by event-type obj-type obj-ID check-condition? #!optional block-on-action)
+  
+  (define obj
+    (case obj-type
+      ((node nodes) (get 'nodes obj-ID))
+      ((link links) (get 'links obj-ID))))
+  
+  (if obj
+      (begin
+        (define rule-lst (ask obj 'rule-lst))
+
+        ;; pruning off rules without action
+        ;; and rules with unsatisfied condition
+        (define (suitable-for-firing? ruleID)
+          (define rule (get 'rules ruleID))
+          (define actions (ask rule 'actions))
+
+          (and (not (null? actions))            ;; has action
+               (or (not check-condition?)       ;; filter out those that dont have condition satisfied
+                   (and check-condition?        ;; if check-condition? #t
+                        (check-rule-condition ruleID)))   ;; and condition satisfied
+               ))
+
+        ;; return all the rules with actions that have condition satisfied
+        (define result (filter suitable-for-firing? rule-lst))
+
+        ;; enforcing the fall-through and blocking
+        ;; returns a list of rules that are allowed to be fired 
+        (define (select-for-firing rule-lst event-type)
+          (if (null? rule-lst)
+              '() ;; end of list
+              (let* ((ruleID (car rule-lst))
+                     (rule (get 'rules ruleID)))
+                
+                ;; only check rule without relevant actions when (not block-on-action)
+                ;; if current rule has relevant actions, block-on-action or not do the same as normal
+                (cond ((or (and (not (has-action-triggered-by event-type ruleID))
+                                (not block-on-action))
+                           (has-action-triggered-by event-type ruleID))
+                       (if (or (and check-condition?
+                                    (ask rule 'fall-through?))
+                               (not check-condition?))
+                           (append (list ruleID) (select-for-firing (cdr rule-lst) event-type))
+                           ;; blocked. only condition this happens is check-condition? #t fall-through? #f
+                           (list ruleID)))
+                      ((and block-on-action
+                            (not (has-action-triggered-by event-type ruleID)))
+                       (fall-through-simulate (cdr rule-lst) event-type)))
+                )))
+
+        ;; return the list of rules that would be triggered
+        (select-for-firing result 'clicked-link)
+        )))
+
+(define (link-has-action? linkID check-condition?)
+  (not (null? (get-rules-triggered-by 'clicked-link 'link linkID check-condition?))))
+
+;; find an action with action-name inside rule
+(define (has-action-triggered-by event-type ruleID)
+  (define rule (get 'rules ruleID))
+  (define actions (ask rule 'actions))
+  (define search-result
+    (filter
+     (lambda (actionID)
+       (define action (get 'actions actionID))
+       (equal? (ask action 'type) event-type)
+       ) actions))
+  (not (null? search-result)))
+
 ;; obj can be a link or node..
 ;; TODO: doc rule should fit into this somehow
 ;; obj-type is either 'links or 'nodes for now
-(define (rule-check-trigger event-type obj-type obj-ID)
-  
-  (define obj (get obj-type obj-ID))
-  (display "args to rule check trigger ")(display (list event-type obj-type obj-ID))(newline) 
-  (define rule-lst (ask obj 'rule-lst))
- 
-  ;; enforce rule fall through checking
-  (define (traverse-rule rule-lst)
-    (if (not (null? rule-lst))
-        (begin
-          (if (check-rule-condition (car rule-lst))
-              (begin
-                (define action-fired? (do-rule-action event-type (car rule-lst)))
-                
-                ;; if this rule triggered, check whether we allow fall through, if not just check next rule
-                (if (or (not action-fired?)
-                        (and action-fired?
-                             (ask (get 'rules (car rule-lst)) 'fall-through?)))
-                    (traverse-rule (cdr rule-lst))))
-              ;; check next ruleID
-              (traverse-rule (cdr rule-lst)))
-          )))
-  
-  ;; call the local helper function
-  (traverse-rule rule-lst))
+(define (rule-check-trigger event-type obj-type obj-ID #!optional block-on-action)
+  (map (lambda (ruleID)
+         (do-rule-action event-type ruleID))
+       (get-rules-triggered-by event-type obj-type obj-ID #t block-on-action)))
 
 ;; goes through all the links of this node and 
 ;; check for rule triggers
 (define (rule-check-trigger-links event-type nodeID)
   (map (lambda (linkID)
          (rule-check-trigger event-type 'links linkID))
-       (ask (get 'nodes nodeID) 'links))
-  )
+       (ask (get 'nodes nodeID) 'links)))
