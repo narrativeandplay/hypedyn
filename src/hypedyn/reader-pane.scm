@@ -664,19 +664,28 @@
               (let* ((ruleID (car rule-lst))
                      (rule (get 'rules ruleID)))
                 
+                (display "select for firing ")(display rule-lst)(newline)
+                (display " not block-on-action? ")(display (not block-on-action))(newline)
                 ;; only check rule without relevant actions when (not block-on-action)
                 ;; if current rule has relevant actions, block-on-action or not do the same as normal
                 (cond ((or (and (not (has-action-triggered-by event-type ruleID))
                                 (not block-on-action))
                            (has-action-triggered-by event-type ruleID))
+                       (display "checking ")(newline)
+                       (define to-return
+                         (if (has-action-triggered-by event-type ruleID)
+                             (list ruleID)
+                             '()
+                             ))
                        (if (or (and check-condition?
                                     (ask rule 'fall-through?))
                                (not check-condition?))
-                           (append (list ruleID) (select-for-firing (cdr rule-lst) event-type))
+                           (append to-return (select-for-firing (cdr rule-lst) event-type))
                            ;; blocked. only condition this happens is check-condition? #t fall-through? #f
-                           (list ruleID)))
+                           to-return))
                       ((and block-on-action
                             (not (has-action-triggered-by event-type ruleID)))
+                       (display "skipping")(newline)
                        (select-for-firing (cdr rule-lst) event-type)))
                 )))
 
@@ -685,6 +694,8 @@
         )))
 
 (define (link-has-action? linkID check-condition?)
+  (display "link has action? ")(display (list linkID check-condition?))(newline)
+  ;(display "rules triggered ")(display (get-rules-triggered-by 'clicked-link 'link linkID check-condition?))(newline)
   (not (null? (get-rules-triggered-by 'clicked-link 'link linkID check-condition?))))
 
 ;; find an action with action-name inside rule

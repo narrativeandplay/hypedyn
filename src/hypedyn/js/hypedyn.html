@@ -107,8 +107,19 @@
 	
 	// look for \n char and attach a </text><br><text>
 	function processNewline( str ) {
-		
+
+		var break_tags = end_tag + "<br>" + start_tag;
+		var nlpos = str.indexOf("\n");
+		if (nlpos != -1) {
+			var front_str = str.substring( 0, nlpos);
+			return  front_str + break_tags + processNewline( str.substring( nlpos + 1, str.length ) );
+		} else {
+			return str;
+		}
 	}
+	
+	var start_tag = "<font size='6'>";
+	var end_tag = "</font>";
 
 	// here we need to add anywhere node 
 	function htmlFormat(content, links) {
@@ -123,7 +134,8 @@
 			
 			if (offset == content.length) return "";
 			else if (start > offset) { // print the text before the link
-				return "<text>"+content.substring(offset, start)+"</text>"+ helper(index, start);
+				//console.log ("PNL " + processNewline( content.substring(offset, start) ) );
+				return start_tag + processNewline(content.substring(offset, start)) + end_tag + helper(index, start);
 			} else if (start == offset) { // print the link
 				// note not to confuse index with link id
 				// index is just the order at which it appears in the node and the position in the text
@@ -140,9 +152,11 @@
 				// the export process to javascript code will makes sure that's true
 				if (currLink.rules.length > 0)
 					return "<a href='javascript:void(0)' onClick='clickedLink(" + currLink.id + ")'>"
+						+ start_tag
 						+ linktext
+						+ end_tag
 						+"</a>" + helper(index+1, end);
-				else return "<text>" + linktext + "</text>" + helper(index+1, end);
+				else return start_tag + linktext + end_tag + helper(index+1, end);
 			} else { // start < offset
 				alert("error in htmlFormat");
 			}

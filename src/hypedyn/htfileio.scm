@@ -868,8 +868,16 @@
   ))
 
 (define (generate-jscode)
-  (display "node list ")(display (map (lambda (e) (car e)) (get-list 'nodes)))(newline)
-  (display "fact list ")(display (map (lambda (e) (car e)) (get-list 'facts)))(newline)
+  
+  (define node-lst (get-list 'nodes))
+  (define fact-lst (get-list 'facts))
+  
+  ;; get-list returns a #f when not found
+  (if (not node-lst)
+      (set! node-lst '()))
+  (if (not fact-lst)
+      (set! fact-lst '()))
+           
   ;; go through all the nodes
   (apply string-append
          (append 
@@ -885,13 +893,13 @@
           ;; object associated with it
           (map js-node-code
                ;; get a list of the node ID
-               (map (lambda (e) (car e)) (get-list 'nodes)))
+               (map (lambda (e) (car e)) node-lst))
           
           ;(list "\n") ;; leave a space before fact code
           
           ;; generate createFact code
           (map js-fact-code
-               (map (lambda (e) (car e)) (get-list 'facts)))
+               (map (lambda (e) (car e)) fact-lst))
           
           (list "}")
           )))
