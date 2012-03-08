@@ -106,14 +106,15 @@ function ruleRelevant(evenType, rule) {
 	for (var i in obj.rules) {
 		var rule = obj.rules[i];
 		if ( checkCondition(rule) ) {
-			var fired = false;
+			//var fired = false;
 			for (var j in rule.actions) {
 				var action = rule.actions[j];
-				fired = action.doaction(eventType) || fired;
+				//fired = 
+				action.doaction(eventType); //|| fired;
 			}
 
 			// stop evaluating if it is not suppose to fall_through
-			if ((!rule.fall_through) && fired) {
+			if ((!rule.fall_through) ) {//&& fired) {
 				break;
 			}
 		}

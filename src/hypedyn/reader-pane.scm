@@ -630,8 +630,8 @@
 ;; if block-on-action we only consider rules that have actions reacting to event-type for firing
 ;; meaning even if a certain rule is satisfied and blocking, it would not block if it does not have any action
 ;; firing to this event-type
+;; note block on action not working
 (define (get-rules-triggered-by event-type obj-type obj-ID check-condition? #!optional block-on-action)
-  
   (define obj
     (case obj-type
       ((node nodes) (get 'nodes obj-ID))
@@ -688,14 +688,55 @@
                        (display "skipping")(newline)
                        (select-for-firing (cdr rule-lst) event-type)))
                 )))
+        
+        ;; without block-on-action feature
+        (define (select-for-firing2 rule-lst event-type)
+          (if (null? rule-lst)
+              '() ;; end of list
+              (let* ((ruleID (car rule-lst))
+                     (rule (get 'rules ruleID)))
+                
+                (if (or (and check-condition?
+                             (ask rule 'fall-through?))
+                        (not check-condition?))
+                    (if (has-action-triggered-by event-type ruleID)
+                        (append (list ruleID) (select-for-firing2 (cdr rule-lst) event-type))
+                        (append '() (select-for-firing2 (cdr rule-lst) event-type)))
+                    ;; check condition but no fall-through
+                    (if (has-action-triggered-by event-type ruleID)
+                        (list ruleID)
+                        '()))
+                )))
+        
+        ;; TODO: continue putting in block-on-action feature in here
+        ;;       this is suppose to be the more compact version of select-for-firing
+        (define (select-for-firing3 rule-lst event-type)
+          (if (null? rule-lst)
+              '() ;; end of list
+              (let* ((ruleID (car rule-lst))
+                     (rule (get 'rules ruleID)))
+                
+                (define follow-up 
+                  (if (or (and check-condition?
+                               (ask rule 'fall-through?))
+                          (not check-condition?))
+                      (select-for-firing3 (cdr rule-lst) event-type)
+                      '()))
+                
+                (if (has-action-triggered-by event-type ruleID)
+                    (append (list ruleID) follow-up)
+                    (append '() follow-up))
+                ))
+          )
 
         ;; return the list of rules that would be triggered
-        (select-for-firing result 'clicked-link)
+        (select-for-firing result event-type)
         )))
 
+;; has action that respond to clicked-link 
 (define (link-has-action? linkID check-condition?)
   (display "link has action? ")(display (list linkID check-condition?))(newline)
-  ;(display "rules triggered ")(display (get-rules-triggered-by 'clicked-link 'link linkID check-condition?))(newline)
+  (display "rules triggered ")(display (get-rules-triggered-by 'clicked-link 'link linkID check-condition?))(newline)
   (not (null? (get-rules-triggered-by 'clicked-link 'link linkID check-condition?))))
 
 ;; find an action with action-name inside rule
@@ -708,6 +749,7 @@
        (define action (get 'actions actionID))
        (equal? (ask action 'type) event-type)
        ) actions))
+  (display "search result ")(display search-result)(newline)
   (not (null? search-result)))
 
 ;; obj can be a link or node..
