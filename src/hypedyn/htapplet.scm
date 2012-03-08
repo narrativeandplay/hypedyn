@@ -34,6 +34,8 @@
 (define (start) <void>
   (let ((applet :: <java.applet.Applet> (this)))
     (format #t "called start.~%~!")
+    ; required! as applets cannot compile to java
+    (set! gnu.expr.ModuleExp:alwaysCompile #f)
     (invoke applet 'setLayout (<java.awt.BorderLayout>))
     (let ((the-filename (invoke applet 'getParameter "STORYFILE")))
       (if (not (is-null? the-filename))
