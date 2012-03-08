@@ -28,6 +28,7 @@
 (require "../kawa/ui/checkbox.scm") ;; make-checkbox
 (require "../kawa/ui/frame.scm") ;; pack-frame 
 (require "../kawa/ui/undo.scm") ;; compoundundomanager-postedit
+(require "../kawa/strings.scm") ;; to-string
 
 (require "../common/datatable.scm") ;; get
 (require "../common/objects.scm") ;; ask
@@ -120,6 +121,11 @@
   (if rule-obj
       (let ((rule-name (ask rule-obj 'name))
             (rule-fall-through? (ask rule-obj 'fall-through?)))
+        
+        ;; TODO: this should refresh when show id just got selected
+        (if (show-IDs?)
+            (set! rule-name (to-string (string-append rule-name "(" (to-string (ask rule-obj 'ID)) ")"))))
+        
         (set! rule-name-label (make-label-with-title rule-name))
   
         ;; set initial state of the fall-through-button (its label)

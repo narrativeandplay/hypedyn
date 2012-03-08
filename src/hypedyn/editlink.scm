@@ -403,12 +403,13 @@
              (let ((using-type (car args-lst))
                    (alt-text (cadr args-lst)))
 
-               (set-combobox-selection-object action-type-combobox using-type)
+               (set-combobox-selection-object action-type-combobox (create-combobox-string-item using-type))
 
                (cond ((equal? using-type "alternative text")
                       (set-text alt-text-textfield alt-text)
                       )
                      ((equal? using-type "string fact")
+                      (display "went into string fact ")(newline)
                                         ;fact-string-choice-combobox
                       (define target-fact (get 'facts alt-text))
                       (define fact-name (ask target-fact 'name))
@@ -618,6 +619,9 @@
         (define actions (ask rule-obj 'actions))
         (define facts (ask rule-obj 'actions))
         (define rule-name (ask rule-obj 'name))
+        ;; TODO refresh name when show ID selected
+        (if (show-IDs?)
+            (string-append rule-name "(" (to-string (ask rule-obj 'ID)) ")"))
         (define expr (ask rule-obj 'and-or))
         
         ;;(define then-action-ID (ask rule-obj 'then-action))
@@ -740,17 +744,31 @@
          (display "equal alt text ")(newline)
          (clear-all-except-first)
          (add-component update-text-action-panel alt-text-textfield)
-         (display "[link-alttext] ")(display link-alttext)
-         (set-text alt-text-textfield link-alttext)
+         (display "[link-alttext] ")(display link-alttext)(newline)
+         
+         ;; dont show the fact id number when switching from a set fact text to set text
+         (if (not (string? link-alttext))
+             (set-text alt-text-textfield "") 
+             (set-text alt-text-textfield link-alttext))
          )
         ((equal? selected-item "string fact")
          (display "eq text from fact ")(newline)
          (clear-all-except-first)
                                         ;(add-component update-text-action-panel fact-choice-combobox)
 
+         ;; get selection on fact-string-choice-combobox  
+         ;; Note: this preserves our fact selection when we toggle between text and fact
+         (define fact-selection #f)
+         (if fact-string-choice-combobox
+             (set! fact-selection (get-comboboxwithdata-selecteddata fact-string-choice-combobox)))
+         
          ;; create and add the combobox containing the string facts
-         (set! fact-string-choice-combobox (create-fact-choice 'string #f))
+         (set! fact-string-choice-combobox (create-fact-choice 'string fact-selection)) 
 
+         
+         ;; remove the previous fact-string-choice-combobox (might be outdated) 
+         (clear-container update-text-fact-selection-panel)
+         
          ;; add to a container panel and add to the update-text-action-panel
          (add-component update-text-fact-selection-panel fact-string-choice-combobox)
          (add-component update-text-action-panel update-text-fact-selection-panel)
@@ -785,6 +803,7 @@
   (add-actionlistener action-type-combobox 
                       (make-actionlistener 
                        (lambda (e)
+                         (display "update text callback")(newline)
                          (action-update-text-combobox-callback))))
   )
 
@@ -1308,10 +1327,10 @@
                   (define text-value #f)
                   (case (to-string text-or-fact)
                     (("alternative text")
-                     (set! text-type "text")
+                     (set! text-type 'text)
                      (set! text-value (get-text alt-text-textfield)))
                     (("string fact")
-                     (set! text-type "fact")
+                     (set! text-type 'fact)
                      ;; TOFIX: get fact string during runtime instead of from the start
                      ;; (might not need to) just need to store factID
                      ;; problem is fact is not accessible to our interpreter since it is in a different environment
@@ -1324,7 +1343,7 @@
 
                   (create-action obj-name 'displayed-node
                                  (list 'replace-link-text
-                                       (list 'quote 'text)
+                                       (list 'quote text-type)
                                        text-value ;; this is actually factID
                                        edited-linkID)
                                  edited-ruleID))

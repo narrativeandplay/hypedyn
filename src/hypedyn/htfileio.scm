@@ -599,7 +599,7 @@
                 (begin ;; show fact text 
                   (create-action link-name 'displayed-node
                                  (list 'replace-link-text
-                                       (list 'quote 'text)
+                                       (list 'quote 'fact)
                                         ;(string-append "\"" link-alttext "\"")
                                        link-alttext ;; this is actually factID
                                        linkID)

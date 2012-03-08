@@ -699,6 +699,7 @@
                 (if (or (and check-condition?
                              (ask rule 'fall-through?))
                         (not check-condition?))
+                    
                     (if (has-action-triggered-by event-type ruleID)
                         (append (list ruleID) (select-for-firing2 (cdr rule-lst) event-type))
                         (append '() (select-for-firing2 (cdr rule-lst) event-type)))
@@ -730,13 +731,13 @@
           )
 
         ;; return the list of rules that would be triggered
-        (select-for-firing result event-type)
+        (select-for-firing2 result event-type)
         )))
 
 ;; has action that respond to clicked-link 
 (define (link-has-action? linkID check-condition?)
   (display "link has action? ")(display (list linkID check-condition?))(newline)
-  (display "rules triggered ")(display (get-rules-triggered-by 'clicked-link 'link linkID check-condition?))(newline)
+  ;(display "rules triggered ")(display (get-rules-triggered-by 'clicked-link 'link linkID check-condition?))(newline)
   (not (null? (get-rules-triggered-by 'clicked-link 'link linkID check-condition?))))
 
 ;; find an action with action-name inside rule
@@ -749,7 +750,6 @@
        (define action (get 'actions actionID))
        (equal? (ask action 'type) event-type)
        ) actions))
-  (display "search result ")(display search-result)(newline)
   (not (null? search-result)))
 
 ;; obj can be a link or node..

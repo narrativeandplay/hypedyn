@@ -57,14 +57,21 @@ function createRule(parentID, parentType, if_not, and_or, fall_through, id) {
 
 // go through all the actions and see whether the eventType 
 // triggers any of the actions in this rule
-function ruleRelevant(evenType, rule) {
-	
+function ruleRelevant(eventType, rule) {
+	var result = false;
+	for (var i in rule.actions) {
+		if (actions[i].eventType == eventType) {
+			result = true;
+			break;
+		}
+	}
 }
 
 /*
  *	Actions
  */ 
  
+ // eventType can be "enteredNode" "clickedLink" "anywhereCheck"
  function createAction(eventType, parentRuleID, func, args, id) {
 	var newaction = new Object();
 	newaction.eventType = eventType;
@@ -121,6 +128,20 @@ function ruleRelevant(evenType, rule) {
 	}
  }
  
+ function firingCandidate( objID, objType, eventType) {
+	function helper ( rules, index, arr ) {
+		if (! index > rules.length - 1) {
+			if (ruleRelevant(eventType, rule[index])) {
+				arr[arr.length] = rule[index];
+			}
+			helper ( rules, index+1, arr );
+		} else {
+			return arr;
+		}
+	}
+ }
+ 
+
 /*
  *	Conditions
  */	

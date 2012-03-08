@@ -150,7 +150,7 @@
 
 				// NOTE: there is no rules with no actions, 
 				// the export process to javascript code will makes sure that's true
-				if (currLink.rules.length > 0)
+				if (ruleRelevant("clickedLink", rule))
 					return "<a href='javascript:void(0)' onClick='clickedLink(" + currLink.id + ")'>"
 						+ start_tag
 						+ linktext

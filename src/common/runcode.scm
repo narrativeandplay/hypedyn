@@ -136,20 +136,22 @@
   )
 
 (define (runcode-just-sexpr sexpr)
-  (let ((output
-             (try-catch 
-                 (myeval sexpr)
-                       
-               ; catch errors
-               ; should actually stop here and show error line to user
-               (ex <java.lang.Throwable>
-                   (begin
-                     (display "runcode-just-sexpr")(newline)
-                     (display (*:toString ex))
-                     )))))
+;  (let ((output
+;             (try-catch 
+;                 (myeval sexpr)
+;                       
+;               ; catch errors
+;               ; should actually stop here and show error line to user
+;               (ex <java.lang.Throwable>
+;                   (begin
+;                     (display "runcode-just-sexpr")(newline)
+;                     (display (*:toString ex))
+;                     )))))
 
-        (display output)(newline)
-    ))
+;        (display output)(newline)
+;    )
+  (myeval sexpr)
+  )
 
 ;; run the proc on the whole code (used to find a certain line in the code to retrieve information)
 (define (parsecode-sexpr input-port proc)
