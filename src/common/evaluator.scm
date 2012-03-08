@@ -25,7 +25,7 @@
                primitive-procedure-names
                set-end-of-code get-end-of-code)
 
-(module-static 'init-run)
+;(module-static 'init-run)
 
 ;; when we reached end of code
 (define end-of-code #f)

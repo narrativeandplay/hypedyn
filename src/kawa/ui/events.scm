@@ -18,7 +18,7 @@
 ;; 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 (module-export make-changelistener add-changelistener
-               make-actionlistener add-actionlistener
+               make-actionlistener add-actionlistener remove-actionlistener
                make-caretlistener add-caretlistener
                make-keylistener add-keylistener
                get-key-event
@@ -80,15 +80,35 @@
 ;add an action listener
 (define (add-actionlistener action-producer
                             action-listener :: <java.awt.event.ActionListener>)
-  (cond
-   ((instance? action-producer <javax.swing.AbstractButton>)
-    (invoke (as <javax.swing.AbstractButton> action-producer) 'addActionListener action-listener))
-   ((instance? action-producer <javax.swing.JComboBox>)
-    (invoke (as <javax.swing.JComboBox> action-producer) 'addActionListener action-listener))
-   ((instance? action-producer <javax.swing.JTextField>)
-    (invoke (as <javax.swing.JTextField> action-producer) 'addActionListener action-listener))
-   (else (format #t "*********** unknown action producer: ~a~%~!" action-producer))
-   ))
+;  (cond
+;   ((instance? action-producer <javax.swing.AbstractButton>)
+;    (invoke (as <javax.swing.AbstractButton> action-producer) 'addActionListener action-listener))
+;   ((instance? action-producer <javax.swing.JComboBox>)
+;    (invoke (as <javax.swing.JComboBox> action-producer) 'addActionListener action-listener))
+;   ((instance? action-producer <javax.swing.JTextField>)
+;    (invoke (as <javax.swing.JTextField> action-producer) 'addActionListener action-listener))
+;   (else (format #t "*********** unknown action producer: ~a~%~!" action-producer))
+;   )
+  (define class-type (invoke action-producer 'get-class))
+  (if (or (instance? action-producer <javax.swing.AbstractButton>)
+          (instance? action-producer <javax.swing.JComboBox>)
+          (instance? action-producer <javax.swing.JTextField>))
+      (invoke (as class-type action-producer) 'add-action-listener action-listener)
+      (format #t "*********** unknown action producer: ~a~%~!" action-producer))
+  )
+
+
+;; TODO: similar in structure as add, perhaps can refactor next time if this get more complicated
+(define (remove-actionlistener action-producer
+                               action-listener :: <java.awt.event.ActionListener>)
+  (display "removing action listener ")(newline)
+  (define class-type (invoke action-producer 'get-class))
+  (if (or (instance? action-producer <javax.swing.AbstractButton>)
+          (instance? action-producer <javax.swing.JComboBox>)
+          (instance? action-producer <javax.swing.JTextField>))
+      (invoke (as class-type action-producer) 'remove-action-listener action-listener)
+      (format #t "*********** unknown action producer: ~a~%~!" action-producer))
+  )
 
 ;;
 ;; caret listener
@@ -311,8 +331,10 @@
   (object (<java.awt.event.WindowListener>)
     ((window-opened e :: <java.awt.event.WindowEvent>) :: <void>
      (opened e))
+    ;; Invoked when the user attempts to close the window from the window's system menu.
     ((window-closing e :: <java.awt.event.WindowEvent>) :: <void>
      (close e))
+    ;; Invoked when a window has been closed as the result of calling dispose on the window.
     ((window-closed e :: <java.awt.event.WindowEvent>) :: <void>
      (closed e))
     ((window-iconified e :: <java.awt.event.WindowEvent>) :: <void>

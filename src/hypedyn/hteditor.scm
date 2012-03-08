@@ -57,6 +57,7 @@
 (require 'srfi-1)
 (require "hypedyn-undo.scm")
 (require "about-hypedyn.scm")
+(require "rules-manager.scm") ;; rmgr-init
 
 ; export
 (module-export close-hteditor-subwindows update-node-emphasis do-selectnode-list do-selectnode-graph
@@ -68,7 +69,6 @@
                ;; needed by hypedyn-undo.scm
                node-graph 
                update-node-style
-               update-link-display
                
                ;; for datastructure.scm (create-node hack)
                update-display-nodes
@@ -107,6 +107,7 @@
 (define m-file-export-web #f)
 (define m-file-export-standalone #f)
 (define m-file-export-text #f)
+(define m-file-export-js #f)
 (define m-file-separator #f)
 (define m-edit-docrule #f)
 (define m-view-zoomin #f)
@@ -145,7 +146,7 @@
 ; shutdown procedure, called in close-hteditor-ui
 (define (close-hteditor-subwindows)
   ; need to close node editor and any other dialogs if necessary
-  (close-nodeeditor)
+  (nodeeditor-close)
   (nodereader-close)
   (close-inspectors))
 
@@ -159,6 +160,7 @@
         (mf-export-web (make-menu-item "Export for Web..."))
         (mf-export-standalone (make-menu-item "Export Standalone..."))
         (mf-export-text (make-menu-item "Export as Text..."))
+        (mf-export-js (make-menu-item "Export as JS"))
         
         ; edit menu
         (m-edit (make-menu "Edit"))
@@ -248,7 +250,12 @@
           (add-component m-file mf-export-standalone)
           (add-actionlistener mf-export-standalone (make-actionlistener
                                                     (lambda (source)
-                                                      (doexport-standalone))))))
+                                                      (doexport-standalone))))
+          (add-component m-file mf-export-js)
+          (add-actionlistener mf-export-js (make-actionlistener
+                                            (lambda (source)
+                                              (doexport-js))))
+          ))
 
     ; edit menu
     (add-component main-menu m-edit)
@@ -264,7 +271,8 @@
     (if (is-undo-enabled?)
         (begin
           (add-menu-action m-edit undo-action)
-          (add-menu-action m-edit redo-action)))
+          (add-menu-action m-edit redo-action))
+        )
 
     ; view menu
     (add-component main-menu m-view)
@@ -490,8 +498,7 @@
     ; callbacks for updating link display in graph, populating nodes list,
     ; renaming a line, (the node graph for deleting), and updating node style
     ; should be safe to assume rename-line and del-line are only called for node-graph?
-    (create-nodeeditor update-link-display
-                       (lambda () (ask node-list 'populate-nodes-list))
+    (create-nodeeditor (lambda () (ask node-list 'populate-nodes-list))
                        (lambda (line-ID newname) (ask node-graph 'rename-line line-ID newname))
                        node-graph
                        update-node-style
@@ -500,8 +507,19 @@
     ; create node reader window
     (create-nodereader-window)
     
+    ;; create the panels (the components inside the editlink editnode dialogs)
+    (create-if-condition-panel)
+    ;(create-then-action-panel)
+    ;(create-facts-main-panel)
+    (create-actions-main-panel)
+    (rmgr-init)
+    
+    (create-update-text-action-panel)
+    
     ; create link editor
     (create-editlink-dialog (get-nodeeditor-frame))
+    ;(create-editnode-dialog (get-nodeeditor-frame))
+    
 
     ; store any references that are needed
     (set! hteditor-ui-panel f-panel)
@@ -511,6 +529,7 @@
     (set! m-file-export-text mf-export-text)
     (set! m-file-export-web mf-export-web)
     (set! m-file-export-standalone mf-export-standalone)
+    (set! m-file-export-js mf-export-js)
     (set! m-file-separator mf-separator)
     (set! m-file-openrecent mf-openrecent)
     (set! m-edit-menu m-edit)
@@ -679,6 +698,15 @@
             (create-node new-nodename ""
                          80 45
                          anywhere update-display-nodes))
+          
+          ;; if anywhere add a rule with add-anywhere-link action
+          (if anywhere
+              (begin
+                (define new-ruleID (create-typed-rule2 "Add Anywhere Link" 'node 'and #f newnode-ID))
+                (create-action "Enable Link" 'anywhere-check
+                               (list 'add-anywhere-link newnode-ID)
+                               new-ruleID)))
+          
           (define newnode (get 'nodes newnode-ID))
           (define newnode-sexpr (ask newnode 'to-save-sexpr))
 
@@ -703,7 +731,7 @@
           )) ;; end of if
     ))
 
-; update both node displays
+; update node displays
 (define (update-display-nodes new-nodeID name x y anywhere)
   (ask node-list 'add-node new-nodeID name)
   (if anywhere
@@ -812,6 +840,7 @@
   )
 
 ; delete currently selected node
+;; TOFIX: [undo] deletion of start node when undone does not restore start node status (already in bug report)
 (define (dodelnode)
   ; first save the node contents if its being edited
   (if (= (get-edited-nodeID) selected-nodeID)
@@ -833,9 +862,25 @@
   ; remember if this was the start node
   (define was-start-node (= (get-start-node) cached-nodeID))
   
+  (define actionID-lst
+    (filter (lambda (actionID) ;;find action in this rule
+              (define action (get 'actions actionID))
+              (define sexpr (ask action 'expr))
+              (and (equal? (car sexpr) 'follow-link)
+                   (equal? (list-ref sexpr 4) selected-nodeID))
+              )
+        ;; get list of action
+        (map (lambda (o) (car o)) (get-list 'actions))))
+  
+  (display "[ACTION lst] ")(display actionID-lst)(newline)
+  
+ 
+  
   ;; wrap delete link and delete node in one operation
   ;; delete-node invokes delete-link which has its own compoundundomanager-postedit
   (compoundundomanager-beginupdate undo-manager)
+  
+  (map delete-action actionID-lst) 
   
   (delete-node selected-nodeID)
   
@@ -863,8 +908,13 @@
           ; if node is open in editor or reader, close them
           (if (= (get-edited-nodeID) nodeID)
               (begin
-                (close-nodeeditor)
-                (set-edited-nodeID! '())))
+                (display "nodeID match so close it ")(display (get-edited-nodeID))(newline)
+                (nodeeditor-close)
+                (set-edited-nodeID! '()))
+              (begin
+                (display "nodeID DOESNOT match so dont close it ")(display (get-edited-nodeID))(newline)
+                )
+              )
           (if (= (get-read-nodeID) nodeID)
               (begin
                 (nodereader-stop)
@@ -884,8 +934,7 @@
           (map (lambda (l)
                  (let ((thislink (get 'links l)))
                    (delete-link l #t node-graph
-                                update-node-style
-                                update-link-display)))
+                                update-node-style)))
                (ask thenode 'links))
 
           ; also need to delete all links that have this node as destination!
@@ -918,8 +967,7 @@
                  (if (= destNodeID thisDestID) 
                      (delete-link l #t 
                                   node-graph
-                                  update-node-style
-                                  update-link-display))))))
+                                  update-node-style))))))
        (ask thenode 'links)))
 
 ;;
@@ -1007,7 +1055,10 @@
     (if (eq? event-type 'left-clicked)
         (let ((event-click-count (get-mouseevent-click-count e)))
           (if (= 2 event-click-count)
-              (doeditnode))))))
+              (begin
+                (doeditnode)
+                )
+              )))))
 
 
 ;;
@@ -1170,7 +1221,7 @@
 
 
 ;;
-;; zooming
+;;;; zooming
 ;; 
 
 ; zoom delta: how much it zooms in/out each time
@@ -1207,6 +1258,8 @@
     (set-menuitem-component m-view-zoomin (< current-zoom min-zoom))
     (set-menuitem-component m-view-zoomout (> current-zoom max-zoom))
     (set-menuitem-component m-view-zoomreset (not (= current-zoom default-zoom)))))
+
+;;;; operation
 
 ; toggle show IDs
 (define (doshowIDs)
@@ -1256,7 +1309,7 @@
   (ask anywhere-graph 'layout-all))
 
 ;;
-;; fact list
+;;;; fact list
 ;; 
 
 (define (make-fact-listview selectfact-callback onmouse-callback)
@@ -1337,7 +1390,7 @@
               (dorenamefact))))))
 
 ;;
-;; graph editor
+;;;; graph editor
 ;;
 
 ; callback from graph editor
@@ -1365,27 +1418,6 @@
 (define (do-deselectnode-graph nodeID)
   (deselectnode)
   (ask node-list 'deselect-node))
-
-; need to direct update-link-display to the correct graph
-;; note this does del-line and create-line so there is no need for anymore
-;; manual del-line on our part
-(define (update-link-display name fromnodeID
-                             oldusetonode oldtonodeID
-                             oldusetoaltnode oldtoaltnodeID
-                             usetonode tonodeID
-                             usetoaltnode toaltnodeID
-                             new-linkID)
-  (let ((the-node (get 'nodes fromnodeID)))
-    (if the-node
-        (let* ((anywhere (ask the-node 'anywhere?))
-               (the-graph (if anywhere anywhere-graph node-graph)))
-          (ask the-graph 'update-link-display
-               name fromnodeID
-               oldusetonode oldtonodeID
-               oldusetoaltnode oldtoaltnodeID
-               usetonode tonodeID
-               usetoaltnode toaltnodeID
-               new-linkID)))))
 
 ; store the node positions for saving
 (define (store-node-positions)
@@ -1418,10 +1450,11 @@
     (values max-x max-y max-anywhere-x max-anywhere-y)))
 
 ;; 
-;; file I/O
+;;;;  file I/O
 ;;
 
-; clear the data
+
+;; clear the data
 (define (clear-data)
   (reset-table)
   (reset-uniqueID)
@@ -1484,6 +1517,8 @@
   (if (not (is-basic-mode?))
       (ask anywhere-graph 'refresh-display)))
 
+;;;; populate  
+
 ; populate lists
 (define (populate-lists)
     (ask node-list 'populate-nodes-list)
@@ -1534,7 +1569,7 @@
 
 ;;text window frame
 
-;window callback ; future work
+;;;; window callback ; future work
 (define (nodereader-window-opened o)
   (format #t "nodereader-window-opened~%~!")
   ())
@@ -1559,6 +1594,7 @@
   (format #t "nodereader-window-deactivated~%~!")
   ())                                                    
 
+;;;; nodereader operation
 ; shutdown procedure - called as closing
 (define (nodereader-close)
   (remove-from-window-menu nrf)
@@ -1600,8 +1636,9 @@
     (add-menu-bar nrf mb)
     (add-component mb (add-window-menu nrf))))
 
-
 ;;
+;;;; main ui hook 
+;; 
 ;; hook into main-ui.scm
 ;;
 

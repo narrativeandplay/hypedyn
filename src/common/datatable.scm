@@ -28,7 +28,8 @@
                dirty? set-dirty! clear-dirty!
                get-list 
                get put del
-               reset-table)
+               reset-table
+               table-map)
 
 ;; datatable.scm uses objects.scm
 
@@ -49,6 +50,7 @@
                (set! dirty #f)
                (save-point-reset)))
     
+    ;; Note: careful putting into the same ID would overwrite the previous value
     (obj-put this-obj 'put
              (lambda (self lst-sym-ID value-ID value)
                (define hash (hash-table-get local-table lst-sym-ID 'not-found)) 
@@ -59,7 +61,7 @@
                      (hash-table-put! (hash-table-get local-table lst-sym-ID) value-ID value)) ;; put content into new hashtable
                    )))
     
-    ;; TOFIX we shouldn't be returning #f. what if we were putting booleans into the hashtable?
+    ;; TODO: Fix: we shouldn't be returning #f. what if we were putting booleans into the hashtable?
     (obj-put this-obj 'get
              (lambda (self lst-sym-ID value-ID)
                (let ((hash (hash-table-get local-table lst-sym-ID 'not-found)))
@@ -82,8 +84,20 @@
                        (hash-table-remove! hash value-ID)
                        'ok)
                      #f))))
+    
     (obj-put this-obj 'local-table
              (lambda (self) local-table))
+    
+    (obj-put this-obj 'table-map
+             (lambda (self lst-sym-ID lambda-obj)
+               (let ((hash (hash-table-get local-table lst-sym-ID 'not-found)))
+                 (if (not (equal? hash 'not-found))
+                     (begin
+                       (hash-table-for-each hash lambda-obj)
+                       'ok)
+                     #f))
+               ))
+    
     this-obj))
 
 (define global-table (make-table))
@@ -102,4 +116,7 @@
   (ask global-table 'get lst-sym-ID value-ID))
 (define (del lst-sym-ID value-ID)
   (ask global-table 'del lst-sym-ID value-ID))
+
+(define (table-map lst-sym-ID lambda-obj)
+  (ask global-table 'table-map lst-sym-ID lambda-obj))
 

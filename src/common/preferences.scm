@@ -27,7 +27,7 @@
 ; export
 (module-export get-pref-languageinfo getprefs putprefs
                init-prefs get-pref-list get-pref put-pref! del-pref!)
- (module-static 'init-run)
+; (module-static 'init-run)
  
 (define pref-file #f)
 (define-constant pref-filename "./myprefs")

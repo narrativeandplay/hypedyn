@@ -24,6 +24,7 @@
   (require "../common/objects.scm")
   (require "../common/datatable.scm") ;;get, del, put
   (require "../common/fileio.scm")
+  (require "../common/list-helpers.scm") ;; list-replace
   ;(require "../common/inspector.scm")
   (require "hteditor.scm")
   (require 'list-lib))
@@ -34,7 +35,7 @@
                set-nodecount-display-callback! reset-node-count inc-node-count dec-node-count get-node-count
                set-import-offsets!
                create-node deletenode
-               create-link create-rule create-typed-rule
+               create-link create-rule create-typed-rule create-typed-rule2
                create-condition create-typed-condition create-action create-fact)
 
 ;; debug var 
@@ -57,13 +58,55 @@
 ;  (set-dirty!)
 ;  (update-dirty-state))
 
+;; inherited by both make-link and make node
+;; just keeps track of a list of ruleIDs
+(define-private (rule-containing-object)
+  (let ((rule 'not-set) ;; legacy attribute (dont think we use it anymore)
+        (rule-lst '())
+        (this-obj (new-object)))
+    (obj-put this-obj 'rule (lambda (self) rule))
+    (obj-put this-obj 'rule-lst (lambda (self) rule-lst))
+    (obj-put this-obj 'set-rule!
+             (lambda (self new-rule)
+               (set! rule new-rule)
+                                        ;(ht-set-dirty!)
+               ))
+    (obj-put this-obj 'add-rule
+             (lambda (self new-rule-ID)
+               (set! rule-lst (append rule-lst (list new-rule-ID)))))
+    (obj-put this-obj 'remove-rule
+             (lambda (self ruleID)
+               (set! rule-lst (remove (lambda (this-ruleID) (= this-ruleID ruleID)) rule-lst))))
+    (obj-put this-obj 'replace-rule
+             (lambda (self ruleID new-rule-ID)
+               (display "replace rule ")(display rule-lst)(newline)
+               (set! rule-lst (list-replace rule-lst (list-index (lambda (this-ruleID) (= ruleID this-ruleID)) rule-lst) new-rule-ID))
+               (display "after replace rule ")(display rule-lst)(newline)
+               ))
+    ;; remove the last rule on the lst (right most)
+    (obj-put this-obj 'remove-last-rule
+             (lambda (self)
+               ;; this changes the lst getting passed in
+               (define (remove-last! lst)
+                 (if (not (= (length (cdr lst)) 1))
+                     (remove-last! (cdr lst))
+                     (set-cdr! lst '())))
+               (remove-last! rule-lst))
+               )
+               
+    (obj-put this-obj 'set-rule-lst
+             (lambda (self new-rule-lst)
+               (set! rule-lst new-rule-lst)
+               ))
+    this-obj))
+
 ;; node;
 ;; overloaded to allow passing in of a predetermined uniqueID, for loading from file
 (define-private (make-node name content x y anywhere . args)
                 (let* ((links '()) ; just a list of IDs, actual data is in data-table
                        (uniqueID-obj (make-uniqueID-object name (if (pair? args) (car args))))
-                       (this-obj (new-object uniqueID-obj))
-                       (rule 'not-set)
+                       (rule-container (rule-containing-object))
+                       (this-obj (new-object uniqueID-obj rule-container))
                        (visited? 0)
                        (inspectable-fields (list (list 'visited? 'number "visited: "))))
                   (obj-put this-obj 'content
@@ -90,17 +133,11 @@
                            ; need to set dirty bit, but not if loading - add a flag?
                            (lambda (self link)
                              (set! links (cons link links))
-                             (display "[make-node] addlink ")(display links)(newline) 
                              ))
                   (obj-put this-obj 'dellink
                            (lambda (self link)
                              (set! links (delete! link links))))
-                  (obj-put this-obj 'rule (lambda (self) rule))
-                  (obj-put this-obj 'set-rule!
-                           (lambda (self new-rule)
-                             (set! rule new-rule)
-                             ;(ht-set-dirty!)
-                             ))
+                  
                   (obj-put this-obj 'to-save-sexpr
                            (lambda (self)
                              (list 'create-node
@@ -129,8 +166,8 @@
 (define-private (make-link name source destination start-index end-index use-destination
                            use-alt-destination use-alt-text alt-destination alt-text . args)
                 (let* ((uniqueID-obj (make-uniqueID-object name (if (pair? args) (car args))))
-                       (this-obj (new-object uniqueID-obj))
-                       (rule 'not-set) ; 'not-set or the ruleID
+                       (rule-container (rule-containing-object))
+                       (this-obj (new-object uniqueID-obj rule-container))
                        (followed? 0) ; 0 = not followed, 1 = followed
                        (link-type 'default) ; 'default or 'hover
                        (custom-cursor-image #f) ; filename of custom cursor for this link, if any
@@ -189,12 +226,6 @@
                              (set! alt-text new-text)
                              ;(ht-set-dirty!)
                              ))
-                  (obj-put this-obj 'rule (lambda (self) rule))
-                  (obj-put this-obj 'set-rule!
-                           (lambda (self new-rule)
-                             (set! rule new-rule)
-                             ;(ht-set-dirty!)
-                             ))
                   (obj-put this-obj 'followed?
                            (lambda (self)
                              followed?))
@@ -241,9 +272,49 @@
                            (lambda (self) inspectable-fields))
                   this-obj))
 
+
+;; make-rule2 provides negate? on top of what we already have
+;; the old files uses make-rule that does not have the negate arg hence the make-rule2
+
+(define-private (make-rule2 name type and-or negate? parentID #!rest args)
+                
+                ;; inherit make-rule
+                (define parent-rule (apply make-rule (append (list name type and-or parentID) args)))
+                (define this-obj (new-object parent-rule))
+                
+                ;; fall through (triggering this rule will stop other rules below it from getting checked and fired)
+                (define fall-through? #t)
+                
+                (obj-put this-obj 'fall-through? (lambda (self) fall-through?))
+                (obj-put this-obj 'set-fall-through? (lambda (self new-ft) (set! fall-through? new-ft)))
+                
+                ;; add new features and override rule-expr and to-save-sexpr
+                (obj-put this-obj 'negate? (lambda (self) negate?)) 
+                (obj-put this-obj 'set-negate!
+                         (lambda (self in-negate)
+                           (set! negate? in-negate)))
+                (obj-put this-obj 'rule-expr
+                           (lambda (self)
+                             (if negate?
+                                 (list 'not
+                                       (ask parent-rule 'rule-expr))
+                                 (ask parent-rule 'rule-expr))))
+                (obj-put this-obj 'type (lambda (self) type))
+                
+                (obj-put this-obj 'to-save-sexpr
+                           (lambda (self)
+                             (list 'create-typed-rule2
+                                   (ask self 'name)                        ; name (string)
+                                   (list 'quote type)                      ; type ('link/'node)
+                                   (list 'quote (ask self 'and-or))        ; and-or ('and/'or)
+                                   negate?
+                                   parentID                                  ; used to be linkID (int)
+                                   (ask self 'ID))))
+                this-obj)
+
 ;; rule
 ; type: 'link or 'node
-(define-private (make-rule name type expression linkID . args)
+(define-private (make-rule name type and-or parentID #!rest args)
                 (let* ((uniqueID-obj (make-uniqueID-object name (if (pair? args) (car args))))
                        (this-obj (new-object uniqueID-obj))
                        ;; note: these actions are actually "before" and "after" for nodes, and
@@ -254,8 +325,12 @@
                        (conditions '()) ; list of conditions which must be satisfied
                        (actions '()))   ; generalized actions, currently used for updating facts in node rules
                   
-                  (obj-put this-obj 'linkID (lambda (self) linkID))
-                  (obj-put this-obj 'expression (lambda (self) expression))
+                  (obj-put this-obj 'parentID (lambda (self) parentID))
+                  (obj-put this-obj 'and-or (lambda (self) and-or))
+                  (obj-put this-obj 'set-and-or! 
+                           (lambda (self in-and-or) 
+                             (set! and-or in-and-or)))
+                  (obj-put this-obj 'type (lambda (self) type))
 
                   ;; conditions
                   (obj-put this-obj 'conditions (lambda (self) conditions))
@@ -289,44 +364,58 @@
                            (lambda (self) actions))
                   (obj-put this-obj 'add-action!
                            (lambda (self new-action)
-                             (set! actions (cons new-action actions))
+                             ;(set! actions (cons new-action actions))
+                             (set! actions (append actions (list new-action)))
+                             ;(display "add-action, new actions ")(display actions)(newline)
                              ;(ht-set-dirty!)
                              ))
                   (obj-put this-obj 'delaction
-                           (lambda (self action)
-                             (set! s (delete! action actions))))
+                           (lambda (self actionID)
+                             (set! actions (delete actionID actions))
+                             ))
 
                   ;; convert rule into an s-expr that can be eval-ed by our evaluator
                   (obj-put this-obj 'rule-expr
                            (lambda (self)
-                             (cons expression
+                             (cons and-or
                                    (map (lambda (c)
                                           (let* ((thiscondition (get 'conditions c))
                                                  (targetID (ask thiscondition 'targetID))
                                                  (operator (ask thiscondition 'operator))
                                                  (type (ask thiscondition 'type)))
-                                            (cond 
-                                             ((eq? type 0)
-                                                ; node
-                                                (cond ((eq? operator 0) (list 'not (list 'visited? targetID)))
-                                                      ((eq? operator 1) (list 'visited? targetID))
-                                                      ((eq? operator 2) (list 'previous? targetID))))
-                                             ((eq? type 1)
-                                                ; link
-                                                (cond ((eq? operator 0) (list 'not (list 'followed? targetID)))
-                                                      ((eq? operator 1) (list 'followed? targetID))))
-                                             ((eq? type 2)
-                                                ; fact
-                                                (cond ((eq? operator 0) (list 'not (list 'holds? targetID)))
-                                                      ((eq? operator 1) (list 'holds? targetID)))))))
-                                        conditions))))
+                                            
+                                            (ask thiscondition 'expr)
+;                                            (cond
+;                                             ((eq? type 0)
+;                                              ;; node
+;                                              (cond ((eq? operator 0) (list 'not (list 'visited? targetID)))
+;                                                    ((eq? operator 1) (list 'visited? targetID))
+;                                                    ((eq? operator 2) (list 'previous? targetID))))
+;                                             ((eq? type 1)
+;                                              ;; link
+;                                              (cond ((eq? operator 0) (list 'not (list 'followed? targetID)))
+;                                                    ((eq? operator 1) (list 'followed? targetID))))
+;                                             ((eq? type 2)
+;                                              ;; fact
+;                                              (cond ((eq? operator 0) (list 'not (list 'holds? targetID)))
+;                                                    ((eq? operator 1) (list 'holds? targetID)))))
+                                            ))
+                                        conditions))
+                             ))
+                  (obj-put this-obj 'empty-rule
+                           (lambda (self)
+                             ;; TODO: should remove conditions and
+                             ;;       actions that were in there as well
+                             (set! actions '())
+                             (set! conditions '())
+                             ))
                   (obj-put this-obj 'to-save-sexpr
                            (lambda (self)
                              (list 'create-typed-rule
                                    (ask self 'name)                        ; name (string)
                                    (list 'quote type)                      ; type ('link/'node)
-                                   (list 'quote expression)                ; expression ('and/'or)
-                                   linkID                                  ; parent linkID (int)
+                                   (list 'quote and-or)                    ; and-or ('and/'or)
+                                   parentID                                ; parent obj's ID (int)
                                    (ask self 'ID))))                       ; ruleID
                   this-obj))
 
@@ -338,6 +427,8 @@
 ;;     for links: not followed (0) or followed (1)
 ;;     for facts: false (0) or true (1)
 ;; ruleID: the ID of the containing rule
+;; TODO: when free, we should convert this to sexpr.
+;;       the operator and type is too troublesome to process mentally
 (define-private (make-condition name type targetID operator ruleID . args)
                 (let* ((uniqueID-obj (make-uniqueID-object name (if (pair? args) (car args))))
                        (this-obj (new-object uniqueID-obj)))
@@ -345,6 +436,24 @@
                   (obj-put this-obj 'targetID (lambda (self) targetID))
                   (obj-put this-obj 'ruleID (lambda (self) ruleID))
                   (obj-put this-obj 'operator (lambda (self) operator))
+                  
+                  ;; new needs testing TODO in progress
+                  (obj-put this-obj 'expr (lambda (self) 
+                                            (cond
+                                             ((eq? type 0)
+                                              ;; node
+                                              (cond ((eq? operator 0) (list 'not (list 'visited? targetID)))
+                                                    ((eq? operator 1) (list 'visited? targetID))
+                                                    ((eq? operator 2) (list 'previous? targetID))))
+                                             ((eq? type 1)
+                                              ;; link
+                                              (cond ((eq? operator 0) (list 'not (list 'followed? targetID)))
+                                                    ((eq? operator 1) (list 'followed? targetID))))
+                                             ((eq? type 2)
+                                              ;; fact
+                                              (cond ((eq? operator 0) (list 'not (list 'holds? targetID)))
+                                                    ((eq? operator 1) (list 'holds? targetID)))))))
+                  
                   (obj-put this-obj 'to-save-sexpr
                            (lambda (self)
                              (list 'create-typed-condition
@@ -356,16 +465,61 @@
                                    (ask self 'ID))))                      ; conditionID (int)
                   this-obj))
 
+;; create an sexpr that creates the sexpr
+;; example (list 'do-action (quote text) "\""string"\"" 1)
+;; when written to file it becomes (do-action 'text "string" 1)
+;; however if we want the original form to be kept in data structure 
+;;  it needs to be written as (list 'list 'do-action (list 'list 'quote 'text) "\"\""string"\"\"" 1)
+
+;; reason we need this is because we are suppose to create the sexpr in actions ( and whatever stores sexpr) when we are loading 
+;; from a saved file
+
+;; general rule
+;; 1) add 'list in from of all list
+;; 2) add "\"" to front and back of strings
+(define (sexpr-recreate sexpr)
+  (if (pair? sexpr)
+      (cons
+       'list
+       (map (lambda (element)
+              (cond ((pair? element)
+                     (sexpr-recreate element))
+                    ((string? element)
+                     ;(string-append "\"" element "\"")
+                     ;(escape-quotes element)
+                     element
+                     )
+                    ((symbol? element)
+                     (list 'quote element))
+                    (else element))
+              ) sexpr))))
+
+(define (escape-quotes str :: <string>)
+  (map (lambda (char-str)
+         (display char-str)(display " ")
+         ) (string->list str))
+  (newline)
+  str
+  )
+
+
+
 ;; action
 ;; an expression to be evaluated, usually when rule is/isn't satisfied
 ;; type: 'then, 'else, 'before, 'after, 'init or 'step
 ;; expr: an s-expression to be evaluated when action is triggered
 ;; ruleID: the rule that this action is attached to
+;; type is now the type of event that is relevant to this action
+;; eg. follow link action has type 'clicked-link 
+;;     replace-link-text has type 'displayed-node
 (define-private (make-action name type expr ruleID . args)
                 (let* ((uniqueID-obj (make-uniqueID-object name (if (pair? args) (car args))))
                        (this-obj (new-object uniqueID-obj)))
                   (obj-put this-obj 'type (lambda (self) type))
                   (obj-put this-obj 'expr (lambda (self) expr))
+                  (obj-put this-obj 'set-expr! 
+                           (lambda (self new-expr) (if (pair? new-expr)
+                                                       (set! expr new-expr))))
                   (obj-put this-obj 'ruleID (lambda (self) ruleID))
                   (obj-put this-obj 'to-save-sexpr
                            (lambda (self)
@@ -373,7 +527,9 @@
                                    (ask self 'name)                      ; name (string)
                                    (list 'quote type)                    ; type ('then, 'else, 'before, 'after, 'init or 'step)
                                    ;(list 'quote expr) ; NOTE: not sure if expr should be stored as string or s-expr - alex
-                                   expr                                  ; expression to be evaluated (string)
+                                   ;; note: trying s-expr approach, might be more convenient 
+                                   ;; to load out the actions into the action panels (teongleong)
+                                   (sexpr-recreate expr)                                  ; expression to be evaluated
                                    ruleID                                ; parent ruleID (int)
                                    (ask self 'ID))))                     ; actionID (int)
                   this-obj))
@@ -410,7 +566,7 @@
                            (lambda (self) inspectable-fields))
                   this-obj))
 
-; keep track of document-level rule
+; keep track of document-level rule (OLD)
 (define-private document-ruleID 'not-set)
 (define (set-document-ruleID! ruleID)
   (set! document-ruleID (if (importing?)
@@ -422,8 +578,18 @@
   document-ruleID)
 (define (reset-document-ruleID)
   (set! document-ruleID 'not-set))
+;(define (has-document-rule?)
+;  (not (eq? document-ruleID 'not-set)))
+
+;; new rule list at document level
+(define-private document-ruleID-lst '())
+(define-private (add-document-ruleID ruleID)
+    (set! document-ruleID-lst (append document-ruleID-lst (list ruleID))))
+(define (get-document-ruleID-lst) document-ruleID-lst)
+(define (reset-document-ruleID-lst)
+  (set! document-ruleID-lst '()))
 (define (has-document-rule?)
-  (not (eq? document-ruleID 'not-set)))
+  (not (null? document-ruleID-lst)))
 
 ; keep track of start node
 (define-private start-nodeID #f)
@@ -518,16 +684,7 @@
                      use-alt-destination use-alt-text alt-destination alt-text
                      update-display . args)
   ;(format #t "Creating link: ~a~%~!" name)
-  (display "create link args name ")(newline)
-  (display " ")(display "create-link name fromnodeID tonodeID start-index end-index use-destination
-                     use-alt-destination use-alt-text alt-destination alt-text
-                     update-display . args")(newline)
-  (display "create link ")(display (list name fromnodeID tonodeID start-index end-index
-                                         use-destination use-alt-destination))(newline)
-  (display "args2 ")(display (list use-alt-text alt-destination alt-text))(newline)
-  (display "name type ")(display (invoke name 'get-class))(newline) 
-  (display "fromnodeID ")(display (invoke fromnodeID 'get-class))(newline)
-  (display "tonodeID ")(display (invoke tonodeID 'get-class))(newline)
+
   (let* ((actual-fromnodeID (if (importing?)
                                 (+ fromnodeID import-offset-ID)
                                 fromnodeID))
@@ -559,17 +716,18 @@
     new-linkID))
 
 ; create a rule - for links, retained for backwards compatibility
-(define (create-rule name expression linkID . args)
-  (create-typed-rule name 'link expression linkID (if (pair? args) (car args))))
+(define (create-rule name and-or linkID . args)
+  (create-typed-rule name 'link and-or linkID (if (pair? args) (car args))))
 
 ; create a typed rule
 ; type: 'link or 'node
-(define (create-typed-rule name type expression parentID . args)
+;; this is preserved to load older file format of hypedyn
+(define (create-typed-rule name type and-or parentID . args)
   ;(format #t "Creating rule: ~a~%~!" name)
   (let* ((actual-parentID (if (importing?)
                               (+ parentID import-offset-ID)
                               parentID))
-         (new-rule (make-rule name type expression actual-parentID
+         (new-rule (make-rule name type and-or actual-parentID
                               (if (pair? args)
                                   (if (importing?)
                                       (+ (car args) import-offset-ID)
@@ -591,6 +749,46 @@
                (the-parent (get the-get-symbol actual-parentID)))
           (if the-parent
               (ask the-parent 'set-rule! rule-ID))))
+    
+    ; return the rule ID
+    rule-ID))
+
+;; version 2 of create-typed-rule 
+;; expression from version 1 takes either 'and or 'or (thus i renamed it as so and-or)
+;; version 2 has a new argument negate? which takes in a boolean 
+;; it duplicates most of the code except that it uses make-rule2 
+;; also it adds to the rule-lst instead of setting the one and only rule
+;; NOTE: this cannot replace create-typed-rule because we need to keep the first version for compatibility
+(define (create-typed-rule2 name type and-or negate? parentID . args)
+  (let* ((actual-parentID (if (importing?)
+                              (+ parentID import-offset-ID)
+                              parentID))
+         (new-rule (make-rule2 name type and-or negate? actual-parentID
+                               (if (pair? args)
+                                   (if (importing?)
+                                       (+ (car args) import-offset-ID)
+                                       (car args)))))
+         (rule-ID (ask new-rule 'ID)))
+    
+    ; add to rule list
+    (put 'rules rule-ID new-rule)
+    ;(format #t "New rule: ~a~%~!" new-rule)
+
+    ; add rule in parent
+    (if (eq? type 'doc)
+        ; document rule, so just set
+        ;(set-document-ruleID! rule-ID)
+        (add-document-ruleID rule-ID)
+        
+        ; otherwise, get the parent and set
+        (let* ((get-symbol (case type 
+                                 ((link) 'links)
+                                 ((node) 'nodes)))
+               (the-parent (get get-symbol actual-parentID)))
+          (if the-parent
+              (ask the-parent 'add-rule rule-ID))
+          ))
+    
     ; return the rule ID
     rule-ID))
 
@@ -624,6 +822,8 @@
 
 ; create an action
 (define (create-action name type expr ruleID . args)
+  
+  ;(display "[create-action] expr ")(display expr)(newline)
   (let* ((actual-ruleID (if (importing?)
                             (+ ruleID import-offset-ID)
                             ruleID))
@@ -632,28 +832,41 @@
                                       (if (importing?)
                                           (+ (car args) import-offset-ID)
                                           (car args)))))
-         (the-rule (get 'rules actual-ruleID)))
+         (the-rule (get 'rules actual-ruleID))
+         (new-action-ID (ask new-action 'ID))
+         )
     ; add to action list
-    (put 'actions (ask new-action 'ID) new-action)
+    (put 'actions new-action-ID new-action)
 
     ; add action to rule
     ; note: for nodes, before=then=step and after=else=init for now
+    ;; TODO: need to clean up all these
+    ;;       action type is now the event types that trigger the action 
+    ;;       so far there is 'clicked-link 'entered-node 'displayed-node
+    
+    ;; TODO: need to reactivate the before after step init actions somehow
+    ;;       it they are still useful
     (if the-rule
-        (cond
-         ((eq? type 'fact) ; hack until generalize actions
-          (ask the-rule 'add-action! (ask new-action 'ID)))
-         ((eq? type 'then)
-          (ask the-rule 'set-then-action! (ask new-action 'ID)))
-         ((eq? type 'else)
-          (ask the-rule 'set-else-action! (ask new-action 'ID)))
-         ((eq? type 'before)
-          (ask the-rule 'set-then-action! (ask new-action 'ID)))
-         ((eq? type 'after)
-          (ask the-rule 'set-else-action! (ask new-action 'ID)))
-         ((eq? type 'step)
-          (ask the-rule 'set-then-action! (ask new-action 'ID)))
-         ((eq? type 'init)
-          (ask the-rule 'set-else-action! (ask new-action 'ID)))))))
+;        (cond
+;         ((eq? type 'fact) ; hack until generalize actions
+;          (ask the-rule 'add-action! (ask new-action 'ID)))
+;         ((eq? type 'then)
+;          (ask the-rule 'set-then-action! (ask new-action 'ID)))
+;         ((eq? type 'else)
+;          (ask the-rule 'set-else-action! (ask new-action 'ID)))
+;         ((eq? type 'before)
+;          (ask the-rule 'set-then-action! (ask new-action 'ID)))
+;         ((eq? type 'after)
+;          (ask the-rule 'set-else-action! (ask new-action 'ID)))
+;         ((eq? type 'step)
+;          (ask the-rule 'set-then-action! (ask new-action 'ID)))
+;         ((eq? type 'init)
+;          (ask the-rule 'set-else-action! (ask new-action 'ID)))
+;         )
+          (ask the-rule 'add-action! (ask new-action 'ID))
+        )
+    
+    new-action-ID))
 
 
 ; create an fact

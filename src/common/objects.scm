@@ -17,19 +17,24 @@
 ;; with this program; if not, write to the Free Software Foundation, Inc.,
 ;; 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-(require 'list-lib)
+;; require on kawa side should be removed
 (require "myhashtable.scm") ;; hash-table-get
 (require 'hash-table)
-(require "../kawa/miscutils.scm") ;; is-void?
-(require "datatable.scm") ;; set-dirty!
 
-(module-export new-object derive 
-               obj-put    obj-get
+(define provide module-export)
+
+;; module-export should be replaced with provide in the preprocessor
+;; of the kawa to racket convertor
+(module-export new-object 
+               derive 
+               obj-put    
+               obj-get
+               ask
+               
                make-typed-object
                new-make-named-object
                make-uniqueID-object
                generate-uniqueID
-               ask
                reset-uniqueID
                )
   ;(print-hash-table #t)
@@ -137,18 +142,7 @@
 (define (new-object . super-objs )
   (let ((obj (make-hash-table)))
     (obj-put obj 'super-lst super-objs)
-    
-;    (display "this super class ")(display (hash-table-get obj 'super-lst '()))(newline)
-    
-    ;; so i would expect every one of them has to have init
-    ;; one problem if we have multiple inheritance, we cant use the same argv for all of them
-;    (obj-put obj 'super-init (lambda (self . argv)
-;                           (for-each (lambda (base) (apply (obj-get base 'init) argv)) (obj-get obj 'super-lst))
-;                           (first argv)))
-    ;; should i write this init? init method is doing nothing in the beginning
-    ;(obj-put obj 'init (lambda () '()))
     obj))
-  
   
   ; Gets an overridden or inherited property of the object.
   ; Inherited properties are expected to be immutable.
@@ -167,8 +161,9 @@
                         (if (equal? cs '())
                             ;; return null when value not found
                             #!null
-                            (let ((val (obj-get (first cs) prop)))
-                              (if (is-null? val)
+                            (let ((val (obj-get (car cs) prop)))
+                              (if ;(is-null? val)
+                                  (equal? #!null val)
                                   (loop (cdr cs))
                                   val))))))))
   
@@ -182,81 +177,10 @@
 (define (obj-put obj prop value)
   (hash-table-put! obj prop value)
   obj)
-  
-  ; Sets multiple properties on the object.
-  ; Useful for initialization.
-  ;
-  ; Returns the object itself, so you can chain property
-  ; edits.
-;(define (putprops obj prop-value-pairs)
-;  (for-each (lambda (pv) (put obj (first pv) (rest pv)))
-;            prop-value-pairs)
-;  obj)
 
   ; Makes an object defive properties from another.
 (define (derive obj prototype)
   (obj-put obj 'super-lst (cons prototype (obj-get obj 'super-lst))))
-   
-  ; Dispatch based on first argument.
-;(define (<- obj method . argv)
-;  (newline)(display "obj ")(display obj)(newline)
-;  (display "method ")(display method)(newline)
-;  (display "argv ")(display argv)(newline)
-;  (newline)(display "dispatch ")(newline)
-;  (define gotten-method (obj-get obj method))
-;  (newline)(display "method here")(newline)
-;  (if (not (is-null? gotten-method)) ;; check if the method exists
-;      (apply gotten-method (cons obj argv))
-;      (begin
-;        (display "[ERROR doing <-] method not found")(newline)
-;        #!null)))
-
-  ; Apply a sequence of methods on the object.
-;(define (do-with obj . methods)
-;  (for-each (lambda (method) (method obj)) methods))
-  
-  ; Chains a sequence of method invocations.
-  ; The result of the first method invocation becomes
-  ; the subject of the second and so on.
-;(define (chain-with obj . methods)
-;  (if (null? methods)
-;      obj
-;      (chain-with ((first methods) obj) (rest methods))))
-
-;  ; Query inheritance
-;(define (super? a b)
-;  (let ((inh (obj-get a 'super-lst)))
-;    (display "inh ")(display inh)(newline)
-;    (cond
-;     ((eq? a b) #t)
-;     ((null? inh) #f)
-;     ;; goes through inh list to check for super? condition
-;     (else (any (lambda (base) (super? base b)) inh))
-;     )))
-
-  ; (with ((obj1 (prop1 var1a) (prop2 var2a) ..)
-  ;        (obj2 (prop1 var1b) (prop2 var2b) ..))
-  ;    ..expr using var1a, var2b etc.
-  ; )
-;(define-macro (with bindings . body)
-;  (if (cons? (second (first bindings)))
-;      (let ((vars-list (apply append (map (lambda (bs)
-;                                            (map (lambda (b) (second b)) (rest bs)))
-;                                          bindings)))
-;            (vals-list (cons 'list (apply append (map (lambda (bs)
-;                                                        (map (lambda (b)
-;                                                               (list 'get (first bs) (list 'quote (first b))))
-;                                                             (rest bs)))
-;                                                      bindings)))))
-;        `(apply (lambda ,vars-list ,@body) ,vals-list))
-;      (let ((vars-list (apply append (map (lambda (bs) (rest bs)) bindings)))
-;            (vals-list (cons 'list (apply append (map (lambda (bs)
-;                                                        (map (lambda (b)
-;                                                               (list 'get (first bs) (list 'quote b)))
-;                                                             (rest bs)))
-;                                                      bindings)))))
-;        `(apply (lambda ,vars-list ,@body) ,vals-list))))
-
 
 ;; typing system
 
@@ -265,15 +189,6 @@
   (obj-put typed-object 'obj-type (lambda (self) type-sym))
   typed-object)
 
-;(define (make-named-object name)
-;  (lambda (message)
-;    (cond ((eq? message 'name) (lambda (self) name))
-;          ((eq? message 'set-name!) (lambda (self newname)
-;                                      (begin
-;                                        (set! name newname)
-;                                        (set-dirty!))))
-;          (else (no-method name)))))
-
 (define (new-make-named-object name-str)
   (define new-named-object (new-object))
   (obj-put new-named-object 'name (lambda (self) name-str))
@@ -281,7 +196,6 @@
            (lambda (self newname)
              (begin
                (set! name-str newname)
-               ;(set-dirty!)
                )))
   new-named-object)
 
@@ -299,9 +213,6 @@
          (named-obj (new-make-named-object name))
          (this-obj (new-object named-obj))
          )
-;    (lambda (message)
-;      (cond ((eq? message 'ID)  (lambda (self) ID))
-;            (else (get-method named-obj message))))
     (obj-put this-obj 'ID (lambda (self) ID))
     this-obj))
 
@@ -317,9 +228,6 @@
         (set! nextID (+ nextID 1))
         nextID)))
 
-;; i wish i had names of the argument i pass in
-;; i wish i had the number of arguments passed into the procedure
-
 (define (ask obj prop . argv)
   (define gotten-attr (obj-get obj prop))
   (if (procedure? gotten-attr)
@@ -328,8 +236,9 @@
         (apply gotten-attr (append (list obj) argv))
         )
       (begin
+        (newline)
         (display "NOT PROC ")(display gotten-attr)(newline)
-        (display "obj ")(display obj)(newline)
+        ;(display "obj ")(display obj)(newline)
         (display "prop ")(display prop)(newline)
         (display "argv ")(display argv)(newline)
         (display "class ")(display (invoke gotten-attr 'get-class))(newline)

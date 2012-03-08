@@ -20,7 +20,8 @@
 ; contains procedure to start hypedyn
 (begin
   (require "hteditor.scm")
-  (require "htlanguage.scm"))
+  (require "htlanguage.scm")
+  )
 
 ; export
 (module-export starthypedyn)
@@ -31,4 +32,5 @@
   (add-htlanguage)
 
   ; register the ui
-  (use-hteditor-ui))
+  (use-hteditor-ui)
+  )

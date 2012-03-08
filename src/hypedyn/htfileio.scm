@@ -38,23 +38,25 @@
   (require "../kawa/ui/cursor.scm")
   (require "../common/main-ui.scm")
   (require "export.scm")
+  (require "editlink.scm") ;; obj-convertion-2.2
   (require 'list-lib) ;; list-ref
   )
 
 ; export
 (module-export set-ht-build-sexpr-callback!
                donew doopen open-file-by-name 
-               doimport doexport-hypedyn-web doexport-standalone doexport-text
+               doimport doexport-hypedyn-web doexport-standalone doexport-text doexport-js
                dosave-wrapper confirm-save ht-save-to-file
                ht-build-sexpr-from-object-with-rule ht-build-sexpr-from-rule
                clear-loaded-file-version ;; used by clear-data in hteditor.scm
+               loaded-file-version obj-convertion-2.2
                )
 
 ; set fileformat version and type
 ; Note: file format version numbers only use the major and minor rev numbers; if you change the file format, be sure to
 ; increment at least the minor rev number (the third sequence is for bug fixes or small changes that don't affect file format)
 ; Note: hypedyn files are marked as type 'htfe (HyperTextFiction Editor, the original name of the app way back)
-(set-fileformat-version! 2.1) 
+(set-fileformat-version! 2.2) 
 (set-fileformat-type! 'htfe) 
 
 ;; for keep track of a loaded old version file
@@ -132,7 +134,8 @@
                                       (if (symbol? file-type)
                                           (string-append " (type: " (symbol->string file-type) ").")
                                           "."))))
-                 ((>= (get-fileformat-version) file-version-number)
+                 ;; opening file saved in older versions of hypedyn (or same version if equal)
+                 ((>= (get-fileformat-version) file-version-number) 
                   
                   (define open-choice #f)
                   (define diff-version? (not (= (get-fileformat-version) file-version-number)))
@@ -141,27 +144,36 @@
                   ;; warn here when opening 
                   (if diff-version?
                       ;(make-confirm-dialogbox #!null 1 "Sorry, no start node defined.")
-                      (set! open-choice (make-confirm-dialogbox 
-                                         (get-main-ui-frame) 
-                                         4 
-                                         (string-append
-                                          "Warning: Opening a file saved in an older version ("
-                                          (to-string file-version-number)
-                                          ").\nFile will be saved as version "
-                                          (to-string (get-fileformat-version))
-                                          ".")
-                                          )))
+                      (begin
+                        (set! open-choice (make-confirm-dialogbox
+                                           (get-main-ui-frame)
+                                           4
+                                           (string-append
+                                            "Warning: Opening a file saved in an older version ("
+                                            (to-string file-version-number)
+                                            ").\nFile will be saved as version "
+                                            (to-string (get-fileformat-version))
+                                            ".")
+                                           ))
+                        )
+                      )
                   
+                  ;; user decides to open the file anyway 
+                  ;; or it is of the same version 
                   (if (or (and diff-version?
                                (equal? open-choice 1))
                           (not diff-version?))
-                      (begin 
-                        (set! loaded-file-version file-version-number)
+                      (begin
+                        
+                        (set! loaded-file-version file-version-number) 
+                        
                         ; load from file
                         (if (load-from-file newfilename)
                             (begin
                               (add-recent-file newfilename)  ;; add to recent menu
-                              (populate-display)))           ;; populate the display
+                              (obj-convertion-2.2)           ;; if loading pre 2.2 objects convert to post 2.2 format
+                              (populate-display)             ;; populate the display (important to convert first)
+                              ))
                         )))
                  ;; older app opening newer file
                  ((< (get-fileformat-version) file-version-number)
@@ -179,11 +191,12 @@
            ))
    (ex <java.lang.Throwable>
    ;; extra to do after exception
-     (make-message-box (get-main-ui-frame)
-                       (*:toString ex)
-                       "")
+;     (make-message-box (get-main-ui-frame)
+;                       (*:toString ex)
+;                       "")
+       
     ;(display (*:toString ex))(newline)
-    ;(*:printStackTrace ex)
+    (*:printStackTrace ex)
      ))
   
   ; reset cursor
@@ -373,16 +386,23 @@
            the-object-list)
       '()))
 
-; build sexpression for an object that has an attached rule: 
+; build sexpression for an object and the sexpr of all the attached rules 
 ; will build both the object's s-expr and the rule's s-expr, plus any
 ; conditions and actions
 (define (ht-build-sexpr-from-object-with-rule the-object)
-  (let ((theruleID (ask the-object 'rule)))
-    (if (eq? theruleID 'not-set)
-        (ask the-object 'to-save-sexpr)
-        (list 'begin
-              (ask the-object 'to-save-sexpr)
-              (ht-build-sexpr-from-rule theruleID)))))
+;  (let ((theruleID (ask the-object 'rule)))
+;    (if (eq? theruleID 'not-set)
+;        (ask the-object 'to-save-sexpr)
+;        (list 'begin
+;              (ask the-object 'to-save-sexpr)
+;              (ht-build-sexpr-from-rule theruleID))))
+  (define rule-lst (ask the-object 'rule-lst))
+  
+  (append
+   (list 'begin
+         (ask the-object 'to-save-sexpr))
+   (map ht-build-sexpr-from-rule rule-lst))
+  )
 
 ; build sexpression for a rule and associated conditions and actions
 (define (ht-build-sexpr-from-rule theruleID)
@@ -454,3 +474,481 @@
      
      ; run through all facts and generate sexpr
      (ht-build-sexpr-from-objectlist the-facts))))
+
+;;  ==============================
+;;;; pre 2.2 save file conversion
+;;  ==============================
+(define (obj-convertion-2.2)
+  (if (<= loaded-file-version 2.1)
+      (begin
+        (table-map 'links convert-pre-2.2-links)
+        (table-map 'nodes convert-pre-2.2-nodes)
+        ;(table-map 'actions convert-pre-2.2-actions)
+        )))
+
+(define (convert-pre-2.2-nodes nodeID node-obj)
+  ;; convert standard node
+  (let* ((ruleID (ask node-obj 'rule))
+         (rule-obj (get 'rules ruleID))
+         (node-name (ask node-obj 'name))
+         (anywhere? (ask node-obj 'anywhere?))
+         (new-ruleID (create-typed-rule2 "Set fact" 'node 'and #f nodeID))
+         ;(conditions (ask rule-obj 'conditions))
+         ;(actions (ask rule-obj 'actions))
+         )
+    
+    ;; add the dummy add-anywhere-link action
+    ;; (does nothing, just a place holder to let it show up in the rule editor)
+    ;; Note: this however is important in the export to js 
+    (if anywhere?
+        (create-action "Enable Link" 'anywhere-check
+                       (list 'add-anywhere-link nodeID)
+                       new-ruleID))
+    
+    ;; add all actions to the new rule (only set fact actions are on pre 2.2 nodes)
+    (if rule-obj
+        (begin
+          (define actions (ask rule-obj 'actions))
+          (map (lambda (actionID)
+                 (define action (get 'actions actionID))
+                 (define action-string (ask action 'expr))
+                 
+                 (define action-input-port (open-input-string action-string))
+                 (define action-sexpr (read action-input-port))
+                 
+                 (if (not (eof-object? action-sexpr))
+                     (begin
+                       (display "SEXPR ")(display action-sexpr)(newline)
+                       (display "pair? ")(display (pair? action-sexpr))(newline)
+                       (define new-rule (get 'rules new-ruleID))
+                       ;; set fact actions
+                       (create-action node-name 'entered-node
+                                      action-sexpr
+                                      new-ruleID)
+                       
+                       ;;(create-condition name nodeID operator ruleID . args)
+                       ;; add the conditions to the rules
+                       ))
+                 ) actions)
+          
+          ;; transfer the condition from the original old rule to the new rules
+        ;(create-typed-condition name type targetID operator ruleID . args)
+        (define old-conditions (ask rule-obj 'conditions))
+        (map (lambda (condition)
+               (define this-cond (get 'conditions condition))
+               (let ((type (ask this-cond 'type))
+                     (targetID (ask this-cond 'targetID))
+                     (operator (ask this-cond 'operator)))
+                 (create-typed-condition "Enable link" type targetID operator new-ruleID))
+               ) old-conditions)
+          )
+          ;; no rule for node so no need to transfer anything to new rule
+        (begin
+          ;(display "no rule for node ")(display nodeID)(newline)
+          #f
+          ))
+  ))
+
+;; convertion of pre 2.2 links to 2.2 format
+;; need to create 2 rules one for(if) and against(else) the condition in rule
+;; note old rules are still around in the datatable, just not invoked
+(define (convert-pre-2.2-links linkID link-obj)
+  ;(display "CONVERT LINKS pre 2.2")(newline)
+
+  (define selected-rule-ID (ask link-obj 'rule))
+  (if (not (eq? selected-rule-ID 'not-set))
+      (begin
+
+        ;; NOTE: rule, destination, use-destination, use-alt-destination,
+        ;;       use-alt-text, alt-destination, alt-text
+        ;;       should not be removed but should be kept as a compatibility layer so that the 
+        ;;       older version of the object still works
+        ;; TODO: move these attributes out to a separate object type inherited by the new link
+        (define selected-rule (get 'rules selected-rule-ID))
+        (define link-name (ask link-obj 'name))
+        
+        ;; old attributes
+        (define link-dest1 (ask link-obj 'destination))
+        (define link-uselink (ask link-obj 'use-destination))
+        (define link-usealtlink (ask link-obj 'use-alt-destination))
+        (define link-usealttext (ask link-obj 'use-alt-text))
+        (define link-dest2 (ask link-obj 'alt-destination))
+        (define link-alttext (ask link-obj 'alt-text))
+        
+        (define link-start-index (ask link-obj 'start-index))
+        (define link-end-index (ask link-obj 'end-index))
+        
+        (define if-rule-ID (create-typed-rule2 "THEN" 'link (ask selected-rule 'and-or) #f linkID))
+        (define else-rule-ID (create-typed-rule2 "ELSE" 'link (ask selected-rule 'and-or) #t linkID))
+        (define if-rule (get 'rules if-rule-ID))
+        (define else-rule (get 'rules else-rule-ID))
+                                        ;)
+        ;; alt-text (text and fact)
+        (if link-usealttext
+            (if (eq? link-usealttext #t) ;; if use-alt-text is just #t use alt-text
+                (begin ;; show alt text
+                  ;; add a new action panel
+                  (create-action link-name 'displayed-node
+                                 (list 'replace-link-text
+                                       (list 'quote 'text)
+                                       link-alttext
+                                       ;(string-append "\"" link-alttext "\"")
+                                       linkID)
+                                 else-rule-ID))
+                ;; if use-alt-text is a factID use fact text
+                (begin ;; show fact text 
+                  (create-action link-name 'displayed-node
+                                 (list 'replace-link-text
+                                       (list 'quote 'fact)
+                                        ;(string-append "\"" link-alttext "\"")
+                                       link-alttext ;; this is actually factID
+                                       linkID)
+                                 else-rule-ID)
+                  )))
+
+        ;; default destination
+        (if (not (equal? link-dest1 -1))
+            (create-action link-name 'clicked-link
+                           (list 'follow-link
+                                 linkID
+                                 (ask if-rule 'ID)
+                                 (list 'quote 'default)
+                                 link-dest1)
+                           if-rule-ID))
+
+        ;; link-dest2 is used in the else so it should be in the not rules instead
+        (if (not (equal? link-dest2 -1))
+            (create-action link-name 'clicked-link
+                           (list 'follow-link
+                                 linkID
+                                 (ask else-rule 'ID)
+                                 (list 'quote 'default)
+                                 link-dest2)
+                           else-rule-ID))
+
+        ;; transfer the condition from the original old rule to the new rules
+        ;(create-typed-condition name type targetID operator ruleID . args)
+        (define old-conditions (ask selected-rule 'conditions))
+        (map (lambda (condition)
+               (define this-cond (get 'conditions condition))
+               (let ((type (ask this-cond 'type))
+                     (targetID (ask this-cond 'targetID))
+                     (operator (ask this-cond 'operator)))
+                 (create-typed-condition "If-rule" type targetID operator if-rule-ID )
+                 (create-typed-condition "else-rule" type targetID operator else-rule-ID ))
+               ) old-conditions)
+        )))
+
+;; ============================
+;;;; string processing helper
+;; ============================
+
+;; add "\"" to start and end
+(define (quote-nest str)
+  (string-append "\"" str "\""))
+
+;; preserves \n when we print out the string,
+;; replaces "\n" with "\\n"
+(define (preserve-newline str)
+  (replace-char str #\newline "\\n"))
+
+(define (preserve-quotes str)
+  ;; escaping both \ and " here so that 
+  ;; \" shows up in the printed display
+  (replace-char str #\" "\\\""))
+
+;; can consider changing this to use (<string> #\a #\p #\p #\l #\e) to form the final string
+;; need a helper to get the list of char
+;; then apply <string> to the list of char
+;; idea is to replace the char we are looking for with two char #\\  and original char 
+;; so that the char we want to preserve is escaped
+(define (replace-char str :: <string>
+                      char :: <char>
+                      char-str :: <string>)
+  (if (= (string-length str) 0)
+      "" ;; terminate
+      (begin
+        (string-append
+         (if (equal? (string-ref str 0) char)
+             char-str
+             ;; cast original char to string
+             (<string> (string-ref str 0)))
+         (replace-char (substring str 1 (string-length str)) char char-str))
+        )))
+
+;;=====================
+;;;; javascript export
+;;=====================
+
+(define (doexport-js) 
+  (write-jscode-to "dynfile.js" (generate-jscode)))
+
+;; createNode (content, id)
+(define (js-node-code nodeID)
+  (define node (get 'nodes nodeID))  
+  (define name (ask node 'name))
+  (define links (ask node 'links))
+  (define rule-lst (ask node 'rule-lst))
+  (define anywhere? (ask node 'anywhere?))
+  
+    (apply string-append
+           (append
+            (list "\tcreateNode("
+                  (quote-nest name) ", " ;; assume no funny characters in these names
+                  (quote-nest 
+                   (preserve-newline 
+                    (preserve-quotes (ask node 'content)))) ", "
+                  (to-string anywhere?) ", "
+                  (to-string (ask node 'ID)) ");\n")
+            (map js-link-code links)     ;; convert its links
+            (map js-rule-code rule-lst)   ;; convert its rules
+            (list "\n") ;; leave a blank line between each node's code block
+            )))
+
+;; createLink(nodeID, start, end, id)
+(define (js-link-code linkID)
+  (let* ((link (get 'links linkID))
+         (rule-lst (ask link 'rule-lst)))
+    (apply string-append 
+           (append 
+            (list "\tcreateLink("
+                  (to-string (ask link 'source)) ", "
+                  (to-string (ask link 'start-index)) ", "
+                  (to-string (ask link 'end-index)) ", "
+                  (to-string (ask link 'ID)) ");\n")
+            (map js-rule-code rule-lst)
+            ))))
+
+;; createRule(parentID, parentType, if_not, and_or, fall_through, id)
+(define (js-rule-code ruleID)
+  (let* ((rule (get 'rules ruleID))
+         (actions (ask rule 'actions))
+         (conditions (ask rule 'conditions))
+         (parent-type (case (ask rule 'type)
+                        ((link) "link")
+                        ((node) "node")))
+         (if-not (if (ask rule 'negate?) "not" "if"))
+         (and-or (cond ((equal? (ask rule 'and-or) 'and) "and")
+                       ((equal? (ask rule 'and-or) 'or) "or")))
+         (fall-through  (if (ask rule 'fall-through?) "true" "false")))
+    
+    ;; skip rules with no actions (commenting out skipping null actions for now) 
+    ;;(if (not (null? actions))
+        (apply string-append
+               (append
+                (list "\t\tcreateRule("
+                      (to-string (ask rule 'parentID)) ", "
+                      (quote-nest parent-type) ", "
+                      (quote-nest if-not) ", "
+                      (quote-nest and-or) ", "
+                      fall-through ", "
+                      (to-string (ask rule 'ID)) ");\n")
+                (map js-condition-code conditions)
+                (map js-action-code actions)
+                ))
+     ;;   "")
+    ))
+
+;; createAction(eventType, parentRuleID, func, args, id)
+(define (js-action-code actionID)
+  (let* ((action (get 'actions actionID))
+         (expr (ask action 'expr))
+         (event-type (case (ask action 'type)
+                       ((entered-node displayed-node) "enteredNode")
+                       ((clicked-link) "clickedLink")
+                       ((anywhere-check) "anywhereCheck")
+                       (else "ERROR EVENT")))
+         (parent-rule-id (ask action 'ruleID))
+         
+         ;; follow-link (follow-link2 linkID parent-ruleID link-type dest-nodeID) , gotoNode(nodeID)
+         ;; (replace-link-text text-type value linkID) replaceText(linkID, altcontent)
+         ;; set-value! (set-fact-value! in-factID in-value), (assert factID), (retract factID) setFact( id, value)
+         (func (case (car expr) 
+                 ((follow-link) "gotoNode")
+                 ((replace-link-text) "replaceText")
+                 ((set-value! assert retract) "setFact")
+                 ((add-anywhere-link) "addAnywhereLink")))
+         (args (case (car expr)
+                 ((follow-link)
+                  (string-append "[" (to-string (list-ref expr 4)) "]"))
+                 ((assert)
+                  (string-append "[" (to-string (list-ref expr 1)) ", "
+                                 "true]"))
+                 ((retract)
+                  (string-append "[" (to-string (list-ref expr 1)) ", "
+                                 "false]"))
+                 ((set-value!)
+                  (string-append "["
+                                 (to-string (list-ref expr 1)) ", "
+                                 (quote-nest (list-ref expr 2)) "]"))
+                 ((add-anywhere-link)
+                  (string-append "[" (to-string (list-ref expr 1)) "]")) ;; TODO add anywhere link not implemented
+                 ((replace-link-text)
+                  (string-append
+                   "[" (to-string (list-ref expr 3)) ", "
+                   ;; differentiate between fact text or just alt text
+                   (let ((val (list-ref expr 2)))
+                     (cond ((string? val)
+                            (quote-nest
+                             (preserve-newline
+                              (preserve-quotes val))))
+                           ((number? val)
+                            (to-string val))))
+                   "]"))
+                 )))
+    
+;    (display "actionID ")(display actionID)(newline)
+;    (display "class? ")(display (invoke actionID 'get-class))(newline)
+;    (display "event type ")(display event-type)(newline)
+;    (display "parent rule id ")(display parent-rule-id)(newline)
+;    (display "func ")(display func)(newline)
+;    (display "args ")(display args)(newline)
+;    (display "expr ")(display expr)(newline)
+;    (display "car expr ")(display (car expr))(newline)
+    ;; return string
+    (string-append "\t\t\tcreateAction(" 
+                   (quote-nest event-type) ", "
+                   (to-string parent-rule-id) ", "
+                   func ", "
+                   args ", "
+                   (to-string actionID) ");\n")
+  ))
+;;(make-condition name type targetID operator ruleID . args)
+;; createCondition(func, func_target_ID, ruleID, not, id)
+
+;(cond
+; ((eq? type 0)
+;  ;; node
+;  (cond ((eq? operator 0) (list 'not (list 'visited? targetID)))
+;        ((eq? operator 1) (list 'visited? targetID))
+;        ((eq? operator 2) (list 'previous? targetID))))
+; ((eq? type 1)
+;  ;; link
+;  (cond ((eq? operator 0) (list 'not (list 'followed? targetID)))
+;        ((eq? operator 1) (list 'followed? targetID))))
+; ((eq? type 2)
+;  ;; fact
+;  (cond ((eq? operator 0) (list 'not (list 'holds? targetID)))
+;        ((eq? operator 1) (list 'holds? targetID)))))
+
+(define (js-condition-code conditionID)
+  (let* ((condition (get 'conditions conditionID))
+         (ruleID (ask condition 'ruleID))
+         (func (case (ask condition 'type)
+                 ((0) "nodeVisited");; node TODO: previous not done in js
+                 ((1) "linkFollowed") ;; link
+                 ((2) "checkBoolFact"))) ;; boolean fact 
+         (func-target-id (ask condition 'targetID))
+         (negate (case (ask condition 'operator)
+                   ((0) "true")
+                   ((1) "false"))))
+    ;; return string
+    (string-append "\t\t\tcreateCondition("
+                   func ", "
+                   (to-string func-target-id) ", "
+                   (to-string ruleID) ", "
+                   negate ", "
+                   (to-string conditionID) ");\n")
+    ))
+
+;createFact(name, type, id)
+(define (js-fact-code factID)
+  (display "factID ")(display factID)(newline)
+  (let* ((fact (get 'facts factID))
+         (value (ask fact 'get-value))
+         (name (ask fact 'name))
+         (type (ask fact 'type)))
+    
+    (display "name ")(display name)(newline)
+    (display "type ")(display type)(newline)
+    (string-append "\tcreateFact("
+                   (quote-nest name) ", "
+                   (quote-nest (to-string type)) ", "
+                   (to-string factID) ");\n")
+  ))
+
+(define (generate-jscode)
+  
+  (define node-lst (get-list 'nodes))
+  (define fact-lst (get-list 'facts))
+  
+  ;; get-list returns a #f when not found
+  (if (not node-lst)
+      (set! node-lst '()))
+  (if (not fact-lst)
+      (set! fact-lst '()))
+           
+  ;; go through all the nodes
+  (apply string-append
+         (append 
+          (list "function loadStory() {\n")
+          
+          ;; Set start node
+          ;; add this only if start node is set
+          (if (get-start-node)
+              (list "\tsetStartNode(" (to-string (get-start-node)) ");\n")
+              '())
+          
+          ;; generate createNode code that would in turn generate all the children
+          ;; object associated with it
+          (map js-node-code
+               ;; get a list of the node ID
+               (map (lambda (e) (car e)) node-lst))
+          
+          ;(list "\n") ;; leave a space before fact code
+          
+          ;; generate createFact code
+          (map js-fact-code
+               (map (lambda (e) (car e)) fact-lst))
+          
+          (list "}")
+          )))
+
+(define (write-jscode-to filename jscode)
+  (display "write jscode to ")(display filename);
+  ; first check for overwrite
+  (define safetoproceed #t)
+  (define overwrite
+    (try-catch
+        (file-exists? filename)
+      (ex <java.lang.Throwable>
+          (begin
+            (display (*:toString ex))(newline)
+            (set! safetoproceed #f)
+            ))))
+  ;; if necessary, delete the existing file
+      (format #t "overwrite: ~a, safetoproceed: ~a~%~!" overwrite safetoproceed)
+  (if safetoproceed
+      (begin
+        (if overwrite
+            (try-catch
+                (delete-file filename)
+              (ex <java.lang.Throwable>
+                  (begin
+                    (display (*:toString ex))(newline)
+                    (set! safetoproceed #f)
+                    ))))
+
+        ;; now go ahead and write
+        (if safetoproceed
+            (begin
+              (format #t "safetoproceed: ~a~%~!" safetoproceed)
+              (let ((output-port
+                     (try-catch
+                         (open-output-file filename)
+                       (ex <java.lang.Throwable>
+                           (begin
+                             (display (*:toString ex))(newline)
+                                        ;(*:printStackTrace ex)
+                             (set! safetoproceed #f)
+                             )))))
+                (format #t "output-port: ~a~a~%~!" output-port (is-void? output-port))
+                (if safetoproceed
+                    (begin
+                      (format #t "writing~%~!")
+                      ;(write jscode output-port)
+                      (with-output-to-file filename (lambda () (display jscode)))
+                      (close-output-port output-port)
+                      #t)
+                    #f)))))))
+  

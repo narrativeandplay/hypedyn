@@ -191,7 +191,6 @@
 
     ; add a link in the editor as an underline
     (define (addlink thislink)
-      (display "[addlink]")(newline)
       ;; cache the value of track-undoable-edits and set it back later
       (define original-track-undoable-edits track-undoable-edits)
       (set-track-undoable-edits! #f)
@@ -218,7 +217,6 @@
     
     ; set clickback on a range of text
     (define (set-clickback this-linkID start-index len)
-      (display "set-clicback! ***********")(display (list this-linkID start-index len))(newline)
       (let ((link-attribute-set (make-attribute-set)))
         (set-attribute-linkAction link-attribute-set
                                   (lambda ()
@@ -283,42 +281,44 @@
             (if (equal? side 'start)
                 (begin
                   (ask thislink 'set-start-index! new-val)
-                  (compoundundomanager-postedit
-                   undo-manager
-                   (make-undoable-edit "Shift link start"
-                                       (lambda () ;; undo
-                                         ;; important to get the link again
-                                         ;; the previous reference to the link is outdated
-                                         (set! thislink (get 'links linkID))
-                                         ;(display " setting start to ")(display old-start)(newline)
-                                         (ask thislink 'set-start-index! old-start)
-                                         ;(clickback-resize new-val old-start side)
-                                         ) ;; undo
-                                       (lambda () ;; redo
-                                         (set! thislink (get 'links linkID))
-                                         ;(display " setting start to ")(display new-val)(newline)
-                                         (ask thislink 'set-start-index! new-val)
-                                         ;(clickback-resize old-start new-val side)
-                                         )))
+                  (if undo-manager
+                      (compoundundomanager-postedit
+                       undo-manager
+                       (make-undoable-edit "Shift link start"
+                                           (lambda () ;; undo
+                                             ;; important to get the link again
+                                             ;; the previous reference to the link is outdated
+                                             (set! thislink (get 'links linkID))
+                                        ;(display " setting start to ")(display old-start)(newline)
+                                             (ask thislink 'set-start-index! old-start)
+                                        ;(clickback-resize new-val old-start side)
+                                             ) ;; undo
+                                           (lambda () ;; redo
+                                             (set! thislink (get 'links linkID))
+                                        ;(display " setting start to ")(display new-val)(newline)
+                                             (ask thislink 'set-start-index! new-val)
+                                        ;(clickback-resize old-start new-val side)
+                                             ))))
                   ))
             (if (equal? side 'end)
                 (begin
                   (ask thislink 'set-end-index! new-val)
-                  (compoundundomanager-postedit
-                   undo-manager
-                   (make-undoable-edit "Shift link end"
-                                       (lambda () ;; undo 
-                                         (set! thislink (get 'links linkID))
-                                         ;(display " setting end to ")(display old-end)(newline)
-                                         (ask thislink 'set-end-index! old-end)
-                                         ;(clickback-resize new-val old-end side)
-                                         ) 
-                                       (lambda () ;; redo
-                                         (set! thislink (get 'links linkID))
-                                         ;(display " setting end to ")(display new-val)(newline)
-                                         (ask thislink 'set-end-index! new-val)
-                                         ;(clickback-resize old-end new-val side)
-                                         )))
+                  (if undo-manager
+                      (compoundundomanager-postedit
+                       undo-manager
+                       (make-undoable-edit "Shift link end"
+                                           (lambda () ;; undo 
+                                             (set! thislink (get 'links linkID))
+                                        ;(display " setting end to ")(display old-end)(newline)
+                                             (ask thislink 'set-end-index! old-end)
+                                        ;(clickback-resize new-val old-end side)
+                                             )
+                                           (lambda () ;; redo
+                                             (set! thislink (get 'links linkID))
+                                        ;(display " setting end to ")(display new-val)(newline)
+                                             (ask thislink 'set-end-index! new-val)
+                                        ;(clickback-resize old-end new-val side)
+                                             ))))
                   ))
             ))
       ))
@@ -365,19 +365,21 @@
         
         (display "  deleted link-bound ")(display deleted-link-bound)(newline)
         
-        (compoundundomanager-postedit
-         undo-manager
-         (make-undoable-edit "link text formating"
-                             (lambda () ;; undo
-                               (display "link text formating ")(newline)
-                               (set-text-style the-doc style-nolink ;; clear formatting for whole of deletion
-                                               start
-                                               len #t)
-                               (map format-link-text deleted-link-bound) ;; then put in formatting for link fragments
-                               )
-                             (lambda () ;; redo
-                               #f
-                               )))
+        ;; undo-manager for read-only (reader-pane) is not set
+        (if undo-manager
+            (compoundundomanager-postedit
+             undo-manager
+             (make-undoable-edit "link text formating"
+                                 (lambda () ;; undo
+                                   (display "link text formating ")(newline)
+                                   (set-text-style the-doc style-nolink ;; clear formatting for whole of deletion
+                                                   start
+                                                   len #t)
+                                   (map format-link-text deleted-link-bound) ;; then put in formatting for link fragments
+                                   )
+                                 (lambda () ;; redo
+                                   #f
+                                   ))))
         ))
     
     
@@ -463,7 +465,9 @@
                      ;(set! link-deleted (- link-end link-start))
                      (set! link-deleted (list link-start link-end))
                      ; Delete the link
-                     (deletelink-callback linkID))
+                     ;; readonly pane does not have deletelink-callback
+                     (if (procedure? deletelink-callback)
+                         (deletelink-callback linkID)))
                     ((and (<= del-end link-end)         ;; Case 4; link-start del-start del-end link-end (eg aaB[B]a, aa[B]Baa, aaB[B]Baa) 
                           (<= link-start del-start))    ;; makes sure not the whole link 
                      ;; Entire deletion is inside link but not encompassing it, (shorten link by length of deletion)
@@ -581,15 +585,15 @@
     ; end, or next position is not the same link
     (define (end-of-link? pos)
       (let ((text-length (get-text-length the-doc)))
-        (display "end of link test ")(display pos)(newline)
-        (display " (> text-length 0) ")(display (> text-length 0))(newline)
-        (display " (> pos 0) ")(display (> pos 0))(newline)
-        (display " (is-link? (- pos 1)) ")(display (is-link? (- pos 1)))(newline)
-        (display " or (= pos text-length) ")(display (= pos text-length))(newline)
-        (display " or (not (eq? (get-attribute-linkAction-pos the-doc (- pos 1))
-                           (get-attribute-linkAction-pos the-doc pos)))")
-        (display (not (eq? (get-attribute-linkAction-pos the-doc (- pos 1))
-                           (get-attribute-linkAction-pos the-doc pos))))(newline)
+;        (display "end of link test ")(display pos)(newline)
+;        (display " (> text-length 0) ")(display (> text-length 0))(newline)
+;        (display " (> pos 0) ")(display (> pos 0))(newline)
+;        (display " (is-link? (- pos 1)) ")(display (is-link? (- pos 1)))(newline)
+;        (display " or (= pos text-length) ")(display (= pos text-length))(newline)
+;        (display " or (not (eq? (get-attribute-linkAction-pos the-doc (- pos 1))
+;                           (get-attribute-linkAction-pos the-doc pos)))")
+;        (display (not (eq? (get-attribute-linkAction-pos the-doc (- pos 1))
+;                           (get-attribute-linkAction-pos the-doc pos))))(newline)
         (and (> text-length 0)
              (> pos 0)
              (is-link? (- pos 1))
@@ -786,14 +790,13 @@
     
     ; handle insert string
     (define (document-filter-insert-string-handler fb offset string attr)
-      (display "INSERT FILTER ")(display (list offset string))(newline)(newline)
       (set! replace-event #f)
       (set! insert-cache (list offset string (string-length string) attr))
       (start-compound-undoable-event "Typing") ;(insert) compound") ; start compound event
       
       ;; used by insert-blank-space atm
-      (display "style to use ")(display (style-to-use offset))(newline)
-      (display "end of link? ")(display (end-of-link? offset))(newline)
+;      (display "style to use ")(display (style-to-use offset))(newline)
+;      (display "end of link? ")(display (end-of-link? offset))(newline)
       (filter-bypass-insert fb offset string (style-to-use offset))
       
       #f)
@@ -801,7 +804,6 @@
     ; handle remove
     ; note: extra parameter (callback) is added when doc filter is created
     (define (document-filter-remove-handler fb offset len)
-      (display "REMOVE FILTER ")(display (list offset len))(newline)
       (start-compound-undoable-event "Typing") ;(remove) compound") ; start compound event
       (define string (substring (get-text the-editor) offset (+ offset len)))
       ;; if locked then we are in the middle of an undo
@@ -820,7 +822,6 @@
     ; handle replace (called when we do inserts or replaces operations)
     ; note: extra parameter (callback) is added when doc filter is created
     (define (document-filter-replace-handler fb offset len string attr)
-      (display "REPLACE FILTER ")(display (list offset len string))(newline)
       (start-compound-undoable-event "Typing") ;(replace) compound") ; start compound event
       (if (or (not undo-manager) 
               (not (compoundundomanager-locked? undo-manager)))
@@ -834,30 +835,10 @@
       (if (> len 0)
           (filter-bypass-replace fb offset len string (style-to-use offset))
           (begin
-            (display "style to use replace ")(display (style-to-use offset))(newline)
-            (display "this returns .. ")(display (get-attributes-pos the-doc (- offset 1)))(newline)
-            (display "this is class tyep ")(display (invoke (get-attributes-pos the-doc (- offset 1)) 'get-class))(newline)
-            (display "class type ")(display (invoke (style-to-use offset) 'get-class))(newline)
-            
-            (define test-cast (as <javax.swing.text.AttributeSet> (get-attributes-pos the-doc (- offset 1))))
-            (display "test-cast ")(display test-cast)(newline)
-            (display "test cast class ")(display (invoke test-cast 'get-class))(newline)
-            
-            (display "offset ")(display (- offset 1))(newline)
-            
-            (display "is this attribute set ")
-            (display (javax.swing.text.AttributeSet? (get-attributes-pos the-doc (- offset 1))))
-            (newline)
-            
-            (display "doc len ")(display (invoke (as <javax.swing.text.Document> the-doc) 'get-length))(newline)
 ;;            (set-text-style the-doc test-cast
 ;;                            ;(- (invoke the-doc 'get-length) 6)'
 ;;                            0
 ;;                            (invoke the-doc 'get-length) #t)
-            
-            (display "is style-link ")(display (equal? (style-to-use offset) style-link))(newline)
-            (display "is style-nolink ")(display (equal? (style-to-use offset) style-nolink))(newline)
-            (display "!!!end of link?!! ")(display (end-of-link? offset))(newline)
             (filter-bypass-insert fb offset string (style-to-use offset))
             )
           )
@@ -869,8 +850,6 @@
     ; note: DON'T make changes to the document from these handlers!
 
     (define (insert-undo event-offset event-string event-len)
-      (display "insert-undo")(newline)
-      (display "track undo here ")(display track-undoable-edits)(newline)
       (set-text-delete the-doc event-offset event-len)
       ;;(textpane-remove the-editor event-offset event-len)
       (set-cursor-pos the-editor event-offset)
@@ -884,7 +863,7 @@
     
     ; handle insert
     (define (document-insert-handler e)
-      (display "[Handler insert] ")(newline)
+      ;(display "[Handler insert] ")(newline)
 ;      (display "undoable? ")(display (undoable-edit? e))(newline)
 ;      (display "redoing ")(display (compoundundomanager-locked? undo-manager))(newline)
       
@@ -942,7 +921,7 @@
     
     ; handle delete
     (define (document-remove-handler e)
-      (display "[HANDLER REMOVE] ")(newline)
+      ;(display "[HANDLER REMOVE] ")(newline)
       
       (define (post-remove-undoable-edit)
 
@@ -983,7 +962,7 @@
     
     ; handle style change
     (define (document-changed-handler e)
-      (display "CHANGED HANDLER ")(newline)
+      ;(display "CHANGED HANDLER ")(newline)
       
        (if (and undo-manager
                (undoable-edit? e) ; this is to avoid posting undo/redo events
@@ -1008,8 +987,7 @@
     ; after-delete
     ; returns #t if need to manually clean up after link deletion
     (define (after-delete start len)
-      (set-dirty!)
-      (display " [after delete] ")(newline)
+      ;(display " [after delete] ")(newline)
       (if track-links 
           (begin
             ;actually do it
@@ -1034,8 +1012,7 @@
 
     ; after-insert
     (define (after-insert start len can-undo)
-      (display "[after insert] ")(newline)
-      (set-dirty!)
+      ;(display "[after insert] ")(newline)
       (if (and track-links
                can-undo)
           (begin

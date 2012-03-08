@@ -67,7 +67,7 @@
 (remove-menu (get-examples-menu))
 ;;(remove-menu (get-help-menu))
 
-;; main tseting
+;; does comments count as change? or deletion for that matter
 
 ; show the frame
 (show-main-frame)
@@ -85,4 +85,3 @@
            (not (equal? "-" (substring arg 0 1))) ; first character must not be -
            (equal? ".dyn" (substring arg (- arg-len 4) arg-len))) ; and must end in .dyn
           (open-file-by-name (make-file (path-file arg))))))
-

@@ -27,13 +27,16 @@
 (require "datastructure.scm")
 (require "hypedyn-graphed-mouse.scm")
 
+;; temp debug
+(require "editlink.scm") ;; add-link-display
+
 (module-export make-node-graphview
                generate-link-name)
 
 ; generate the link name
-(define (generate-link-name in-name in-linkID in-alt?)
+(define (generate-link-name in-name in-linkID)
   (string-append
-   (if in-alt? "~" "")
+   ;(if in-alt? "~" "")
    in-name
    (if (show-IDs?) (string-append "(" (number->string in-linkID) ")") "")))
 
@@ -94,20 +97,8 @@
         (if (not is-anywhere)
             (if the-links
                 (map (lambda (l)
-                       (let* ((this-link (cdr l))
-                              (sourceID (ask this-link 'source))
-                              (destinationID (ask this-link 'destination))
-                              (alt-destinationID (ask this-link 'alt-destination))
-                              (use-destination (ask this-link 'use-destination))
-                              (use-alt-destination (ask this-link 'use-alt-destination))
-                              (this-link-ID(ask this-link 'ID))
-                              (this-link-name (ask this-link 'name)))
-                         (update-link-display this-link-name sourceID
-                                              #f -1
-                                              #f -1
-                                              use-destination destinationID
-                                              use-alt-destination alt-destinationID
-                                              this-link-ID)))
+                       (let ((linkID (car l)))
+                         (add-link-display linkID)))
                      the-links)))
             
         
@@ -226,63 +217,8 @@
                 black-color 'solid)
       )
 
-    ; update a link in the graph; used as a callback from doeditlink
-    ; if oldtonodeID or oldtoaltnodeID not -1 then delete old line first
-    ; if tonodeID or toaltnodeID is -1 then don't show line
-    (define (update-link-display name fromnodeID
-                                 oldusetonode oldtonodeID
-                                 oldusetoaltnode oldtoaltnodeID
-                                 usetonode tonodeID
-                                 usetoaltnode toaltnodeID
-                                 new-linkID)
-      ; update links
-      (let ((line-ID-base (number->string new-linkID)))
-        ; if link
-        (update-link-display-helper (generate-link-name name new-linkID #f)
-                                    fromnodeID
-                                    oldusetonode oldtonodeID
-                                    usetonode tonodeID
-                                    line-ID-base)
-
-        ; else link
-        (update-link-display-helper (generate-link-name name new-linkID #t)
-                                    fromnodeID
-                                    oldusetoaltnode oldtoaltnodeID
-                                    usetoaltnode toaltnodeID
-                                    (string-append "~" line-ID-base)))
-      ; also update node style in case a link is/isn't using alt text
-      (update-node-style fromnodeID))
-    
-    ; helper function - update one link (if or else)
-    (define (update-link-display-helper name fromnodeID
-                                        oldusetonode oldtonodeID
-                                        usetonode tonodeID
-                                        line-ID)
-      
-;;      (display "[UPDATE-link-display-helper]")(newline)
-;;      (display "arg-nme ")(display (list "name" "fromnodeID"
-;;                                        "oldusetonode" "oldtonodeID"
-;;                                        "usetonode" "tonodeID"
-;;                                        "line-ID"))(newline)
-;;      (display "args ")(display (list name fromnodeID oldusetonode))(newline)
-;;      (display "args2 ")(display (list oldtonodeID usetonode tonodeID line-ID))(newline)
-      
-      ; only update if there's a change
-      (if (or (not (= oldtonodeID tonodeID)) (not (eq? oldusetonode usetonode)))
-          (begin
-;;            (display "[UPDATE-link-display-helper] inside IF 1")(newline)
-            ; first delete any existing links with same ID
-            (if (and oldusetonode (not (= -1 oldtonodeID)))
-                (begin
-;;                  (display "[UPDATE-link-display-helper] inside IF 2")(newline)
-                  (ask parent-obj 'del-line line-ID fromnodeID oldtonodeID)))
-            ; then add new line
-            (if (and usetonode (not (= -1 tonodeID)))
-                (begin
-;;                  (display "[UPDATE-link-display-helper] inside IF 3")(newline)
-                  (ask parent-obj 'create-line name line-ID fromnodeID tonodeID))))))
-
     ; helper to check if node has any alt text
+    ;; TODO: remove outdated
     (define (has-alt-text? thisnodeID)
       (let ((thisnode (get 'nodes thisnodeID))
             (has-alt #f))
@@ -297,6 +233,8 @@
             #f)))
 
     ; update node style
+    ;; TODO: to get back to this, unsure what this is doing
+    ;;       however this is definitely outdated since has-alt-text? isnt working
     (define (update-node-style nodeID)
       (let ((graph-node (ask the-graph-editor 'node-get-by-data (number->string nodeID))))
         (if graph-node
@@ -353,20 +291,24 @@
             (if the-links
                 (map (lambda (l)
                        (let* ((this-link (cdr l))
-                              (use-destination (ask this-link 'use-destination))
-                              (use-alt-destination (ask this-link 'use-alt-destination))
+                              ;(use-destination (ask this-link 'use-destination))
+                              ;(use-alt-destination (ask this-link 'use-alt-destination))
                               (this-link-ID(ask this-link 'ID))
                               (this-link-name (ask this-link 'name)))
-                         ; if using destination, then refresh to link line's label
-                         (if use-destination
-                             (ask parent-obj 'rename-line 
-                                  (number->string this-link-ID)
-                                  (generate-link-name this-link-name this-link-ID #f)))
-                         ; if using alt-destination, then refresh alt link line's label
-                         (if use-alt-destination
-                             (ask parent-obj 'rename-line 
-                                  (string-append "~" (number->string this-link-ID))
-                                  (generate-link-name this-link-name this-link-ID #t)))))
+;                         ; if using destination, then refresh to link line's label
+;                         (if use-destination
+;                             (ask parent-obj 'rename-line 
+;                                  (number->string this-link-ID)
+;                                  (generate-link-name this-link-name this-link-ID #f)))
+;                         ; if using alt-destination, then refresh alt link line's label
+;                         (if use-alt-destination
+;                             (ask parent-obj 'rename-line 
+;                                  (string-append "~" (number->string this-link-ID))
+;                                  (generate-link-name this-link-name this-link-ID #t))))
+                         (ask parent-obj 'rename-line
+                              (number->string this-link-ID)
+                              (generate-link-name this-link-name this-link-ID))
+                       ))
                      the-links)))
         
         ; allow repaint
@@ -374,73 +316,54 @@
         (ask parent-obj 'refresh)))
     
     ; message handling                  
-;    (lambda (message)
-;      (cond ((eq? message 'init)
-;             (lambda (self)
-;               (init)))
     (obj-put this-obj 'init
              (lambda (self) (init)))
-;            ((eq? message 'populate-graph)
-;             (lambda (self)
-;               (populate-graph)))
     (obj-put this-obj 'populate-graph
              (lambda (self) (populate-graph)))
-;            ((eq? message 'add-node)
-;             (lambda (self new-nodeID name x y)
-;               (add-node new-nodeID name x y)))
     (obj-put this-obj 'add-node
              (lambda (self new-nodeID name x y)
                (add-node new-nodeID name x y)))
-;            ((eq? message 'update-node-style)
-;             (lambda (self nodeID)
-;               (update-node-style nodeID)))
     (obj-put this-obj 'update-node-style
              (lambda (self nodeID)
                (update-node-style nodeID)))
-;            ((eq? message 'update-node-emphasis)
-;             (lambda (self nodeID)
-;               (update-node-emphasis nodeID)))
     (obj-put this-obj 'update-node-emphasis
              (lambda (self nodeID)
                (update-node-emphasis nodeID)))
-;            ((eq? message 'update-link-display)
-;             (lambda (self name fromnodeID
-;                           oldusetonode oldtonodeID
-;                           oldusetoaltnode oldtoaltnodeID
-;                           usetonode tonodeID
-;                           usetoaltnode toaltnodeID
-;                           new-linkID)
-;               (update-link-display name fromnodeID
-;                                    oldusetonode oldtonodeID
-;                                    oldusetoaltnode oldtoaltnodeID
-;                                    usetonode tonodeID
-;                                    usetoaltnode toaltnodeID
-;                                    new-linkID)))
-    (obj-put this-obj 'update-link-display
-             (lambda (self name fromnodeID
-                           oldusetonode oldtonodeID
-                           oldusetoaltnode oldtoaltnodeID
-                           usetonode tonodeID
-                           usetoaltnode toaltnodeID
-                           new-linkID)
-               (update-link-display name fromnodeID
-                                    oldusetonode oldtonodeID
-                                    oldusetoaltnode oldtoaltnodeID
-                                    usetonode tonodeID
-                                    usetoaltnode toaltnodeID
-                                    new-linkID)))
              
-;            ((eq? message 'get-max-node-positions)
-;             (lambda (self)
-;               (get-max-node-positions)))
     (obj-put this-obj 'get-max-node-positions
              (lambda (self)
                (get-max-node-positions)))
-;            ((eq? message 'refresh-display)
-;             (lambda (self)
-;               (refresh-display)))
     (obj-put this-obj 'refresh-display
              (lambda (self) (refresh-display)))
+    
+;    (define (del-line line-ID fromnodeID tonodeID)
+;      (let* ((c-fromnode (ask c 'node-get-by-data (number->string fromnodeID)))
+;             (c-tonode (ask c 'node-get-by-data (number->string tonodeID)))
+;             (c-fromtab (ask c-fromnode 'tab-out-ref 0))
+;             (c-totab (ask c-tonode 'tab-in-ref 0))
+;             ;(link (ask c 'get-line-by-ID line-ID))
+;             )
+;        (define link (ask c 'get-line-by-ID line-ID))
+;        (ask c 'line-del link c-fromtab c-totab line-ID)))
+    
+    ;; remove all lines coming out of this node (give this a better name next time)
+    (obj-put this-obj 'clear-node-outlinks
+             (lambda (self nodeID)
+               (define graph-ed (ask parent-obj 'get-graph-editor))
+               (define fromnode (ask graph-ed 'node-get-by-data (number->string nodeID)))
+               (define fromtab (ask fromnode 'tab-out-ref 0))
+               (define line-lst (ask fromtab 'get-lines))
+               (map (lambda (line)
+                      (define src-tab (ask line 'get-source))
+                      (define target-tab (ask line 'get-target))
+                      (define line-name (ask line 'get-ID))
+                      (ask graph-ed 'line-del line src-tab target-tab line-name)
+                      ) line-lst)
+               ))
+    
+    ;; no need to do this since we inherited parent-obj
+;    (obj-put this-obj 'create-line 
+;             (lambda (self name line-ID fromnodeID tonodeID)
+;               (ask parent-obj 'create-line name line-ID fromnodeID tonodeID)))
                
-;            (else (get-method parent-obj message))))
     this-obj))

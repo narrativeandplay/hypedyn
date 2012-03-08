@@ -105,7 +105,8 @@
                        (data #f)
                        (visible? #f)
                        (selected? #f)
-                       (custom-line-draw #f))
+                       (custom-line-draw #f)
+                       (ID #f))
 
                   ;; default function to draw a line from tab to tab (source to dest)
                   (define (default-line-draw dc source target selected? show? data)
@@ -177,86 +178,46 @@
                           (else #f))
                     )
 
-;                  (lambda (message)
-;                    (cond ((eq? message 'get-data)
-;                           (lambda (self)
-;                             data))
                   (obj-put this-obj 'get-data
                            (lambda (self) data))
-;                          ((eq? message 'set-data)
-;                           (lambda (self dat)
-;                             (set! data dat)))
                   (obj-put this-obj 'set-data
                            (lambda (self dat) (set! data dat)))
-;                          ((eq? message 'is-shown?)
-;                           (lambda (self)
-;                             visible?))
                   (obj-put this-obj 'is-shown?
                            (lambda (self) visible?))
-;                          ((eq? message 'is-selected?)
-;                           (lambda (self)
-;                             selected?))
                   (obj-put this-obj 'is-selected?
                            (lambda (self) selected?))
-;                          ((eq? message 'select)
-;                           (lambda (self)
-;                             (set! selected? #t)
-;                             (display "line select message")(newline)
-;                           ))
                   (obj-put this-obj 'select
                            (lambda (self)
                              (set! selected? #t)
                              (display "line select message")(newline)
                            ))
-;                          ((eq? message 'deselect)
-;                           (lambda (self)
-;                             (set! selected? #f)
-;                             (display "line deselect message")(newline)
-;                             ))
                   (obj-put this-obj 'deselect
                            (lambda (self)
                              (set! selected? #f)
                              (display "line deselect message")(newline)
                              ))
-;                          ((eq? message 'get-source)
-;                           (lambda (self)
-;                             source))
                   (obj-put this-obj 'get-source
                            (lambda (self) source))
-;                          ((eq? message 'get-target)
-;                           (lambda (self)
-;                             target))
                   (obj-put this-obj 'get-target
                            (lambda (self) target))
-;                          ((eq? message 'set-target!)
-;                           (lambda (self new-target)
-;                             (set! target new-target)))
                   (obj-put this-obj 'set-target!
                            (lambda (self new-target)
                              (set! target new-target)))
-;                          ((eq? message 'show)
-;                           (lambda (self)
-;                             (draw #t)))
                   (obj-put this-obj 'show
                            (lambda (self) (draw #t)))
-;                          ((eq? message 'hide)
-;                           (lambda (self)
-;                             (draw #f)))
                   (obj-put this-obj 'hide
                            (lambda (self) (draw #f)))
-;                          ((eq? message 'on-mouse)
-;                           (lambda (self event-type cx cy)
-;                             (line-on-mouse self event-type cx cy)))
                   (obj-put this-obj 'on-mouse
                            (lambda (self event-type cx cy)
                              (line-on-mouse self event-type cx cy)))
-;                          ((eq? message 'set-custom-line-draw)
-;                           (lambda (self drawfunc)
-;                             (set! custom-line-draw drawfunc)))
                   (obj-put this-obj 'set-custom-line-draw
                            (lambda (self drawfunc)
                              (set! custom-line-draw drawfunc)))
-;                          (else (get-method typed-obj message))))
+                  (obj-put this-obj 'set-ID
+                           (lambda (self in-ID)
+                             (set! ID in-ID)))
+                  (obj-put this-obj 'get-ID
+                           (lambda (self) ID))
                   this-obj))
 
 ; ----------------------------------------------------------------------------
@@ -401,87 +362,34 @@
 
                      (else #f)))
 
-;                  (lambda (message)
-;                    (cond ((eq? message 'get-data)
-;                           (lambda (self)
-;                             data))
                   (obj-put this-obj 'get-data
                            (lambda (self) data))
-;                          ((eq? message 'clear-lines)
-;                           (lambda (self)
-;                             (set! lines '())))
                   (obj-put this-obj 'clear-lines
                            (lambda (self) (set! lines '())))
-;                          ((eq? message 'line-add)
-;                           (lambda (self line)
-;                             (set! lines (cons line lines))))
                   (obj-put this-obj 'line-add
                            (lambda (self line)
                              (set! lines (cons line lines))))
-;                          ((eq? message 'line-del)
-;                           (lambda (self line)
-;                             (if line
-;                                 ; need to pass in a pred for list-lib version of remove - alex
-;                                 (set! lines (remove (lambda (x) (eq? line x)) lines)))))
                   (obj-put this-obj 'line-del
                            (lambda (self line)
                              (if line
                                  ; need to pass in a pred for list-lib version of remove - alex
                                  (set! lines (remove (lambda (x) (eq? line x)) lines)))))
-;                          ((eq? message 'get-lines)
-;                           (lambda (self)
-;                             (begin
-;                               ;(if (and (equal? type 'in)
-;                               ;    (> (length lines) 1))
-;                               ; (error "too many lines connected to an in tab")
-;                               ; )
-;                               lines)))
                   (obj-put this-obj 'get-lines
                            (lambda (self) lines))
-;                          ((eq? message 'connected?)
-;                           (lambda (self)
-;                             (if (> (length lines) 0)
-;                                 #t #f)))
                   (obj-put this-obj 'connected?
                            (lambda (self) (> (length lines) 0)))
-;                          ((eq? message 'is-shown?)
-;                           (lambda (self)
-;                             visible?))
                   (obj-put this-obj 'is-shown?
                            (lambda (self) visible?))
-;                          ((eq? message 'get-type)
-;                           (lambda (self)
-;                             type))
                   (obj-put this-obj 'get-type
                            (lambda (self) type))
-;                          ((eq? message 'get-node)
-;                           (lambda (self)
-;                             node))
                   (obj-put this-obj 'get-node 
                            (lambda (self) node))
-;                          ((eq? message 'x-set!)
-;                           (lambda (self cx)
-;                             (set! x cx)))
                   (obj-put this-obj 'x-set!
                            (lambda (self cx) (set! x cx)))
-;                          ((eq? message 'y-set!)
-;                           (lambda (self cy)
-;                             (set! y cy)))
                   (obj-put this-obj 'y-set!
                            (lambda (self cy) (set! y cy)))
-;                          ((eq? message 'get-position)
-;                           (lambda (self)
-;                             (values x y)))
                   (obj-put this-obj 'get-position
                            (lambda (self) (values x y)))
-;                          ((eq? message 'get-line-position)
-;                           (lambda (self)
-;                             (begin
-;                               (if (equal? type 'in)
-;                                   ;(values x (- y tab-height))
-;                                   ;(values x (+ y tab-height -1))))))
-;                                   (values x (- y (/ tab-height 2.0)))
-;                                   (values x (+ y (/ tab-height 2.0) -1.0)))))) ;ioblocks change cos x y is center of tab
                   (obj-put this-obj 'get-line-position
                            (lambda (self)
                              (begin
@@ -490,34 +398,18 @@
                                    ;(values x (+ y tab-height -1))))))
                                    (values x (- y (/ tab-height 2.0)))
                                    (values x (+ y (/ tab-height 2.0) -1.0)))))) ;ioblocks change cos x y is center of tab
-;                          ((eq? message 'show)
-;                           (lambda (self)
-;                             (draw #t)))
                   (obj-put this-obj 'show
                            (lambda (self) (draw #t)))
-;                          ((eq? message 'hide)
-;                           (lambda (self)
-;                             (draw #f)))
                   (obj-put this-obj 'hide
                            (lambda (self) (draw #f)))
-;                          ((eq? message 'on-mouse)
-;                           (lambda (self etype cx cy)
-;                             (on-mouse self etype cx cy)))
                   (obj-put this-obj 'on-mouse
                            (lambda (self etype cx cy)
                              (on-mouse self etype cx cy)))
-;                          ((eq? message 'get-name)
-;                           (lambda (self)
-;                             name))
                   (obj-put this-obj 'get-name
                            (lambda (self) name))
-;                          ((eq? message 'set-custom-tab-draw)
-;                           (lambda (self drawfunc)
-;                             (set! custom-tab-draw drawfunc)))
                   (obj-put this-obj 'set-custom-tab-draw
                            (lambda (self drawfunc)
                              (set! custom-tab-draw drawfunc)))
-;                          (else (get-method typed-obj message))))
                   this-obj))
 
 ; ----------------------------------------------------------------------------
@@ -925,40 +817,16 @@
                     )
 
                   ;; public methods
-;                  (lambda (message)
-;                    (cond ((eq? message 'init)
-;                           (lambda (self)
-;                             (init self)))
                   (obj-put this-obj 'init
                            (lambda (self) (init self)))
-;                          ((eq? message 'get-data)
-;                           (lambda (self)
-;                             data))
                   (obj-put this-obj 'get-data
                            (lambda (self) data))
-;                          ((eq? message 'set-data)
-;                           (lambda (self dat)
-;                             (set! data dat)))
                   (obj-put this-obj 'set-data
                            (lambda (self dat) (set! data dat)))
-;                          ((eq? message 'get-id)
-;                           (lambda (self)
-;                             id))
                   (obj-put this-obj 'get-id
                            (lambda (self) id))
-;                          ((eq? message 'get-name)
-;                           (lambda (self)
-;                             name))
                   (obj-put this-obj 'get-name
                            (lambda (self) name))
-;                          ((eq? message 'set-name)
-;                           (lambda (self str)
-;                             (begin
-;                               (hide #f)
-;                               (set! name str)
-;                               (set! width (get-real-width))
-;                               (show #f)
-;                               (ask editor 'layout id))))
                   (obj-put this-obj 'set-name
                            (lambda (self str)
                              (begin
@@ -967,28 +835,12 @@
                                (set! width (get-real-width))
                                (show #f)
                                (ask editor 'layout id))))
-;                          ((eq? message 'get-x)
-;                           (lambda (self)
-;                             x))
                   (obj-put this-obj 'get-x
                            (lambda (self) x))
-;                          ((eq? message 'get-y)
-;                           (lambda (self)
-;                             y))
                   (obj-put this-obj 'get-y
                            (lambda (self) y))
-;                          ((eq? message 'get-style)
-;                           (lambda (self)
-;                             style))
                   (obj-put this-obj 'get-style
                            (lambda (self) style))
-;                          ((eq? message 'set-style)
-;                           (lambda (self in-style)
-;                             (begin
-;                               (hide #f)
-;                               (set! style in-style)
-;                               (show #f)
-;                               (ask editor 'layout id))))
                   (obj-put this-obj 'set-style
                            (lambda (self in-style)
                              (begin
@@ -996,80 +848,39 @@
                                (set! style in-style)
                                (show #f)
                                (ask editor 'layout id))))
-;                          ((eq? message 'is-shown?)
-;                           (lambda (self)
-;                             visible?))
                   (obj-put this-obj 'is-shown?
                            (lambda (self) visible?))
-;                          ((eq? message 'x-set!)
-;                           (lambda (self cx)
-;                             (x-set! cx)))
                   (obj-put this-obj 'x-set!
                            (lambda (self cx)
                              (x-set! cx)))
-;                          ((eq? message 'y-set!)
-;                           (lambda (self cy)
-;                             (y-set! cy)))
                   (obj-put this-obj 'y-set!
                            (lambda (self cy)
                              (y-set! cy)))
-;                          ((eq? message 'set-emph-height)
-;                           (lambda (self in-height)
-;                             (set-emph-height in-height)))
                   (obj-put this-obj 'set-emph-height
                            (lambda (self in-height)
                              (set-emph-height in-height)))
-;                          ((eq? message 'get-position)
-;                           (lambda (self)
-;                             (values x y)))
                   (obj-put this-obj 'get-position
                            (lambda (self) (values x y)))
-;                          ((eq? message 'get-size)
-;                           (lambda (self)
-;                             (values width height)))
                   (obj-put this-obj 'get-size
                            (lambda (self)
                              (values width height)))
-;                          ((eq? message 'tab-in-count)
-;                           (lambda (self)
-;                             (hash-table-count tab-in)))
                   (obj-put this-obj 'tab-in-count
                            (lambda (self)
                              (hash-table-count tab-in)))
-;                          ((eq? message 'tab-out-count)
-;                           (lambda (self)
-;                             (hash-table-count tab-out)))
                   (obj-put this-obj 'tab-out-count
                            (lambda (self)
                              (hash-table-count tab-out)))
-;                          ((eq? message 'tab-in-ref)
-;                           (lambda (self i)
-;                             (begin
-;                               (if (>= i 0)
-;                                   (hash-table-get tab-in i #f)))))
                   (obj-put this-obj 'tab-in-ref
                            (lambda (self i)
                              (begin
                                (if (>= i 0)
                                    (hash-table-get tab-in i #f)))))
-;                          ((eq? message 'tab-out-ref)
-;                           (lambda (self i)
-;                             (begin
-;                               (if (>= i 0)
-;                                   (hash-table-get tab-out i #f)))))
                   (obj-put this-obj 'tab-out-ref
                            (lambda (self i)
                              (begin
                                (if (>= i 0)
                                    (hash-table-get tab-out i #f)))))
                           ;; get in tab by name
-;                          ((eq? message 'tab-in-get)
-;                           (lambda (self tabname)
-;                             ;(hash-table-get tab-in tabname)
-;                             (let ((tab-to-return #f))
-;                               (hash-table-walk tab-in (lambda (key tab) (if (equal? (ask tab 'get-name) tabname)
-;                                                                             (set! tab-to-return tab))))
-;                               tab-to-return)))
                   (obj-put this-obj 'tab-in-get
                            (lambda (self tabname)
                              ;(hash-table-get tab-in tabname)
@@ -1078,13 +889,6 @@
                                                                              (set! tab-to-return tab))))
                                tab-to-return)))
                           ;; get out tab by name
-;                          ((eq? message 'tab-out-get)
-;                           (lambda (self tabname)
-;                             ;(hash-table-get tab-in tabname)
-;                             (let ((tab-to-return #f))
-;                               (hash-table-walk tab-out (lambda (key tab) (if (equal? (ask tab 'get-name) tabname)
-;                                                                              (set! tab-to-return tab))))
-;                               tab-to-return)))
                   (obj-put this-obj 'tab-out-get
                            (lambda (self tabname)
                              ;(hash-table-get tab-in tabname)
@@ -1092,110 +896,56 @@
                                (hash-table-walk tab-out (lambda (key tab) (if (equal? (ask tab 'get-name) tabname)
                                                                               (set! tab-to-return tab))))
                                tab-to-return)))
-;                          ((eq? message 'get-tab-in-list)
-;                           (lambda (self)
-;                             tab-in))
                   (obj-put this-obj 'get-tab-in-list
                            (lambda (self) tab-in))
-;                          ((eq? message 'get-tab-out-list)
-;                           (lambda (self)
-;                             tab-out))
                   (obj-put this-obj 'get-tab-out-list
                            (lambda (self) tab-out))
-;                          ((eq? message 'tab-in-connected?)
-;                           (lambda (self)
-;                             (tab-connected? tab-in)))
                   (obj-put this-obj 'tab-in-connected?
                            (lambda (self)
                              (tab-connected? tab-in)))
-;                          ((eq? message 'tab-out-connected?)
-;                           (lambda (self)
-;                             (tab-connected? tab-out)))
                   (obj-put this-obj 'tab-out-connected?
                            (lambda (self)
                              (tab-connected? tab-out)))
-;                          ((eq? message 'tab-in-decr)
-;                           (lambda (self)
-;                             (tab-decr tab-in 'in)))
                   (obj-put this-obj 'tab-in-decr
                            (lambda (self)
                              (tab-decr tab-in 'in)))
-;                          ((eq? message 'tab-out-decr)
-;                           (lambda (self)
-;                             (tab-decr tab-out 'out)))
                   (obj-put this-obj 'tab-out-decr
                            (lambda (self)
                              (tab-decr tab-out 'out)))
-;                          ((eq? message 'tab-in-incr)
-;                           (lambda (self . portname)                 ;ioblocks need portname
-;                             (if (not (null? portname))
-;                                 (tab-incr self tab-in 'in (car portname))
-;                                 (tab-incr self tab-in 'in ))))
                   (obj-put this-obj 'tab-in-incr
                            (lambda (self . portname)                 ;ioblocks need portname
                              (if (not (null? portname))
                                  (tab-incr self tab-in 'in (car portname))
                                  (tab-incr self tab-in 'in ))))
-;                          ((eq? message 'tab-out-incr)
-;                           (lambda (self . portname)                 ;ioblocks need portname
-;                             (if (not (null? portname))
-;                                 (tab-incr self tab-out 'out (car portname))
-;                                 (tab-incr self tab-out 'out ))))
                   (obj-put this-obj 'tab-out-incr
                            (lambda (self . portname)                 ;ioblocks need portname
                              (if (not (null? portname))
                                  (tab-incr self tab-out 'out (car portname))
                                  (tab-incr self tab-out 'out ))))
-;                          ((eq? message 'show)
-;                           (lambda (self selected?)
-;                             (show selected?)))
                   (obj-put this-obj 'show
                            (lambda (self selected?) (show selected?)))
                           ;; for hide shouldn't we just don't draw?
-;                          ((eq? message 'hide)
-;                           (lambda (self selected?)
-;                             (hide selected?)))
                   (obj-put this-obj 'hide
                            (lambda (self selected?) (hide selected?)))
-;                          ((eq? message 'on-mouse)
-;                           (lambda (self type cx cy)
-;                             (on-mouse self type cx cy)))
                   (obj-put this-obj 'on-mouse
                            (lambda (self type cx cy)
                              (on-mouse self type cx cy)))
-;                          ((eq? message 'set-custom-node-draw)
-;                           (lambda (self drawfunc)
-;                             (set! custom-draw drawfunc)))
                   (obj-put this-obj 'set-custom-node-draw
                            (lambda (self drawfunc)
                              (set! custom-draw drawfunc)))
-;                          ((eq? message 'set-node-color)
-;                           (lambda (self in-color)
-;                             (set-node-color in-color)))
                   (obj-put this-obj 'set-node-color
                            (lambda (self in-color)
                              (set-node-color in-color)))
-;                          ((eq? message 'set-text-color)
-;                           (lambda (self in-color)
-;                             (set-text-color in-color)))
                   (obj-put this-obj 'set-text-color
                            (lambda (self in-color)
                              (set-text-color in-color)))
-;                          ((eq? message 'set-size)
-;                           (lambda (self newwidth newheight)
-;                             (set! width newwidth)
-;                             (set! height newheight)))
                   (obj-put this-obj 'set-size
                            (lambda (self newwidth newheight)
                              (set! width newwidth)
                              (set! height newheight)))
-;                          ((eq? message 'custom-tab-incr)
-;                           (lambda (self x y type custom-tab-draw)
-;                             (custom-tab-incr self x y type custom-tab-draw)))
                   (obj-put this-obj 'custom-tab-incr
                            (lambda (self x y type custom-tab-draw)
                              (custom-tab-incr self x y type custom-tab-draw)))
-;                          (else (get-method typed-obj message))))
                   this-obj))
 
 
@@ -1545,6 +1295,8 @@
 
                   ; it returns the line object
                   ;; node ID-str must be a string 
+                  ;; TODO: get rid of the annoying (ID line) pair format (use data table or hashtable)
+                  ;; TODO: get rid of the first ('ID line) entry in links, it was a hack or some sort for something that was long forgotten 
                   (define (line-add-with-name-and-ID g-editor in-name ID-str src-tab dst-tab in-custom-draw)
                     
                     (let
@@ -1557,6 +1309,7 @@
                                      (procedure? in-custom-draw))
                                 (ask line 'set-custom-line-draw in-custom-draw))
                             (set! links (append links (list (list ID-str line))))
+                            (ask line 'set-ID ID-str)
                             (ask src-tab 'line-add line)
                             (ask dst-tab 'line-add line)
                             (ask line 'set-data in-name)
@@ -1628,8 +1381,7 @@
                           (ask selected-line 'show))) ; paint it
                     )
 
-
-                  (define (line-del line src-tab dst-tab . args) ; added args to allow passing in of ID when deleting line
+                  (define (line-del line src-tab dst-tab #!optional ID) ; added args to allow passing in of ID when deleting line
 ;                    (display "line-del in graph-editor")(newline)
 ;                    (display "line ")(display line)(newline)
                     (let
@@ -1639,10 +1391,23 @@
                           (begin
                             (ask src-tab 'line-del line)
                             (ask dst-tab 'line-del line)
-                            ; need to remove from links list as well - alex
-                            (if (pair? args)
-                                  (set! links (remove (lambda (a) (equal? (car a) (caar args))) links)))
-                            (display "in [line-del] line ")(display line)(newline)
+                            ;; need to remove from links list as well - alex
+                            ;(display "links before del ")(display links)(newline) 
+                            (display "ID ")(display ID)(newline)
+                            (display "line name ")(display (ask line 'get-data))(newline)
+                            (display (map (lambda (link)
+                                            (car link)) links))(newline)
+                            
+                            ;(display "testing name ")(display (ask (cadr (car links)) 'get-data))(newline)
+                            (display (map (lambda (link)
+                                            (ask (cadr link) 'get-data)) (cdr links)))(newline)
+                                   
+                            (if ID
+                                (set! links (remove (lambda (a) (equal? (car a) ID)) links)))
+                            (display (map (lambda (link)
+                                            (car link)) links))(newline)
+                            
+                            ;(display "links after aft ")(display links)(newline)
                             (ask line 'hide)
                             ;; no after-line-del in ioblocks's callback
                             (if callback
@@ -1915,40 +1680,18 @@
                               (click-count (get-mouseevent-click-count event))
                               (find-clicked-trigger-list (list 'left-down 'right-down 'motion)))
                           
-                          
                           ;; only check what is clicked when a left 
                           ;; or right down is registered
-                          (if ;(or (equal? mouse-event-type 'left-down)
-                              ;    (equal? mouse-event-type 'right-down)
-                              ;    (equal? mouse-event-type 'motion)
-                              ;   )
-                              (member mouse-event-type find-clicked-trigger-list)
+                          (if (member mouse-event-type find-clicked-trigger-list)
                               (begin
-
                                 ;; set internal-clicked so we know what is clicked
                                 (set! internal-clicked (find-clicked mouse-event-type x y))
-                                ;(display "internal-clicked set to : ")(display internal-clicked)(newline)
-                                
+                                        ;(display "internal-clicked set to : ")(display internal-clicked)(newline)
+
                                 (if internal-clicked
                                     (set! clicked-type (ask internal-clicked 'obj-type)) ; can be 'node 'tab 'line
                                     (set! clicked-type #f))
-
-                                )
-                          )
-                          
-                          ;;debugging code
-;                          (if (not (equal? mouse-event-type 'motion))
-;                              (begin
-;                                (newline)
-;                                ;(display (list clicked-type mouse-event-type (if internal-clicked #t #f)))(newline)(newline)
-;                                ;(display mouse-func-slot-set)(newline)
-;                                (display "my clicked-typed ")(display clicked-type)(newline)
-;                                (display "mouse-event-type ")(display  mouse-event-type)(newline)
-;                                (display "internal-clicked ")(display internal-clicked)(newline)
-;                                (display "query list ")(display (list clicked-type mouse-event-type (if internal-clicked #t #f)))(newline)
-;                                
-;                                )
-;                              )
+                                ))
                           
                           ;; actual mouse event handling
                           ;; retrieve and carry out mouse-event behavior if it's existent
@@ -1956,14 +1699,7 @@
                               (begin ;(display "carrying out mouse behavior")(newline)
                                 ((hash-table-get func-hashtable (list clicked-type mouse-event-type (if internal-clicked #t #f)) ) 
                                  x y click-count internal-clicked)) ; added click-count - alex
-                              ;(begin (display "mouse behavior not set ")(newline))
                               )
-                          
-                          ;;debug code
-;                          (if (not (equal? mouse-event-type 'motion))
-;                              (begin
-;                                (display "selected node ")(display selected-node)(newline)
-;                                ))
                           
                           ; used to tell the difference between a drag and a clicked event
                           ; drag event has a drag right before a left-up
@@ -1971,27 +1707,6 @@
 
                           ));; end of mouse handler event
                       
-;                      (lambda (message)
-;                        (cond 
-;                         ;; obj-type is namely either tab, line or node
-;                         ;; could consider adding graph-editor itself as a type
-;                         ((eq? message 'set-event-func)
-;                          (lambda (self obj-type event-slot clicked func)
-;                            (if (and func-hashtable
-;                                     (or (symbol? obj-type)
-;                                         (boolean? obj-type))
-;                                     (symbol? event-slot)
-;                                     (boolean? clicked)
-;                                     (procedure? func))
-;                                (begin 
-;                                  (let ((combi-list (list obj-type event-slot clicked)))
-;                                    (hash-table-put! func-hashtable combi-list func)
-;                                    (if (not (member combi-list mouse-func-slot-set))
-;                                        (set! mouse-func-slot-set (append mouse-func-slot-set (list combi-list)))))
-;                                  )
-;                                (begin
-;                                  (display "error in adding mouse-event-func to mouse-handler-mould")(newline))
-;                                  )))
                       (obj-put this-obj 'set-event-func
                           (lambda (self obj-type event-slot clicked func)
                             (if (and func-hashtable
@@ -2010,49 +1725,25 @@
                                   (display "error in adding mouse-event-func to mouse-handler-mould")(newline))
                                   )))
 
-;                         ((eq? message 'get-mouse-handler)
-;                          (lambda (self)
-;                            mouse-handler))
                       (obj-put this-obj 'get-mouse-handler
                           (lambda (self) mouse-handler))
-;                         ((eq? message 'get-prev-x)
-;                          (lambda (self)
-;                            prev-x))
                       (obj-put this-obj 'get-prev-x
                           (lambda (self) prev-x))
-;                         ((eq? message 'get-prev-y)
-;                          (lambda (self)
-;                            prev-y))
                       (obj-put this-obj 'get-prev-y
                           (lambda (self) prev-y))
-;                         ((eq? message 'set-prev-x)
-;                          (lambda (self new-x)
-;                            (set! prev-x new-x)))
                       (obj-put this-obj 'set-prev-x
                           (lambda (self new-x)
                             (set! prev-x new-x)))
-;                         ((eq? message 'set-prev-y)
-;                          (lambda (self new-y)
-;                            (set! prev-y new-y)))
                       (obj-put this-obj 'set-prev-y
                           (lambda (self new-y)
                             (set! prev-y new-y)))
-;                         ((eq? message 'reset-clicked)
-;                          (lambda (self)
-;                            (set! internal-clicked #f)
-;                            (set! clicked-type #f)))
                       (obj-put this-obj 'reset-clicked
                           (lambda (self)
                             (set! internal-clicked #f)
                             (set! clicked-type #f)))
-;                         ((eq? message 'get-prev-mouse-event)
-;                          (lambda (self)
-;                            prev-mouse-event))
                       (obj-put this-obj 'get-prev-mouse-event
                           (lambda (self)
                             prev-mouse-event))
-;                         (else 
-;                          (display "ERROR (mouse-handler-mould): invalid message: ")(display message)(newline))))
 
                       this-obj));end of mouse-handler-mould
                   
@@ -2060,32 +1751,14 @@
                   (set! mhm (mouse-handler-mould))
 
                   ;; public methods
-;                  (lambda (message)
-;                    (cond ((eq? message 'init)
-;                           (lambda (self)
-;                             (init self)))
                   (obj-put this-obj 'init
                            (lambda (self) (init self)))
-;                          ((eq? message 'get-selected)
-;                           (lambda (self)
-;                             (get-selected)))
                   (obj-put this-obj 'get-selected
                            (lambda (self)
                              (get-selected)))
-;                          ((eq? message 'set-selected!)
-;                           (lambda (self ID)
-;                             (set-selected! ID)))
                   (obj-put this-obj 'set-selected!
                            (lambda (self ID)
                              (set-selected! ID)))
-;                          ((eq? message 'set-selected-node)
-;                           (lambda (self node)
-;                             (begin
-;                               (begin-paint)
-;                               (if node
-;                                   (ask node 'show #t))
-;                               (end-paint)
-;                               (set! selected-node node))))
                   (obj-put this-obj 'set-selected-node
                            (lambda (self node)
                              (begin
@@ -2094,276 +1767,137 @@
                                    (ask node 'show #t))
                                (end-paint)
                                (set! selected-node node))))
-;                          ((eq? message 'scroll-to-node)
-;                           (lambda (self ID)
-;                             (scroll-to-node ID)))
                   (obj-put this-obj 'scroll-to-node
                            (lambda (self ID)
                              (scroll-to-node ID)))
-;                          ((eq? message 'layout)
-;                           (lambda (self id)
-;                             (layout id)))
                   (obj-put this-obj 'layout 
                            (lambda (self id)
                              (layout id)))
-;                          ((eq? message 'layout-all)
-;                           (lambda (self)
-;                             (layout-all)))
                   (obj-put this-obj 'layout-all
                            (lambda (self)
                              (layout-all)))
-;                          ((eq? message 'clear)
-;                           (lambda (self)
-;                             (clear)))
                   (obj-put this-obj 'clear
                            (lambda (self) (clear)))
-;                          ((eq? message 'node-add)
-;                           (lambda (self data name x y style)
-;                             (node-add self data name x y style)))
                   (obj-put this-obj 'node-add
                            (lambda (self data name x y style)
                              (node-add self data name x y style)))
-;                          ((eq? message 'node-del)
-;                           (lambda (self in-node)
-;                             (node-del in-node)))
                   (obj-put this-obj 'node-del
                            (lambda (self in-node)
                              (node-del in-node)))
-;                          ((eq? message 'node-get-by-name)
-;                           (lambda (self in-name)
-;                             (node-get-by-name in-name)))
                   (obj-put this-obj 'node-get-by-name
                            (lambda (self in-name)
                              (node-get-by-name in-name)))
-;                          ((eq? message 'node-get-by-data)
-;                           (lambda (self in-data)
-;                             (node-get-by-data in-data)))
                   (obj-put this-obj 'node-get-by-data
                            (lambda (self in-data)
                              (node-get-by-data in-data)))
-;                          ((eq? message 'node-for-each)
-;                           (lambda (self func)
-;                             (node-for-each func)))
                   (obj-put this-obj 'node-for-each
                            (lambda (self func)
                              (node-for-each func)))
-;                          ((eq? message 'node-del!)
-;                           (lambda (self in-node)
-;                             (node-del! in-node)))
                   (obj-put this-obj 'node-del!
                            (lambda (self in-node)
                              (node-del! in-node)))
-;                          ((eq? message 'line-add)
-;                           (lambda (self src-tab dst-tab in-custom-draw)
-;                             (line-add self src-tab dst-tab in-custom-draw)))
                   (obj-put this-obj 'line-add
                            (lambda (self src-tab dst-tab in-custom-draw)
                              (line-add self src-tab dst-tab in-custom-draw)))
-;                          ((eq? message 'line-add-with-name-and-ID)
-;                           (lambda (self in-name ID src-tab dst-tab in-custom-draw)
-;                             (line-add-with-name-and-ID self in-name ID src-tab dst-tab in-custom-draw)))
                   (obj-put this-obj 'line-add-with-name-and-ID
                            (lambda (self in-name ID src-tab dst-tab in-custom-draw)
                              (line-add-with-name-and-ID self in-name ID src-tab dst-tab in-custom-draw)))
-;                          ((eq? message 'get-line-by-ID)
-;                           (lambda (self ID)
-;                             (get-line-by-ID ID)))
                   (obj-put this-obj 'get-line-by-ID
                            (lambda (self ID)
                              (get-line-by-ID ID)))
-;                          ((eq? message 'get-line-by-name)
-;                           (lambda (self name)
-;                             (get-line-by-name name)))
                   (obj-put this-obj 'get-line-by-name
                            (lambda (self name)
                              (get-line-by-name name)))
-;                          ((eq? message 'line-rename)
-;                           (lambda (self line newname)
-;                             (line-rename line newname)))
                   (obj-put this-obj 'line-rename
                            (lambda (self line newname)
                              (line-rename line newname)))
-;                          ((eq? message 'line-change-dest)
-;                           (lambda (self line old-dst-tab new-dst-tab lineID)
-;                             (line-change-dest line old-dst-tab new-dst-tab lineID)))
                   (obj-put this-obj 'line-change-dest
                            (lambda (self line old-dst-tab new-dst-tab lineID)
                              (line-change-dest line old-dst-tab new-dst-tab lineID)))
-;                          ((eq? message 'line-del)
-;                           (lambda (self line src-tab dst-tab . args)
-;                             (line-del line src-tab dst-tab args)))
                   (obj-put this-obj 'line-del
                            (lambda (self line src-tab dst-tab . args)
-                             (line-del line src-tab dst-tab args)))
-;                          ((eq? message 'set-selected-line!)
-;                           (lambda (self line)
-;                             (set-selected-line! line)))
+                             (apply line-del (append (list line src-tab dst-tab) args))))
                   (obj-put this-obj 'set-selected-line!
                            (lambda (self line)
                              (set-selected-line! line)))
-;                          ((eq? message 'get-selected-line)
-;                           (lambda (self)
-;                             selected-line))
                   (obj-put this-obj 'get-selected-line
                            (lambda (self)
                              selected-line))
-;                          ((eq? message 'begin-paint)
-;                           (lambda (self)
-;                             (begin-paint)))
                   (obj-put this-obj 'begin-paint
                            (lambda (self)
                              (begin-paint)))
-;                          ((eq? message 'end-paint)
-;                           (lambda (self)
-;                             (end-paint)))
                   (obj-put this-obj 'end-paint
                            (lambda (self)
                              (end-paint)))
-;                          ((eq? message 'my-on-paint)
-;                           (lambda (self)
-;                             (my-on-paint)))
                   (obj-put this-obj 'my-on-paint
                            (lambda (self)
                              (my-on-paint)))
-;                          ((eq? message 'get-buffer)
-;                           (lambda (self)
-;                             (get-buffer glcanvas)))
                   (obj-put this-obj 'get-buffer
                            (lambda (self)
                              (get-buffer glcanvas)))
-;                          ((eq? message 'get-canvas)
-;                           (lambda (self)
-;                             glcanvas))
                   (obj-put this-obj 'get-canvas
                            (lambda (self)
                              glcanvas))
-;                          ((eq? message 'my-refresh)
-;                           (lambda (self)
-;                             (my-refresh)))
                   (obj-put this-obj 'my-refresh
                            (lambda (self)
                              (my-refresh)))
-;                          ((eq? message 'add-to-linklist)
-;                           (lambda (self ID line)
-;                             (add-to-linklist ID line)))
                   (obj-put this-obj 'add-to-linklist
                            (lambda (self ID line)
                              (add-to-linklist ID line)))
-;                          ((eq? message 'get-mouse-overed)
-;                           (lambda (self)
-;                             mouse-overed))
                   (obj-put this-obj 'get-mouse-overed
                            (lambda (self)
                              mouse-overed))
-;                          ((eq? message 'set-mouse-overed) ;;mouse overed is used to update status bar
-;                           (lambda (self mouseovered-name)
-;                             (set! mouse-overed mouseovered-name)))
                   (obj-put this-obj 'set-mouse-overed ;;mouse overed is used to update status bar
                            (lambda (self mouseovered-name)
                              (set! mouse-overed mouseovered-name)))
-;                          ((eq? message 'get-application-symbol)
-;                           (lambda (self)
-;                             application-symbol))
                   (obj-put this-obj 'get-application-symbol
                            (lambda (self)
                              application-symbol))
-;                          ((eq? message 'get-links)
-;                           (lambda (self)
-;                             links))
                   (obj-put this-obj 'get-links
                            (lambda (self)
                              links))
-;                          ((eq? message 'on-size)
-;                           (lambda (self)
-;                             (on-size)))
                   (obj-put this-obj 'on-size
                            (lambda (self)
                              (on-size)))
-;                          ((eq? message 'set-bgdraw)
-;                           (lambda (self drawfunc)
-;                             (set! bgdraw drawfunc)))
                   (obj-put this-obj 'set-bgdraw
                            (lambda (self drawfunc)
                              (set! bgdraw drawfunc)))
-;                          ((eq? message 'set-zoomfactor!)
-;                           (lambda (self in-zoomfactor)
-;                             (set! zoomfactor in-zoomfactor)))
                   (obj-put this-obj 'set-zoomfactor!
                            (lambda (self in-zoomfactor)
                              (set! zoomfactor in-zoomfactor)))
-;                          ((eq? message 'get-zoomfactor)
-;                           (lambda (self)
-;                             zoomfactor))
                   (obj-put this-obj 'get-zoomfactor
                            (lambda (self)
                              zoomfactor))
-;                          ((eq? message 'graph->canvas)
-;                           (lambda (self in-value)
-;                             (graph->canvas in-value)))
                   (obj-put this-obj 'graph->canvas
                            (lambda (self in-value)
                              (graph->canvas in-value)))
-;                          ((eq? message 'canvas->graph)
-;                           (lambda (self in-value)
-;                             (canvas->graph in-value)))
                   (obj-put this-obj 'canvas->graph
                            (lambda (self in-value)
                              (canvas->graph in-value)))
-;                          ((eq? message 'zoomed?)
-;                           (lambda (self)
-;                             (zoomed?)))
                   (obj-put this-obj 'zoomed?
                            (lambda (self)
                              (zoomed?)))
-;                          ((eq? message 'set-allow-overlap!)
-;                           (lambda (self in-flag)
-;                             (set! allow-overlap in-flag)))
                   (obj-put this-obj 'set-allow-overlap!
                            (lambda (self in-flag)
                              (set! allow-overlap in-flag)))
-;                          ((eq? message 'allow-overlap?)
-;                           (lambda (self)
-;                             allow-overlap))
                   (obj-put this-obj 'allow-overlap?
                            (lambda (self)
                              allow-overlap))
-;                          ((eq? message 'set-snap-to-grid!)
-;                           (lambda (self in-flag)
-;                             (set! snap-to-grid in-flag)))
                   (obj-put this-obj 'set-snap-to-grid!
                            (lambda (self in-flag)
                              (set! snap-to-grid in-flag)))
-;                          ((eq? message 'snap-to-grid?)
-;                           (lambda (self)
-;                             snap-to-grid))
                   (obj-put this-obj 'snap-to-grid?
                            (lambda (self)
                              snap-to-grid))
-;                          ((eq? message 'set-allow-repaint!)
-;                           (lambda (self in-flag)
-;                             (set! allow-repaint in-flag)))
                   (obj-put this-obj 'set-allow-repaint!
                            (lambda (self in-flag)
                              (set! allow-repaint in-flag)))
-;                          ((eq? message 'get-mhm)
-;                           (lambda (self)
-;                             mhm))
                   (obj-put this-obj 'get-mhm
                            (lambda (self)
                              mhm))
-;                          ((eq? message 'find-clicked)
-;                           (lambda (self type x y)
-;                             (find-clicked type x y)))
                   (obj-put this-obj 'find-clicked
                            (lambda (self type x y)
                              (find-clicked type x y)))
-;                          ((eq? message 'get-callback)
-;                           (lambda (self)
-;                             (if callback
-;                                 callback
-;                                 (begin 
-;                                   (display "callback of graph-editor does not exist")(newline)
-;                                   #f))))
                   (obj-put this-obj 'get-callback
                            (lambda (self)
                              (if callback
@@ -2371,30 +1905,18 @@
                                  (begin 
                                    (display "callback of graph-editor does not exist")(newline)
                                    #f))))
-;                          ((eq? message 'custom-wrap-anode)
-;                           (lambda (self date name x y superclass-wrapper)
-;                             (custom-wrap-anode self date name x y superclass-wrapper)
-;                             ))
                   (obj-put this-obj 'custom-wrap-anode
                            (lambda (self date name x y superclass-wrapper)
                              (custom-wrap-anode self date name x y superclass-wrapper)
                              ))
                           ;; add custom-node to a seperate hashtable from normal node
                           ;; custom-nodes-hash is handled differently
-;                          ((eq? message 'custom-node-add)
-;                           (lambda (self namekey custom-node) ;; obj is the ac
-;                             (hash-table-put! custom-nodes-hash namekey custom-node)))
                   (obj-put this-obj 'custom-node-add
                            (lambda (self namekey custom-node) ;; obj is the ac
                              (hash-table-put! custom-nodes-hash namekey custom-node)))
                           ; set text height
-;                          ((eq? message 'set-text-height!)
-;                           (lambda (self in-text-height)
-;                             (set! text-height in-text-height)))
                   (obj-put this-obj 'set-text-height!
                            (lambda (self in-text-height)
                              (set! text-height in-text-height)))
-;                          (else (get-method typed-obj message))))
                   this-obj))
-
 ;        ); end of module

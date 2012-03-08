@@ -26,7 +26,7 @@
   )
 
 ; export
-(module-export runcode runcode-exp runcode-just-sexpr parsecode-sexpr)
+(module-export runcode runcode-exp runcode-just-sexpr parsecode-sexpr string->sexpr)
 (module-static 'init-run)
 
 ; need to get the text, convert to s-expression using read,
@@ -92,24 +92,68 @@
 
     (runcode-exp explist result-callback status-callback))))
 
+;; open-input-file
+(define (string->sexpr code-str :: <string>)
+  (define input-port (open-input-string code-str))
+  (define (one-element? port) ;; check whether the whole code is one closure example (begin (dothis) (dothat)) or not (dothis)(dothat)
+    ;; read one time
+    (define first-read (custom-try-catch
+                        (lambda () (read port))
+                        #t
+                        (lambda (ex)
+                          (display "[ERROR] from string->sexpr ")(newline)
+                          (display (*:toString ex)))))
+    (define second-read (read port)) ;; assuming if first read went ok second read should be fine
+    ;; read second time
+    (and (not (eof-object? first-read))
+         (eof-object? second-read)))
+  
+  ;; create a list of all the sexpr (converted from string via read)
+  (define (helper port)
+    (define input
+      (custom-try-catch
+       (lambda () (read port))
+       #t
+       (lambda (ex)
+         (display "[ERROR] from string->sexpr ")(newline)
+         (display (*:toString ex)))))
+    (cond
+     ((eof-object? input)
+      '())
+     (else 
+      (append (list input) (helper port))))
+    )
+  
+    (if (one-element? input-port)
+        (begin
+          ;; if in one closure get that single element from the list returned by helper
+          (car (helper (open-input-string code-str)))) ;; note input-port has been read and need to load it again
+          
+        (begin
+          ;; if not in one closure add a begin in from of the enclosing list returned by helper
+          (cons 'begin (helper (open-input-string code-str))))
+      )
+  )
+
 (define (runcode-just-sexpr sexpr)
-  (let ((output
-             (try-catch (begin 
-                          (display sexpr)(newline)
-                          (myeval sexpr))
-                       
-               ; catch errors
-               ; should actually stop here and show error line to user
-               (ex <java.lang.Throwable>
-                   (begin
-                     (display "runcode-just-sexpr")(newline)
-                     (display (*:toString ex))
-                     )))))
+;  (let ((output
+;             (try-catch 
+;                 (myeval sexpr)
+;                       
+;               ; catch errors
+;               ; should actually stop here and show error line to user
+;               (ex <java.lang.Throwable>
+;                   (begin
+;                     (display "runcode-just-sexpr")(newline)
+;                     (display (*:toString ex))
+;                     )))))
 
-        (display output)(newline)
-    ))
+;        (display output)(newline)
+;    )
+  (myeval sexpr)
+  )
 
-
+;; run the proc on the whole code (used to find a certain line in the code to retrieve information)
 (define (parsecode-sexpr input-port proc)
   (define input 
     (custom-try-catch 

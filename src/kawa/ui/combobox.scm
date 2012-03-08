@@ -17,13 +17,18 @@
 ;; with this program; if not, write to the Free Software Foundation, Inc.,
 ;; 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+;(require "../arrays.scm") ;; array-to-list
+
 (module-export make-combobox make-choices make-comboboxwithdata make-sortedcomboboxwithdata
                get-combobox-selecteditem get-combobox-selectedindex get-combobox-item-at get-comboboxwithdata-selecteddata get-comboboxwithdata-data-at
                set-combobox-clear set-comboboxwithdata-clear set-combobox-selection set-combobox-selection-object set-comboboxwithdata-selection-bydata
                add-combobox-item add-combobox-string 
                add-comboboxwithdata-item insert-comboboxwithdata-item-at 
                add-comboboxwithdata-string insert-comboboxwithdata-string-at
-               get-combobox-item-count)
+               remove-combobox-item
+               remove-combobox-string
+               get-combobox-item-count
+               create-combobox-string-item)
                
 ;;
 ;; combo box
@@ -32,8 +37,14 @@
 ; make a combo box
 ; pass in parameters for each item to appear in the combobox
 ; ie. (make-combobox "first" "second" "third")
-(define (make-combobox #!rest (args :: <Object[]>))
-  (<javax.swing.JComboBox> args))
+;; need to apply the fix that comes from create-combobox-string-item here
+(define (make-combobox #!rest args) ;; just have args as list   ;(args :: <Object[]>))
+  (define combobox (<javax.swing.JComboBox>))
+  (map (lambda (item)
+         (add-combobox-string combobox item))
+       args)
+  ;(<javax.swing.JComboBox> args)
+  combobox)
 
 ; think this is a leftover from drscheme - alex
 (define (make-choices)
@@ -143,6 +154,8 @@
   (invoke in-combo 'getDataAt in-index))
 
 ; clear combobox
+;; TOFIX bug when using it with add-combobox-string
+;; the equals object seems to be bringing in a null object when it deletes using this
 (define (set-combobox-clear in-combo :: <javax.swing.JComboBox>)
   (invoke in-combo 'removeAllItems))
 
@@ -165,22 +178,54 @@
                                                 in-data :: <object>)
   (invoke in-combo 'setSelectedData in-data))
 
-; add an item to a combobox
+;; remove a selected object from the combobox
+(define (remove-combobox-item in-combo :: <javax.swing.JComboBox>
+                              to-remove :: <java.lang.Object>)
+  (invoke in-combo 'remove-item to-remove)
+  )
+
+; add an item to a combobox 
+; (should we stop using this? since add-combobox-string solves duplicate object problem?)
 (define (add-combobox-item in-combo :: <javax.swing.JComboBox>
                            in-item :: <object>)
   (invoke in-combo 'addItem in-item))
 
+;; need this because to do a set-combobox-selection-object 
+;; on a combobox that does add-combobox-string 
+;; we need to create such an object
+;; for the selction to work
+(define (create-combobox-string-item str-obj :: <java.lang.Object>)
+  
+  (define-class combobox-string-item (java.lang.Object)
+    ((toString) :: <java.lang.String>
+     str-obj)
+    ((equals obj :: <java.lang.Object>) 
+;     (display "equals ")(newline)
+;     (display "obj ")(display obj)(newline)
+;     (display "str-obj ")(display str-obj)(newline)
+     (if (equal? #!null obj)
+         #f
+         (equal? (invoke obj 'to-string) (invoke str-obj 'to-string)))))
+  
+  (make combobox-string-item))
+  
 ; add a string to a combobox
 ; this is a workaround to avoid duplicate display of item
 ; selections, see http://download.oracle.com/javase/1,5.0/docs/api/javax/swing/JComboBox.html#addItem%28java.lang.Object%29
+; TOFIX: perhaps this is just the different types of string causing the bug
 (define (add-combobox-string in-combo :: <javax.swing.JComboBox>
                            in-item :: <object>)
   (invoke in-combo 'addItem 
-          (begin
-            (define-class myObject (java.lang.Object)
-              ((toString) :: <java.lang.String>
-               in-item))
-            (make myObject))))
+;          (begin
+;            (define-class myObject (java.lang.Object)
+;              ((toString) :: <java.lang.String>
+;               in-item))
+;            (make myObject))
+          (create-combobox-string-item in-item)))
+
+(define (remove-combobox-string in-combobox :: <javax.swing.JComboBox>
+                                in-item :: <object>)
+  (invoke in-combobox 'remove-item (create-combobox-string-item in-item)))
 
 ; add an item to a combobox with data
 (define (add-comboboxwithdata-item in-combo :: <comboboxwithdata>
@@ -202,11 +247,12 @@
                                      in-item :: <String>
                                      in-data :: <object>)
   (invoke in-combo 'addItem
-          (begin
-            (define-class myObject (java.lang.Object)
-              ((toString) :: <java.lang.String>
-               in-item))
-            (make myObject))
+;          (begin
+;            (define-class myObject (java.lang.Object)
+;              ((toString) :: <java.lang.String>
+;               in-item))
+;            (make myObject))
+          (create-combobox-string-item in-item)
           in-data))
 
 ; as above but insert at a specific index
@@ -215,11 +261,12 @@
                                            in-data :: <object>
                                            in-index :: <int>)
   (invoke in-combo 'insertItemAt
-          (begin
-            (define-class myObject2 (java.lang.Object)
-              ((toString) :: <java.lang.String>
-               in-item))
-            (make myObject2))
+;          (begin
+;            (define-class myObject2 (java.lang.Object)
+;              ((toString) :: <java.lang.String>
+;               in-item))
+;            (make myObject2))
+          (create-combobox-string-item in-item)
           in-data
           in-index))
 
@@ -230,5 +277,3 @@
 
 (define (get-combobox-item-count in-combo :: <javax.swing.JComboBox>)
   (invoke in-combo 'getItemCount))
-
-

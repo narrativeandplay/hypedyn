@@ -26,7 +26,6 @@
   (require "../kawa/ui/component.scm")
   (require "../kawa/ui/container.scm")
   (require "../kawa/ui/frame.scm")
-  (require "../kawa/file.scm")
   (require "../kawa/ui/events.scm")
   (require "../kawa/ui/text.scm")
   (require "../kawa/ui/panel.scm")
@@ -34,9 +33,13 @@
   (require "../kawa/ui/label.scm")
   (require "../kawa/ui/button.scm")
   (require "../kawa/ui/toolbar.scm")
+  
+  (require "../kawa/file.scm")
+  (require "../kawa/strings.scm") ;;to-string
   (require "../kawa/system.scm")
   (require "../kawa/miscutils.scm")
   (require "../kawa/audio-kawa.scm")
+  
   (require "../common/evaluator.scm")
   (require "../common/objects.scm") ;; ask
   (require "../common/datatable.scm") ;; get-list, get, reset-table 
@@ -44,10 +47,17 @@
   (require "../common/fileio.scm")
   (require "../common/list-helpers.scm")
   (require "../common/runcode.scm")
+  (require "../common/myhashtable.scm") ;;hash-table-for-each
+  (require "../common/links.scm") ;; for style-link 
+  (require "../common/hypertextpane.scm") ;; set-attribute-linkAction
+  
   (require "config-options.scm")
   (require "datastructure.scm")
   (require "reader-pane.scm")
-  (require 'list-lib))
+  
+  (require 'list-lib)
+  ;(require 'hash-table)
+  )
 
 ; exports
 (module-export close-nodereader
@@ -56,33 +66,47 @@
                forget-history goto-node doback
                get-read-nodeID get-prev-read-nodeID
                dorestart doreadstartnode create-nodereader
-               visited? followed? previous? dest-visited? alt-dest-visited? holds? get-fact-value
+               visited? followed? previous? 
+               ;dest-visited? alt-dest-visited? 
+               holds? get-fact-value
                set-visited! set-followed! assert retract set-fact-value!
                get-link-type set-link-type!
                get-custom-cursor-image set-custom-cursor-image!
                get-user-data set-user-data!
                do-action get-action-from-rule-by-ID get-action-from-rule
-               eval-rule-expr-by-ID eval-rule-expr
+               check-rule-condition ;eval-rule-expr
                set-custom-cursors! set-hover-links! set-hover-click!
                set-available-node-count! get-available-node-count
                set-visited-node-count! get-visited-node-count
                update-node-counter toggle-show-node-counter
                set-reader-background-color!
                set-reader-background-image! clear-reader-background-image!
-               play-audio loop-audio loop-audio-forever stop-audio)
+               play-audio loop-audio loop-audio-forever stop-audio
+               
+               get-anywhere-nodes
+               
+               replace-link-text follow-link2 add-anywhere-link)
 
 ;;
 ;; config flags
 ;; 
 
-; true if we're running in demo mode
-(define demo-mode #f)
+;;;; Reader states
 
-; demo filename
-(define demo-filename #f)
+(define demo-mode #f)          ;; true if we're running in demo mode
+(define demo-filename #f)      ;; demo filename
+(define applet-mode #f)        ;; true if we're running in an applet
 
-; true if we're running in an applet
-(define applet-mode #f)
+; keep track of number of nodes read, and number currently available to be read
+; note that this doesn't really make sense, but is being used for the user study
+(define visited-node-count 0)
+(define available-node-count 0)
+(define showing-node-count #f)
+
+
+;;
+;;;; UI objects
+;; 
 
 ; variables to hold components of nodereader
 (define nodereader-frame #f)
@@ -95,11 +119,7 @@
 (define nodereader-canvas #f)
 (define nodereader-pane #f)
 
-;;
-;; UI
-;; 
-
-; create the nodereader
+; create the nodereader (init ui)
 (define (create-nodereader in-frame in-applet-mode in-demo-mode in-demo-filename)
   ; remember the frame
   (set! nodereader-frame in-frame)
@@ -157,13 +177,17 @@
   (ask nodereader-pane 'init)
   (add-component in-frame (make-scrollpane (ask nodereader-pane 'getcomponent)) 'border-center))
 
-; keep track of number of nodes read, and number currently available to be read
-; note that this doesn't really make sense, but is being used for the user study
-(define visited-node-count 0)
-(define available-node-count 0)
-(define showing-node-count #f)
+; close the nodereader
+(define (close-nodereader)
+  (format #t "close-nodereader~%~!")
+  (set-component-visible nodereader-frame #f)
+  (stop-audio)
+  ;(dispose-frame nodereader-frame)
+  ;(set! nodereader-frame #f)
+  )
 
-; hide/show
+;;;; show node counter
+; hide/show label
 (define (toggle-show-node-counter)
   (set! showing-node-count (not showing-node-count))
   (set-component-visible nodereader-toolbar-label-nodecount-label showing-node-count)
@@ -182,18 +206,8 @@
              (number->string visited-node-count)
              (string-append " of " (number->string available-node-count)))))
 
-; close the nodereader
-(define (close-nodereader)
-  (format #t "close-nodereader~%~!")
-  (set-component-visible nodereader-frame #f)
-  (stop-audio)
-  ;(dispose-frame nodereader-frame)
-  ;(set! nodereader-frame #f)
-  )
-
-
 ;;
-;; file i/o
+;;;; file i/o
 ;;
 
 ; name of file being read
@@ -229,9 +243,12 @@
       #t))
 
 
+;;;; node traversal
 ;;
 ;; overall document
 ;; 
+
+;;; step count
 
 ; remember how many steps
 ; note: starts at 0, and is incremented when leaving first node,
@@ -388,7 +405,7 @@
         #f)))
 
 ;;
-;; card shark stuff
+;;;; card shark stuff
 ;;
 
 ; nodes currently in hand
@@ -444,6 +461,7 @@
 
 ;; end card shark stuff
 
+;;;; story states
 ; save the initial state, in case running the story messes up the nodes/links
 (define saved-state #f)
 
@@ -485,7 +503,7 @@
                      (doc-step-action (get-action-from-rule-by-ID 'then-action doc-ruleID)))
                 (if (and
                      doc-step-action
-                     (eval-rule-expr-by-ID doc-ruleID))
+                     (check-rule-condition doc-ruleID))
                     (do-action doc-step-action))))
 
           ; run before action for next node (not sure about exact sequence for this)
@@ -496,18 +514,11 @@
                 (if before-action
                     (do-action before-action))))
 
-          ; run facts for next node
-          ; note: this will be generalized for all actions eventually
+          ;; trigger the rules with entered-node event 
           (if next-node
-              (let ((the-ruleID (ask next-node 'rule)))
-                (if (not (eq? the-ruleID 'not-set))
-                    (let* ((the-rule (get 'rules the-ruleID))
-                           (the-actions (ask the-rule 'actions)))
-                      (map (lambda (actionID)
-                             (let ((the-action (get 'actions actionID)))
-                               (if the-action
-                                   (do-action the-action))))
-                           the-actions)))))
+              (map (lambda (ruleID)
+                     (do-rule-action 'entered-node ruleID)
+                     ) (ask next-node 'rule-lst)))
 
           ; remember this node has been visited
           (if (not (visited? next-nodeID))
@@ -519,7 +530,7 @@
           
           ; if there was a previous node, need to take next card out
           ; of hand - card shark stuff
-          (format #t "goto-node: card-shark=~a~%~!\n" (card-shark?))
+          ;(format #t "goto-node: card-shark=~a~%~!\n" (card-shark?))
           (if (and (card-shark?) 
                    prev-node)
               (begin
@@ -557,12 +568,20 @@
 
           ; remember read node    
           (set! read-nodeID next-nodeID)
-
+          
+          ;; cache link bounds before the replace link text is triggered by displayed-node
+          (cache-link-bounds)
+          
+          ;; trigger rules
+          (rule-check-trigger-links 'displayed-node next-nodeID) ;; trigger links text display
+          (rule-check-trigger 'entered-node 'nodes next-nodeID) ;; trigger the node 
+          ;(ask nodereader-pane 'rule-check-trigger-links next-nodeID)
+          
           ; highlight links
           (ask nodereader-pane 'highlight-links)
 
           ; add anywhere nodes
-          (format #t "goto-node: card-shark=~a~%~!\n" (card-shark?))
+          ;(format #t "goto-node: card-shark=~a~%~!\n" (card-shark?))
           (if (card-shark?)
               (ask nodereader-pane 'add-nodes-in-hand-links nodes-in-hand)
               (ask nodereader-pane 'add-anywherenode-links))
@@ -574,7 +593,31 @@
         #f))
   (update-inspectors))
 
-;; conditions
+;; called when we set fact
+;; a subset of goto-node (refresh the display of the node)
+;; TODO: the mechanism to refresh a node's display after fact is update is problematic
+;;       because if we replace text of a link first then set fact, we would replace that newly replaced text with old content
+;;       this is commented out of set-fact procedures for now
+(define (refresh-node)
+  (define current-node (get 'nodes (get-read-nodeID)))
+  
+  (if current-node
+      (begin
+        ;; set contents - need to enable editing temporarily
+        (ask nodereader-pane 'set-node! current-node)
+
+        ;; trigger rules
+        (rule-check-trigger-links 'displayed-node (get-read-nodeID)) ;; trigger links text display
+
+        ;; highlight links
+        (ask nodereader-pane 'highlight-links)
+
+        ;; add anywhere nodes
+        (ask nodereader-pane 'add-anywherenode-links)
+        )))
+
+
+;;;; conditions
 
 ; was a node visited?
 (define (visited? dest-nodeID)
@@ -589,38 +632,17 @@
     (display "Prev node: ") (display prev-read-nodeID) (newline)
     (and prev-read-nodeID (= prev-read-nodeID in-nodeID))))
 
-; check if a link's destination has been visited
-(define (dest-visited? l)
-  (let* ((dest-nodeID (ask l 'destination))
-         (dest-node (get 'nodes dest-nodeID)))
-    (> (ask dest-node 'visited?) 0)))
+;;; check if a link's destination has been visited
+;(define (dest-visited? l)
+;  (let* ((dest-nodeID (ask l 'destination))
+;         (dest-node (get 'nodes dest-nodeID)))
+;    (> (ask dest-node 'visited?) 0)))
 
-; check if a link's alt destination has been visited
-(define (alt-dest-visited? l)
-  (let* ((dest-nodeID (ask l 'alt-destination))
-         (dest-node (get 'nodes dest-nodeID)))
-    (> (ask dest-node 'visited?) 0)))
-
-; check if a link has been followed
-(define (followed? target-linkID)
-  (let ((target-link (get 'links target-linkID)))
-    (if target-link
-        (> (ask target-link 'followed?) 0)
-        #f)))
-
-; check if an fact holds
-(define (holds? target-factID)
-  (let ((target-fact (get 'facts target-factID)))
-    (if target-fact
-        (ask target-fact 'holds?)
-        #f)))
-
-; get the value of an fact
-(define (get-fact-value target-factID)
-  (let ((target-fact (get 'facts target-factID)))
-    (if target-fact
-        (ask target-fact 'get-value)
-        #f)))
+;;; check if a link's alt destination has been visited
+;(define (alt-dest-visited? l)
+;  (let* ((dest-nodeID (ask l 'alt-destination))
+;         (dest-node (get 'nodes dest-nodeID)))
+;    (> (ask dest-node 'visited?) 0)))
 
 ;; operations
 
@@ -636,25 +658,7 @@
     (if the-link
         (ask the-link 'set-followed! in-value))))
 
-; assert an fact
-(define (assert in-factID)
-  (let ((target-fact (get 'facts in-factID)))
-    (if target-fact
-        (ask target-fact 'assert))))
-
-; retract an fact
-(define (retract in-factID)
-  (let ((target-fact (get 'facts in-factID)))
-    (if target-fact
-        (ask target-fact 'retract))))
-
-; set the value of an fact
-(define (set-fact-value! in-factID in-value)
-  (let ((target-fact (get 'facts in-factID)))
-    (format #t "set-fact-value!: fact: ~a, value: ~a, target fact: ~a~%~!\n" 
-            in-factID in-value target-fact)
-    (if target-fact
-        (ask target-fact 'set-value! in-value))))
+;;;; link information
 
 ; get the link type
 (define (get-link-type in-linkID)
@@ -669,19 +673,6 @@
     (if the-link
         (ask the-link 'set-link-type! in-type))))
   
-; get the custom cursor image for a link
-(define (get-custom-cursor-image in-linkID)
-  (let ((the-link (get 'links in-linkID)))
-    (if the-link
-        (ask the-link 'get-custom-cursor-image)
-        '#f)))
-
-; set the custom cursor image for a link
-(define (set-custom-cursor-image! in-linkID in-image)
-  (let ((the-link (get 'links in-linkID)))
-    (if the-link
-        (ask the-link 'set-custom-cursor-image! in-image))))
-  
 ; get the user data in a link
 (define (get-user-data in-linkID)
   (let ((the-link (get 'links in-linkID)))
@@ -694,7 +685,60 @@
   (let ((the-link (get 'links in-linkID)))
     (if the-link
         (ask the-link 'set-user-data! in-data))))
-  
+
+; check if a link has been followed
+(define (followed? target-linkID)
+  (let ((target-link (get 'links target-linkID)))
+    (if target-link
+        (> (ask target-link 'followed?) 0)
+        #f)))
+
+;;;; fact operations
+
+; assert an fact
+(define (assert in-factID)
+  (let ((target-fact (get 'facts in-factID)))
+    (if target-fact
+        (begin
+          (ask target-fact 'assert)
+          ;(refresh-node)
+          ))))
+
+; retract an fact
+(define (retract in-factID)
+  (let ((target-fact (get 'facts in-factID)))
+    (if target-fact
+        (begin
+          (ask target-fact 'retract)
+          ;(refresh-node)
+          ))))
+
+; set the value of an fact
+(define (set-fact-value! in-factID in-value)
+  (let ((target-fact (get 'facts in-factID)))
+;    (format #t "set-fact-value!: fact: ~a, value: ~a, target fact: ~a~%~!\n" 
+;            in-factID in-value target-fact)
+    (if target-fact
+        (begin
+          (ask target-fact 'set-value! in-value)
+          ;(refresh-node)
+          ))))
+
+; check if an fact holds
+(define (holds? target-factID)
+  (let ((target-fact (get 'facts target-factID)))
+    (if target-fact
+        (ask target-fact 'holds?)
+        #f)))
+
+; get the value of an fact
+(define (get-fact-value target-factID)
+  (let ((target-fact (get 'facts target-factID)))
+    (if target-fact
+        (ask target-fact 'get-value)
+        #f)))
+
+;;;; rules operation
 ;; actions
 
 ; perform an action
@@ -712,20 +756,20 @@
 
 ; perform an action
 ; this version assumes stored as a string
-(define (do-action in-action)
+(define (do-action actionID)
+  (define in-action (get 'actions actionID))
+  
+  ;; debug code block
+  (define ruleID (ask in-action 'ruleID))
+  (define rule (get 'rules ruleID))
+  
   (if in-action
       (let ((this-expr (ask in-action 'expr)))
         ; wrap the expression in a "begin" so its all one expression
-        (runcode (string-append "(begin\n" this-expr "\n)") 
-                 display-results display-status))))
-
-; display the results after running an action (debugging)
-(define (display-results txt)
-  (format #t "Results: ~a~%~!\n" txt))
-
-; display the status after running an action (debugging)
-(define (display-status txt)
-  (format #t "Status: ~a~%~!\n" txt))
+;        (runcode (string-append "(begin\n" (to-string this-expr) "\n)") 
+;                 display-results display-status)
+        (runcode-just-sexpr this-expr) 
+        )))
 
 ; get action from rule by ID
 (define (get-action-from-rule-by-ID in-get-method in-ruleID)
@@ -739,25 +783,34 @@
     (get 'actions the-action-ID)))
 
 ; evaluate a rule expression by ID
-(define (eval-rule-expr-by-ID in-ruleID)
+;; new name should be check-rule-condition
+(define (check-rule-condition in-ruleID)
+;  (if (not (eq? in-ruleID 'not-set))
+;      (eval-rule-expr (get 'rules in-ruleID))
+;      #t)
   (if (not (eq? in-ruleID 'not-set))
-      (eval-rule-expr (get 'rules in-ruleID))
-      #t))
+      (let ((rule-expr (ask (get 'rules in-ruleID) 'rule-expr)))
+        ;; evaluate the expression in our evaluator
+        (try-catch
+            (myeval rule-expr)
+          (ex <java.lang.Throwable>
+              (begin
+                (display (*:toString ex))(newline)
+                (*:printStackTrace ex)
+                #f))))
+      #t)
+  )
 
-; evaluate a rule expression
-(define (eval-rule-expr therule)
-  (let ((rule-expr (ask therule 'rule-expr)))
-    ; evaluate the expression in our evaluator
-    (try-catch
-        (myeval rule-expr)
-      (ex <java.lang.Throwable>
-          (begin
-            (display (*:toString ex))(newline)
-            (*:printStackTrace ex)
-            #f)))))
+;;;; evaluator debugging
+; display the results after running an action (debugging)
+(define (display-results txt)
+  (format #t "Results: ~a~%~!\n" txt))
 
+; display the status after running an action (debugging)
+(define (display-status txt)
+  (format #t "Status: ~a~%~!\n" txt))
 
-;; display options
+;;;; cursor over display options
 
 ; not sure where this should go - turn custom cursors on/off
 (define (set-custom-cursors! in-flag)
@@ -774,6 +827,20 @@
   (if nodereader-pane
       (ask nodereader-pane 'set-hover-click! in-flag)))
 
+; get the custom cursor image for a link
+(define (get-custom-cursor-image in-linkID)
+  (let ((the-link (get 'links in-linkID)))
+    (if the-link
+        (ask the-link 'get-custom-cursor-image)
+        '#f)))
+
+; set the custom cursor image for a link
+(define (set-custom-cursor-image! in-linkID in-image)
+  (let ((the-link (get 'links in-linkID)))
+    (if the-link
+        (ask the-link 'set-custom-cursor-image! in-image))))
+
+;;;; node counts
 ; set number of available nodes, for user study
 (define (set-available-node-count! in-count)
   (set! available-node-count in-count)
@@ -785,6 +852,7 @@
 (define (get-visited-node-count)
   visited-node-count)
 
+;;;; reader background 
 ; set the background colour: takes a list as defined in ui-kawa.scm
 (define (set-reader-background-color! in-color)
   (if nodereader-pane
@@ -801,7 +869,7 @@
       (ask nodereader-pane 'clear-background-image)))
 
 ;;
-;; audio
+;;;; audio
 ;; 
 
 ; audio clip
@@ -841,3 +909,170 @@
         (stop-audio-clip the-clip)
         (close-audio-clip the-clip)
         (set! the-clip #!null))))
+
+;;;; replace text / highlight
+(define (update-indices this-hashtable this-key this-index insert-index offset)
+  (if (>= this-index insert-index)
+      (hash-table-put! this-hashtable this-key (+ this-index offset))))
+
+(define (cache-link-bounds)
+  ; first pass - make copy of link positions, to be offset when
+  ; text is changed by alternate links
+  ;; moved to reader.scm from reader-pane's highlight-links
+  (map (lambda (l)
+         (let* ((thislink (get 'links l))
+                (start-index (ask thislink 'start-index))
+                (end-index (ask thislink 'end-index)))
+           (hash-table-put! start-indices l start-index)
+           (hash-table-put! end-indices l end-index)
+           ))
+       (ask (get 'nodes (ask nodereader-pane 'get-nodeID)) 'links)))
+
+;; new addition to htlanguage
+
+    ;; text-type is either 'text 'fact 
+    ;; value would be a string when it is text-type 
+    ;;       or a factID if it is a fact (num)
+    ;; part of htlanguage
+(define (replace-link-text text-type value linkID)
+  (if nodereader-pane
+      (let* ((link-obj (get 'links linkID))
+             ;(start-index (ask link-obj 'start-index))
+             ;(end-index (ask link-obj 'end-index))
+             (start-index (hash-table-get start-indices linkID))
+             (end-index (hash-table-get end-indices linkID))
+             (newtext (cond ((eq? text-type 'text)
+                             value)
+                            ((eq? text-type 'fact)
+                             (define fact-obj (get 'facts value))
+                             (if fact-obj
+                                 (begin
+                                   (define fact-text (ask fact-obj 'get-value))
+                                   (if fact-text
+                                       fact-text
+                                       "[fact not set]")
+                                   )
+                                 "[fact not found]"
+                                 ))))
+             (new-end-index (+ start-index (string-length newtext)))
+             ;(use-alt-text (alttext? thislink))
+             )
+
+        ;; do the replacement in the textpane
+        (ask nodereader-pane 'set-track-links! #f)
+        (let ((nodereader-doc (ask nodereader-pane 'getdocument)))
+;          (display "[delete from] ")(display start-index) (newline)
+;          (display "  to ")(display end-index)(newline)
+;          (display "  deleting these - ")(display (substring (ask nodereader-pane 'gettext) start-index end-index))(newline) 
+          (set-text-delete nodereader-doc
+                           start-index
+                           (- end-index start-index))
+;          (display "[insert] ")(display newtext)(newline)
+;          (display "  from ")(display start-index)(newline) 
+          (set-text-insert nodereader-doc
+                           newtext
+                           start-index)
+          )
+       (ask nodereader-pane 'set-track-links! #t) ;; htpane-obj (nodereader-pane)
+        
+        (define newtext-len (string-length newtext))
+        (define oldtext-len (- end-index start-index))
+        (define offset (- newtext-len oldtext-len))
+        
+        ; update link positions (shift the link bounds that comes after this link)
+        (define new-end-index (+ end-index offset))
+        (hash-table-for-each start-indices
+                             (lambda (k v)
+                               (update-indices start-indices k v end-index offset))) ;; was end-index
+        (hash-table-for-each end-indices
+                             (lambda (k v)
+                               (update-indices end-indices k v end-index offset)))
+        )))
+
+;; part of htlanguage
+;; check whether condition in ruleID is met then carry out follow link
+;; a copy of follow-link
+(define (follow-link2 linkID parent-ruleID link-type dest-nodeID) ;; the-action, use-link taken out
+  (display "follow-link2 ")(newline)
+  (if nodereader-pane 
+      (begin
+        (define the-link (get 'links linkID))
+        ; perform action, if any, before going to destination
+;        (if the-action
+;            (do-action the-action))
+
+        ; and go to destination node if link is active
+        ;(if use-link
+;            (if (and (or (not hover-links)
+;                         (equal? link-type 'default))
+;                     (check-rule-condition parent-ruleID)) ; Note: this check was only for hover-links - Alex
+        (if (check-rule-condition parent-ruleID) ; I don't think this check is necessary - Alex
+            (begin
+              ; increment followed count
+              (ask the-link 'set-followed!
+                   (+ (ask the-link 'followed?) 1))
+
+              ; goto node
+              (goto-node dest-nodeID #t))
+
+;                ;; else
+;                ;(if hover-links
+;                 ; show the hover link 
+;                (let ((e (ask nodereader-pane 'get-lastmousemove)))
+;                  (set-tooltip-text (ask the-link 'ID))
+;                                        ; dispatch a mouseevent to trick tooltipmanager into displaying tooltip
+;                  (if e
+;                      (begin ;; QUESTION: why do it twice here?
+;                        (dispatch-mouseevent (ask nodereader-pane 'getcomponent) e)
+;                        (dispatch-mouseevent (ask nodereader-pane 'getcomponent) e)
+;                        )))
+            )))
+  )
+
+;; dummy for anywhere link adding action
+;; not sure if we're going to use this or not
+(define (add-anywhere-link nodeID)
+
+  (let* ((thisnode (get 'nodes nodeID))
+         (thisnodeName (ask thisnode 'name))
+         (nodereader-doc (ask nodereader-pane 'getdocument))
+         (thisStartPos (get-text-length nodereader-doc)))
+    ;; add text
+    (set-text-insert nodereader-doc
+                     (string-append "\n" thisnodeName)
+                     thisStartPos)
+
+    ;; no format for \n char
+    ;; Note: this fixed the clickable area beyond anywhere links to the right
+    (set-text-style nodereader-doc
+                        style-nolink
+                        thisStartPos 1
+                        #t)
+    
+    ;; highlight
+    (if (> (ask thisnode 'visited?) 0)
+        ;; already followed, so just underline
+        (set-text-style nodereader-doc
+                        style-followed-link
+                        (+ 1 thisStartPos)
+                        (- (get-text-length nodereader-doc) (+ 1 thisStartPos))
+                        #t)
+        ;; otherwise underline and bold
+        (set-text-style nodereader-doc
+                        style-link
+                        (+ 1 thisStartPos)
+                        (- (get-text-length nodereader-doc) (+ 1 thisStartPos))
+                        #t))
+
+    ;; and set clickback
+    (let ((link-attribute-set (make-attribute-set)))
+      (set-attribute-linkAction link-attribute-set
+                                (lambda ()
+                                  (goto-node nodeID #t)))
+      (set-attribute-linkID link-attribute-set nodeID)
+      (set-text-style nodereader-doc
+                      link-attribute-set
+                      (+ 1 thisStartPos)
+                      (- (get-text-length nodereader-doc) (+ 1 thisStartPos))
+                      #f)))
+)

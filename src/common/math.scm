@@ -100,24 +100,13 @@
         )
       ))
 
-;; 2d-vect-pair is a cons-pair
-;; NOTE TOFIX (or not) this procedure doesnt have any side effects
+;; 2d-vect-pair is a vector
 (define (vector2d-normalize vect2d)
-;;  (let* ((length (sqrt (+ (* (car 2d-vect-pair)
-;;                             (car 2d-vect-pair))
-;;                          (* (cdr 2d-vect-pair)
-;;                             (cdr 2d-vect-pair)))))
-;;         (x-comp (/ (car 2d-vect-pair) length))
-;;         (y-comp (/ (cdr 2d-vect-pair) length))
-;;         (pair-to-return (cons x-comp y-comp)))
-;;    pair-to-return
-;;    )
   (let* ((length (vector-magnitude vect2d))
          (x-comp (/ (vector-ref vect2d 0) length))
          (y-comp (/ (vector-ref vect2d 1) length))
          (to-return (vector x-comp y-comp)))
-    to-return)
-  )
+    to-return))
 
 ;; assuming we have a purely numerical vector
 ;; changes the vector too
@@ -565,6 +554,24 @@
   (if (not (equal? total-weight 0))
       (set! normalized-sum (/ total-sum total-weight)))
   normalized-sum
+  )
+
+;; TODO: need testing to replace the above
+(define (weighted-sum2 . weight-value-pairs)
+  (define total-sum 0)
+  (define total-weight 0)
+  (define (helper wv-lst)
+    (if (> (length wv-lst) 2)
+        (begin
+          (set! total-sum (+ total-sum (* (car wv-lst) (cadr wv-lst))))
+          (set! total-weight (+ total-weight (car wv-lst)))))
+    (helper (cddr wv-lst)))
+  (helper weight-value-pairs)
+  
+  ;; prevent division by 0
+  (if (not (= total-weight 0))
+      (/ total-sum total-weight)
+      0) ;; all weight 0 just return 0
   )
 
 ;; vec-list is a list of 2d vector 
