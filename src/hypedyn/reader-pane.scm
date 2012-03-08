@@ -641,97 +641,77 @@
       (begin
         (define rule-lst (ask obj 'rule-lst))
 
-        ;; pruning off rules without action
         ;; and rules with unsatisfied condition
         (define (suitable-for-firing? ruleID)
-          (define rule (get 'rules ruleID))
-          (define actions (ask rule 'actions))
-
-          (and ;(not (null? actions))            ;; has action (commented out, we do not skip pass empty rules now)
-               (or (not check-condition?)       ;; filter out those that dont have condition satisfied
+          (and (or (not check-condition?)       ;; filter out those that dont have condition satisfied
                    (and check-condition?        ;; if check-condition? #t
                         (check-rule-condition ruleID)))   ;; and condition satisfied
                ))
 
         ;; return all the rules with actions that have condition satisfied
-        (define result (filter suitable-for-firing? rule-lst))
+        (set! rule-lst (filter suitable-for-firing? rule-lst))
 
         ;; enforcing the fall-through and blocking
         ;; returns a list of rules that are allowed to be fired 
+        
+        ;; a check-condition?
+        ;; b fall-through?
+        ;; f - fall, b - block
+        ;; caps - #t lowcase - #f
+        
+        ;; without needing to check condition
+        ;; we skip those that have condition false anyway.. because they do nothing
+        ;; A B f
+        ;; A b b  (only condition that blocks)
+        ;; a B f
+        ;; a b f
+        
+        ;; a - not check condition just fall
+        ;; A B - check condition and fall through just fall
+        ;; A b - possibly block
+        
+        ;; inserting block-on-action
+        ;; would just split A b into four case (block-on-action X  action fired?)
+        ;; d - block-on-action
+        ;; e - has-action-triggered-by event type 
+        ;; A b D E  b 
+        ;; A b D e  f  (only condition that fails to block)
+        ;; A b d E  b
+        ;; A b d e  b
+        
+        ;; d - just block, no need to check e (we're not using block-on-action)
+        ;; D E - block because action relevant
+        ;; D e - fails to block, no action fired
+        
+        ;; TODO: continue putting in block-on-action feature in here
+        ;;       this is suppose to be the more compact version of select-for-firing
         (define (select-for-firing rule-lst event-type)
           (if (null? rule-lst)
               '() ;; end of list
               (let* ((ruleID (car rule-lst))
                      (rule (get 'rules ruleID)))
                 
-                (display "select for firing ")(display rule-lst)(newline)
-                (display " not block-on-action? ")(display (not block-on-action))(newline)
-                ;; only check rule without relevant actions when (not block-on-action)
-                ;; if current rule has relevant actions, block-on-action or not do the same as normal
-                (cond ((or (and (not (has-action-triggered-by event-type ruleID))
-                                (not block-on-action))
-                           (has-action-triggered-by event-type ruleID))
-                       (display "checking ")(newline)
-                       (define to-return
-                         (if (has-action-triggered-by event-type ruleID)
-                             (list ruleID)
-                             '()
-                             ))
-                       (if (or (and check-condition?
-                                    (ask rule 'fall-through?))
-                               (not check-condition?))
-                           (append to-return (select-for-firing (cdr rule-lst) event-type))
-                           ;; blocked. only condition this happens is check-condition? #t fall-through? #f
-                           to-return))
-                      ((and block-on-action
-                            (not (has-action-triggered-by event-type ruleID)))
-                       (display "skipping")(newline)
-                       (select-for-firing (cdr rule-lst) event-type)))
+                (define to-insert 
+                  (if (has-action-triggered-by event-type ruleID)
+                    (list ruleID) ;; insert
+                    '()))         ;; dont insert
+                  
+                (define follow-up
+                  (if (and check-condition? ;; only condition that can possibly block
+                           (not (ask rule 'fall-through?)))
+                      ;; block on action does additional check on has-action-triggered-by 
+                      ;; before deciding to block or not
+                      (if (and block-on-action ;; only condition failing to block (after the above is true)
+                               (not (has-action-triggered-by event-type ruleID)))
+                          (select-for-firing (cdr rule-lst) event-type) ;; fall
+                          '()) ;; block
+                      (select-for-firing (cdr rule-lst) event-type)))
+                
+                (append to-insert follow-up)
                 )))
-        
-        ;; without block-on-action feature
-        (define (select-for-firing2 rule-lst event-type)
-          (if (null? rule-lst)
-              '() ;; end of list
-              (let* ((ruleID (car rule-lst))
-                     (rule (get 'rules ruleID)))
-                
-                (if (or (and check-condition?
-                             (ask rule 'fall-through?))
-                        (not check-condition?))
-                    
-                    (if (has-action-triggered-by event-type ruleID)
-                        (append (list ruleID) (select-for-firing2 (cdr rule-lst) event-type))
-                        (append '() (select-for-firing2 (cdr rule-lst) event-type)))
-                    ;; check condition but no fall-through
-                    (if (has-action-triggered-by event-type ruleID)
-                        (list ruleID)
-                        '()))
-                )))
-        
-        ;; TODO: continue putting in block-on-action feature in here
-        ;;       this is suppose to be the more compact version of select-for-firing
-        (define (select-for-firing3 rule-lst event-type)
-          (if (null? rule-lst)
-              '() ;; end of list
-              (let* ((ruleID (car rule-lst))
-                     (rule (get 'rules ruleID)))
-                
-                (define follow-up 
-                  (if (or (and check-condition?
-                               (ask rule 'fall-through?))
-                          (not check-condition?))
-                      (select-for-firing3 (cdr rule-lst) event-type)
-                      '()))
-                
-                (if (has-action-triggered-by event-type ruleID)
-                    (append (list ruleID) follow-up)
-                    (append '() follow-up))
-                ))
-          )
 
         ;; return the list of rules that would be triggered
-        (select-for-firing2 result event-type)
+        (select-for-firing rule-lst event-type)
         )))
 
 ;; has action that respond to clicked-link 

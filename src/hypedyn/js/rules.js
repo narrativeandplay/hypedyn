@@ -128,10 +128,11 @@ function ruleRelevant(eventType, rule) {
 	}
  }
  
- function firingCandidate( objID, objType, eventType) {
+ function firingCandidate( objID, objType, eventType checkCond) {
 	function helper ( rules, index, arr ) {
 		if (! index > rules.length - 1) {
-			if (ruleRelevant(eventType, rule[index])) {
+			if (ruleRelevant(eventType, rule[index]) && 
+					((!checkCond) || (( checkCondition(rule[index]) ) && checkCond)) {
 				arr[arr.length] = rule[index];
 			}
 			helper ( rules, index+1, arr );
@@ -139,6 +140,13 @@ function ruleRelevant(eventType, rule) {
 			return arr;
 		}
 	}
+	var obj = switch objType {
+				case "node": 
+					nodelist[objID];
+				case "link": 
+					linklist[objID];
+			}
+	return helper ( obj.rules, 0, [] );
  }
  
 

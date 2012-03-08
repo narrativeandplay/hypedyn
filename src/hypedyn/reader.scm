@@ -716,8 +716,8 @@
 ; set the value of an fact
 (define (set-fact-value! in-factID in-value)
   (let ((target-fact (get 'facts in-factID)))
-    (format #t "set-fact-value!: fact: ~a, value: ~a, target fact: ~a~%~!\n" 
-            in-factID in-value target-fact)
+;    (format #t "set-fact-value!: fact: ~a, value: ~a, target fact: ~a~%~!\n" 
+;            in-factID in-value target-fact)
     (if target-fact
         (begin
           (ask target-fact 'set-value! in-value)
