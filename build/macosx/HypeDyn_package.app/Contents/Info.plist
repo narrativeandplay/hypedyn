@@ -5,13 +5,13 @@
 	<key>CFBundleName</key>
 	<string>HypeDyn</string>
 	<key>CFBundleGetInfoString</key>
-	<string>2.1.7 (15 December 2011)</string>
+	<string>2.2a1 (8 March 2012)</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2008-2011 National University of Singapore and National University of Singapore. All rights reserved.</string>
 	<key>CFBundleVersion</key>
-	<string>15 December 2011</string>
+	<string>8 March 2012</string>
 	<key>CFBundleShortVersionString</key>
-	<string>2.1.7 rev 27</string>
+	<string>2.2a1 rev 27</string>
 	<key>CFBundleAllowMixedLocalizations</key>
 	<string>true</string>
 	<key>CFBundleExecutable</key>
