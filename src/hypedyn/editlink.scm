@@ -67,11 +67,14 @@
                
                edit-mode ;; used by rules-manager so far
                delete-action ;; just for ht-editor.scm's dodelnode
+               
+               edited-linkID
                )
                
 
 ; remember which link we're editing
 (define edited-linkID '())
+;;(define (get-edited-linkID) edited-linkID)
 
 ;; keep track of which rule we're editing
 (define edited-ruleID '())

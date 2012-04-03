@@ -306,6 +306,9 @@
 ; select-dir: #t if user is selecting a directory, #f if selecting a file
 ; filetype: extension for 
 ; returns filename if can proceed, #f otherwise
+;; TODO; choosing dir to save to does not seem to work. highlighting the dir you would like to overwrite 
+;; does not bring the name of that dir up in the name
+;; cant overwrite dir that way
 (define (get-safe-new-filename in-dir select-dir filterlist #!optional default-name default-extension)
   (let ((newfilename (get-file-to-save in-dir select-dir filterlist default-name default-extension)))
     (if (is-mac-os?)

@@ -20,8 +20,7 @@ function createFact(name, type, id) {
 function setFact( id, value) {
 	var fact = factlist[id];
 	fact.value = value;
-	
-	factsDebug();
+	//factsDebug();
 }
 
 // return the html code 
@@ -31,6 +30,6 @@ function factsDebug() {
 		temp += factlist[i].id+" "+factlist[i].name+"::  "+factlist[i].value+"<br>";
 	}
 	var title="<br><text> Fact Debug </text><br>";
-	document.getElementById("fact_debug").innerHTML = title+"<text>"+temp+"</text>";
+	document.getElementById("fact_debug").innerHTML = title+"<text>"+temp+"</text>"+"<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><text>DEBUG</text>";
 }
 

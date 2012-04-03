@@ -680,8 +680,46 @@
 ;;;; javascript export
 ;;=====================
 
+
+(define (copy-js-framework)
+;; assuming .dyn is always appended to the filename get-filename-callback returns
+  
+  (define folder-name
+    (let ((tmp (get-saved-filename-string)))
+      (if (not tmp)
+          (set! tmp "Untitled.dyn"))
+      ;; removes the extension
+      (string-append (substring tmp 0 (- (string-length tmp) 4)) "-JS")
+      ))
+  
+  (let ((export-folder (get-safe-new-filename (get-last-exported-dir) #t '() folder-name)))
+    (if (not (eq? #f export-folder))
+        (begin
+          ; create folder, first deleting if it already exists
+          (export-create-folder export-folder)
+          (update-last-exported-dir! export-folder)
+
+          ; Note: put try-catch around this and cleanup on failure
+          (let* ((source-folder-string "js"))   ;;;(path-file (get-content-file export-web-folder))))
+            (try-catch
+                (begin
+                  (recursively-copy-directory (make-file source-folder-string)
+                                    export-folder)
+                  (copy-file-nio (make-file "dynfile.js")
+                                 (make-file (string-append (path-file export-folder) "/dynfile.js")))
+                  )
+              (ex <java.lang.Throwable>
+                  (begin
+                    (display (*:toString ex))(newline)
+                                        ;(*:printStackTrace ex)
+                    ))))
+          #t)
+        #f))
+  )
+
 (define (doexport-js) 
-  (write-jscode-to "dynfile.js" (generate-jscode)))
+  (write-jscode-to "dynfile.js" (generate-jscode))
+  (copy-js-framework))
 
 ;; createNode (content, id)
 (define (js-node-code nodeID)

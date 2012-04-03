@@ -1,0 +1,169 @@
+<html>
+<head>
+	<meta name="viewport" content="height=device-height, width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+	<script language=javascript> 
+		var device_width = (window.innerWidth > 0) ? window.innerWidth : screen.width;
+		var device_height = (window.innerHeight > 0) ? window.innerHeight : screen.height;
+		
+		//if (device_height > 480) 
+		//	device_height = 480;
+		device_height = 410; //460
+	</script>
+	<style type="text/css">
+		
+		/* applied to the sections in 'pages' */
+		.pagesdiv {
+			position: absolute;
+			overflow: hidden;
+			//background-repeat: no-repeat;
+			//background-color: green;
+			white-space: pre-wrap; /* preserve sequence of white space and wrap the text */
+			width: 320px; // 320-40
+			
+			//top: 50px; //50
+			//padding: 20px;
+			//padding-left: 20px;
+			//padding-right: 20px;
+			left: 0px;
+			top: 0px;
+		}
+		
+		.pagecontent {
+			padding: 20px;
+			width: 280px;
+		}
+		
+		#pages {
+			left: 0px;
+			top: 0px;
+		}
+		
+		/* pages
+				page(div)
+					content (div)
+		*/
+
+		/* makes sure the div in the page do not scale with parent section (ie keep constant width)*/
+		#pages div {
+			//position: fixed;
+			// width: 289px;
+			// width: 320px;
+			
+			// padding: 1em;
+			// padding-right: 10em;
+			
+			// height: 480px;
+			// visibility: hidden;
+		}
+		
+		#test_bed {
+			width: 320px;
+			//white-space: pre-wrap; /* preserve sequence of white space and wrap the text */
+			//padding-top: 1em;
+			//padding-left: 1em;
+			//padding-right: 1em;
+			//visibility: hidden;
+		}
+		
+		#pageflip-canvas {
+			position: absolute;
+			width: 320px;
+			//height: 480px;
+			z-Index: -101;
+			opacity: 1.0;
+			pointer-events: none;
+			top: 0px;
+			left: 0px;
+			//visibility: hidden;
+		}
+		
+		#popup {
+			position: absolute;
+			width: 260px;
+			//height: 280px; 
+			z-Index: -104;
+			opacity: 1.0;
+			overflow: scroll;
+			border-radius: 15px;
+
+			top: 15px;
+			left: 15px;
+			
+			padding-right: 15px;
+		}
+		
+		#outer-popup {
+			position: absolute;
+			width: 290px;
+			//height: 310px;
+			border-radius: 15px;
+			
+			top: 50px; //button_panel_height
+			left: 20px;
+		}
+		
+		#lightsoff-canvas {
+			position: absolute;
+			width: 320px;
+			height: 480px;
+			z-Index: -102;
+			opacity: 1.0;
+			color: black
+			pointer-events: none;
+			top: 0px;
+			left: 0px;
+			//visibility: hidden;
+		}
+		
+		#buttons-panel {
+			position: absolute;
+			//background-image:url('page_back_320_480.png');
+			height: 50px;
+			width: 320px;
+			//padding-right: 50px;
+			left: 0px;
+			top: 0px;
+		}
+		
+		#page-indicate-canvas {
+			position: absolute;
+			left: 80px;
+			//pointer-events: none;
+		}
+		
+	</style>
+</head>
+
+<body>
+	<div id="buttons-panel"></div>
+	<div id="pages"></div>
+	<div id="test_bed" style="visibility: hidden; left: 500px"></div>
+	
+	<div id="outer-popup">
+		<div id="popup">
+			<div>
+			</div>
+		</div>
+	</div>
+	
+	<div id="last_page" style="visibility: hidden; top: 500px"></div>
+	
+	<canvas id="pageflip-canvas" width="320" height="480"></canvas>
+	<canvas id="lightsoff-canvas" width="320" height="480"></canvas>
+	<canvas id="page-indicate-canvas" width="160" height="50"></canvas>
+	
+	<div id="touch_debug"></div>
+	<div id="fact_debug"></div>
+</body>
+
+<script src="main.js"></script>
+<script src="facts.js"></script>
+<script src="rules.js"></script>
+<script src="dynfile.js"></script>
+<script src="hdmouse.js"></script>
+<script type="application/javascript" src="iscroll.js?v4"></script>
+<script src="datastructure.js"></script>
+<script src="page-formatting.js"></script>
+<script src="flip-animation.js"></script>
+<script src="choice-button.js"></script>
+</html>

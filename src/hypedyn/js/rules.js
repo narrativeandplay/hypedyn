@@ -50,7 +50,7 @@ function createRule(parentID, parentType, if_not, and_or, fall_through, id) {
 	newrule.addCondition = function (newcond) {
 		newrule.conditions[newrule.conditions.length] = newcond;
 	}
-	
+
 	rulelist[id] = newrule;
 	return newrule;
 }
@@ -60,11 +60,14 @@ function createRule(parentID, parentType, if_not, and_or, fall_through, id) {
 function ruleRelevant(eventType, rule) {
 	var result = false;
 	for (var i in rule.actions) {
-		if (actions[i].eventType == eventType) {
+		if (rule.actions[i].eventType == eventType) {
+			//console.log("action tyep "+ rule.actions[i].eventType);
+			//console.log(" in type "+ eventType);
 			result = true;
 			break;
 		}
 	}
+	return result;
 }
 
 /*
@@ -79,12 +82,10 @@ function ruleRelevant(eventType, rule) {
 	newaction.id = id;
 	newaction.args = args; // array of to be passed to the function
 	newaction.doaction = function (evtType) {
-		
 		if (func == undefined)
 			func = function () {}
 		if (args == undefined)
 			args = [];
-		
 		if (newaction.eventType == evtType) {
 			func.apply(this, args);
 			return true; // indicate action fired
@@ -95,6 +96,8 @@ function ruleRelevant(eventType, rule) {
 	
 	if (rulelist[parentRuleID] != undefined) {
 		rulelist[parentRuleID].addAction(newaction);
+	} else {
+		alert("parent rule we're adding action to is undefined!");
 	}
 	
 	return newaction;
@@ -110,43 +113,63 @@ function ruleRelevant(eventType, rule) {
  // eventType can be one of these ["clicked-links" "entered-node"]
  // goes through all the rules in this obj
  function eventTrigger(eventType, obj) {
-	for (var i in obj.rules) {
-		var rule = obj.rules[i];
-		if ( checkCondition(rule) ) {
-			//var fired = false;
-			for (var j in rule.actions) {
-				var action = rule.actions[j];
-				//fired = 
-				action.doaction(eventType); //|| fired;
-			}
-
-			// stop evaluating if it is not suppose to fall_through
-			if ((!rule.fall_through) ) {//&& fired) {
-				break;
-			}
+	var rules_to_fire = firingCandidate( obj, eventType, true);
+	
+	for (var i in rules_to_fire) {
+		var rule = rules_to_fire[i];
+		//var fired = false;
+		for (var j in rule.actions) {
+			var action = rule.actions[j];
+			//fired = 
+			action.doaction(eventType); //|| fired;
+		}
+		// stop evaluating if it is not suppose to fall_through
+		if ((!rule.fall_through) ) {//&& fired) {
+			break;
 		}
 	}
  }
+
+ // if ready is true, we check whether the condition for 
+ // that action is satisfied
+ function link_clickable (link, ready) {
+	var fireable = firingCandidate( link, "clickedLink", ready);
+	//console.log("FIREABLE len "+fireable.length);
+	return fireable.length > 0;
+}
  
- function firingCandidate( objID, objType, eventType checkCond) {
-	function helper ( rules, index, arr ) {
-		if (! index > rules.length - 1) {
-			if (ruleRelevant(eventType, rule[index]) && 
-					((!checkCond) || (( checkCondition(rule[index]) ) && checkCond)) {
-				arr[arr.length] = rule[index];
-			}
-			helper ( rules, index+1, arr );
+ function firingCandidate( obj, eventType, checkCond ) {
+ 
+	function filter_out_unsatisfied( rules, index, arr ) {
+		if ( index < rules.length ) {
+			if (checkCondition(rules[index]))
+				arr[arr.length] = rules[index];
+			return filter_out_unsatisfied( rules, index+1, arr );
 		} else {
 			return arr;
 		}
 	}
-	var obj = switch objType {
-				case "node": 
-					nodelist[objID];
-				case "link": 
-					linklist[objID];
-			}
-	return helper ( obj.rules, 0, [] );
+	
+	function helper ( rules, index, arr ) {
+		if ( index < rules.length ) {
+			// check kawa code for logic
+			if (! (checkCond && (! rules[index].fall_through) )) { 
+				if (ruleRelevant(eventType, rules[index])) {
+					arr[arr.length] = rules[index];
+				}
+				return helper ( rules, index+1, arr );
+			} else return arr;
+		} else {
+			return arr;
+		}
+	}
+	
+	if (checkCond) {
+		var satisfied_rules = filter_out_unsatisfied( obj.rules, 0, [] );
+		return helper ( satisfied_rules, 0, [] );
+	} else {
+		return helper ( obj.rules, 0, [] );
+	}
  }
  
 

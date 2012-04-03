@@ -251,12 +251,12 @@
           (add-actionlistener mf-export-standalone (make-actionlistener
                                                     (lambda (source)
                                                       (doexport-standalone))))
-          ; (add-component m-file mf-export-js) ; temporarily disable JS export
+          (add-component m-file mf-export-js) ; temporarily disable JS export
           (add-actionlistener mf-export-js (make-actionlistener
                                             (lambda (source)
                                               (doexport-js))))
           ))
-
+    
     ; edit menu
     (add-component main-menu m-edit)
     (if (show-docrule?)

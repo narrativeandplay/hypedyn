@@ -7,6 +7,8 @@ var nodelist =[];
 var linklist = [];
 //var anywhere_nodelist = [];
 var start_node;
+
+//var clinklist = [];
 	
   // datastructure
 function createNode (name, content, anywhere, id ) {
@@ -16,6 +18,7 @@ function createNode (name, content, anywhere, id ) {
 	newNode.visited = false;
 	newNode.links = [];
 	newNode.rules = [];
+	newNode.clinks = [];
 	
 	// only for anywhere node (activated the anywhere link)
 	newNode.activated = false; 
@@ -31,7 +34,7 @@ function createNode (name, content, anywhere, id ) {
 	return id;
 }
 
-function createLink(nodeID, start, end, id) {
+function createLink(nodeID, start, end, id, type) {
 	newLink = new Object();
 	newLink.nodeID = nodeID;
 	newLink.start = start;
@@ -43,6 +46,9 @@ function createLink(nodeID, start, end, id) {
 	//if (id == undefined)
 	//	id = genID(linklist);
 	id = (id == undefined) ? genID(linklist) : id;
+	
+	type = (type == undefined) ? "default" : type;
+	newLink.type = type;
 		
 	//var parentnode = nodelist.get(nodeID);
 	var parentnode = nodelist[nodeID];
@@ -50,6 +56,47 @@ function createLink(nodeID, start, end, id) {
 	if (parentnode != undefined)
 		if ( parentnode != undefined ) {
 			addLink(parentnode, newLink);
+		}
+
+	//var id = linklist.length;
+	newLink.id = id;
+	linklist[id] = newLink;
+	
+	//method
+	//newLink.setContent = function(newcontent) {
+	//	newLink.content = newcontent;
+	//	newLink.end = newLink.start + newcontent.length;
+	//}
+	
+	return id;
+}
+
+// name is gotten from the content start to end index on the link
+function createChoiceLink(nodeID, start, end, id, type) {
+	newLink = new Object();
+	newLink.nodeID = nodeID;
+	newLink.start = start;
+	newLink.end = end;
+	//newLink.destnode = destnode
+	newLink.followed = 0;
+	newLink.rules = [];
+	
+	// specific to choice link
+	newLink.name = nodelist[nodeID].content.substring(start,end);
+	
+	//if (id == undefined)
+	//	id = genID(linklist);
+	id = (id == undefined) ? genID(linklist) : id;
+	
+	type = (type == undefined) ? "default" : type;
+		
+	//var parentnode = nodelist.get(nodeID);
+	var parentnode = nodelist[nodeID];
+	
+	if (parentnode != undefined)
+		if ( parentnode != undefined ) {
+			//addLink(parentnode, newLink);
+			parentnode.clinks[parentnode.clinks.length] = newLink;
 		}
 
 	//var id = linklist.length;

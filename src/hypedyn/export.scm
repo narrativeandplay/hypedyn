@@ -94,7 +94,7 @@
 ;;    (if get-filename-callback 
 ;;        (string-append (substring (get-filename-callback) 0 (- (string-length tmp) 4)) "-web") 
 ;;        "Untitled-web"))
-  
+
   ;; assuming .dyn is always appended to the filename get-filename-callback returns
   (define folder-name
     (let ((tmp (get-saved-filename-string)))
@@ -133,9 +133,9 @@
                            (make-file (string-append (path-file export-folder) "/AppleJavaExtensions.jar")))
 
             ; do app-specific saving
-            (display "save-callback ")(display save-callback)(newline)
-            (display "path-file export folder ")(display (path-file export-folder))(newline)
-            (display "source folder string ")(display source-folder-string)(newline)
+            ;(display "save-callback ")(display save-callback)(newline)
+            ;(display "path-file export folder ")(display (path-file export-folder))(newline)
+            ;(display "source folder string ")(display source-folder-string)(newline)
             (if (procedure? save-callback)
                 (save-callback (path-file export-folder) source-folder-string)))
           #t)

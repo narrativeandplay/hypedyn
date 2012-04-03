@@ -641,15 +641,10 @@
       (begin
         (define rule-lst (ask obj 'rule-lst))
 
-        ;; and rules with unsatisfied condition
-        (define (suitable-for-firing? ruleID)
-          (and (or (not check-condition?)       ;; filter out those that dont have condition satisfied
-                   (and check-condition?        ;; if check-condition? #t
-                        (check-rule-condition ruleID)))   ;; and condition satisfied
-               ))
-
-        ;; return all the rules with actions that have condition satisfied
-        (set! rule-lst (filter suitable-for-firing? rule-lst))
+        
+        ;; return all the rules with actions that have condition satisfied (only need to do when checking condition)
+        (if check-condition?
+            (set! rule-lst (filter check-rule-condition rule-lst)))
 
         ;; enforcing the fall-through and blocking
         ;; returns a list of rules that are allowed to be fired 
