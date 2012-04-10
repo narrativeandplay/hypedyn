@@ -692,9 +692,10 @@
       (string-append (substring tmp 0 (- (string-length tmp) 4)) "-JS")
       ))
   
-  (let ((export-folder (get-safe-new-filename (get-last-exported-dir) #t '() folder-name)))
+  (let ((export-folder (get-safe-new-filename (get-last-exported-dir) #f '()))) ;; third arg was #t, last arg folder-name taken out
     (if (not (eq? #f export-folder))
         (begin
+          (display "export folder ")(display export-folder)(newline)
           ; create folder, first deleting if it already exists
           (export-create-folder export-folder)
           (update-last-exported-dir! export-folder)

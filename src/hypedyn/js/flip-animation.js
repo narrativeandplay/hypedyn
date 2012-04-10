@@ -1,13 +1,12 @@
-
 // *******************
 // Page flipping code
 // *******************
+// based on http://www.html5rocks.com/en/tutorials/casestudies/20things_pageflip/ example code 
+// used with permission
 
 var flips = [];
-
-var page = 0;
-
 var multiflips = [];
+var page = 0;
 
 // Render the page flip 60 times a second
 setInterval( render, 1000 / 30 );
@@ -67,6 +66,7 @@ function style_pages() {
 	}
 }
 
+// cloning a flip into a multiflip with trailing/leading flips and put inside multiflips[]
 function make_multiflip( flip, dir ) {
 	
 	var progress = [];
@@ -96,6 +96,16 @@ function make_multiflip( flip, dir ) {
 					};
 }
 
+// if the flips inside are done reset multiflips array to empty arr
+function multiflips_check() {	
+	var result = 0;
+	for (i in multiflips) {
+		result += multiflips[i].progress;
+	}
+	if ( Math.abs(result) >= 3)
+		multiflips = [];
+}
+
 var PAGE_WIDTH = page_width;
 var PAGE_HEIGHT = page_height;//device_height;
 var CANVAS_PADDING = 6;
@@ -114,23 +124,7 @@ function render() {
 	// Reset all pixels in the canvas
 	context.clearRect( 0, 0, canvas.width, canvas.height );
 	
-	// var visibleIds = [4,5,6];
-	// var idx = visibleIds.indexOf(5); // Find the index
-	// if(idx!=-1) visibleIds.splice(idx, 1); // Remove it if really found!
-	// [5]
-	// visibleIds
-	// [4, 6]
-	
-	// if the flips inside are done reset multiflips array to empty arr
-	function multiflips_check() {	
-		var result = 0;
-		for (i in multiflips) {
-			result += multiflips[i].progress;
-		}
-		if ( Math.abs(result) >= 3)
-			multiflips = [];
-	}
-	
+	// concat flips with multiflips(cloned trailing flips)
 	var temp_flips = flips;
 	if (multiflips.length > 0)
 		temp_flips = flips.concat(multiflips);
@@ -217,6 +211,8 @@ function drawBlackOut () {
 	lo_context.fillRect(0,0,lo_canvas.width,lo_canvas.height);
 }
 
+// multiflip_bool differentiates between cloned flips and original
+// the only difference is we dont change the length of the page (hiding of the page) for multi flips
 function drawFlip( flip , multiflip_bool) {
 
 	var page_width_half = ( PAGE_WIDTH * 0.5 );
@@ -243,9 +239,11 @@ function drawFlip( flip , multiflip_bool) {
 	
 	// Change page element width to match the x position of the fold
 	//flip.page.style.width = Math.max(foldX, 0) + "px";
+	
+	// only the original flip changes the width
 	if (! multiflip_bool)
-		flip.page.style.width = Math.min(Math.max(foldX, 0), 320)  + "px"; //- 40
-	//disp("page content width "+ flip.page.style.width);
+		//flip.page.style.width = Math.min(Math.max(foldX, 0), device_width)  + "px"; //- 40
+		flip.page.style.width = Math.min(Math.max(foldX, 0), page_width)  + "px"; //- 40
 	
 	context.save();
 	//context.translate( CANVAS_PADDING + ( BOOK_WIDTH / 2 ), PAGE_Y + CANVAS_PADDING );
@@ -365,7 +363,7 @@ function drawTriangle2( context, color ) {
 	context.lineTo(width_third, height_third*2);
 	context.lineTo(width_third*2, canvas_height/2);
 	//context.lineTo(width_third, height_third);
-	//context.closePath();
+	context.closePath();
 	context.fillStyle = color;
 	context.fill();
 }
@@ -437,8 +435,6 @@ function alpha_step() {
 }
 
 function popup(nodeID) { 
-	disp("fade in");
-	
 	//var node = nodelist.get(nodeID);
 	var node = nodelist[nodeID];
 	if (node != undefined) {
@@ -460,18 +456,18 @@ function popup(nodeID) {
 		// bring lighting canvas in front
 		$('lightsoff-canvas').style.zIndex = 101;
 		
-		$('outer-popup').style.zIndex = 2103;
+		$('outer-popup').style.zIndex = 103;
 		$('outer-popup').style.visibility = "visible";
 		$('outer-popup').style.backgroundColor = "rgba(255,255,255,1.0)";
 		
-		$('popup').style.zIndex = 2102;
+		$('popup').style.zIndex = 102;
 		$('popup').style.visibility = "visible";
 		$('popup').style.backgroundColor = "rgba(255,255,255,1.0)";
 		
 		target_alpha = max_alpha; 
 		step_amt = (target_alpha - current_alpha) / delta_time;
 	} else {
-		alert("cant find node");
+		alert("cant find popup node");
 	}
 }
 

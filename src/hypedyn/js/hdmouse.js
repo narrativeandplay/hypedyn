@@ -9,24 +9,8 @@ var drag_minX = 0;
 
 var flip_canceled = false;
 
-// gotten from http://www.nogginbox.co.uk/blog/canvas-and-multi-touch
-function getCoords(e) {
-	if (e.offsetX) {
-		// Works in Chrome / Safari (except on iPad/iPhone)
-		return { x: e.offsetX, y: e.offsetY };
-	} else if (e.layerX) {
-		// Works in Firefox
-		return { x: e.layerX, y: e.layerY };
-	} else {
-		// Works in Safari on iPad/iPhone
-		return { x: e.pageX - cb_canvas.offsetLeft, y: e.pageY - cb_canvas.offsetTop };
-		return { x: e.pageX - cb_canvas.offsetLeft, y: e.pageY - cb_canvas.offsetTop };
-	}
-}
-
 // useful cross browser block for bubbling after we have hit our desired target
-function stopBubbling(e)
-{
+function stopBubbling(e) {
 	//disp("STOP BUBBLING");
 	if (!e) var e = window.event;
 	e.cancelBubble = true;
@@ -108,27 +92,12 @@ function finishFlipPage( flips ) {
 			disp("page drag rightwards canceled");
 		}
 	}
-/*	else {
-		disp(" drag_start "+ drag_startx);
-		disp(" drag_end "+ drag_endx);
-		disp(" isClick "+isClick);
-		disp(" flip len "+ flips.length);
-		disp(" page "+page);
-	}*/
-	
-	//}
 }
 
 var mouseDown=0;
 function mouseUpHandler(e) {
-	// UP
-	disp("pages UP");
 	e.preventDefault();
-	//disp("stop bub mouse UP");
 	stopBubbling(e);
-	
-	//disp("clicked link flag "+ clicked_link_flag);
-	//disp("flipping_flag "+flipping_flag);
 	
 	if ( mouseDown == 1) {
 		mouseDown = 0;
@@ -136,33 +105,18 @@ function mouseUpHandler(e) {
 			drag_endx = e.clientX;
 			disp('mouse up instant flip');
 			finishFlipPage( flips );
-			
-		} else {
-			//disp("reset clicked_link_flag in mouse up");
-			//disp("clicked link flag2 "+ clicked_link_flag);
-			//disp("flipping_flag2 "+flipping_flag);
+		} else
 			clicked_link_flag = false; // reset it (it has served its purpose
-		}
 	}
 }
 
 function mouseDownHandler(e) {
 	e.preventDefault();
-	//disp("mouseDown stop bubb");
-	//stopBubbling(e);
-	//disp("DOWN");;
 	drag_startx = e.clientX;
 	drag_minX = drag_startx;
 	drag_maxX = drag_startx;
 	mouseDown = 1;
 }
-
-var dispatch_flag = false;
-
-
-//debug
-var start_cache = null;
-var end_cache = null;
 
 //http://ross.posterous.com/2008/08/19/iphone-touch-events-in-javascript
 function touchHandler(event)
@@ -191,15 +145,6 @@ function touchHandler(event)
                               first.screenX, first.screenY, 
                               first.clientX, first.clientY, false, 
                               false, false, false, 0/*left*/, null);
-							  
-	var theTarget = first.currentTarget;
-	theTarget = (theTarget == undefined) ? this : null;
-	disp("theTarget "+theTarget);
-	disp("target zindex "+ theTarget.style.zIndex);
-	//simulatedEvent.preventDefault();
-	//$("pages").dispatchEvent(simulatedEvent);
-	// was target 
-	//theTarget.dispatchEvent(simulatedEvent);
 	
 	first.target.dispatchEvent(simulatedEvent);
 }
@@ -225,10 +170,6 @@ function draggingHandler(e) {
 			{
 				flips[i].dragging = true;
 				flips[i].target = (mouse.x - PAGE_WIDTH/2) / (PAGE_WIDTH/2);
-				//disp("target set to "+flips[i].target);
-				
-				// fail safe to set flag back to false
-				//setTimeout("flipping_flag = false", 1200);
 			}
 			else if ( drag_startx <= PAGE_WIDTH / 2 && 
 					  i == Math.floor(page) - 1 && 
@@ -236,31 +177,22 @@ function draggingHandler(e) {
 			{
 				flips[i].dragging = true;
 				flips[i].target = (mouse.x - PAGE_WIDTH/2) / (PAGE_WIDTH/2);
-				//disp("target set to "+flips[i].target);
-				
-				// fail safe to set flag back to false
-				//setTimeout("flipping_flag = false", 1200);
 			}
 		}
-	} else if (!clicked_link_flag) {
-		//disp ("reset clicked flag in dragging");
+	} else if (!clicked_link_flag)
 		clicked_link_flag = false; // reset it (it has served its purpose
-	}
 }
 
-function mouse_exit(event) {
-	//disp("mouse exit stop bubb");
+function mouseExitHandler(event) {
 	event.preventDefault();
-	//stopBubbling(event);
 	// prevent mouse out getting triggered when mouse over children element 
 	e = event.toElement || event.relatedTarget;
 	
 	if (e && e != null && mouseDown == 1) 
-		//if (e.parentNode == this || e == this) { // this probably refers to the object mouse_exit is assigned to as onmouseout
+		//if (e.parentNode == this || e == this) { // this probably refers to the object mouseExitHandler is assigned to as onmouseout
 		if (isParentOf( this, e) ) {
 			return;
 		} else { // dont trigger these when mouse out triggered by mouse over child element
-			
 			drag_endx = event.clientX;
 			
 			// reset mouseDown count
@@ -269,15 +201,9 @@ function mouse_exit(event) {
 				disp("drag flip up");
 				finishFlipPage(flips);
 				mouseDown = 0;
-			} else {
-				//disp("mouse exit "+event.clientX);
-				//disp(" mouse exit ignored ");
-				//disp("mouseDown "+mouseDown);
 			}
 			mouseDown = 0;
 		}
-		
-			
 	function isParentOf ( parent, obj ) {
 		//disp("parent of "+obj.tagName+" "+parent.tagName);
 		//disp("parent name "+obj.getAttribute("name")+" "+parent.getAttribute("name"));
@@ -291,31 +217,16 @@ function mouse_exit(event) {
 		else 
 			return false;
 	}
-	
 }
 
 function init_event_listeners () {
 	var canvas = $("myCanvas");
 	var pageflip_canvas = $("pageflip-canvas");
 	
-	/*if ("ontouchstart" in document.documentElement)
-	{
-		document.body.ontouchend = touchHandler;//UPeventPasser;
-		document.body.ontouchstart = touchHandler;//DOWNeventPasser;
-	}
-	else
-	{
-		document.body.onmouseup = UPeventPasser;
-		document.body.onmousedown = DOWNeventPasser;
-		$("pages").onmouseup = UPeventPasser;
-		$("pages").onmousedown = DOWNeventPasser;
-	}*/
-	
-	//addEventListener('click',doSomething2,true)
 	$("pages").addEventListener('mouseup', mouseUpHandler, false);
 	$("pages").addEventListener('mousedown', mouseDownHandler, false);
 	$("pages").addEventListener('mousemove', draggingHandler, false);
-	$("pages").addEventListener('mouseout', mouse_exit, false);
+	$("pages").addEventListener('mouseout', mouseExitHandler, false);
 	
 	$("pages").addEventListener('touchstart', touchHandler, false);
 	$("pages").addEventListener('touchend', touchHandler, false);
@@ -325,11 +236,35 @@ function init_event_listeners () {
 	$('lightsoff-canvas').addEventListener('mousedown', black_fade_out, false);
 }
 
-function popup_mouse_handler(e) {
-	e.preventDefault();
-}
+function popup_mouse_handler(e) { e.preventDefault(); }
 
 function touchDebug(str) {
 	var title="<br><text> Touch Debug </text><br>";
 	document.getElementById("touch_debug").innerHTML = title+"<text>"+str+"</text>";
 }
+
+// test for touch events
+	/*if ("ontouchstart" in document.documentElement) {
+		document.body.ontouchend = touchHandler;//UPeventPasser;
+		document.body.ontouchstart = touchHandler;//DOWNeventPasser;
+	} else {
+		document.body.onmouseup = UPeventPasser;
+		document.body.onmousedown = DOWNeventPasser;
+		$("pages").onmouseup = UPeventPasser;
+		$("pages").onmousedown = DOWNeventPasser;
+	}*/
+	
+// gotten from http://www.nogginbox.co.uk/blog/canvas-and-multi-touch
+/*function getCoords(e) {
+	if (e.offsetX) {
+		// Works in Chrome / Safari (except on iPad/iPhone)
+		return { x: e.offsetX, y: e.offsetY };
+	} else if (e.layerX) {
+		// Works in Firefox
+		return { x: e.layerX, y: e.layerY };
+	} else {
+		// Works in Safari on iPad/iPhone
+		return { x: e.pageX - cb_canvas.offsetLeft, y: e.pageY - cb_canvas.offsetTop };
+		return { x: e.pageX - cb_canvas.offsetLeft, y: e.pageY - cb_canvas.offsetTop };
+	}
+}*/

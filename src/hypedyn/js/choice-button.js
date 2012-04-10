@@ -2,25 +2,12 @@ var button_len = 250;
 var button_height = "50px";
 var button_side_len = 50;
 
-function isNumber (o) {
-  return ! isNaN (o-0);
-}
-
 var prev_choice_buttons = [];
 var choice_buttons = [];
 
 function back_page_check() {
 	return !(prev_choice_buttons.length == 0);
 }
-
-// tl - top left, br - btm right
-//function drawRect(context, tlx, tly, brx, bry) {
-//	context.beginPath();
-//	context.rect(tlx, tly, brx, bry);
-//	context.lineWidth = 1;
-//	context.strokeStyle = "black";
-//	context.stroke();
-//}
 
 // click callback is javascript code in string form
 function createButton( display_name, click_callback ) {
@@ -43,35 +30,18 @@ function createButton( display_name, click_callback ) {
 		var context = button_canvas.getContext('2d');
 		
 		drawRect(context, 0, 0, button_canvas.width, button_canvas.height, "black", "stroke");
-		 context.font = "15pt Calibri";
+		context.font = "15pt Calibri";
 		context.lineWidth = 3;
 		
 		 // textAlign aligns text horizontally relative to placement
 		context.textAlign = "center";
+		
 		// textBaseline aligns text vertically relative to font style
 		context.textBaseline = "middle";	
-		
-		//context.strokeStyle = "blue"; // stroke color
-		//context.strokeText("Hello World!", 160, 25);
 		
 		context.fillStyle = this.fontcolor; //"blue";
 		context.fillText( display_name, button_canvas.width/2, button_canvas.height/2 );
 	}
-	
-	button_canvas.update = left_update;
-	button_canvas.addEventListener( 'mouseup', shrink, false );
-	
-	//button_canvas.addEventListener('touchend', touchHandler, true);
-	//button_canvas.addEventListener('touchmove', touchHandler, true);
-	//button_canvas.addEventListener('touchstart', touchHandler, true);
-	
-	//button_canvas.onclick = shrink;
-	
-	button_canvas.target_width = button_len;
-	button_canvas.start_width = button_len;
-	
-	button_canvas.fontcolor = "blue";
-	button_canvas.update();
 	
 	function right_update() {
 		var context = hidden_canvas.getContext('2d');
@@ -81,11 +51,9 @@ function createButton( display_name, click_callback ) {
 	}
 	
 	function run_click_callback(e) {
-		//disp("stop bubb run click callback");
 		//stopBubbling(e);
 		this.bgcolor = "grey";
 		this.update();
-		//disp("clicked choice link");
 		// did a slight delay of 10ms to show the grey highlight.
 		setTimeout(dothis, 10);
 		function dothis () {
@@ -94,28 +62,36 @@ function createButton( display_name, click_callback ) {
 		}
 	}
 	
+	// set the draw update and mouse events listener
+	button_canvas.update = left_update;
+	button_canvas.addEventListener( 'mouseup', shrink, false );
+	//button_canvas.addEventListener('touchend', touchHandler, true);
+	//button_canvas.addEventListener('touchmove', touchHandler, true);
+	//button_canvas.addEventListener('touchstart', touchHandler, true);
+	
+	button_canvas.target_width = button_len;
+	button_canvas.start_width = button_len;
+	
+	button_canvas.fontcolor = "blue";
+	button_canvas.update();
+	
+	// do the same for right canvas 
 	hidden_canvas.update = right_update;
 	hidden_canvas.addEventListener('mouseup', run_click_callback, false);
 	hidden_canvas.run_click_callback = run_click_callback;
-	//hidden_canvas.addEventListener('mouseup', expand, false);
-	
 	//hidden_canvas.addEventListener('touchend', touchHandler, true);
 	//hidden_canvas.addEventListener('touchmove', touchHandler, true);
 	//hidden_canvas.addEventListener('touchstart', touchHandler, true);
-	//hidden_canvas.onclick = 
 	
 	hidden_canvas.target_width = 0;
 	hidden_canvas.start_width = 0;
 
 	hidden_canvas.update();
-	
 	hidden_canvas.bgcolor = "transparent";
 	
 	// keep a reference in of adjacent canvas in both of them
 	button_canvas.hidden_canvas = hidden_canvas;
 	hidden_canvas.button_canvas = button_canvas;
-	
-	//disp("last page AFT "+last_page.innerHTML);
 	
 	button_panel.appendChild(button_canvas);
 	button_panel.appendChild(hidden_canvas);
@@ -125,8 +101,6 @@ function createButton( display_name, click_callback ) {
 	var button_obj = { left_button: button_canvas,
 					   right_button: hidden_canvas,
 					   button_div: button_panel,
-					   //activate: button_canvas.update,
-					   //deactivate: hidden_canvas.update,
 					   activated: false
 					};
 	button_canvas.button_obj = button_obj;
@@ -135,25 +109,19 @@ function createButton( display_name, click_callback ) {
 	return button_obj;
 }
 
-
 // adds the button to the last page
 function addButton( display_name, click_callback ) {
 	
 	var pages = document.getElementsByName("page");
-	var last_page = pages[pages.length-1];//.getElementsByTag('div')[0];
-	//disp("pages len " + pages.length);
-	//disp("last page B4 " + last_page.innerHTML);
+	var last_page = pages[pages.length-1];
 	
 	var button = createButton( display_name, click_callback );
 	last_page.appendChild(button.button_div);
 }
 
 function shrink(e) {
-	//disp("shrink stop bubbb");
 	stopBubbling(e);
-	//disp("click link flag true in shrink");
 	clicked_link_flag = true;
-	//disp("SHRINK!");
 	this.start_width = this.width;
 	this.target_width = button_len - button_side_len;
 	this.button_obj.activated = true;
@@ -166,11 +134,7 @@ function shrink(e) {
 		}
 }
 
-var se_share_test = null;
-
 function expand( button_canvas ) {
-	//button_canvas = this.button_canvas;
-	//console.log("expand!");
 	button_canvas.start_width = button_canvas.width;
 	button_canvas.target_width = button_len;
 }
@@ -215,13 +179,7 @@ function anywherelink_buttons () {
 	}
 }
 
-var choice_link_placeholders = [];
 var choice_link_cache = [];
-
-// its a placeholder div element
-function cache_choice_link_placeholder( ph ) {
-	choice_link_placeholders[choice_link_placeholders.length] = ph;
-}
 
 // clink is the actual link with type 'choice'
 // what is cached is the canvas choice button
@@ -232,34 +190,22 @@ function cache_choice_link( clink ) {
 }
 
 // put choice buttons into the placeholder
+// NOTE: the choice links had been placed from the htmlFormat linkcode section
 function replace_button_placeholder () {
 	var placeholders = document.getElementsByName("button-placeholders");
 	for ( var i=0; i < placeholders.length; ++i ) {
 		for ( j in choice_link_cache ) {
 			if ( placeholders[i].id == choice_link_cache[j].name ) {
-				//disp("placeholder name: "+placeholders[i].id);
-				//disp("choice link name: "+choice_link_cache[j].name);
-				//placeholders[i].style.overflow = "auto";
 				placeholders[i].style.backgroundColor = "transparent";
 				placeholders[i].innerHTML = "";
 				placeholders[i].appendChild( choice_link_cache[j].button_div );
 				choice_link_cache[j].button_div.style.zIndex = "auto";
-				//disp("choice button zindex "+ choice_link_cache[j].button_div.style.zIndex);
 			}
 		}
 	}
-	
-	// keep track of current nodes choices
+	// keep track of current nodes choices (for activating and deactivating only one at a time)
 	choice_buttons = choice_link_cache;
-	
-	//debug
-	//disp("replace button placeholders");
-	//for (i in choice_buttons) {
-	//	disp("choice buttons "+choice_buttons[i]);
-	//}
-	
 	choice_link_cache = [];
-	//addButton(node.clinks[i].name, "clickedLink("+ node.clinks[i].id+ ")");
 }
 
 setInterval(adjustButtonWidth, 1000/button_frame_rate);

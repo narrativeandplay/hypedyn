@@ -185,11 +185,15 @@
                            default-name
                            default-extension)
   
+  (display "show jfilechooser ")(display dir)(newline)
+  
   (let* ((fchooser :: <javax.swing.JFileChooser>
                    (if (is-null? dir)
                        (<javax.swing.JFileChooser>)
-                       (<javax.swing.JFileChooser> dir))
-                       )
+                       ;(<Bar> 'right)
+                       (<javax.swing.JFileChooser> dir)
+                       ;(custom-jfilechooser2 dir)
+                       ))
          (local-frame (<javax.swing.JFrame>)))
     
     ;; this should be called before setFileSelectionMode
@@ -199,15 +203,20 @@
         (invoke fchooser 'setSelectedFile (make-file default-name)))
     
     ; select directory?
-;    (if select-dir
-;        (invoke fchooser 'setFileSelectionMode <javax.swing.JFileChooser>:DIRECTORIES_ONLY))
-    
+    (if select-dir
+        (begin
+          (invoke fchooser 'setFileSelectionMode <javax.swing.JFileChooser>:DIRECTORIES_ONLY)
+          ;; dont use file filter when selecting directory (show all files and folders)
+          (invoke fchooser 'setAcceptAllFileFilterUsed #f)
+          )
+        )
+        
     ; file filter
     (if (not (null? filterlist))
         (invoke fchooser 'setFileFilter
                 ; anonymous class to filter file list
                 (object (<javax.swing.filechooser.FileFilter>)
-                  ((accept the-file :: <java.io.File>) ::boolean
+                  ((accept the-file :: <java.io.File>) :: boolean
                    (or 
                     ; if its a directory, let it through
                     (file-directory? the-file)
@@ -231,10 +240,13 @@
                          (invoke the-string 'to-string)))
                   )))
     
+    (display "entering show dialog")(newline)
     ; show the dialog
     (let ((returnVal (invoke fchooser mode local-frame)))
+      (display "here returnVal ")(display returnVal)(newline)
       (if (= returnVal <javax.swing.JFileChooser>:APPROVE_OPTION)
           (begin
+            (display "clicked on ok in file chooser ");
             ; select directory?
             ;; setting this disallows the default-name to be set to the textfield
             ;; so we set it after clicking on ok
