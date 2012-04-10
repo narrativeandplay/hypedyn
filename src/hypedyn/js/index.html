@@ -5,105 +5,12 @@
 		var device_width = (window.innerWidth > 0) ? window.innerWidth : screen.width;
 		var device_height = (window.innerHeight > 0) ? window.innerHeight : screen.height;
 		
-		//if (device_height > 480) 
-		//	device_height = 480;
-		
 		// uncomment for mobile version
 		device_height = 410; //460 hardcoded value
 	</script>
+
+	<link rel="stylesheet" type="text/css" href="common.css" />
 	<style type="text/css">
-		
-		/* applied to the sections in 'pages' */
-		.pagesdiv {
-			position: absolute;
-			overflow: hidden;
-			white-space: pre-wrap; /* preserve sequence of white space and wrap the text */
-			width: 320px; // 320-40
-
-			padding: 0px;
-			left: 0px;
-			top: 0px;
-		}
-		
-		/* makes sure the div in the page do not scale with parent section (ie keep constant width) used to be #pages div*/
-		.pagecontent {
-			padding: 20px;
-			width: 280px; // for mobile only to keep the width of the 
-		}
-		
-		#pages {
-			left: 0px;
-			top: 0px;
-		}
-		
-		/* pages
-				page(div)
-					pagecontent (div)
-		*/
-		
-		#test_bed {
-			width: 320px;
-		}
-		
-		#pageflip-canvas {
-			position: absolute;
-			width: 320px;
-			z-Index: -101;
-			opacity: 1.0;
-			pointer-events: none;
-			top: 0px;
-			left: 0px;
-		}
-		
-		#popup {
-			position: absolute;
-			width: 260px;
-			z-Index: -104;
-			opacity: 1.0;
-			overflow: scroll;
-			border-radius: 15px;
-
-			top: 15px;
-			left: 15px;
-			
-			padding-right: 15px;
-		}
-		
-		#outer-popup {
-			position: absolute;
-			width: 290px;
-			border-radius: 15px;
-			
-			top: 50px; //button_panel_height
-			left: 20px;
-		}
-		
-		#lightsoff-canvas {
-			position: absolute;
-			//width: 320px;
-			height: 480px;
-			z-Index: -102;
-			opacity: 1.0;
-			color: black
-			pointer-events: none;
-			top: 0px;
-			left: 0px;
-		}
-		
-		#buttons-panel {
-			position: absolute;
-			//background-image:url('page_back_320_480.png');
-			height: 50px;
-			//width: 320px;
-			left: 0px;
-			top: 0px;
-		}
-		
-		#page-indicate-canvas {
-			position: absolute;
-			left: 80px;
-		}
-		
 	</style>
 </head>
 
