@@ -33,13 +33,9 @@ function htmlFormat(content, links, noformat) {
 	var alt_offset = -1;
 
 	function offset_to_link( offset ) {
-		disp("offset to link "+offset);
-		disp("links len "+links.length);
-		
 		for ( i in links ) {
 			if ( (links[i].start <= offset) && (offset < links[i].end) ) {
 				disp("link id "+links[i].id);
-				if ( currNodeID == 119 ) alert("");
 				return links[i];
 			}
 		}
@@ -227,11 +223,19 @@ function htmlFormat(content, links, noformat) {
 			test_bed_html_cache += htmlcode;
 			// make sure test_bed has same styling as actual page
 			$('test_bed').className = "pagesdiv";
+			$('test_bed').style.width = page_width;
 			$("test_bed").innerHTML = "<div name='testcontent'>" + test_bed_html_cache + "</div>";
 			var pages = document.getElementsByName("testcontent");
 			
 			for (j in pages) {
-				pages[j].className = 'pagecontent';
+				if (isNumber(j)) {
+					//disp("j "+j);
+					pages[j].className = 'pagecontent';
+					//disp("setting page content width1 "+page_width);
+					//disp("pages j "+pages[j]);
+					//if (pages[j].style)
+					pages[j].style.width = (page_width - (2*20)); // padding
+				}
 			}
 			
 			if ($("test_bed").clientHeight < text_area_height) {
@@ -260,8 +264,8 @@ function htmlFormat(content, links, noformat) {
 	if (noformat)
 		return htmlcode ;
 	else
-		//return page_start_tag + htmlcode + page_end_tag + "<br><text>WTF</text><br>" + anywherelink_htmlcode();
-		return  page_start_tag +  htmlcode + page_end_tag;
+		//return page_start_tag + htmlcode + page_end_tag + anywherelink_htmlcode();
+		return  page_start_tag +  htmlcode + "<br><br>" + start_tag + anywherelink_buttons() + end_tag + page_end_tag;
 }
 
 // special characters in the string that is used by html syntax

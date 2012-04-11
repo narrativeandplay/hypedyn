@@ -18,7 +18,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
  
- var button_len = 250;
+var button_len = 250;
 var button_height = "50px";
 var button_side_len = 50;
 
@@ -189,14 +189,29 @@ function adjustButtonWidth () {
 }
 
 function anywherelink_buttons () {
+	var result = "";
 	for ( i in activated_anywhere_nodes ) {
 		if (activated_anywhere_nodes[i].id != currNodeID) {
-			//result += "<a href='javascript:void(0)' onMouseUp='gotoNode(" 
+			result += "<a href='javascript:void(0)' onMouseUp='gotoNode(" 
+				+ activated_anywhere_nodes[i].id + ")'>"
+				+ activated_anywhere_nodes[i].name + "</a><br>"
+			//addButton(activated_anywhere_nodes[i].name, "gotoNode("+ activated_anywhere_nodes[i].id+ ")");
+			
+			//$("pages").innerHTML = 
+			//var html_link = document.createElement('a');
+			//html_link.setAttribute('href', 'javascript:void(0)');
+			//html_link.setAttribute('onMouseUp', 'gotoNode(' + activated_anywhere_nodes[i].id + ')');
+			//html_link.setAttribute('name', 'left_button');
+			
+			//var breaktag = document.createElement('br');
+			
+			//$('pages').innerHTML += "<a href='javascript:void(0)' onMouseUp='gotoNode(" 
 			//	+ activated_anywhere_nodes[i].id + ")'>"
 			//	+ activated_anywhere_nodes[i].name + "</a><br>"
-			addButton(activated_anywhere_nodes[i].name, "gotoNode("+ activated_anywhere_nodes[i].id+ ")");
+			//disp("pages inner html "+ $('pages').innerHTML);
 		}
 	}
+	return result;
 }
 
 var choice_link_cache = [];

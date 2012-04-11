@@ -23,8 +23,7 @@
 // get document element easily
 function $(id) { return document.getElementById(id); }
 function disp(obj) { 
-	if ( currNodeID == 119 )
-		console.log(obj);
+	console.log(obj);
 }
 function isNumber (o) {
   return ! isNaN (o-0);
@@ -37,26 +36,75 @@ function clone_arr ( arr ) {
 	return result;
 }
 
+var device_width, device_height, page_width, line_break_width, btm_height, text_area_height;
+
+// can be browser or mobile
+//var display_mode = "mobile";
+var display_mode// = "mobile";
+var page_flipping_mode;
+
+if ("ontouchstart" in document.body) {
+	display_mode = "mobile";
+	page_flipping_mode = true;
+} else {
+	display_mode = "browser";
+	page_flipping_mode = false;
+}
+
 /* global var */
 var startNodeID;
 var currNodeID;
 
-//var page_width = device_width; // 320 hardcoded for mobile
-var page_width = 320;
-
 var page_height = 480;
-
 //var page_break_height = 400;
 var page_padding = 20;
-var line_break_width = page_width  - 160; //- page_padding * 2
 
 var button_panel_height = 50
 var page_indicator_height = 50;
-var btm_height = device_height - button_panel_height;// - page_indicator_height;
-
-var text_area_height = btm_height - page_indicator_height;
 
 var myScroll = null;
+
+function get_device_dimension() {
+	disp("get device dimension");
+	device_width = (window.innerWidth > 0) ? window.innerWidth : screen.width;
+	device_height = (window.innerHeight > 0) ? window.innerHeight : screen.height;
+	
+	if (display_mode == "browser")
+		page_width = device_width; // 320 hardcoded for mobile
+	else if (display_mode == "mobile") {
+		page_width = 320;
+		device_height = 410;
+	}
+	
+	line_break_width = page_width  - 160; //- page_padding * 2
+	
+	btm_height = device_height - button_panel_height;// - page_indicator_height;
+	text_area_height = btm_height - page_indicator_height;
+	
+	$('page-indicate-canvas').style.left = page_width/4;
+	$('page-indicate-canvas').width = page_width/2;
+	$('page-indicate-canvas').height = 50;
+	drawPageIndicator( page, flips.length, back_page_check() );
+	
+	$('lightsoff-canvas').width = page_width; //320
+	$('lightsoff-canvas').style.width = page_width; //320
+	$('lightsoff-canvas').height = 480;
+	
+	$('pageflip-canvas').width = page_width; //320
+	$('pageflip-canvas').style.width = page_width; //320
+	$('pageflip-canvas').height = 480;
+	
+}
+
+function nonpageflip_init() {
+	if (!page_flipping_mode) {
+		$("pageflip-canvas").style.visibility = "hidden";
+		$("lightsoff-canvas").style.visibility = "hidden";
+		//$("outer-popup").style.backgroundColor = "rgba(100,100,255,1)";
+		//$("popup").style.backgroundColor = "rgba(0,0,255,1)";
+		//$('pages').style.visibility = "hidden";
+	}
+}
 
 // TOFIX, setFact getting triggered twice by hyper link
 var clicked_link_flag = false;
@@ -175,68 +223,77 @@ function gotoNode(nodeID) {
 		
 		update_anywhere_visibility ();
 		
-		// from here on different from black_fade_in
-		var last_page_flip;
-		var last_page;
-		
-		// reset the flipping for the new node
-		if ( flips.length > 0 ) {
-			last_page_flip = ( flips.length > 0 ) ? flips[flips.length-1] : null;
-			if ( last_page_flip != null ) {
-				last_page = last_page_flip.page;
+		if (page_flipping_mode) {
+			// from here on different from black_fade_in
+			var last_page_flip;
+			var last_page;
+			
+			// reset the flipping for the new node
+			if ( flips.length > 0 ) {
+				last_page_flip = ( flips.length > 0 ) ? flips[flips.length-1] : null;
+				if ( last_page_flip != null ) {
+					last_page = last_page_flip.page;
+				}
 			}
-		}
-		
-		flips = [];
-		prev_choice_buttons = choice_buttons;
+			
+			flips = [];
+			prev_choice_buttons = choice_buttons;
 
-		for (i in prev_choice_buttons)
-			disp("prev chioce "+prev_choice_buttons[i]);
-		page = 0;
+			for (i in prev_choice_buttons)
+				disp("prev chioce "+prev_choice_buttons[i]);
+			page = 0;
+		}
 		
 		var htmlcode = htmlFormat( node.content, clone_arr(node.links), false );
 		$("pages").innerHTML = htmlcode;
 		
-		// makes sure last_page not included in this list
-		var page_list = document.getElementsByName('page');
-		
-		if (last_page != undefined) {
+		if (page_flipping_mode) {
+			// makes sure last_page not included in this list
+			var page_list = document.getElementsByName('page');
 			
-			// change font color to grey for all font in last_page
-			last_page.style.color = "grey";
-			for (i in prev_choice_buttons) {
-				var left_button = prev_choice_buttons[i].left_button;
-				var right_button = prev_choice_buttons[i].right_button;
+			if (last_page != undefined) {
 				
-				if (prev_choice_buttons[i].activated)
-					left_button.fontcolor = "black";
-				else 
-					left_button.fontcolor = "grey";
+				// change font color to grey for all font in last_page
+				last_page.style.color = "grey";
+				for (i in prev_choice_buttons) {
+					var left_button = prev_choice_buttons[i].left_button;
+					var right_button = prev_choice_buttons[i].right_button;
 					
-				left_button.removeEventListener("mouseup", shrink, false);
-				right_button.removeEventListener('mouseup', right_button.run_click_callback, false);
+					if (prev_choice_buttons[i].activated)
+						left_button.fontcolor = "black";
+					else 
+						left_button.fontcolor = "grey";
+						
+					left_button.removeEventListener("mouseup", shrink, false);
+					right_button.removeEventListener('mouseup', right_button.run_click_callback, false);
+				}
+				
+				// insert as first page
+				$('pages').insertBefore(last_page, page_list[0]);
+				page = 0;
 			}
 			
-			// insert as first page
-			$('pages').insertBefore(last_page, page_list[0]);
-			page = 0;
-		}
-		
-		style_pages();
-		order_pages(page);
-		
-		// set the page to flip forward
-		if (last_page_flip != undefined) {
-			flips[0].target = -1;
-			flips[0].progress = 1;
-			//page: pages[i],   // The page DOM element related to this flip
-			flips[0].dragging = true;
+			style_pages();
+			order_pages(page);
+			
+			// set the page to flip forward
+			if (last_page_flip != undefined) {
+				flips[0].target = -1;
+				flips[0].progress = 1;
+				//page: pages[i],   // The page DOM element related to this flip
+				flips[0].dragging = true;
+			}
+		} else {
+			// do during browser mode
+			style_pages();
 		}
 		
 		anywherelink_buttons(); // original anywhere nodes
 		add_anywhere_button(); // choice links
-		replace_button_placeholder ();
-		drawPageIndicator(page, flips.length, (last_page_flip != undefined));
+		replace_button_placeholder();
+		
+		if (page_flipping_mode)
+			drawPageIndicator(page, flips.length, (last_page_flip != undefined));
 	}
 }
 
@@ -246,6 +303,7 @@ function runhypedyn() {
 }
 
 function add_anywhere_button() {
+	disp("add anywhere button");
 	$("buttons-panel").innerHTML = "";
 	for (i in activated_anywhere_buttons) {	
 		var nodeID = activated_anywhere_buttons[i];
@@ -257,8 +315,9 @@ function add_anywhere_button() {
 	// font: 16px/20px Helvetica, sans-serif;  text-shadow: 1px 1px 1px #000; float: right; height: 40px;
 	$("buttons-panel").innerHTML += "<button type='button' style='position: absolute; right: 0px; top: 5px; font: 16px/20px Helvetica, sans-serif;' onClick='option_callback()'><font size=5>Options</font></button>";
 	
-	//$("buttons-panel").style.backgroundColor = "rgba(255,255,255,1)";
+	//$("buttons-panel").style.backgroundColor = "rgba(255,0,0,1)";
 	$("buttons-panel").style.backgroundImage = "url(page_back_320_480.png)"
+	
 	$("buttons-panel").style.width = page_width;  // "320px" for mobile
 	// new for browser version
 	$("buttons-panel").style.backgroundRepeat = "repeat";//"no-repeat"; 
@@ -291,10 +350,13 @@ function option_callback() {
 }
 
 window.onload = function() {
+	get_device_dimension();
 	init_event_listeners ();
-	drawPageIndicator(page, page.length, false);
+	//drawPageIndicator(page, page.length, false);
 	
 	loadStory(); // defined in dynfile.js (the story data file)
 	runhypedyn(); // entrance point of the story logic
-	setTimeout('window.scrollTo(0, 0)', 1000); // for mobile to hide the url
+	//setTimeout('window.scrollTo(0, 0)', 1000); // for mobile to hide the url
+	
+	nonpageflip_init();
 }

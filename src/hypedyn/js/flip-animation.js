@@ -70,7 +70,9 @@ function style_pages() {
 	for( var i = 0, len = pages.length; i < len; i++ ) {
 		
 		pages[i].style.backgroundImage = "url(page_back_btm_320_480.png)";//"url(paper.png)";// no repeat;
+		//pages[i].style.backgroundColor = "rgba(0,255,0,1)";
 		pages[i].className = 'pagesdiv'; 
+		pages[i].style.width = page_width;
 		pages[i].style.height = btm_height;
 		pages[i].style.top = "50px";
 		
@@ -82,8 +84,11 @@ function style_pages() {
 		} );
 	}
 	
+	disp("contents leng "+contents.length);
 	for (var i = 0, len = contents.length; i < len; i++) {
 		contents[i].className = 'pagecontent';
+		//disp("setting page content width2 "+page_width);
+		contents[i].style.width = (page_width - (2*20));
 	}
 }
 
@@ -127,8 +132,6 @@ function multiflips_check() {
 		multiflips = [];
 }
 
-var PAGE_WIDTH = page_width;
-var PAGE_HEIGHT = page_height;//device_height;
 var CANVAS_PADDING = 6;
 
 var canvas = $("pageflip-canvas");
@@ -236,7 +239,7 @@ function drawBlackOut () {
 // the only difference is we dont change the length of the page (hiding of the page) for multi flips
 function drawFlip( flip , multiflip_bool) {
 
-	var page_width_half = ( PAGE_WIDTH * 0.5 );
+	var page_width_half = ( page_width * 0.5 );
 	
 	// Strength of the fold is strongest in the middle of the book
 	var strength = 1 - Math.abs( flip.progress );
@@ -245,7 +248,7 @@ function drawFlip( flip , multiflip_bool) {
 	var foldWidth = page_width_half * ( 1 - flip.progress );
 	
 	// X position of the folded paper
-	var foldX = PAGE_WIDTH * flip.progress + foldWidth //- page_padding;
+	var foldX = page_width * flip.progress + foldWidth //- page_padding;
 	//disp("flip progress "+flip.progress);
 	
 	var fold_diff = foldX - foldWidth;
@@ -277,7 +280,7 @@ function drawFlip( flip , multiflip_bool) {
 	context.lineWidth = 30 * strength;
 	context.beginPath();
 	context.moveTo(fold_diff, -half_verticalOutdent);
-	context.lineTo(fold_diff, PAGE_HEIGHT + half_verticalOutdent);
+	context.lineTo(fold_diff, page_height + half_verticalOutdent);
 	context.stroke();
 	
 	// Right side drop shadow
@@ -290,8 +293,8 @@ function drawFlip( flip , multiflip_bool) {
 	context.beginPath();
 	context.moveTo(foldX, 0);
 	context.lineTo(foldX + rightShadowWidth, 0);
-	context.lineTo(foldX + rightShadowWidth, PAGE_HEIGHT);
-	context.lineTo(foldX, PAGE_HEIGHT);
+	context.lineTo(foldX + rightShadowWidth, page_height);
+	context.lineTo(foldX, page_height);
 	context.fill();
 	
 	// Left side drop shadow
@@ -303,8 +306,8 @@ function drawFlip( flip , multiflip_bool) {
 	context.beginPath();
 	context.moveTo(foldX - foldWidth - leftShadowWidth, 0);
 	context.lineTo(foldX - foldWidth, 0);
-	context.lineTo(foldX - foldWidth, PAGE_HEIGHT);
-	context.lineTo(foldX - foldWidth - leftShadowWidth, PAGE_HEIGHT);
+	context.lineTo(foldX - foldWidth, page_height);
+	context.lineTo(foldX - foldWidth - leftShadowWidth, page_height);
 	context.fill();
 	*/
 	
@@ -323,8 +326,8 @@ function drawFlip( flip , multiflip_bool) {
 	// Draw the folded piece of paper
 	context.beginPath();
 	context.moveTo(foldX, 0);
-	context.lineTo(foldX, PAGE_HEIGHT);
-	context.quadraticCurveTo(foldX, PAGE_HEIGHT + double_verticalOutdent, fold_diff, PAGE_HEIGHT + verticalOutdent);
+	context.lineTo(foldX, page_height);
+	context.quadraticCurveTo(foldX, page_height + double_verticalOutdent, fold_diff, page_height + verticalOutdent);
 	context.lineTo(fold_diff, -verticalOutdent);
 	context.quadraticCurveTo(foldX, -double_verticalOutdent, foldX, 0);
 	

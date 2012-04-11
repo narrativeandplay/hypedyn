@@ -51,11 +51,11 @@ function finishFlipPage( flips ) {
 	//disp("finish flip page ");
 	function sq(x) { return x*x; };
 	var isClick = sq( drag_minX - drag_maxX ) < sq( click_thresh );
-		
+	var page_width_half = page_width/2;
 	// Figure out which page we should navigate to
 	// clicking to turn pages forward (leftwards)
-	if ( //drag_endx > PAGE_WIDTH / 2 && 
-		 drag_startx > PAGE_WIDTH / 2 && 
+	if ( //drag_endx > page_width_half && 
+		 drag_startx > page_width_half && 
 		 isClick &&
 		 //i == Math.floor(page) && 
 		 page != flips.length - 1)
@@ -64,8 +64,8 @@ function finishFlipPage( flips ) {
 		flip_left(i);
 	}
 	// clicking to turn pages forward (rightwards)
-	else if ( //drag_endx <= PAGE_WIDTH / 2 && 
-			  drag_startx <= PAGE_WIDTH / 2 &&
+	else if ( //drag_endx <= page_width_half && 
+			  drag_startx <= page_width_half &&
 			  isClick &&
 			  //i == Math.floor(page) - 1 && 
 			  page != 0)
@@ -74,15 +74,15 @@ function finishFlipPage( flips ) {
 		flip_right(i);
 	}
 	// drag release to flip forward
-	else if ( //drag_endx <= PAGE_WIDTH / 2 && 
-			  drag_startx > PAGE_WIDTH / 2 && 
+	else if ( //drag_endx <= page_width_half && 
+			  drag_startx > page_width_half && 
 			  !isClick &&
 			  //i == Math.floor(page) && 
 			  page != flips.length - 1 )
 	{	
 		var i = Math.floor(page);
 		// drag successfully flip
-		if ( drag_endx <= PAGE_WIDTH / 2 ) {
+		if ( drag_endx <= page_width_half ) {
 			flip_left(i);
 			//disp("dragging release forwards");
 		// flip canceled
@@ -93,15 +93,15 @@ function finishFlipPage( flips ) {
 		}
 	}
 	// drag release to flip backwards
-	else if ( //drag_endx > PAGE_WIDTH / 2 && 
-			  drag_startx <= PAGE_WIDTH / 2 && 
+	else if ( //drag_endx > page_width_half && 
+			  drag_startx <= page_width_half && 
 			  !isClick &&
 			  //i == Math.floor(page) - 1 && 
 			  page != 0)
 	{
 		var i = Math.floor(page) - 1;
 		// drag successfully flip
-		if ( drag_endx > PAGE_WIDTH / 2 ) {
+		if ( drag_endx > page_width_half ) {
 			flip_right(i);
 			disp("dragging release backwards");
 		// flip canceled
@@ -174,6 +174,7 @@ function draggingHandler(e) {
 	//stopBubbling(e);
 	mouse.x = e.clientX;
 	mouse.y = e.clientY;
+	var page_width_half = page_width / 2;
 	
 	if (!clicked_link_flag && mouseDown > 0) {
 		//disp("dragging");
@@ -183,19 +184,19 @@ function draggingHandler(e) {
 		
 		for( var i = 0; i < flips.length; i++ ) {
 			// flipping forward
-			if ( drag_startx > PAGE_WIDTH / 2 && 
+			if ( drag_startx > page_width_half && 
 				 i == Math.floor(page) && 
 				 page != flips.length - 1 )
 			{
 				flips[i].dragging = true;
-				flips[i].target = (mouse.x - PAGE_WIDTH/2) / (PAGE_WIDTH/2);
+				flips[i].target = (mouse.x - page_width_half) / page_width_half;
 			}
-			else if ( drag_startx <= PAGE_WIDTH / 2 && 
+			else if ( drag_startx <= page_width_half && 
 					  i == Math.floor(page) - 1 && 
 					  page != 0 )
 			{
 				flips[i].dragging = true;
-				flips[i].target = (mouse.x - PAGE_WIDTH/2) / (PAGE_WIDTH/2);
+				flips[i].target = (mouse.x - page_width_half) / (page_width_half);
 			}
 		}
 	} else if (!clicked_link_flag)
@@ -242,14 +243,16 @@ function init_event_listeners () {
 	var canvas = $("myCanvas");
 	var pageflip_canvas = $("pageflip-canvas");
 	
-	$("pages").addEventListener('mouseup', mouseUpHandler, false);
-	$("pages").addEventListener('mousedown', mouseDownHandler, false);
-	$("pages").addEventListener('mousemove', draggingHandler, false);
-	$("pages").addEventListener('mouseout', mouseExitHandler, false);
-	
-	$("pages").addEventListener('touchstart', touchHandler, false);
-	$("pages").addEventListener('touchend', touchHandler, false);
-	$("pages").addEventListener('touchmove', touchHandler, false);
+	if (page_flipping_mode) {
+		$("pages").addEventListener('mouseup', mouseUpHandler, false);
+		$("pages").addEventListener('mousedown', mouseDownHandler, false);
+		$("pages").addEventListener('mousemove', draggingHandler, false);
+		$("pages").addEventListener('mouseout', mouseExitHandler, false);
+		
+		$("pages").addEventListener('touchstart', touchHandler, false);
+		$("pages").addEventListener('touchend', touchHandler, false);
+		$("pages").addEventListener('touchmove', touchHandler, false);
+	}
 	
 	$('popup').addEventListener('mousedown', popup_mouse_handler, false); // was popup
 	$('lightsoff-canvas').addEventListener('mousedown', black_fade_out, false);

@@ -2,11 +2,6 @@
 <head>
 	<meta name="viewport" content="height=device-height, width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
 	<script language=javascript> 
-		var device_width = (window.innerWidth > 0) ? window.innerWidth : screen.width;
-		var device_height = (window.innerHeight > 0) ? window.innerHeight : screen.height;
-		
-		// uncomment for mobile version
-		device_height = 410; //460 hardcoded value
 	</script>
 
 	<link rel="stylesheet" type="text/css" href="common.css" />
@@ -26,9 +21,9 @@
 	
 	<div id="last_page" style="visibility: hidden; top: 500px"></div>
 	
-	<canvas id="pageflip-canvas" width="320" height="480"></canvas>
-	<canvas id="lightsoff-canvas" width="320" height="480"></canvas>
-	<canvas id="page-indicate-canvas" width="160" height="50"></canvas>
+	<canvas id="pageflip-canvas"></canvas>
+	<canvas id="lightsoff-canvas"></canvas>
+	<canvas id="page-indicate-canvas"></canvas>
 	
 	<div id="touch_debug"></div>
 	<div id="fact_debug"></div>
