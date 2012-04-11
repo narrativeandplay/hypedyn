@@ -27,6 +27,7 @@ var test_bed_html_cache = "";
 
 // given the content(text) of the node, and the arr of links
 // this returns the html code to display the node's content and the links
+// noformat flag stops all page breaking and just return the plain text
 function htmlFormat(content, links, noformat) {
 	noformat = (noformat == undefined) ? false : noformat;
 	
@@ -35,7 +36,6 @@ function htmlFormat(content, links, noformat) {
 	function offset_to_link( offset ) {
 		for ( i in links ) {
 			if ( (links[i].start <= offset) && (offset < links[i].end) ) {
-				disp("link id "+links[i].id);
 				return links[i];
 			}
 		}
@@ -44,7 +44,12 @@ function htmlFormat(content, links, noformat) {
 	// main control loop (entrance)
 	function helper2(offset) {
 		//disp("helper "+offset);
-		if (offset == content.length) return "";
+		if (offset == content.length) {
+			if (links.length != 0)
+				// assume the rest in links are anywhere nodes
+				return anywherelink_code ( links[0], offset );
+			else return "";
+		}
 		else {
 			var link_find =  offset_to_link( offset );
 			//disp("link find typeof "+ link_find);
@@ -64,24 +69,9 @@ function htmlFormat(content, links, noformat) {
 		// if we pass in linktext then we are breaking that link
 		var plaintext = (linktext == undefined) ? content.substring(offset, content.length) : linktext.substring(alt_offset, linktext.length);
 		
-		// check whether a link starts within this range
-		function linkstart_find ( from_index, to_index ) {
-			//disp("links len "+links.length);
-			for (i in links) {
-				if ( links[i].start >= from_index && (links[i].start < to_index || from_index == to_index ) ) { // in special case of from==to index we still match start of link
-					//disp("LINK FOUND ");
-					return links[i];
-				}
-			}
-		}
-		
-		var link_find = linkstart_find ( offset, offset+plaintext.length );
-		
 		var space_pos = plaintext.indexOf(" ");
 		var nlpos = plaintext.indexOf("\n");
-		
-		// rewriting the above
-		
+
 		// mode transition between breaking link text and normal text
 		if (linktext != undefined) {
 			if (alt_offset == -1) {// init break link
@@ -154,6 +144,23 @@ function htmlFormat(content, links, noformat) {
 		}
 	}
 	
+	function anywherelink_code ( anywherenode, offset ) {
+	disp("anyywhere processing ");
+	disp("anywherenode id "+anywherenode.id);
+	disp("name "+ anywherenode.name);
+		var code = "";
+		if (links.length == activated_anywhere_nodes.length) // start of anywhere node link
+			code += "<br><br>";
+		code += start_tag 
+				+ "<a href='javascript:void(0)' onMouseUp='gotoNode(" 
+				+ anywherenode.id + ")'>"
+				+ anywherenode.name + "</a>"
+				+ end_tag
+				+ "<br>";
+		links.splice(links.indexOf(anywherenode), 1);
+		return pagebreak_check2( code, offset );
+	}
+	
 	function link_code2 ( offset, link ) {
 		var start = link.start;
 		var end = link.end;
@@ -219,7 +226,7 @@ function htmlFormat(content, links, noformat) {
 	}
 	
 	function pagebreak_check2 ( htmlcode, new_offset ) {
-		if (!noformat) {
+		if (!noformat && page_flipping_mode) { // dont try to break page when page flipping mode off
 			test_bed_html_cache += htmlcode;
 			// make sure test_bed has same styling as actual page
 			$('test_bed').className = "pagesdiv";
@@ -243,7 +250,7 @@ function htmlFormat(content, links, noformat) {
 			} else {
 				$("test_bed").innerHTML = "";
 				test_bed_html_cache = "";
-				
+				disp("breaking page!");
 				// remaining code goes to next page
 				return page_end_tag + page_start_tag + htmlcode + helper2(new_offset);
 			}
@@ -265,7 +272,8 @@ function htmlFormat(content, links, noformat) {
 		return htmlcode ;
 	else
 		//return page_start_tag + htmlcode + page_end_tag + anywherelink_htmlcode();
-		return  page_start_tag +  htmlcode + "<br><br>" + start_tag + anywherelink_buttons() + end_tag + page_end_tag;
+		//return  page_start_tag +  htmlcode + "<br><br>" + start_tag + anywherelink_buttons() + end_tag + page_end_tag;
+		return  page_start_tag +  htmlcode + page_end_tag;
 }
 
 // special characters in the string that is used by html syntax

@@ -140,6 +140,7 @@ function mouseDownHandler(e) {
 //http://ross.posterous.com/2008/08/19/iphone-touch-events-in-javascript
 function touchHandler(event)
 {
+	disp("touch handling");
     var touches = event.changedTouches,
         first = touches[0],
         type = "";
@@ -252,10 +253,14 @@ function init_event_listeners () {
 		$("pages").addEventListener('touchstart', touchHandler, false);
 		$("pages").addEventListener('touchend', touchHandler, false);
 		$("pages").addEventListener('touchmove', touchHandler, false);
+		
+		$('popup').addEventListener('mousedown', popup_mouse_handler, false); // was popup
+		$('lightsoff-canvas').addEventListener('mousedown', black_fade_out, false);
+	} else {
+		disp("no mouse event added ");
 	}
 	
-	$('popup').addEventListener('mousedown', popup_mouse_handler, false); // was popup
-	$('lightsoff-canvas').addEventListener('mousedown', black_fade_out, false);
+	
 }
 
 function popup_mouse_handler(e) { e.preventDefault(); }

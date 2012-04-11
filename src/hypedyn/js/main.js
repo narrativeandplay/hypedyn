@@ -36,18 +36,20 @@ function clone_arr ( arr ) {
 	return result;
 }
 
-var device_width, device_height, page_width, line_break_width, btm_height, text_area_height;
+var device_width, device_height, page_width, btm_height, text_area_height;
 
 // can be browser or mobile
-//var display_mode = "mobile";
-var display_mode// = "mobile";
+var display_mode;
 var page_flipping_mode;
 
 if ("ontouchstart" in document.body) {
 	display_mode = "mobile";
-	page_flipping_mode = true;
+	page_flipping_mode = false; // mobile has page flipping removed as well
+	disp("touch detected!");
 } else {
 	display_mode = "browser";
+	//page_flipping_mode = false;
+	//display_mode = "mobile";
 	page_flipping_mode = false;
 }
 
@@ -73,18 +75,21 @@ function get_device_dimension() {
 		page_width = device_width; // 320 hardcoded for mobile
 	else if (display_mode == "mobile") {
 		page_width = 320;
-		device_height = 410;
+		if (page_flipping_mode)
+			device_height = 410;
 	}
-	
-	line_break_width = page_width  - 160; //- page_padding * 2
 	
 	btm_height = device_height - button_panel_height;// - page_indicator_height;
 	text_area_height = btm_height - page_indicator_height;
+	disp("device height "+device_height);
+	disp("btm_height "+btm_height);
+	disp('text area height '+text_area_height);
 	
 	$('page-indicate-canvas').style.left = page_width/4;
 	$('page-indicate-canvas').width = page_width/2;
 	$('page-indicate-canvas').height = 50;
-	drawPageIndicator( page, flips.length, back_page_check() );
+	if (page_flipping_mode)
+		drawPageIndicator( page, flips.length, back_page_check() );
 	
 	$('lightsoff-canvas').width = page_width; //320
 	$('lightsoff-canvas').style.width = page_width; //320
@@ -100,10 +105,13 @@ function nonpageflip_init() {
 	if (!page_flipping_mode) {
 		$("pageflip-canvas").style.visibility = "hidden";
 		$("lightsoff-canvas").style.visibility = "hidden";
+		$("popup").style.visibility = "hidden";
+		document.body.style.backgroundImage = "url(page_back_320_480.png)";
+		document.body.style.backgroundSize = "100%"; 
 		//$("outer-popup").style.backgroundColor = "rgba(100,100,255,1)";
 		//$("popup").style.backgroundColor = "rgba(0,0,255,1)";
 		//$('pages').style.visibility = "hidden";
-	}
+	} 
 }
 
 // TOFIX, setFact getting triggered twice by hyper link
@@ -244,8 +252,10 @@ function gotoNode(nodeID) {
 			page = 0;
 		}
 		
-		var htmlcode = htmlFormat( node.content, clone_arr(node.links), false );
+		var htmlcode = htmlFormat( node.content, clone_arr(node.links).concat(activated_anywhere_nodes), false );
 		$("pages").innerHTML = htmlcode;
+		
+		disp("htmlcode "+htmlcode);
 		
 		if (page_flipping_mode) {
 			// makes sure last_page not included in this list
@@ -288,7 +298,7 @@ function gotoNode(nodeID) {
 			style_pages();
 		}
 		
-		anywherelink_buttons(); // original anywhere nodes
+		//anywherelink_buttons(); // original anywhere nodes
 		add_anywhere_button(); // choice links
 		replace_button_placeholder();
 		
@@ -316,7 +326,8 @@ function add_anywhere_button() {
 	$("buttons-panel").innerHTML += "<button type='button' style='position: absolute; right: 0px; top: 5px; font: 16px/20px Helvetica, sans-serif;' onClick='option_callback()'><font size=5>Options</font></button>";
 	
 	//$("buttons-panel").style.backgroundColor = "rgba(255,0,0,1)";
-	$("buttons-panel").style.backgroundImage = "url(page_back_320_480.png)"
+	if (page_flipping_mode)
+		$("buttons-panel").style.backgroundImage = "url(page_back_320_480.png)"
 	
 	$("buttons-panel").style.width = page_width;  // "320px" for mobile
 	// new for browser version

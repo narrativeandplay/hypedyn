@@ -69,11 +69,17 @@ function style_pages() {
 	// Organize the depth of our pages and create the flip definitions
 	for( var i = 0, len = pages.length; i < len; i++ ) {
 		
-		pages[i].style.backgroundImage = "url(page_back_btm_320_480.png)";//"url(paper.png)";// no repeat;
+		if (page_flipping_mode)
+			pages[i].style.backgroundImage = "url(page_back_btm_320_480.png)";//"url(paper.png)";// no repeat;
 		//pages[i].style.backgroundColor = "rgba(0,255,0,1)";
 		pages[i].className = 'pagesdiv'; 
 		pages[i].style.width = page_width;
-		pages[i].style.height = btm_height;
+		disp("pages height "+pages[i].height);
+		disp("btm height "+btm_height);
+		//dont limit the height when we're not breaking the page 
+		if (page_flipping_mode )
+			pages[i].style.height = btm_height;
+			
 		pages[i].style.top = "50px";
 		
 		flips.push( {

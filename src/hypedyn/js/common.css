@@ -35,7 +35,7 @@
 	//width: 320px;
 	z-Index: -101;
 	opacity: 1.0;
-	pointer-events: none;
+	//pointer-events: none;
 	top: 0px;
 	left: 0px;
 }
@@ -70,8 +70,8 @@
 	height: 480px;
 	z-Index: -102;
 	opacity: 1.0;
-	color: black
-	pointer-events: none;
+	color: black;
+	//pointer-events: none;
 	top: 0px;
 	left: 0px;
 }
