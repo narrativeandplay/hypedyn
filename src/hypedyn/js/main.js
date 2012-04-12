@@ -162,6 +162,8 @@ var activated_anywhere_buttons = [];
 
 // anywhere link stub TODO:
 function addAnywhereLink(anywhereNodeID) {
+	if (anywhereNodeID == currNodeID)
+		return; // don't add this node when we're already there
 	for ( i in activated_anywhere_nodes) {
 		if (activated_anywhere_nodes[i].id == anywhereNodeID) {
 			return; // break to prevent last line from running
