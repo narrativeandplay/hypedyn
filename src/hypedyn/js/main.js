@@ -42,15 +42,16 @@ var device_width, device_height, page_width, btm_height, text_area_height;
 var display_mode;
 var page_flipping_mode;
 
-if ("ontouchstart" in document.body) {
-	display_mode = "mobile";
-	page_flipping_mode = false; // mobile has page flipping removed as well
-	disp("touch detected!");
-} else {
-	display_mode = "browser";
-	//page_flipping_mode = false;
-	//display_mode = "mobile";
-	page_flipping_mode = false;
+// determine whether it is a browser or a mobile
+function device_detection() {
+	if ("ontouchstart" in document.body) {
+		display_mode = "mobile";
+		page_flipping_mode = false; // mobile has page flipping removed as well
+		disp("touch detected!");
+	} else {
+		display_mode = "browser";
+		page_flipping_mode = false;
+	}
 }
 
 /* global var */
@@ -106,8 +107,10 @@ function nonpageflip_init() {
 		$("pageflip-canvas").style.visibility = "hidden";
 		$("lightsoff-canvas").style.visibility = "hidden";
 		$("popup").style.visibility = "hidden";
-		document.body.style.backgroundImage = "url(page_back_320_480.png)";
-		document.body.style.backgroundSize = "100%"; 
+		
+		//document.body.style.backgroundImage = "url(page_back_320_480.png)";
+		//document.body.style.backgroundSize = "100%"; 
+		
 		//$("outer-popup").style.backgroundColor = "rgba(100,100,255,1)";
 		//$("popup").style.backgroundColor = "rgba(0,0,255,1)";
 		//$('pages').style.visibility = "hidden";
@@ -363,6 +366,7 @@ function option_callback() {
 }
 
 window.onload = function() {
+	device_detection();
 	get_device_dimension();
 	init_event_listeners ();
 	//drawPageIndicator(page, page.length, false);

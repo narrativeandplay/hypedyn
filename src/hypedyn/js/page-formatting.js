@@ -18,12 +18,15 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
  
-var start_tag = "<font size='5'>";
+var start_tag = "<font class='plaintext'>"; // used to be size=5 inside font tag
 var end_tag = "</font>";
 
 var page_start_tag = "<div name='page'><div name='pagecontent'>"//"<section><div>";
 var page_end_tag = "</div></div>";//</section>";
 var test_bed_html_cache = "";
+
+var dormant_start_tag = "<font class='dormant'>";
+var dormant_end_tag = "</font>"
 
 // given the content(text) of the node, and the arr of links
 // this returns the html code to display the node's content and the links
@@ -151,11 +154,11 @@ function htmlFormat(content, links, noformat) {
 		var code = "";
 		if (links.length == activated_anywhere_nodes.length) // start of anywhere node link
 			code += "<br><br>";
-		code += start_tag 
-				+ "<a href='javascript:void(0)' onMouseUp='gotoNode(" 
+		code += //start_tag +
+				"<a href='javascript:void(0)' class='anywhere' onMouseUp='gotoNode(" 
 				+ anywherenode.id + ")'>"
 				+ anywherenode.name + "</a>"
-				+ end_tag
+				//+ end_tag
 				+ "<br>";
 		links.splice(links.indexOf(anywherenode), 1);
 		return pagebreak_check2( code, offset );
@@ -173,12 +176,12 @@ function htmlFormat(content, links, noformat) {
 			var code ="";
 			switch (link.type) {
 				case "default":
-					code = "<a href='javascript:void(0)' "
+					code = "<a href='javascript:void(0)' class='intextlink' "
 						+ "onMouseUp='"
 						+ "clickedLink(" + link.id + ")'>"
-						+ start_tag
+						//+ start_tag
 						+ linktext
-						+ end_tag
+						//+ end_tag
 						+ "</a>";
 					break;
 					//	+"</a>" + helper(index+1, end);
@@ -196,9 +199,9 @@ function htmlFormat(content, links, noformat) {
 						+ "<a href='javascript:void(0)' "
 						+ "onMouseUp='"
 						+ "clickedLink(" + link.id + ")'>"
-						+ start_tag
+						//+ start_tag
 						+ linktext
-						+ end_tag
+						//+ end_tag
 						+ "</a>"
 						+ "</div>";
 					break;
@@ -208,11 +211,11 @@ function htmlFormat(content, links, noformat) {
 			return pagebreak_check2( code, end );
 			
 		} else if ( link_clickable ( link, false ) && !noformat ) {
-			var code = "<b>"
-				+ start_tag
+			var code = //"<b>"
+				dormant_start_tag
 				+ linktext
-				+ end_tag
-				+ "</b>";
+				+ dormant_end_tag;
+				//+ "</b>";
 			// remove link from links array
 			links.splice(links.indexOf(link), 1);
 			return pagebreak_check2( code, end );
