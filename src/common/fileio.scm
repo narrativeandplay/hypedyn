@@ -257,6 +257,7 @@
                                  (set! safetoproceed #f)
                                  )))))
                     (format #t "output-port: ~a~a~%~!" output-port (is-void? output-port))
+                    
                     (if safetoproceed
                         (begin
                           (format #t "writing~%~!")
@@ -312,6 +313,7 @@
 ;; cant overwrite dir that way
 (define (get-safe-new-filename in-dir select-dir filterlist #!optional default-name default-extension)
   (let ((newfilename (get-file-to-save in-dir select-dir filterlist default-name default-extension)))
+    
     (if (is-mac-os?)
         ; mac, so assume java.awt.FileDialog has already checked, don't check twice
         newfilename

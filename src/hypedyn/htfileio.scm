@@ -688,11 +688,13 @@
     (let ((tmp (get-saved-filename-string)))
       (if (not tmp)
           (set! tmp "Untitled.dyn"))
+      
+      (display "folder name ")(display tmp)(newline)
       ;; removes the extension
       (string-append (substring tmp 0 (- (string-length tmp) 4)) "-JS")
       ))
   
-  (let ((export-folder (get-safe-new-filename (get-last-exported-dir) #f '()))) ;; third arg was #t, last arg folder-name taken out
+  (let ((export-folder (get-safe-new-filename (get-last-exported-dir) #f '() folder-name))) ;; third arg was #t
     (if (not (eq? #f export-folder))
         (begin
           (display "export folder ")(display export-folder)(newline)
@@ -944,7 +946,7 @@
           )))
 
 (define (write-jscode-to filename jscode)
-  (display "write jscode to ")(display filename);
+  (display "write jscode to ")(display filename)(newline);
   ; first check for overwrite
   (define safetoproceed #t)
   (define overwrite
@@ -981,7 +983,8 @@
                                         ;(*:printStackTrace ex)
                              (set! safetoproceed #f)
                              )))))
-                (format #t "output-port: ~a~a~%~!" output-port (is-void? output-port))
+                ;(format #t "output-port: ~a~a~%~!" output-port (is-void? output-port))
+                (display "output port ")(display output-port)(newline)
                 (if safetoproceed
                     (begin
                       (format #t "writing~%~!")

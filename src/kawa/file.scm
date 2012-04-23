@@ -122,8 +122,9 @@
                          (invoke the-string 'to-string)))
                       )))
         ;)
-   
-    (invoke fchooser 'setFile default-name)
+    
+   (if default-name 
+       (invoke fchooser 'setFile default-name))
     
     ; show the dialog
     (invoke fchooser 'show)
