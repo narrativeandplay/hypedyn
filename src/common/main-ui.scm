@@ -43,6 +43,7 @@
   (require "languages.scm")
   (require "preferences.scm")
   (require "macos.scm")
+  (require "datatable.scm") ;; dirty?
   )
 
 ; export
@@ -583,19 +584,19 @@
 ; save a file - specifying #t as filename will open file dialog,
 ; specifying #f will use existing filename, if any, 
 (define (saveit filename)
-  (display "went into saveit")(newline)
-  (display "save-callback ")(display save-callback)(newline)
-  (display "filename ")(display filename)(newline)
+  ;; remove * at the back of the filename if it exists
+  (let* ((namelen (string-length filename))
+         (lastchar (substring filename (- namelen 1) namelen)))
+    (if (equal? lastchar "*")
+        (set! filename (substring filename 0 (- namelen 1)))))
+  
   (if save-callback (save-callback filename))
-  (display "after save-callback")(newline)
-  (update-label)
-  )
+  (update-label))
 
 ; load a file - specifying "" as filename will open file dialog
 (define (loadit load)
   (if load-callback (load-callback))
-  (update-label)
-  )
+  (update-label))
 
 ; update the main window label
 (define (update-label)
@@ -603,8 +604,18 @@
       (let ((filename (if get-filename-callback (get-filename-callback) #f)))
                                         ;(format #t "filename: ~a~%~!" filename)
         (if (not (eq? filename #f))
-            (set-frame-title frame (string-append filename " - " (get-curr-languagename)))
-            (set-frame-title frame (get-curr-languagename))))))
+            (begin
+;              (set! filename
+;                    (string-append
+;                     filename
+;                     (if (or
+;                          (dirty?)
+;                          (nodeeditor-dirty?))
+;                         "*" "")))
+              (set-frame-title frame (string-append filename " - " (get-curr-languagename)))
+              )
+            (set-frame-title frame (get-curr-languagename)))
+        )))
 
 ; exit
 (define (exitit exititem)

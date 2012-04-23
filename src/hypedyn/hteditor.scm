@@ -1560,7 +1560,9 @@
      (if (or
           (dirty?)
           (nodeeditor-dirty?))
-         "*" ""))))
+         "*" "")
+     )
+    ))
 
 ;;
 ;; reader window - implementation is in reader.scm

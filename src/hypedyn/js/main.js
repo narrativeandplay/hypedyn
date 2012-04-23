@@ -44,7 +44,8 @@ var page_flipping_mode;
 
 // determine whether it is a browser or a mobile
 function device_detection() {
-	if ("ontouchstart" in document.body) {
+	var element = document.createElement('div');
+	if ("ontouchstart" in element) {
 		display_mode = "mobile";
 		page_flipping_mode = false; // mobile has page flipping removed as well
 		disp("touch detected!");
