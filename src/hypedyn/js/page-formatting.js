@@ -38,7 +38,16 @@ function htmlFormat(content, links, noformat) {
 
 	function offset_to_link( offset ) {
 		for ( i in links ) {
+			//disp("otl "+links[i].start+" "+links[i].end);
 			if ( (links[i].start <= offset) && (offset < links[i].end) ) {
+				return links[i];
+			}
+		}
+	}
+	
+	function next_link_from( offset ) {
+		for ( i in links ) {
+			if ( links[i].start >= offset ) {
 				return links[i];
 			}
 		}
@@ -46,7 +55,6 @@ function htmlFormat(content, links, noformat) {
 	
 	// main control loop (entrance)
 	function helper2(offset) {
-		//disp("helper "+offset);
 		if (offset == content.length) {
 			if (links.length != 0)
 				// assume the rest in links are anywhere nodes
@@ -54,19 +62,15 @@ function htmlFormat(content, links, noformat) {
 			else return "";
 		}
 		else {
-			var link_find =  offset_to_link( offset );
-			//disp("link find typeof "+ link_find);
+			var link_find = offset_to_link( offset );
 			if ( link_find == undefined ) {
-				//disp("undefined");
 				return plain_text_code2 ( offset );
 			} else {
-				//disp("found link "+link_find);
 				return link_code2 ( offset, link_find );
 			}
 		}
 	}
 	
-	// TODO i think all the here 2 to here 5 are very similar and can be shrunk
 	function plain_text_code2 ( offset, linktext, link ) {
 
 		// if we pass in linktext then we are breaking that link
@@ -74,6 +78,9 @@ function htmlFormat(content, links, noformat) {
 		
 		var space_pos = plaintext.indexOf(" ");
 		var nlpos = plaintext.indexOf("\n");
+		
+		var next_link = next_link_from( offset );
+		var next_link_pos = (next_link == undefined) ? -1 : next_link.start - offset;
 
 		// mode transition between breaking link text and normal text
 		if (linktext != undefined) {
@@ -82,10 +89,10 @@ function htmlFormat(content, links, noformat) {
 			}
 		}
 		
-		if (alt_offset == -1)  { // not breaking link text
+		if (alt_offset == -1) { // not breaking link text
 			var newcode;
 			var offset_inc;
-			if ( space_pos == -1 && nlpos == -1 ) {
+			if ( space_pos == -1 && nlpos == -1 && next_link_pos == -1 ) {
 				newcode = start_tag + plaintext + end_tag;
 				offset_inc = plaintext.length;
 			} else if ( space_pos == 0 ) {
@@ -95,13 +102,18 @@ function htmlFormat(content, links, noformat) {
 				newcode = "<br>";
 				offset_inc = 1;
 			} else {
-				// note both space_pos and nlpos equal -1 is already not true
-				if (space_pos == -1) // only spacepos not found, nlpos found
-					offset_inc = nlpos;
-				else if (nlpos == -1) // only nlpos not found, space_pos found
-					offset_inc = space_pos;
-				else 
-					offset_inc = Math.min( nlpos, space_pos );
+				// take the smallest of the 3, ignore those that are negative
+				var arr = [];
+				if ( space_pos > 0 ) {
+					arr[arr.length] = space_pos;
+				} 
+				if ( nlpos > 0 ) {
+					arr[arr.length] = nlpos;
+				}
+				if ( next_link_pos > 0 ) {
+					arr[arr.length] = next_link_pos;
+				}
+				offset_inc = Math.min.apply( this, arr );
 					
 				newcode = start_tag + plaintext.substring(0, offset_inc) + end_tag;
 			}
@@ -148,9 +160,9 @@ function htmlFormat(content, links, noformat) {
 	}
 	
 	function anywherelink_code ( anywherenode, offset ) {
-	disp("anyywhere processing ");
-	disp("anywherenode id "+anywherenode.id);
-	disp("name "+ anywherenode.name);
+	//disp("anyywhere processing ");
+	//disp("anywherenode id "+anywherenode.id);
+	//disp("name "+ anywherenode.name);
 		var code = "";
 		if (links.length == activated_anywhere_nodes.length) // start of anywhere node link
 			code += "<br><br>";
@@ -169,6 +181,8 @@ function htmlFormat(content, links, noformat) {
 		var end = link.end;
 		var altcontent = findReplaceText(link.id);
 		var linktext = (altcontent == undefined) ? content.substring(start, end) : altcontent;
+		disp("linktext "+linktext);
+		disp("altcontent "+altcontent);
 		
 		// note export process does not ensure that rules have actions
 		// therefore we have to check whether a link is clickable by checking the actions in its rules
@@ -220,9 +234,11 @@ function htmlFormat(content, links, noformat) {
 			links.splice(links.indexOf(link), 1);
 			return pagebreak_check2( code, end );
 		} else if (!noformat) {  // just plain text
+			disp("linktext "+linktext);
 			return plain_text_code2( offset, linktext, link );
 		} else if (noformat) {
 			// remove link from links array
+			disp("linktext "+linktext);
 			links.splice(links.indexOf(link), 1);
 			return pagebreak_check2( start_tag + linktext + end_tag, end );
 		}

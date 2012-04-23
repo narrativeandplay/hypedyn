@@ -139,6 +139,7 @@ function replaceText(linkID, altcontent) {
 	function comparator ( pair1, pair2 ) {
 		pair1[0] < pair2[0];
 	}
+	disp("replace text "+altcontent);
 	insertSorted( text_to_replace, [linkID, altcontent], comparator );
 }
 function findReplaceText(linkID) {
@@ -147,11 +148,14 @@ function findReplaceText(linkID) {
 		if (text_to_replace[i][0] == linkID) {
 			// need to differentiate between 
 			// text from fact or just text
-			if (typeof text_to_replace[i][1] == "string")
+			
+			if (typeof text_to_replace[i][1] == "string") {
+				disp("string");
 				result = text_to_replace[i][1];
-			else if (typeof text_to_replace[i][1] == "number")
+			} else if (typeof text_to_replace[i][1] == "number") {
+				disp("number");
 				result = factlist[text_to_replace[i][1]].value;
-			else {
+			} else {
 				alert("typeof result "+ typeof text_to_replace[i][1]);
 				result = "[Text Replace Error]";
 			}
@@ -259,8 +263,6 @@ function gotoNode(nodeID) {
 		
 		var htmlcode = htmlFormat( node.content, clone_arr(node.links).concat(activated_anywhere_nodes), false );
 		$("pages").innerHTML = htmlcode;
-		
-		disp("htmlcode "+htmlcode);
 		
 		if (page_flipping_mode) {
 			// makes sure last_page not included in this list
