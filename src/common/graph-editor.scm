@@ -1326,7 +1326,8 @@
                   (define (get-line-by-ID ID)
 ;                    (display "inside get line by ID ")(newline)
 ;                    (display "link list ")(display links)(newline)
-                    
+                    (display "get line by ID ")(display ID)(newline)
+                    ;(display "link list ")(display links)(newline)
                     (define (search link ID)
                       (if (null-list? link)
                           #f
@@ -1336,6 +1337,7 @@
 ;                            (display "id class type ")(display (invoke (car curr-link) 'get-class))(newline)
 ;                            (display "match id ")(display ID)(newline)
 ;                            (display "id class type ")(display (invoke ID 'get-class))(newline)
+                            (display "id what class ")(display (invoke (car curr-link) 'get-class))(display " ")(display (car curr-link))(newline)
                             (if (equal? (car curr-link) ID)
                                 (cadr curr-link)
                                 (search (cdr link) ID)))))

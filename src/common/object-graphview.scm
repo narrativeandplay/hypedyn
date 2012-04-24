@@ -78,7 +78,8 @@
                                  fromnodeID
                                  tonodeID
                                  new-linkID)
-      (create-line name (number->string new-linkID) fromnodeID tonodeID))
+      (display "update link display ")(newline)
+      (create-line name fromnodeID tonodeID (number->string new-linkID)))
 
     ;; custom line drawing
     (define (line-draw dc source target selected? show? data)
@@ -158,10 +159,15 @@
 
     ; create the line in graph
     ; name and ID should be strings, ID is generally the linkID (plus "~" for "else")
-    (define (create-line name ID fromnodeID tonodeID)
+    (define (create-line name fromnodeID tonodeID ID)
       ;; only create line if tonodeID not -1
       (if (not (= tonodeID -1))
           (begin
+            (display "create-line name ID fromnodeID tonodeID")(newline)
+            (display (list name ID fromnodeID tonodeID))(newline)
+            (display "fromnodeID class ")(display (invoke fromnodeID 'get-class))(newline)
+            (display "tonodeID class ")(display (invoke tonodeID 'get-class))(newline)
+            
             (define c-fromnode (ask c 'node-get-by-data (number->string fromnodeID)))
             (define c-tonode (ask c 'node-get-by-data (number->string tonodeID)))
             (define c-fromtab (ask c-fromnode 'tab-out-ref 0))
@@ -188,7 +194,14 @@
     ; line-ID should be a string corresponding to the linkID for "if" case, and
     ; "~" + linkID for "else" case
     (define (rename-line line-ID newname)
+      (display "rename line ")(display line-ID)(display " ")(display newname)(newline)
+      (display "type of line id? ")(display (invoke line-ID 'get-class))(newline)
+      (set! line-ID (string->number line-ID))
+      (display "type of line id? ")(display (invoke line-ID 'get-class))(newline)
+      (set! line-ID (invoke line-ID 'to-string))
+      (display "type of line id? ")(display (invoke line-ID 'get-class))(newline)
       (let ((link (ask c 'get-line-by-ID line-ID)))
+        (display "link in rename ")(display link)(newline)
         (if link (ask c 'line-rename link newname))))
     
     ; rename node in graph

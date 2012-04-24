@@ -555,10 +555,7 @@
   (define version-one? (= loaded-file-version 1))
   
   ;(display "CONVERT LINKS pre 2.2")(newline)
-  (display "convert links ")(display linkID)(newline)
   (define selected-rule-ID (ask link-obj 'rule))
-  (display "  dest ")(display (ask link-obj 'destination))(newline)
-  (display "  rule ")(display selected-rule-ID)(newline)
   (if (or (not (eq? selected-rule-ID 'not-set))
           version-one?)
       (begin
@@ -578,8 +575,6 @@
         (define link-usealttext (ask link-obj 'use-alt-text))
         (define link-dest2 (ask link-obj 'alt-destination))
         (define link-alttext (ask link-obj 'alt-text))
-        
-        (display "link-dest1 ")(display link-dest1)(newline) 
         
         (define link-start-index (ask link-obj 'start-index))
         (define link-end-index (ask link-obj 'end-index))

@@ -307,9 +307,14 @@
 ;                             (ask parent-obj 'rename-line 
 ;                                  (string-append "~" (number->string this-link-ID))
 ;                                  (generate-link-name this-link-name this-link-ID #t))))
+                         
+                          ;debug does rename line do the right thing?
                          (ask parent-obj 'rename-line
                               (number->string this-link-ID)
-                              (generate-link-name this-link-name this-link-ID))
+                              ;(generate-link-name this-link-name this-link-ID)
+                              "DOH"
+                              )
+                         
                        ))
                      the-links)))
         
@@ -362,10 +367,4 @@
                       (ask graph-ed 'line-del line src-tab target-tab line-name)
                       ) line-lst)
                ))
-    
-    ;; no need to do this since we inherited parent-obj
-;    (obj-put this-obj 'create-line 
-;             (lambda (self name line-ID fromnodeID tonodeID)
-;               (ask parent-obj 'create-line name line-ID fromnodeID tonodeID)))
-               
     this-obj))
