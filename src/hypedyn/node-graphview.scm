@@ -88,6 +88,7 @@
                           (thisnode-name (ask thisnode 'name))
                           (thisnode-ID (ask thisnode 'ID))
                           (thisnode-anywhere (ask thisnode 'anywhere?)))
+                     ;(display "drawing nodes ")(display nodeID)(newline)
                      (if (eq? thisnode-anywhere is-anywhere)
                          (add-node thisnode-ID (make-displayname thisnode)
                                    (ask thisnode 'get-x) (ask thisnode 'get-y)))))
@@ -98,6 +99,7 @@
             (if the-links
                 (map (lambda (l)
                        (let ((linkID (car l)))
+                         (display "drawing links ")(display linkID)(newline)
                          (add-link-display linkID)))
                      the-links)))
             

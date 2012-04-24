@@ -164,9 +164,7 @@
                                (equal? open-choice 1))
                           (not diff-version?))
                       (begin
-                        
                         (set! loaded-file-version file-version-number) 
-                        
                         ; load from file
                         (if (load-from-file newfilename)
                             (begin
@@ -553,10 +551,16 @@
 ;; need to create 2 rules one for(if) and against(else) the condition in rule
 ;; note old rules are still around in the datatable, just not invoked
 (define (convert-pre-2.2-links linkID link-obj)
+  
+  (define version-one? (= loaded-file-version 1))
+  
   ;(display "CONVERT LINKS pre 2.2")(newline)
-
+  (display "convert links ")(display linkID)(newline)
   (define selected-rule-ID (ask link-obj 'rule))
-  (if (not (eq? selected-rule-ID 'not-set))
+  (display "  dest ")(display (ask link-obj 'destination))(newline)
+  (display "  rule ")(display selected-rule-ID)(newline)
+  (if (or (not (eq? selected-rule-ID 'not-set))
+          version-one?)
       (begin
 
         ;; NOTE: rule, destination, use-destination, use-alt-destination,
@@ -575,11 +579,18 @@
         (define link-dest2 (ask link-obj 'alt-destination))
         (define link-alttext (ask link-obj 'alt-text))
         
+        (display "link-dest1 ")(display link-dest1)(newline) 
+        
         (define link-start-index (ask link-obj 'start-index))
         (define link-end-index (ask link-obj 'end-index))
         
-        (define if-rule-ID (create-typed-rule2 "THEN" 'link (ask selected-rule 'and-or) #f linkID))
-        (define else-rule-ID (create-typed-rule2 "ELSE" 'link (ask selected-rule 'and-or) #t linkID))
+        (define and-or 
+          (if version-one?
+              'and
+              (ask selected-rule 'and-or)))
+        
+        (define if-rule-ID (create-typed-rule2 "THEN" 'link and-or #f linkID))
+        (define else-rule-ID (create-typed-rule2 "ELSE" 'link and-or #t linkID))
         (define if-rule (get 'rules if-rule-ID))
         (define else-rule (get 'rules else-rule-ID))
                                         ;)
@@ -628,15 +639,18 @@
 
         ;; transfer the condition from the original old rule to the new rules
         ;(create-typed-condition name type targetID operator ruleID . args)
-        (define old-conditions (ask selected-rule 'conditions))
-        (map (lambda (condition)
-               (define this-cond (get 'conditions condition))
-               (let ((type (ask this-cond 'type))
-                     (targetID (ask this-cond 'targetID))
-                     (operator (ask this-cond 'operator)))
-                 (create-typed-condition "If-rule" type targetID operator if-rule-ID )
-                 (create-typed-condition "else-rule" type targetID operator else-rule-ID ))
-               ) old-conditions)
+        (if selected-rule
+            (begin
+              (define old-conditions (ask selected-rule 'conditions))
+              (map (lambda (condition)
+                     (define this-cond (get 'conditions condition))
+                     (let ((type (ask this-cond 'type))
+                           (targetID (ask this-cond 'targetID))
+                           (operator (ask this-cond 'operator)))
+                       (create-typed-condition "If-rule" type targetID operator if-rule-ID )
+                       (create-typed-condition "else-rule" type targetID operator else-rule-ID ))
+                     ) old-conditions)
+              ))
         )))
 
 ;; ============================

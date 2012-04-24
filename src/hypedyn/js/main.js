@@ -47,7 +47,7 @@ function device_detection() {
 	var element = document.createElement('div');
 	if ("ontouchstart" in element) {
 		display_mode = "mobile";
-		page_flipping_mode = false; // mobile has page flipping removed as well
+		page_flipping_mode = true; // mobile has page flipping removed as well
 		disp("touch detected!");
 	} else {
 		display_mode = "browser";

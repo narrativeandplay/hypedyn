@@ -108,7 +108,6 @@
                 ((explist (open-input-file filename)))
               ; run the file
               (runcode-exp explist display display)
-              
               ; close input port
               (close-input-port explist)
               
@@ -137,7 +136,6 @@
         (try-catch
             (let
                 ((explist (open-input-file filename)))
-              
               ; parse  the file
               ;(parsecode-sexpr explist (lambda (e) (display "[code] ")(display e)(newline)))
               (parsecode-sexpr explist proc)
@@ -171,7 +169,8 @@
         (update-last-saved-dir)
 
         ; mark newly loaded file as clean
-        (clear-dirty!))))
+        (clear-dirty!)))
+  )
 
 ;; load from file without reseting environment
 ;(define (load-from-file2 filename)

@@ -72,7 +72,8 @@
     (define output
       (custom-try-catch
        (lambda ()
-         (myeval input))
+         (myeval input)
+         )
        #f ;; dont do standard print stack
        ;; catch errors
        ;; should actually stop here and show error line to user
