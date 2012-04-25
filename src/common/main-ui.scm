@@ -395,7 +395,6 @@
   (add-actionlistener m-file-open (make-actionlistener loadit))
   (add-actionlistener m-file-save (make-actionlistener (lambda (source)
                                                          (begin
-                                                           (display "b4 saveit")(newline)
                                                            (saveit #f)))))
   (add-actionlistener m-file-saveas (make-actionlistener (lambda (source)
                                                            (begin
