@@ -1157,12 +1157,13 @@
                            (if (not (= dest-nodeID -1))
                                (case add-or-remove
                                  ((add) ;; draw a line in the node-graph from the edited-node to the dest-node
-                                  (display "adding line ")
                                   (ask node-graph 'create-line
-                                       (ask parent-link 'name)
+                                       (ask rule 'name)
                                        source-nodeID
                                        dest-nodeID
-                                       (number->string ruleID))) ;; use ruleID as the display ID of line for the moment))
+                                       ruleID) ;; use ruleID as the display ID of line for the moment))
+                                  ;(ask node-graph 'refresh-display) ;; check show-IDs? and display id accordingly for the new line
+                                  ) 
                                  ((remove) ;; remove the line in the node-graph 
                                   (ask node-graph 'del-line
                                         ;                                   (ask node-graph 'get-line-by-ID

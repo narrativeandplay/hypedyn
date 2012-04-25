@@ -163,11 +163,6 @@
       ;; only create line if tonodeID not -1
       (if (not (= tonodeID -1))
           (begin
-            (display "create-line name ID fromnodeID tonodeID")(newline)
-            (display (list name ID fromnodeID tonodeID))(newline)
-            (display "fromnodeID class ")(display (invoke fromnodeID 'get-class))(newline)
-            (display "tonodeID class ")(display (invoke tonodeID 'get-class))(newline)
-            
             (define c-fromnode (ask c 'node-get-by-data (number->string fromnodeID)))
             (define c-tonode (ask c 'node-get-by-data (number->string tonodeID)))
             (define c-fromtab (ask c-fromnode 'tab-out-ref 0))
@@ -194,14 +189,9 @@
     ; line-ID should be a string corresponding to the linkID for "if" case, and
     ; "~" + linkID for "else" case
     (define (rename-line line-ID newname)
-      (display "rename line ")(display line-ID)(display " ")(display newname)(newline)
-      (display "type of line id? ")(display (invoke line-ID 'get-class))(newline)
       (set! line-ID (string->number line-ID))
-      (display "type of line id? ")(display (invoke line-ID 'get-class))(newline)
       (set! line-ID (invoke line-ID 'to-string))
-      (display "type of line id? ")(display (invoke line-ID 'get-class))(newline)
       (let ((link (ask c 'get-line-by-ID line-ID)))
-        (display "link in rename ")(display link)(newline)
         (if link (ask c 'line-rename link newname))))
     
     ; rename node in graph

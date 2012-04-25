@@ -99,7 +99,6 @@
             (if the-links
                 (map (lambda (l)
                        (let ((linkID (car l)))
-                         (display "drawing links ")(display linkID)(newline)
                          (add-link-display linkID)))
                      the-links)))
             
@@ -288,39 +287,32 @@
                          (ask parent-obj 'rename-node thisnode-ID))))
                  the-nodes))
 
-        ; go through all links and refresh name
+        ; go through all links and refresh name (mainly for updating show ID)
         (if (not is-anywhere)
             (if the-links
                 (map (lambda (l)
                        (let* ((this-link (cdr l))
-                              ;(use-destination (ask this-link 'use-destination))
-                              ;(use-alt-destination (ask this-link 'use-alt-destination))
-                              (this-link-ID(ask this-link 'ID))
-                              (this-link-name (ask this-link 'name)))
-;                         ; if using destination, then refresh to link line's label
-;                         (if use-destination
-;                             (ask parent-obj 'rename-line 
-;                                  (number->string this-link-ID)
-;                                  (generate-link-name this-link-name this-link-ID #f)))
-;                         ; if using alt-destination, then refresh alt link line's label
-;                         (if use-alt-destination
-;                             (ask parent-obj 'rename-line 
-;                                  (string-append "~" (number->string this-link-ID))
-;                                  (generate-link-name this-link-name this-link-ID #t))))
-                         
-                          ;debug does rename line do the right thing?
-                         (ask parent-obj 'rename-line
-                              (number->string this-link-ID)
-                              ;(generate-link-name this-link-name this-link-ID)
-                              "DOH"
-                              )
-                         
+                              (this-link-ID (ask this-link 'ID)))
+                         ;; go through all the rules on this link
+                         ;; if it exists, there would be a line sharing the same ID with that rule
+                         (map (lambda (ruleID)
+                                (ask parent-obj 'rename-line
+                                     (number->string ruleID)
+                                     (generate-link-name (ask (get 'rules ruleID) 'name) ruleID))
+                                ) (ask this-link 'rule-lst))
                        ))
                      the-links)))
         
         ; allow repaint
         (ask parent-obj 'set-allow-repaint! #t)
         (ask parent-obj 'refresh)))
+    
+    (define (create-line name fromnodeID tonodeID ID)
+      (ask parent-obj 'create-line
+           (generate-link-name name ID)
+           fromnodeID
+           tonodeID
+           (number->string ID)))
     
     ; message handling                  
     (obj-put this-obj 'init
@@ -342,6 +334,9 @@
                (get-max-node-positions)))
     (obj-put this-obj 'refresh-display
              (lambda (self) (refresh-display)))
+    (obj-put this-obj 'create-line
+             (lambda (self name fromnodeID tonodeID ID) 
+               (create-line name fromnodeID tonodeID ID)))
     
 ;    (define (del-line line-ID fromnodeID tonodeID)
 ;      (let* ((c-fromnode (ask c 'node-get-by-data (number->string fromnodeID)))
