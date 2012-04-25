@@ -251,7 +251,7 @@
          ;; removes the extension
          (string-append (substring tmp 0 (- (string-length tmp) 4)) ".txt")
          ))
-      (let ((exportfilename (get-safe-new-filename (get-last-saved-dir) #f (list ".txt") file-name "txt" parent: (get-main-ui-frame) )))
+      (let ((exportfilename (get-safe-new-filename (get-last-saved-dir) #f (list ".txt") file-name "txt")))
         (if (not (eq? #f exportfilename))
             (begin
               (if (file-exists? exportfilename)
@@ -311,7 +311,7 @@
 (define (dosaveas filename :: <string>)
   (if (check-file-version)
       (let* ((filename (filename-extension-check filename ".dyn")) ;; make sure filename has .dyn at the end
-             (newfile (get-safe-new-filename (get-last-saved-dir) #f (list ".dyn") filename "dyn"  parent: (get-main-ui-frame))))
+             (newfile (get-safe-new-filename (get-last-saved-dir) #f (list ".dyn") filename "dyn")))
         (if (not (eq? #f newfile))
             (begin
               (ht-save-to-file newfile #f)
@@ -703,7 +703,7 @@
       (string-append (substring tmp 0 (- (string-length tmp) 4)) "-JS")
       ))
   
-  (let ((export-folder (get-safe-new-filename (get-last-exported-dir) #f '() folder-name  parent: (get-main-ui-frame)))) ;; third arg was #t
+  (let ((export-folder (get-safe-new-filename (get-last-exported-dir) #f '() folder-name))) ;; third arg was #t
     (if (not (eq? #f export-folder))
         (begin
           (display "export folder ")(display export-folder)(newline)

@@ -104,7 +104,7 @@
       (string-append (substring tmp 0 (- (string-length tmp) 4)) "-web")
       ))
   
-  (let ((export-folder (get-safe-new-filename (get-last-exported-dir) #t '() folder-name  parent: (get-main-ui-frame))))
+  (let ((export-folder (get-safe-new-filename (get-last-exported-dir) #t '() folder-name)))
     (if (not (eq? #f export-folder))
         (begin
           ; create folder, first deleting if it already exists
@@ -258,7 +258,7 @@
       ))
 
   ; get folder to export to (should check if no platforms selected first)
-  (let ((export-folder (get-safe-new-filename (get-last-exported-dir) #t '() folder-name  parent: (get-main-ui-frame))))
+  (let ((export-folder (get-safe-new-filename (get-last-exported-dir) #t '() folder-name)))
     (if (not (eq? #f export-folder))
         (begin
           ; create the folder

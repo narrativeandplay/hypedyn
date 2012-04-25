@@ -69,9 +69,9 @@
 ; open file dialog to save a file
 ; select-dir: #t if user is selecting a directory, #f if user is selecting a file
 ; filterlist: list of filetype filter(s)
-(define (get-file-to-save dir :: <java.io.File> select-dir filterlist #!optional default-name default-extension parent)
+(define (get-file-to-save dir :: <java.io.File> select-dir filterlist #!optional default-name default-extension)
   (if (is-mac-os?)
-      (show-file-dialog dir "Save..." <java.awt.FileDialog>:SAVE select-dir filterlist default-name default-extension parent)
+      (show-file-dialog dir "Save..." <java.awt.FileDialog>:SAVE select-dir filterlist default-name default-extension)
       (show-jfilechooser dir 'showSaveDialog select-dir filterlist default-name default-extension)))
 
 ; open file dialog to load a file
@@ -84,13 +84,9 @@
 
 ; common code for file dialog, flag to select directories, and list of filetype filter(s)
 ; note that for Windows, only the first filetype filter is used
-(define (show-file-dialog dir :: <java.io.File> title mode select-dir filterlist #!optional default-name default-extension parent)
-  (if (or (not parent)
-          (not (java.awt.Component? parent))) ;; parent must be a component
-      (set! parent (<javax.swing.JFrame>)))
-  
+(define (show-file-dialog dir :: <java.io.File> title mode select-dir filterlist #!optional default-name default-extension)
   ; now create the jfilechooser
-  (let ((fchooser :: <java.awt.FileDialog> (<java.awt.FileDialog> parent title mode)))
+  (let ((fchooser :: <java.awt.FileDialog> (<java.awt.FileDialog> (<javax.swing.JFrame>) title mode)))
     (invoke fchooser 'setDirectory (if (is-null? dir) (get-user-directory) dir))
     
     ; select directory? (only works on macos)

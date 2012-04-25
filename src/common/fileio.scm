@@ -310,8 +310,8 @@
 ;; TODO; choosing dir to save to does not seem to work. highlighting the dir you would like to overwrite 
 ;; does not bring the name of that dir up in the name
 ;; cant overwrite dir that way
-(define (get-safe-new-filename in-dir select-dir filterlist #!optional default-name default-extension #!key parent)
-  (let ((newfilename (get-file-to-save in-dir select-dir filterlist default-name default-extension parent)))
+(define (get-safe-new-filename in-dir select-dir filterlist #!optional default-name default-extension)
+  (let ((newfilename (get-file-to-save in-dir select-dir filterlist default-name default-extension)))
     
     (if (is-mac-os?)
         ; mac, so assume java.awt.FileDialog has already checked, don't check twice
@@ -338,7 +338,7 @@
                                     "Warning: file exists")))
                         (cond ((eq? 1 reply) newfilename) ; yes, so return the new filename
                               ((eq? 2 reply) #f) ; cancel, so return #f
-                              (else (get-safe-new-filename in-dir select-dir filterlist default-name default-extension parent: parent)))) ; no, so ask again
+                              (else (get-safe-new-filename in-dir select-dir filterlist default-name default-extension)))) ; no, so ask again
                       ; not duplicate, so return filename
                       newfilename)
                   ; not safe, so an exception occurred
