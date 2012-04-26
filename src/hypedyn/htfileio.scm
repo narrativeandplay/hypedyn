@@ -718,7 +718,8 @@
                   (recursively-copy-directory (make-file source-folder-string)
                                     export-folder)
                   (write-jscode-to 
-                   (string-append source-folder-string "\\" "dynfile.js")
+                   (string-append (path-file export-folder) "/dynfile.js")
+                   ;;(string-append source-folder-string "\\" "dynfile.js")
                    ;"dynfile.js"
                    (generate-jscode))
                   ;(copy-file-nio (make-file "dynfile.js")
