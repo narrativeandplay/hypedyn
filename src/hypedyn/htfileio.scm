@@ -712,13 +712,17 @@
           (update-last-exported-dir! export-folder)
 
           ; Note: put try-catch around this and cleanup on failure
-          (let* ((source-folder-string (path-file (get-content-file "js")))) ;;"js"))   ;;;(path-file (get-content-file export-web-folder))))
+          (let* ((source-folder-string (path-file (get-content-file "js"))))
             (try-catch
                 (begin
                   (recursively-copy-directory (make-file source-folder-string)
                                     export-folder)
-                  (copy-file-nio (make-file "dynfile.js")
-                                 (make-file (string-append (path-file export-folder) "/dynfile.js")))
+                  (write-jscode-to 
+                   (string-append source-folder-string "\\" "dynfile.js")
+                   ;"dynfile.js"
+                   (generate-jscode))
+                  ;(copy-file-nio (make-file "dynfile.js")
+                  ;               (make-file (string-append (path-file export-folder) "/dynfile.js")))
                   )
               (ex <java.lang.Throwable>
                   (begin
@@ -730,7 +734,6 @@
   )
 
 (define (doexport-js) 
-  (write-jscode-to "dynfile.js" (generate-jscode))
   (copy-js-framework))
 
 ;; createNode (content, id)
@@ -1002,4 +1005,3 @@
                       (close-output-port output-port)
                       #t)
                     #f)))))))
-  
