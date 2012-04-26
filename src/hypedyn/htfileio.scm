@@ -712,7 +712,7 @@
           (update-last-exported-dir! export-folder)
 
           ; Note: put try-catch around this and cleanup on failure
-          (let* ((source-folder-string "js"))   ;;;(path-file (get-content-file export-web-folder))))
+          (let* ((source-folder-string (path-file (get-content-file "js")))) ;;"js"))   ;;;(path-file (get-content-file export-web-folder))))
             (try-catch
                 (begin
                   (recursively-copy-directory (make-file source-folder-string)
