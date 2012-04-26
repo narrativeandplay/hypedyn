@@ -32,7 +32,7 @@
   <property name="reader-mainclass" value="${src.dir}/htreader.scm"/>
   <property name="applet-mainclass" value="${src.dir}/htapplet.scm"/>
 
-  <property name="base.kawa.jar" value="kawa.jar"/> 
+  <property name="base.kawa.jar" value="kawa.jar"/>
 	
   <property name="base.hypedyn.jar" value="hypedyn.jar"/>
   <property name="base.htapplet.jar" value="htapplet.jar"/>
@@ -268,6 +268,12 @@
 		<copy todir="${dist.editor.package.javadir}/tutorials">
 		  	<fileset file="${doc.dir}/*.pdf"/>
 		</copy>
+		
+		<!-- copy the js files -->
+		<copy todir="${dist.editor.package}/js">
+		  	<fileset dir="${src.dir}/js"/>
+		</copy>
+		
 	</target>
  
   <!-- Distribute Editor Linux -->
