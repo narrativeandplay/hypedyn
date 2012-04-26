@@ -269,11 +269,6 @@
 		  	<fileset file="${doc.dir}/*.pdf"/>
 		</copy>
 		
-		<!-- copy the js files -->
-		<copy todir="${dist.editor.package}/js">
-		  	<fileset dir="${src.dir}/js"/>
-		</copy>
-		
 	</target>
  
   <!-- Distribute Editor Linux -->
@@ -297,11 +292,16 @@
   	<chmod file="${dist.editor.package}/hypedyn" perm="a+x" />
   	      		
    	<!-- copy the jar files to the linux bundle -->
-    <copy file="${build.hypedyn.jar}" todir="${dist.editor.package.javadir}"/>
+    	<copy file="${build.hypedyn.jar}" todir="${dist.editor.package.javadir}"/>
   	<copy file="${build.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar"/>
   	<!-- rename to kawa.jar -->
   	<!-- <move file="${dist.editor.package.javadir}/${base.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar" /> -->
 	<copy file="${appletlib.dir}/AppleJavaExtensions.jar" todir="${dist.editor.package.javadir}" />
+
+	<!-- copy the js files -->
+	<copy todir="${dist.editor.package}/js">
+	  	<fileset dir="${src.dir}/js"/>
+	</copy>
   	
   </target>
 
@@ -314,11 +314,16 @@
   	<copy file="${launcher.windows.dir}/hypedyn.exe" todir="${dist.editor.package}" />
   		  	      		
    	<!-- copy the jar files to the windows bundle -->
-    <copy file="${build.hypedyn.jar}" todir="${dist.editor.package.javadir}"/>
+    	<copy file="${build.hypedyn.jar}" todir="${dist.editor.package.javadir}"/>
    	<copy file="${build.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar"/>
 	<!-- rename to kawa.jar -->
   	 <!-- <move file="${dist.editor.package.javadir}/${base.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar" /> -->
 	<copy file="${appletlib.dir}/AppleJavaExtensions.jar" todir="${dist.editor.package.javadir}" />
+
+	<!-- copy the js files -->
+	<copy todir="${dist.editor.package}/js">
+	  	<fileset dir="${src.dir}/js"/>
+	</copy>
   </target>
   		
   <!-- Distribute Editor Mac -->
@@ -336,6 +341,12 @@
   	   <fileset dir="${src.editor.package}"/>
   	</copy>
 	<chmod file="${dist.editor.package.appstub}" perm="a+x"/>
+
+	<!-- copy the js files -->
+	<copy todir="${dist.editor.package.javadir}/js">
+	  	<fileset dir="${src.dir}/js"/>
+	</copy>
+
   </target>
   	
 	<!-- Distribute Reader Linux -->
