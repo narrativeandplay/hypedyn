@@ -1,78 +1,93 @@
-(begin (make-hypertext (quote htfe) 2.1) (set-card-shark! (quote #f)) (begin
+(begin (make-hypertext (quote htfe) 2.2) (set-card-shark! (quote #f)) (begin
 (create-node "start"
 "One day, Little Red Riding Hood is walking through the forest, on the way to deliver a basket of food and flowers to her grandmother."
-331.0 47.0 false false 1) (begin (create-typed-rule "start" (quote node) (quote
-and) 1 300))) (begin (create-node "Explore the forest"
+331.0 47.0 false false 1) (begin (create-typed-rule2 "Set fact" (quote node)
+(quote and) #f 1 491))) (begin (create-node "Explore the forest"
 "Tempted by a grove of flowers, Red strays off the path into the forest. There are a number of different types of flowers growing in the grassy clearing."
-517.0 51.0 true false 3) (begin (create-typed-rule "Explore the forest" (quote
-node) (quote and) 3 397) (create-typed-condition "Explore the forest" 0 9 0 397
-400) (create-typed-condition "Explore the forest" 0 4 0 397 399)
-(create-typed-condition "Explore the forest" 0 3 0 397 398) (create-action
-"Explore the forest" (quote fact) "(assert 378)" 397 401))) (begin (create-node
-"Go directly to Grandma's house"
+517.0 51.0 true false 3) (begin (create-typed-rule2 "Set fact" (quote node)
+(quote and) #f 3 485) (create-typed-condition "Enable link" 0 9 0 485 490)
+(create-typed-condition "Enable link" 0 4 0 485 489) (create-typed-condition
+"Enable link" 0 3 0 485 488) (create-action "Enable Link" (quote
+anywhere-check) (list (quote add-anywhere-link) 3) 485 486) (create-action
+"Explore the forest" (quote entered-node) (list (quote assert) 378) 485 487)))
+(begin (create-node "Go directly to Grandma's house"
 "Red walks along the path, sticking carefully to the center to avoid the dark, menacing trees. Eventually, she reaches Grandma's house. \n\nWhen Red enters Grandma's house, she is surprised to see the young man sitting on the sofa.  \n\nGrandma smiles when she sees Red."
-226.05 53.0 true false 4) (begin (create-typed-rule
-"Go directly to Grandma's house" (quote node) (quote and) 4 411)
-(create-typed-condition "Go directly to Grandma's house" 0 9 0 411 413)
-(create-typed-condition "Go directly to Grandma's house" 0 4 0 411 412)
-(create-action "Go directly to Grandma's house" (quote fact) "(retract 378)"
-411 414))) (begin (create-node "Go deeper into the forest"
+226.05 53.0 true false 4) (begin (create-typed-rule2 "Set fact" (quote node)
+(quote and) #f 4 480) (create-typed-condition "Enable link" 0 9 0 480 484)
+(create-typed-condition "Enable link" 0 4 0 480 483) (create-action
+"Enable Link" (quote anywhere-check) (list (quote add-anywhere-link) 4) 480
+481) (create-action "Go directly to Grandma's house" (quote entered-node) (list
+(quote retract) 378) 480 482))) (begin (create-node "Go deeper into the forest"
 "A handsome young man is leaning against the trunk of a tree. He gestures to Red to come over."
-673.0 128.0 true false 5) (begin (create-typed-rule "Go deeper into the forest"
-(quote node) (quote and) 5 402) (create-typed-condition
-"Go deeper into the forest" 0 9 0 402 406) (create-typed-condition
-"Go deeper into the forest" 0 4 0 402 405) (create-typed-condition
-"Go deeper into the forest" 0 5 0 402 404) (create-typed-condition
-"Go deeper into the forest" 0 3 1 402 403) (create-action
-"Go deeper into the forest" (quote fact) "(retract 378)" 402 407))) (begin
-(create-node "Talk to young man"
+673.0 128.0 true false 5) (begin (create-typed-rule2 "Set fact" (quote node)
+(quote and) #f 5 473) (create-typed-condition "Enable link" 0 9 0 473 479)
+(create-typed-condition "Enable link" 0 4 0 473 478) (create-typed-condition
+"Enable link" 0 5 0 473 477) (create-typed-condition "Enable link" 0 3 1 473
+476) (create-action "Enable Link" (quote anywhere-check) (list (quote
+add-anywhere-link) 5) 473 474) (create-action "Go deeper into the forest"
+(quote entered-node) (list (quote retract) 378) 473 475))) (begin (create-node
+"Talk to young man"
 "Red goes over and talks to the wolf. He asks her where she's going, and she says she's off to deliver a basket of food and flowers to her sick grandma."
-677.0 202.0 true false 6) (begin (create-typed-rule "Talk to young man" (quote
-node) (quote and) 6 415) (create-typed-condition "Talk to young man" 0 4 0 415
-419) (create-typed-condition "Talk to young man" 0 9 0 415 418)
-(create-typed-condition "Talk to young man" 0 6 0 415 417)
-(create-typed-condition "Talk to young man" 0 5 1 415 416))) (begin
-(create-node "Approach the young man"
+677.0 202.0 true false 6) (begin (create-typed-rule2 "Set fact" (quote node)
+(quote and) #f 6 467) (create-typed-condition "Enable link" 0 4 0 467 472)
+(create-typed-condition "Enable link" 0 9 0 467 471) (create-typed-condition
+"Enable link" 0 6 0 467 470) (create-typed-condition "Enable link" 0 5 1 467
+469) (create-action "Enable Link" (quote anywhere-check) (list (quote
+add-anywhere-link) 6) 467 468))) (begin (create-node "Approach the young man"
 "Unfortunately, the young man was a wolf. Neither Red nor Grandma were ever seen again."
-315.0 134.0 true false 7) (begin (create-typed-rule "Approach the young man"
-(quote node) (quote and) 7 366) (create-typed-condition
-"Approach the young man" 0 4 1 366 367) (create-typed-condition
-"Approach the young man" 0 6 1 366 368) (create-typed-condition
-"Approach the young man" 0 9 0 366 369) (create-typed-condition
-"Approach the young man" 0 7 0 366 370))) (begin (create-node
+315.0 134.0 true false 7) (begin (create-typed-rule2 "Set fact" (quote node)
+(quote and) #f 7 461) (create-typed-condition "Enable link" 0 4 1 461 466)
+(create-typed-condition "Enable link" 0 6 1 461 465) (create-typed-condition
+"Enable link" 0 9 0 461 464) (create-typed-condition "Enable link" 0 7 0 461
+463) (create-action "Enable Link" (quote anywhere-check) (list (quote
+add-anywhere-link) 7) 461 462))) (begin (create-node
 "Pass the basket to Grandma"
 "Red passes the basket of food and flowers to Grandma." 113.0 135.0 true false
-8) (begin (create-typed-rule "Pass the basket to Grandma" (quote node) (quote
-and) 8 361) (create-typed-condition "Pass the basket to Grandma" 0 8 0 361 362)
-(create-typed-condition "Pass the basket to Grandma" 0 9 0 361 363)
-(create-typed-condition "Pass the basket to Grandma" 0 6 0 361 364)
-(create-typed-condition "Pass the basket to Grandma" 0 4 1 361 365))) (begin
-(create-node "Head home" "Red heads back home." 386.0 53.0 true false 9) (begin
-(create-typed-rule "Head home" (quote node) (quote and) 9 408)
-(create-typed-condition "Head home" 0 7 0 408 409) (create-action "Head home"
-(quote fact) "(retract 378)" 408 410))) (begin (create-node
-"Pick the geraniums"
+8) (begin (create-typed-rule2 "Set fact" (quote node) (quote and) #f 8 455)
+(create-typed-condition "Enable link" 0 8 0 455 460) (create-typed-condition
+"Enable link" 0 9 0 455 459) (create-typed-condition "Enable link" 0 6 0 455
+458) (create-typed-condition "Enable link" 0 4 1 455 457) (create-action
+"Enable Link" (quote anywhere-check) (list (quote add-anywhere-link) 8) 455
+456))) (begin (create-node "Head home" "Red heads back home." 386.0 53.0 true
+false 9) (begin (create-typed-rule2 "Set fact" (quote node) (quote and) #f 9
+451) (create-typed-condition "Enable link" 0 7 0 451 454) (create-action
+"Enable Link" (quote anywhere-check) (list (quote add-anywhere-link) 9) 451
+452) (create-action "Head home" (quote entered-node) (list (quote retract) 378)
+451 453))) (begin (create-node "Pick the geraniums"
 "Red decides to pick some of the geraniums in the grove and exchange them for the flowers in the basket for Grandma."
-502.0 203.0 true false 376) (begin (create-typed-rule "Pick the geraniums"
-(quote node) (quote and) 376 392) (create-typed-condition "Pick the geraniums"
-2 374 0 392 394) (create-typed-condition "Pick the geraniums" 2 378 1 392 393)
-(create-action "Pick the geraniums" (quote fact)
-"(set-value! 375 \"geraniums\")" 392 396) (create-action "Pick the geraniums"
-(quote fact) "(assert 374)" 392 395))) (begin (create-node "Pick the violets"
+502.0 203.0 true false 376) (begin (create-typed-rule2 "Set fact" (quote node)
+(quote and) #f 376 445) (create-typed-condition "Enable link" 2 374 0 445 450)
+(create-typed-condition "Enable link" 2 378 1 445 449) (create-action
+"Enable Link" (quote anywhere-check) (list (quote add-anywhere-link) 376) 445
+446) (create-action "Pick the geraniums" (quote entered-node) (list (quote
+set-value!) 375 "geraniums") 445 447) (create-action "Pick the geraniums"
+(quote entered-node) (list (quote assert) 374) 445 448))) (begin (create-node
+"Pick the violets"
 "Red decides to pick some of the violets in the grove and exchange them for the flowers in the basket for Grandma."
-495.0 130.0 true false 377) (begin (create-typed-rule "Pick the violets" (quote
-node) (quote and) 377 387) (create-typed-condition "Pick the violets" 2 374 0
-387 389) (create-typed-condition "Pick the violets" 2 378 1 387 388)
-(create-action "Pick the violets" (quote fact) "(set-value! 375 \"violets\")"
-387 391) (create-action "Pick the violets" (quote fact) "(assert 374)" 387
-390))) (begin (create-link "talked" 4 -1 135 229 false false true -1 "" false
-343) (begin (create-typed-rule "talked" (quote link) (quote and) 343 349)
-(create-typed-condition "talked" 0 6 1 349 350))) (begin (create-link
-"didn't talk" 4 -1 230 265 false false true -1 "" false 346) (begin
-(create-typed-rule "didn't talk" (quote link) (quote and) 346 347)
-(create-typed-condition "didn't talk" 0 6 0 347 348))) (begin (create-link
-"flowers" 8 -1 34 41 false false (quote fact) -1 375 false 421) (begin
-(create-typed-rule "flowers" (quote link) (quote and) 421 422)
-(create-typed-condition "flowers" 2 374 0 422 423))) (set-start-node! 1)
-(create-fact "Picked flowers" (quote boolean) 374) (create-fact "The flowers"
-(quote string) 375) (create-fact "In the forest grove" (quote boolean) 378))
+495.0 130.0 true false 377) (begin (create-typed-rule2 "Set fact" (quote node)
+(quote and) #f 377 439) (create-typed-condition "Enable link" 2 374 0 439 444)
+(create-typed-condition "Enable link" 2 378 1 439 443) (create-action
+"Enable Link" (quote anywhere-check) (list (quote add-anywhere-link) 377) 439
+440) (create-action "Pick the violets" (quote entered-node) (list (quote
+set-value!) 375 "violets") 439 441) (create-action "Pick the violets" (quote
+entered-node) (list (quote assert) 374) 439 442))) (begin (create-link "talked"
+4 -1 135 229 false false true -1 "" false 343) (begin (create-typed-rule2
+"THEN" (quote link) (quote and) #f 343 434) (create-typed-condition "If-rule" 0
+6 1 434 437)) (begin (create-typed-rule2 "ELSE" (quote link) (quote and) #t 343
+435) (create-typed-condition "else-rule" 0 6 1 435 438) (create-action "talked"
+(quote displayed-node) (list (quote replace-link-text) (list (quote quote)
+(quote text)) "" 343) 435 436))) (begin (create-link "didn't talk" 4 -1 230 265
+false false true -1 "" false 346) (begin (create-typed-rule2 "THEN" (quote
+link) (quote and) #f 346 429) (create-typed-condition "If-rule" 0 6 0 429 432))
+(begin (create-typed-rule2 "ELSE" (quote link) (quote and) #t 346 430)
+(create-typed-condition "else-rule" 0 6 0 430 433) (create-action "didn't talk"
+(quote displayed-node) (list (quote replace-link-text) (list (quote quote)
+(quote text)) "" 346) 430 431))) (begin (create-link "flowers" 8 -1 34 41 false
+false (quote fact) -1 375 false 421) (begin (create-typed-rule2 "THEN" (quote
+link) (quote and) #f 421 424) (create-typed-condition "If-rule" 2 374 0 424
+427)) (begin (create-typed-rule2 "ELSE" (quote link) (quote and) #t 421 425)
+(create-typed-condition "else-rule" 2 374 0 425 428) (create-action "flowers"
+(quote displayed-node) (list (quote replace-link-text) (list (quote quote)
+(quote fact)) 375 421) 425 426))) (set-start-node! 1) (create-fact
+"Picked flowers" (quote boolean) 374) (create-fact "The flowers" (quote string)
+375) (create-fact "In the forest grove" (quote boolean) 378))
