@@ -80,6 +80,11 @@ Public domain.\n
 Export code from Processing
 from Sketch.java and Base.java
 Used under GNU GPL.\n
+iScroll v4.1.9 ~ Copyright (c) 2011 Matteo Spinelli, http://cubiq.org
+Released under MIT license, http://cubiq.org/license\n
+Page flipping based on 
+http://www.html5rocks.com/en/tutorials/casestudies/20things_pageflip/
+used with permission of the author\n
 The following libraries are bundled with the software:
 AppleJavaExtensions\n
 Credits\n
