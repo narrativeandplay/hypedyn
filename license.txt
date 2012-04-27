@@ -1,6 +1,6 @@
 License for the HypeDyn project - http://www.partechgroup.org/hypedyn
 
-Copyright (C) 2008-2011
+Copyright (C) 2008-2012
 National University of Singapore
 
 HypeDyn is distributed under the GNU GPL v 2. 
@@ -32,6 +32,13 @@ Export code from Processing
 from Sketch.java and Base.java
 Used under GNU GPL.	
 See src/hypedyn/export.scm for details.
+
+iScroll v4.1.9 ~ Copyright (c) 2011 Matteo Spinelli, http://cubiq.org
+Released under MIT license, http://cubiq.org/license
+
+Page flipping based on 
+http://www.html5rocks.com/en/tutorials/casestudies/20things_pageflip/
+used with permission of the author
 
 The following libraries are bundled with the software:
 

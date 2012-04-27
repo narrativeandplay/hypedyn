@@ -1,6 +1,6 @@
 ;; Part of the HypeDyn project - http://www.partechgroup.org/hypedyn
 ;; 
-;; Copyright (C) 2008-2011
+;; Copyright (C) 2008-2012
 ;; National University of Singapore
 ;;
 ;; This program is free software; you can redistribute it and/or modify
@@ -51,7 +51,7 @@
   (set-text about-editor 
             "HypeDyn hypertext fiction editor 
 Version 2.2a2 rev 55, 27 April 2012\n
-Copyright (C) 2008-2011
+Copyright (C) 2008-2012
 National Univeristy of Singapore\n
 This program is free software; you can redistribute it and/or 
 modify it under the terms of the GNU General Public License as 

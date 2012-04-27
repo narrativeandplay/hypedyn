@@ -1,6 +1,6 @@
 /* Part of the HypeDyn project - http://www.partechgroup.org/hypedyn
  * 
- * Copyright (C) 2008-2011
+ * Copyright (C) 2008-2012
  * National University of Singapore
  *
  * This program is free software; you can redistribute it and/or modify
