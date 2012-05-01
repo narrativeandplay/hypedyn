@@ -39,7 +39,6 @@ function order_pages(curr_page) {
 	
 	var pages = document.getElementsByName("page");
 	//var contents = document.getElementsByName("pagecontent");
-	
 	// Organize the depth of our pages and create the flip definitions
 	for( var i = 0, len = pages.length; i < len; i++ ) {
 		pages[i].style.zIndex = len - i; // pages at the back get smaller value
@@ -77,7 +76,7 @@ function style_pages() {
 		disp("pages height "+pages[i].height);
 		disp("btm height "+btm_height);
 		//dont limit the height when we're not breaking the page 
-		if (page_flipping_mode )
+		if (page_flipping_mode)
 			pages[i].style.height = btm_height;
 			
 		pages[i].style.top = "50px";
@@ -174,7 +173,7 @@ function render() {
 			
 			if ( Math.abs( flip.progress ) < 0.99 ) {
 			
-				if ( multiflips.length == 0 ) {
+				if ( multiflips.length == 0 && peek_back_mode ) {
 					if (step >=0 && //back (from page 1 to 0)
 						i == 0 && 
 						page == 1 &&

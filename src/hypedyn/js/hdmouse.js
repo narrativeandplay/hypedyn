@@ -259,8 +259,6 @@ function init_event_listeners () {
 	} else {
 		disp("no mouse event added ");
 	}
-	
-	
 }
 
 function popup_mouse_handler(e) { e.preventDefault(); }

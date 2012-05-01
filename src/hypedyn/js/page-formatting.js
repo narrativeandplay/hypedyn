@@ -167,7 +167,7 @@ function htmlFormat(content, links, noformat) {
 		if (links.length == activated_anywhere_nodes.length) // start of anywhere node link
 			code += "<br><br>";
 		code += //start_tag +
-				"<a href='javascript:void(0)' class='anywhere' onMouseUp='gotoNode(" 
+				"<a href='javascript:void(0)' class='anywhere' onMouseUp='clickedLink(" 
 				+ anywherenode.id + ")'>"
 				+ anywherenode.name + "</a>"
 				//+ end_tag
