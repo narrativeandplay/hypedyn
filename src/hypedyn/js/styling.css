@@ -50,14 +50,6 @@ a.anywhere:active {
 	font-size: 26px;
 }
 
-
-
-body {
-	//background-image: url(page_back_320_480.png);
-	background-color: aliceblue;
-	background-size: 100%;
-}
-
 /* unformatted text */
 .plaintext {
 	color: navy;

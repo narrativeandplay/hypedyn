@@ -32,8 +32,8 @@ function device_detection() {
 		page_flipping_mode = true; // mobile has page flipping removed as well
 		disp("touch detected!");
 	} else {//browser
-		display_mode = "mobile";
-		page_flipping_mode = true;
+		display_mode = "browser";
+		page_flipping_mode = false;
 	}
 }
 
@@ -41,13 +41,6 @@ function device_detection() {
 var startNodeID;
 var currNodeID;
 var prev_read_nodes = [];
-
-var page_height = 480;
-//var page_break_height = 400;
-var page_padding = 20;
-
-var button_panel_height = 50
-var page_indicator_height = 50;
 
 var myScroll = null;
 
@@ -83,6 +76,10 @@ function get_device_dimension() {
 	$('pageflip-canvas').width = page_width; //320
 	$('pageflip-canvas').style.width = page_width; //320
 	$('pageflip-canvas').height = 480;
+	
+	// make sure test_bed has same styling as actual page
+	$('test_bed').className = "pagesdiv";
+	$('test_bed').style.width = page_width;
 }
 
 function nonpageflip_init() {
@@ -90,13 +87,6 @@ function nonpageflip_init() {
 		$("pageflip-canvas").style.visibility = "hidden";
 		$("lightsoff-canvas").style.visibility = "hidden";
 		$("popup").style.visibility = "hidden";
-		
-		//document.body.style.backgroundImage = "url(page_back_320_480.png)";
-		//document.body.style.backgroundSize = "100%"; 
-		
-		//$("outer-popup").style.backgroundColor = "rgba(100,100,255,1)";
-		//$("popup").style.backgroundColor = "rgba(0,0,255,1)";
-		//$('pages').style.visibility = "hidden";
 	}
 }
 
@@ -311,7 +301,6 @@ function backPrevNode() {
 				eventTrigger("enteredNode", node.links[i]); 
 			}
 			
-			//prevNodeID = currNodeID;
 			//node.visited = true;
 			currNodeID = nodeID;
 			
@@ -327,12 +316,10 @@ function backPrevNode() {
 			var htmlcode = htmlFormat( node.content, clone_arr(node.links).concat(activated_anywhere_nodes), false );
 			$("pages").innerHTML = htmlcode;
 			
-			
 			if (page_flipping_mode)
 				insert_peek_back();
 			else 
 				style_pages();
-			
 			
 			//anywherelink_buttons(); // original anywhere nodes
 			add_anywhere_button(); // choice links
@@ -420,7 +407,7 @@ var back_button, restart_button;
 
 function add_anywhere_button() {
 	disp("add anywhere button");
-	$("buttons-panel").innerHTML = "";
+	//$("buttons-panel").innerHTML = ""; // clear any buttons from previous 
 	
 	// option button (not used anymore)
 	// font: 16px/20px Helvetica, sans-serif;  text-shadow: 1px 1px 1px #000; float: right; height: 40px;
@@ -432,6 +419,7 @@ function add_anywhere_button() {
 	$("buttons-panel").appendChild( option_button ); */
 	
 	// back button
+	/*
 	if ( ! back_button ) {
 		disp("cant find back button ");
 		back_button = document.createElement("button");
@@ -456,6 +444,7 @@ function add_anywhere_button() {
 		restart_button.innerHTML = "<font size=5>Restart</font>";
 	}
 	$("buttons-panel").appendChild( restart_button );
+	*/
 	
 	// add anywhere button from the story
 	for (i in activated_anywhere_buttons) {	
@@ -474,42 +463,6 @@ function add_anywhere_button() {
 	activated_anywhere_buttons = [];
 }
 
-// should be done after add_anywhere_button
-// because we don't have the precise height of the button panel before we add the buttons in
-function init_element_height() {
-	//$("buttons-panel").style.backgroundColor = "rgba(255,0,0,1)";
-	if (page_flipping_mode)
-		$("buttons-panel").style.backgroundImage = "url(page_back_320_480.png)"
-	
-	$("buttons-panel").style.width = page_width;  // "320px" for mobile
-	// new for browser version
-	$("buttons-panel").style.backgroundRepeat = "repeat";//"no-repeat"; 
-	
-	button_panel_height = $("buttons-panel").scrollHeight;
-	
-	btm_height = device_height - button_panel_height;
-	text_area_height = btm_height - page_indicator_height;
-	
-	$('pages').style.height = text_area_height;
-	$('pages').style.top = button_panel_height;
-	
-	$("pageflip-canvas").style.height = device_height;
-	$('popup').style.height = ( device_height - button_panel_height * 2 - 30 ) + "px";
-	$('outer-popup').style.height = (device_height - button_panel_height * 2) + "px";
-	$("lightsoff-canvas").style.height = device_height;
-}
-
-// options not implemented yet
-/*var option_mode = false;
-function option_callback() {
-	if (!option_mode) {
-		window.scrollTo(10, -50);
-	} else {
-		window.scrollTo(0, 0);
-	}
-	option_mode = !option_mode;
-}*/
-
 window.onload = function() {
 	device_detection();
 	get_device_dimension();
@@ -518,7 +471,7 @@ window.onload = function() {
 	
 	loadStory(); // defined in dynfile.js (the story data file)
 	runhypedyn(); // entrance point of the story logic
-	//setTimeout('window.scrollTo(0, 0)', 1000); // for mobile to hide the url
+	setTimeout('window.scrollTo(0, 0)', 1000); // for mobile to hide the url
 	
 	nonpageflip_init();
 }

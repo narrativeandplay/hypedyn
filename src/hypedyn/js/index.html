@@ -1,26 +1,26 @@
 <html>
 <head>
 	<meta name="viewport" content="height=device-height, width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-	<script language=javascript> 
-	</script>
-
 	<link rel="stylesheet" type="text/css" href="dimension.css" />
 	<link rel="stylesheet" type="text/css" href="styling.css" />
-	<style type="text/css">
-	</style>
 </head>
 
 <body>
-	<div id="buttons-panel"></div>
+	<div id="buttons-panel">
+		<button id="back_button" type="button" style="position: static; left: 0px; top: 5px; font: 16px/20px Helvetica, sans-serif;" onClick="backPrevNode()">
+			<font size=5>Back</font>
+		</button>
+		<button id="restart_button" type="button" style="position: static; left: 0px; top: 5px; font: 16px/20px Helvetica, sans-serif;" onClick="restartStory()">
+			<font size=5>Restart</font>
+		</button>
+	</div>
+	
 	<div id="pages"></div>
 	<div id="test_bed" style="visibility: hidden; left: 500px"></div>
 	
 	<div id="outer-popup">
-		<div id="popup">
-		</div>
+		<div id="popup"></div>
 	</div>
-	
-	<div id="last_page" style="visibility: hidden; top: 500px"></div>
 	
 	<canvas id="pageflip-canvas"></canvas>
 	<canvas id="lightsoff-canvas"></canvas>
@@ -32,6 +32,7 @@
 
 <script src="main.js"></script>
 <script src="misc.js"></script>
+<script src="layout.js"></script>
 <script src="facts.js"></script>
 <script src="rules.js"></script>
 <script src="dynfile.js"></script>

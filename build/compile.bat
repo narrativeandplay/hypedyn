@@ -1,0 +1,1 @@
+ant -Dkawa.dir=C:\kawa\ -Dbase.kawa.jar=kawa-1.11-7044.jar

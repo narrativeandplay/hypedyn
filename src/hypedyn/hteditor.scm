@@ -38,6 +38,8 @@
 (require "../kawa/ui/button.scm")
 (require "../kawa/ui/splitpane.scm")
 (require "../kawa/ui/undo.scm")
+(require "../kawa/ui/tabpanel.scm")
+(require "../kawa/ui/radio.scm")
 (require "../common/objects.scm") ;; ask
 (require "../common/datatable.scm") ;; dirty?, reset-table, del, get
 (require "../common/object-listview.scm")
@@ -155,12 +157,15 @@
         ; file menu
         (m-file (get-file-menu))
         (mf-separator (make-separator))
+        (mf-separator2 (make-separator))
         (mf-openrecent (make-menu "Open Recent"))
         (mf-import (make-menu-item "Import..."))
         (mf-export-web (make-menu-item "Export for Web..."))
         (mf-export-standalone (make-menu-item "Export Standalone..."))
         (mf-export-text (make-menu-item "Export as Text..."))
         (mf-export-js (make-menu-item "Export as JS"))
+        
+        (mf-properties (make-menu-item "Properties"))
         
         ; edit menu
         (m-edit (make-menu "Edit"))
@@ -233,11 +238,21 @@
     (add-menuitem-at m-file mf-openrecent 2)
     (set-menuitem-component mf-openrecent #f)
     (add-component m-file mf-separator)
+    (if (not (is-basic-mode?))
+        (begin
+          (add-component m-file mf-properties)
+          (add-component m-file mf-separator2)
+          (add-actionlistener mf-properties
+                              (make-actionlistener
+                               (lambda (source)
+                                 (show-properties))))
+          ))
     (add-component m-file mf-import)
+    (add-component m-file mf-export-text)
+    
     (add-actionlistener mf-import (make-actionlistener
                                    (lambda (source)
                                      (doimport))))
-    (add-component m-file mf-export-text)
     (add-actionlistener mf-export-text (make-actionlistener
                                        (lambda (source)
                                          (doexport-text))))
@@ -251,10 +266,11 @@
           (add-actionlistener mf-export-standalone (make-actionlistener
                                                     (lambda (source)
                                                       (doexport-standalone))))
-          (add-component m-file mf-export-js) ; temporarily disable JS export
+          (add-component m-file mf-export-js)
           (add-actionlistener mf-export-js (make-actionlistener
                                             (lambda (source)
                                               (doexport-js))))
+          
           ))
     
     ; edit menu
@@ -520,6 +536,7 @@
     (create-editlink-dialog (get-nodeeditor-frame))
     ;(create-editnode-dialog (get-nodeeditor-frame))
     
+    (make-properties-ui)
 
     ; store any references that are needed
     (set! hteditor-ui-panel f-panel)
@@ -1739,3 +1756,130 @@
       (let ((new-nodeID (create-node "Start" "" 80 45 #f #f)))
         (set-start-node! new-nodeID)
         (populate-display))))
+
+;;==================
+;;   Properties UI
+;;==================
+
+(define propt-dialog #f)
+(define propt-tabpanel #f)
+(define general-tab #f)
+(define reader-tab #f)
+
+(define (make-properties-ui) 
+  (set! propt-dialog (make-dialog (get-main-ui-frame) "Properties" #t))
+  (set! propt-tabpanel (make-tab-panel))
+  (set! general-tab (make-panel))
+  (set! reader-tab (make-panel))
+  (add-tabpanel-tab propt-tabpanel "General" general-tab)
+  (add-tabpanel-tab propt-tabpanel "Reader" reader-tab)
+  
+  ;; general tab
+  (define label-group-panel (make-panel))
+  (define label-panel-1 (make-panel))
+  (define label-panel-2 (make-panel))
+  (define label-panel-3 (make-panel))
+  
+  (define tf-group-panel (make-panel))
+  (define tf-panel-1 (make-panel))
+  (define tf-panel-2 (make-panel))
+  (define tf-panel-3 (make-panel))
+  
+  (define label-1 (make-label-with-title "Author"))
+  (define label-2 (make-label-with-title "Title"))
+  (define label-3 (make-label-with-title "Comments"))
+  
+  (define tf-1 (make-textfield "" 20))
+  (define tf-2 (make-textfield "" 20))
+  (define tf-3 (make-textfield "" 20))
+  
+  (set-container-layout label-group-panel 'grid 3 1)
+  (set-container-layout tf-group-panel 'grid 3 1)
+  
+  (add-component label-panel-1 label-1)
+  (add-component label-panel-2 label-2)
+  (add-component label-panel-3 label-3)
+  
+  (add-component tf-panel-1 tf-1)
+  (add-component tf-panel-2 tf-2)
+  (add-component tf-panel-3 tf-3)
+    
+  (add-component label-group-panel label-panel-1)
+  (add-component label-group-panel label-panel-2)
+  (add-component label-group-panel label-panel-3)
+  
+  (add-component tf-group-panel tf-panel-1)
+  (add-component tf-group-panel tf-panel-2)
+  (add-component tf-group-panel tf-panel-3)
+  
+  (set-container-layout general-tab 'horizontal)
+  (add-component general-tab label-group-panel)
+  (add-component general-tab tf-group-panel)
+  
+  ;; Reader tab
+  (define sep-1 (make-separator))
+  (define sep-2 (make-separator))
+  (define sep-3 (make-separator))
+  (define sep-4 (make-separator))
+  ;; styles control web-reader mobile-reader
+  (define label-4 (make-label-with-title "Style"))
+  (define label-5 (make-label-with-title "Control"))
+  (define label-6 (make-label-with-title "Web Reader"))
+  (define label-7 (make-label-with-title "Mobile Reader"))
+  
+  (define label-panel-4 (make-panel))
+  (define label-panel-5 (make-panel))
+  (define label-panel-6 (make-panel))
+  (define label-panel-7 (make-panel))
+  
+  (define button-grp (make-button-group))
+  (define rbutton-1 (make-radio-button "default"))
+  (define rbutton-2 (make-radio-button "fancy"))
+  (define rbutton-3 (make-radio-button "custom"))
+  (add-to-button-group button-grp
+                       rbutton-1
+                       rbutton-2
+                       rbutton-3)
+  (define rbutton-group-panel (make-panel))
+  (add-components rbutton-group-panel
+                  rbutton-1
+                  rbutton-2
+                  rbutton-3)
+  
+  (set-container-layout label-panel-4 'flow 'left)
+  (set-container-layout label-panel-5 'flow 'left)
+  (set-container-layout label-panel-6 'flow 'left)
+  (set-container-layout label-panel-7 'flow 'left)
+  (add-component label-panel-4 label-4)
+  (add-component label-panel-5 label-5)
+  (add-component label-panel-6 label-6)
+  (add-component label-panel-7 label-7)
+  
+  (set-container-layout reader-tab 'vertical)
+  (add-components reader-tab 
+                  sep-1
+                  label-panel-4
+                  rbutton-group-panel
+                  sep-2
+                  label-panel-5
+                  sep-3
+                  label-panel-6
+                  sep-4
+                  label-panel-7)
+                  
+;  (add-component reader-tab sep-1)
+;  (add-component reader-tab label-panel-4)
+;  (add-component reader-tab rbutton-group-panel)
+;  (add-component reader-tab sep-2)
+;  (add-component reader-tab label-panel-5)
+;  (add-component reader-tab sep-3)
+;  (add-component reader-tab label-panel-6)
+;  (add-component reader-tab sep-4)
+;  (add-component reader-tab label-panel-7)
+  
+  (add-component propt-dialog propt-tabpanel)
+  )
+
+(define (show-properties) 
+  (pack-frame propt-dialog)
+  (set-component-visible propt-dialog #t))

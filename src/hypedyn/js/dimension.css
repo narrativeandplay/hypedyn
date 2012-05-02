@@ -1,24 +1,27 @@
+body {
+	//background-image: url(page_back_320_480.png);
+	background-color: aliceblue;
+	background-size: 100%;
+}
+
+.pageflip {
+	background-image: url(page_back_btm_320_480.png);
+}
+
 /* applied to the sections in 'pages' */
 .pagesdiv {
 	position: absolute;
 	overflow: hidden;
 	white-space: pre-wrap; /* preserve sequence of white space and wrap the text */
-	//width: 320px; // 320-40 // remove soon
-
+	
 	padding: 0px;
 	left: 0px;
-	top: 0px;
+	top: 50px;
 }
 
 /* makes sure the div in the page do not scale with parent section (ie keep constant width) used to be #pages div*/
 .pagecontent {
 	padding: 20px;
-	//width: 280px; // for mobile only to keep the width of the //remove soon (getting set somewhere else)
-}
-
-#pages {
-	left: 0px;
-	top: 0px;
 }
 
 /* pages
@@ -26,16 +29,21 @@
 			pagecontent (div)
 */
 
-#test_bed {
-	//width: 320px;
+#buttons-panel {
+	position: absolute;
+	height: 50px;
+	left: 0px;
+	top: 0px;
+}
+
+#page-indicate-canvas {
+	position: absolute;
 }
 
 #pageflip-canvas {
 	position: absolute;
-	//width: 320px;
 	z-Index: -101;
 	opacity: 1.0;
-	//pointer-events: none;
 	top: 0px;
 	left: 0px;
 }
@@ -66,26 +74,10 @@
 
 #lightsoff-canvas {
 	position: absolute;
-	//width: 320px;
 	height: 480px;
 	z-Index: -102;
 	opacity: 1.0;
 	color: black;
-	//pointer-events: none;
 	top: 0px;
 	left: 0px;
-}
-
-#buttons-panel {
-	position: absolute;
-	//background-image:url('page_back_320_480.png');
-	height: 50px;
-	//width: 320px;
-	left: 0px;
-	top: 0px;
-}
-
-#page-indicate-canvas {
-	position: absolute;
-	//left: 80px;
 }

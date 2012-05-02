@@ -17,19 +17,13 @@
 ;; with this program; if not, write to the Free Software Foundation, Inc.,
 ;; 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-(module-export make-tabpanel make-tab-panel add-tabpanel-tab insert-tabpanel-tab remove-tabpanel-tab
+(module-export make-tab-panel add-tabpanel-tab insert-tabpanel-tab remove-tabpanel-tab
                get-tabpanel-selection-index get-tabpanel-selected-component set-tabpanel-selected-index 
                get-tabpanel-label-at set-tabpanel-label-at)
  
 ;;
 ;; tabbed panel
 ;;
-
-; why are there 2 of these? - alex
-
-;make a tab panel
-(define (make-tabpanel)
-  (<javax.swing.JTabbedPane>))
 
 ;make tab panel
 (define (make-tab-panel)

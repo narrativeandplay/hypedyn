@@ -42,7 +42,7 @@ function order_pages(curr_page) {
 	// Organize the depth of our pages and create the flip definitions
 	for( var i = 0, len = pages.length; i < len; i++ ) {
 		pages[i].style.zIndex = len - i; // pages at the back get smaller value
-		if (i < page )
+		if ( i < page )
 			pages[i].style.width = 0;
 		/*
 		if (i == page) 
@@ -68,18 +68,19 @@ function style_pages() {
 	// Organize the depth of our pages and create the flip definitions
 	for( var i = 0, len = pages.length; i < len; i++ ) {
 		
-		if (page_flipping_mode)
-			pages[i].style.backgroundImage = "url(page_back_btm_320_480.png)";//"url(paper.png)";// no repeat;
 		//pages[i].style.backgroundColor = "rgba(0,255,0,1)";
 		pages[i].className = 'pagesdiv'; 
-		pages[i].style.width = page_width;
-		disp("pages height "+pages[i].height);
-		disp("btm height "+btm_height);
+		if (page_flipping_mode)
+		//	pages[i].style.backgroundImage = "url(page_back_btm_320_480.png)";//"url(paper.png)";// no repeat;
+			pages[i].className += ' pageflip';
+		
+		//pages[i].style.width = page_width;
+
 		//dont limit the height when we're not breaking the page 
 		if (page_flipping_mode)
 			pages[i].style.height = btm_height;
 			
-		pages[i].style.top = "50px";
+		//pages[i].style.top = "50px";
 		
 		flips.push( {
 			progress: 1,      // Current progress of the flip (left -1 to right +1)
@@ -253,7 +254,7 @@ function drawFlip( flip , multiflip_bool) {
 	var foldWidth = page_width_half * ( 1 - flip.progress );
 	
 	// X position of the folded paper
-	var foldX = page_width * flip.progress + foldWidth //- page_padding;
+	var foldX = page_width * flip.progress + foldWidth;
 	//disp("flip progress "+flip.progress);
 	
 	var fold_diff = foldX - foldWidth;

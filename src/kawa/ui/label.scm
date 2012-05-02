@@ -17,7 +17,7 @@
 ;; with this program; if not, write to the Free Software Foundation, Inc.,
 ;; 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-(module-export make-label make-label-with-title)
+(module-export make-label make-label-with-title bold-label)
 
 ;;
 ;; labels
@@ -30,3 +30,13 @@
 ; make a label with title 
 (define (make-label-with-title title :: <java.lang.String>)
   (<javax.swing.JLabel> title))
+
+;;JLabel has bold as default already (so only useful for unbolding it)
+(define (bold-label in-label :: <javax.swing.JLabel>
+                    #!optional bold? :: <boolean>)
+  (if (not bold?) (set! bold? #t)) ;; if bold? not given then bold it
+  (let* ((font (invoke in-label 'get-font))
+         (font-style (invoke font 'get-style))
+         (new-font (invoke font 'derive-font 
+                           ((if bold? bitwise-and bitwise-xor) font-style <java.awt.Font>:BOLD))))
+    (invoke in-label 'set-font new-font)))

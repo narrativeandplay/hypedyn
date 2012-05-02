@@ -247,9 +247,7 @@ function htmlFormat(content, links, noformat) {
 	function pagebreak_check2 ( htmlcode, new_offset ) {
 		if (!noformat && page_flipping_mode) { // dont try to break page when page flipping mode off
 			test_bed_html_cache += htmlcode;
-			// make sure test_bed has same styling as actual page
-			$('test_bed').className = "pagesdiv";
-			$('test_bed').style.width = page_width;
+			
 			$("test_bed").innerHTML = "<div name='testcontent'>" + test_bed_html_cache + "</div>";
 			var pages = document.getElementsByName("testcontent");
 			

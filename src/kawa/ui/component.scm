@@ -18,7 +18,7 @@
 ;; 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 ; export
-(module-export add-component remove-component
+(module-export add-component add-components remove-component
                set-component-size set-component-preferred-size set-component-minimum-size set-component-maximum-size
                set-component-non-resizable-size
                set-opaque set-border set-background-color get-background-color 
@@ -72,6 +72,12 @@
                 ))
       (invoke (as <java.awt.Container> container)
               'add component)))
+
+(define (add-components container :: <java.awt.Container>
+                       . components)
+  (map (lambda (comp)
+         (if (java.awt.Component? comp)
+             (add-component container comp))) components))
 
 ;; adding component to jframe
 ;frame.getContentPane().add(child);
