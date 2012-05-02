@@ -585,10 +585,11 @@
 ; specifying #f will use existing filename, if any, 
 (define (saveit filename)
   ;; remove * at the back of the filename if it exists
-  (let* ((namelen (string-length filename))
-         (lastchar (substring filename (- namelen 1) namelen)))
-    (if (equal? lastchar "*")
-        (set! filename (substring filename 0 (- namelen 1)))))
+  (if filename
+      (let* ((namelen (string-length filename))
+             (lastchar (substring filename (- namelen 1) namelen)))
+        (if (equal? lastchar "*")
+            (set! filename (substring filename 0 (- namelen 1))))))
   
   (if save-callback (save-callback filename))
   (update-label))
