@@ -307,12 +307,13 @@
         (ask parent-obj 'set-allow-repaint! #t)
         (ask parent-obj 'refresh)))
     
-    (define (create-line name fromnodeID tonodeID ID)
+    (define (create-line name fromnodeID tonodeID ID #!optional style)
       (ask parent-obj 'create-line
            (generate-link-name name ID)
            fromnodeID
            tonodeID
-           (number->string ID)))
+           (number->string ID)
+           style))
     
     ; message handling                  
     (obj-put this-obj 'init
@@ -335,8 +336,8 @@
     (obj-put this-obj 'refresh-display
              (lambda (self) (refresh-display)))
     (obj-put this-obj 'create-line
-             (lambda (self name fromnodeID tonodeID ID) 
-               (create-line name fromnodeID tonodeID ID)))
+             (lambda (self name fromnodeID tonodeID ID #!optional style) 
+               (create-line name fromnodeID tonodeID ID style)))
     
 ;    (define (del-line line-ID fromnodeID tonodeID)
 ;      (let* ((c-fromnode (ask c 'node-get-by-data (number->string fromnodeID)))

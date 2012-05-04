@@ -126,6 +126,7 @@
   (primitive-procedure-add! 'replace-link-text replace-link-text)
   (primitive-procedure-add! 'goto-node goto-node)
   (primitive-procedure-add! 'add-anywhere-link add-anywhere-link)
+  (primitive-procedure-add! 'show-in-popup show-in-popup)
   
   ; some additional useful primitives
   (primitive-procedure-add! 'random generate-random-int)

@@ -33,6 +33,7 @@
   (require "../kawa/ui/label.scm")
   (require "../kawa/ui/button.scm")
   (require "../kawa/ui/toolbar.scm")
+  (require "../kawa/ui/popup.scm")
   
   (require "../kawa/file.scm")
   (require "../kawa/strings.scm") ;;to-string
@@ -85,7 +86,7 @@
                
                get-anywhere-nodes
                
-               replace-link-text follow-link2 add-anywhere-link)
+               replace-link-text follow-link2 add-anywhere-link show-in-popup)
 
 ;;
 ;; config flags
@@ -347,14 +348,8 @@
   (if (not in-filename)
       (set! nodereader-filename "Untitled")
       (set! nodereader-filename in-filename))
-
-  ; forget history
   (forget-history)
-
-  ; reset environment
   (reset-environment)
-  
-  ; reset step count
   (reset-step-count)
   
   ; reset custom cursors
@@ -366,7 +361,6 @@
   ; reset hover click
   (set-hover-click! #f)
   
-  ; stop any audio
   (stop-audio)
   
   ; reset background color
@@ -465,6 +459,9 @@
 ; save the initial state, in case running the story messes up the nodes/links
 (define saved-state #f)
 
+;; used for popup
+(define current-node-content "")
+
 ; store initial state if not yet stored
 (define (save-state)
   (if (not saved-state)
@@ -482,6 +479,8 @@
         (next-node (get 'nodes next-nodeID)))
     (if (not (eq? #f next-node))
         (begin
+          (set! display-mode 'textpane)
+          
           ; check if there was a previous node
           (if prev-node
               (begin
@@ -543,6 +542,7 @@
 
           ; set contents - need to enable editing temporarily
           (ask nodereader-pane 'set-node! next-node)
+          (set! current-node-content (ask next-node 'content))
 
           ; remember previous node
           (if (and remember read-nodeID)
@@ -589,6 +589,10 @@
           ; show the nodereader window
           (set-component-visible nodereader-frame #t)
 
+;          (show-popup (make-popup (ask nodereader-pane 'getcomponent)
+;                                  (make-label-with-title "<html>this is a test popup<br> second line</html>")
+;                                  100 100))
+          
           #t)
         #f))
   (update-inspectors))
@@ -615,7 +619,6 @@
         ;; add anywhere nodes
         (ask nodereader-pane 'add-anywherenode-links)
         )))
-
 
 ;;;; conditions
 
@@ -936,10 +939,7 @@
     ;; part of htlanguage
 (define (replace-link-text text-type value linkID)
   (if nodereader-pane
-      (let* ((link-obj (get 'links linkID))
-             ;(start-index (ask link-obj 'start-index))
-             ;(end-index (ask link-obj 'end-index))
-             (start-index (hash-table-get start-indices linkID))
+      (let* ((start-index (hash-table-get start-indices linkID))
              (end-index (hash-table-get end-indices linkID))
              (newtext (cond ((eq? text-type 'text)
                              value)
@@ -954,39 +954,40 @@
                                    )
                                  "[fact not found]"
                                  ))))
-             (new-end-index (+ start-index (string-length newtext)))
-             ;(use-alt-text (alttext? thislink))
-             )
+             (new-end-index (+ start-index (string-length newtext))))
+        
+        ;; generate the string version of the content to be shown
+        (set! current-node-content (string-replace current-node-content newtext start-index end-index))
+        
+        (if (equal? display-mode 'textpane)
+            (begin
+              ;; do the replacement in the textpane
+              (ask nodereader-pane 'set-track-links! #f)
+                                        ;        (let ((nodereader-doc (ask nodereader-pane 'getdocument)))
+                                        ;          (set-text-delete nodereader-doc
+                                        ;                           start-index
+                                        ;                           (- end-index start-index))
+                                        ;          (set-text-insert nodereader-doc
+                                        ;                           newtext
+                                        ;                           start-index))
+              (set-text (ask nodereader-pane 'getcomponent) current-node-content)
 
-        ;; do the replacement in the textpane
-        (ask nodereader-pane 'set-track-links! #f)
-        (let ((nodereader-doc (ask nodereader-pane 'getdocument)))
-;          (display "[delete from] ")(display start-index) (newline)
-;          (display "  to ")(display end-index)(newline)
-;          (display "  deleting these - ")(display (substring (ask nodereader-pane 'gettext) start-index end-index))(newline) 
-          (set-text-delete nodereader-doc
-                           start-index
-                           (- end-index start-index))
-;          (display "[insert] ")(display newtext)(newline)
-;          (display "  from ")(display start-index)(newline) 
-          (set-text-insert nodereader-doc
-                           newtext
-                           start-index)
-          )
-       (ask nodereader-pane 'set-track-links! #t) ;; htpane-obj (nodereader-pane)
-        
-        (define newtext-len (string-length newtext))
-        (define oldtext-len (- end-index start-index))
-        (define offset (- newtext-len oldtext-len))
-        
-        ; update link positions (shift the link bounds that comes after this link)
-        (define new-end-index (+ end-index offset))
-        (hash-table-for-each start-indices
-                             (lambda (k v)
-                               (update-indices start-indices k v end-index offset))) ;; was end-index
-        (hash-table-for-each end-indices
-                             (lambda (k v)
-                               (update-indices end-indices k v end-index offset)))
+              (ask nodereader-pane 'set-track-links! #t) ;; htpane-obj (nodereader-pane)
+
+              (define newtext-len (string-length newtext))
+              (define oldtext-len (- end-index start-index))
+              (define offset (- newtext-len oldtext-len))
+
+                                        ; update link positions (shift the link bounds that comes after this link)
+              (define new-end-index (+ end-index offset))
+              ;; shift links beyond end-index
+              (hash-table-for-each start-indices
+                                   (lambda (k v)
+                                     (update-indices start-indices k v end-index offset))) ;; was end-index
+              (hash-table-for-each end-indices
+                                   (lambda (k v)
+                                     (update-indices end-indices k v end-index offset)))
+              ))
         )))
 
 ;; part of htlanguage
@@ -1076,3 +1077,34 @@
                       (- (get-text-length nodereader-doc) (+ 1 thisStartPos))
                       #f)))
 )
+
+;; use to keep track of whether we're showing in 'popup or 'textpane
+;; this is the only two possible values possible for this so far, 
+;; it would be set from show-in-popup and goto-node
+
+(define display-mode #f)
+(define (show-in-popup nodeID) 
+  (set! display-mode 'popup)
+  (display "SHOW POPUP HERE!")(newline)
+;  (show-popup (make-popup (ask nodereader-pane 'getcomponent)
+;                                  (make-label-with-title "<html>this is a test popup<br> second line</html>")
+;                                  100 100))
+  (set! current-node-content (ask (get 'nodes nodeID) 'content))
+  
+  (rule-check-trigger-links 'displayed-node nodeID) ;; trigger links text display
+  (rule-check-trigger 'entered-node 'nodes nodeID) ;; trigger the node 
+  
+  (define text-pane (ask nodereader-pane 'getcomponent))
+  (define tp-loc (get-location-on-screen text-pane))
+  (define tp-x (vector-ref tp-loc 0))
+  (define tp-y (vector-ref tp-loc 1))
+  
+  (define node-content (ask (get 'nodes nodeID) 'content))
+
+  (show-popup (make-popup text-pane (make-label-with-title 
+                                     ;(to-string node-content)
+                                     ;node-content
+                                     (to-string (line-broken-html current-node-content))
+                                     )
+                          (+ tp-x 10) (+ tp-y 10) ))
+  )

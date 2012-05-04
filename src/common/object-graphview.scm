@@ -49,7 +49,7 @@
     
     ; initialize
     (define (init)
-      (set! line-draw-proc line-draw)
+      ;(set! line-draw-proc line-draw)
       (set! c (create-graph-editor w h graph-callback 'generic)) ; last param no longer used?
       (if (procedure? set-mouse-event-callback)
           (set-mouse-event-callback c))
@@ -82,84 +82,92 @@
       (create-line name fromnodeID tonodeID (number->string new-linkID)))
 
     ;; custom line drawing
-    (define (line-draw dc source target selected? show? data)
-      (let ((src-node (ask source 'get-node))
-            (dst-node (ask target 'get-node)))
+    ;; return a line-draw with dotted? parameterized
+    (define (return-line-draw-proc line-dashed?)
+      (define (line-draw dc source target selected? show? data)
+        (let ((src-node (ask source 'get-node))
+              (dst-node (ask target 'get-node)))
+          (let-values
+              (((sx sy) (ask src-node 'get-position))
+               ((tx ty) (ask dst-node 'get-position))
+               ((sw sh) (ask src-node 'get-size))
+               ((tw th) (ask dst-node 'get-size))
+               )
+
+                                        ; offset based on relative positions of nodes
+            (let ((src-halfwidth (/ sw 2.0))
+                  (src-halfheight (/ sh 2.0))
+                  (dst-halfwidth (/ tw 2.0))
+                  (dst-halfheight (/ th 2.0))
+                  (dx (abs (- sx tx)))
+                  (dy (abs (- sy ty))))
+              (if (> dx dy)
+                  (begin
+                                        ; x offset
+                    (if (< (+ sx src-halfwidth) (- tx dst-halfwidth))
+                        (begin
+                          (set! sx (+ sx src-halfwidth))
+                          (set! tx (- tx dst-halfwidth))))
+                    (if (> (- sx src-halfwidth) (+ tx dst-halfwidth))
+                        (begin
+                          (set! sx (- sx src-halfwidth))
+                          (set! tx (+ tx dst-halfwidth)))))
+                  (begin
+                                        ; y offset
+                    (if (< (+ sy src-halfheight) (- ty dst-halfheight))
+                        (begin
+                          (set! sy (+ sy src-halfheight))
+                          (set! ty (- ty dst-halfheight))))
+                    (if (> (- sy src-halfheight) (+ ty dst-halfheight))
+                        (begin
+                          (set! sy (- sy src-halfheight))
+                          (set! ty (+ ty dst-halfheight)))))))
+
+                                        ; draw the line
+            
+            (if line-dashed?
+                (if show? 
+                    (draw-dashed-line dc sx sy tx ty black-color)
+                    (draw-dashed-line dc sx sy tx ty white-color))
+                (if show?
+                    (drawline dc sx sy tx ty black-color 'solid)
+                    (drawline dc sx sy tx ty white-color 'solid)))
+
+                                        ; arrowhead
+            (let* ((width 4.0)
+                   (height (* width 2.5))
+                   (angle (angle-from-x-axis sx sy tx ty))
+                   (basex (round (- tx (* height (Cosine angle)))))
+                   (basey (round (- ty (* height (Sine angle)))))
+                   (x1 (round (+ basex (* width (Cosine (- angle 90.0))))))
+                   (y1 (round (+ basey (* width (Sine (- angle 90.0))))))
+                   (x2 tx)
+                   (y2 ty)
+                   (x3 (round (+ basex (* width (Cosine (+ angle 90.0))))))
+                   (y3 (round (+ basey (* width (Sine (+ angle 90.0)))))))
+              (drawfilledtriangle dc x1 y1 x2 y2 x3 y3 black-color))))
+
+        ;;drawing the data--name of line
         (let-values
-            (((sx sy) (ask src-node 'get-position))
-             ((tx ty) (ask dst-node 'get-position))
-             ((sw sh) (ask src-node 'get-size))
-             ((tw th) (ask dst-node 'get-size))
-             )
+            (((sx sy) (ask source 'get-position))
+             ((tx ty) (ask target 'get-position))
+             ((tw th td ta) (get-text-extent dc data text-height)))
 
-          ; offset based on relative positions of nodes
-          (let ((src-halfwidth (/ sw 2.0))
-                (src-halfheight (/ sh 2.0))
-                (dst-halfwidth (/ tw 2.0))
-                (dst-halfheight (/ th 2.0))
-                (dx (abs (- sx tx)))
-                (dy (abs (- sy ty))))
-            (if (> dx dy)
-                (begin
-                  ; x offset
-                  (if (< (+ sx src-halfwidth) (- tx dst-halfwidth))
-                      (begin
-                        (set! sx (+ sx src-halfwidth))
-                        (set! tx (- tx dst-halfwidth))))
-                  (if (> (- sx src-halfwidth) (+ tx dst-halfwidth))
-                      (begin
-                        (set! sx (- sx src-halfwidth))
-                        (set! tx (+ tx dst-halfwidth)))))
-                (begin
-                  ; y offset
-                  (if (< (+ sy src-halfheight) (- ty dst-halfheight))
-                      (begin
-                        (set! sy (+ sy src-halfheight))
-                        (set! ty (- ty dst-halfheight))))
-                  (if (> (- sy src-halfheight) (+ ty dst-halfheight))
-                      (begin
-                        (set! sy (- sy src-halfheight))
-                        (set! ty (+ ty dst-halfheight)))))))
-
-          ; draw the line
-          (if show?
-              (drawline dc sx sy tx ty black-color 'solid)
-              (drawline dc sx sy tx ty white-color 'solid))
-
-          ; arrowhead
-          (let* ((width 4.0)
-                 (height (* width 2.5))
-                 (angle (angle-from-x-axis sx sy tx ty))
-                 (basex (round (- tx (* height (Cosine angle)))))
-                 (basey (round (- ty (* height (Sine angle)))))
-                 (x1 (round (+ basex (* width (Cosine (- angle 90.0))))))
-                 (y1 (round (+ basey (* width (Sine (- angle 90.0))))))
-                 (x2 tx)
-                 (y2 ty)
-                 (x3 (round (+ basex (* width (Cosine (+ angle 90.0))))))
-                 (y3 (round (+ basey (* width (Sine (+ angle 90.0)))))))
-            (drawfilledtriangle dc x1 y1 x2 y2 x3 y3 black-color))))
-
-      ;;drawing the data--name of line
-      (let-values
-          (((sx sy) (ask source 'get-position))
-           ((tx ty) (ask target 'get-position))
-           ((tw th td ta) (get-text-extent dc data text-height)))
-
-        ; should get panel background somehow? - alex
-        (rectangle-fill dc
-                        (- (/ (abs (+ tx sx)) 2.0) (/ tw 2.0))
-                        (- (/ (abs (+ ty sy)) 2.0) (/ th 2.0) )
-                        (+ (/ (abs (+ tx sx)) 2.0) (/ tw 2.0))
-                        (+ (/ (abs (+ ty sy)) 2.0) (/ th 2.0) )
-                        bg-color 'solid)
-        (drawtext dc
-                  (- (/ (abs (+ tx sx)) 2) (* tw 0.5)) (+ (/ (abs (+ ty sy)) 2) (* th 0.5))
-                  red-color bg-color data)))
+                                        ; should get panel background somehow? - alex
+          (rectangle-fill dc
+                          (- (/ (abs (+ tx sx)) 2.0) (/ tw 2.0))
+                          (- (/ (abs (+ ty sy)) 2.0) (/ th 2.0) )
+                          (+ (/ (abs (+ tx sx)) 2.0) (/ tw 2.0))
+                          (+ (/ (abs (+ ty sy)) 2.0) (/ th 2.0) )
+                          bg-color 'solid)
+          (drawtext dc
+                    (- (/ (abs (+ tx sx)) 2) (* tw 0.5)) (+ (/ (abs (+ ty sy)) 2) (* th 0.5))
+                    red-color bg-color data)))
+      line-draw)
 
     ; create the line in graph
     ; name and ID should be strings, ID is generally the linkID (plus "~" for "else")
-    (define (create-line name fromnodeID tonodeID ID)
+    (define (create-line name fromnodeID tonodeID ID #!optional style)
       ;; only create line if tonodeID not -1
       (if (not (= tonodeID -1))
           (begin
@@ -168,7 +176,11 @@
             (define c-fromtab (ask c-fromnode 'tab-out-ref 0))
             (define c-totab (ask c-tonode 'tab-in-ref 0))
 
-            (ask c 'line-add-with-name-and-ID name (to-string ID) c-fromtab c-totab line-draw-proc)
+            (case style
+                ((#f default) 
+                 (ask c 'line-add-with-name-and-ID name (to-string ID) c-fromtab c-totab (return-line-draw-proc #f)))
+                ((dashed) 
+                 (ask c 'line-add-with-name-and-ID name (to-string ID) c-fromtab c-totab (return-line-draw-proc #t))))
             )))
 
     ; delete the line in graph
@@ -280,11 +292,11 @@
              (lambda (self name
                            fromnodeID
                            tonodeID
-                           new-linkID-string)
+                           new-linkID-string #!optional style)
                (create-line name
                             fromnodeID
                             tonodeID
-                            new-linkID-string)))
+                            new-linkID-string style)))
     (obj-put this-obj 'rename-line
              (lambda (self line-ID newname)
                (rename-line line-ID newname)))

@@ -39,7 +39,7 @@
 ;; 
 
 ;; predefined borders // to use do (set-border <component> <border>)
-(define black-border (invoke-static <javax.swing.BorderFactory> 'createLineBorder (<java.awt.Color> 0 0 0 0)))
+(define black-border (invoke-static <javax.swing.BorderFactory> 'createLineBorder (<java.awt.Color> 0 0 0 255)))
 (define bevel-in-border (invoke-static <javax.swing.BorderFactory> 'createLoweredBevelBorder))
 (define bevel-out-border (invoke-static <javax.swing.BorderFactory> 'createRaisedBevelBorder))
 

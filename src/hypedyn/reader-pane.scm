@@ -52,10 +52,23 @@
                end-indices
                
                do-rule-action
+               show-tooltip
+               line-broken-html
                )
 
 (define start-indices (make-hash-table))
 (define end-indices (make-hash-table))
+
+
+(define (show-tooltip target-comp)
+;  ToolTipManager.sharedInstance().mouseMoved(
+;        new MouseEvent(targetComponent, 0, 0, 0,
+;                0, 0, // X-Y of the mouse for the tool tip
+;                0, false));
+  (invoke (invoke-static javax.swing.ToolTipManager 'shared-instance) 'mouse-moved
+          (java.awt.event.MouseEvent target-comp 0 0 0
+                                     0 0 ;; x y of the mouse for the tool tip
+                                     0 #f)))
 
 ; read-only hypertextpane
 (define (make-reader-pane
@@ -448,6 +461,12 @@
                   ; otherwise, just show hand
                   (if (not (check-cursor-type nodereader-text 'hand))
                       (set-cursor-type nodereader-text 'hand)))
+              
+              ;; the commented out (set-tooltip-text -1)
+              ;; are done to stop them from interferring 
+              ;; my use of tooltip in our reader-pane 
+              ;; they are not used atm anyway - teongleong
+              
               (if (and hover-links (not hover-click))
                   ; if using hover-links, show based on link
                   (let ((link-type (get-link-type linkID)))
@@ -456,15 +475,18 @@
                         ; show the hover link
                         (show-hover-link linkID)
                         ; otherwise no tooltip
-                        (set-tooltip-text -1)))
+                        ;(set-tooltip-text -1)
+                        ))
                   ; otherwise not using hover-links, so no tooltip
-                  (if (not hover-links)
-                      (set-tooltip-text -1))))
+;                  (if (not hover-links)
+;                      (set-tooltip-text -1))
+                  ))
             ; otherwise change to default cursor
             (begin
               (if (not (check-cursor-type nodereader-text 'default))
                   (set-cursor-type nodereader-text 'default))
-              (set-tooltip-text -1)))))
+              ;(set-tooltip-text -1)
+              ))))
     
     ; show a hover link
     (define (show-hover-link linkID)
@@ -537,33 +559,6 @@
                     (ask the-node 'content))))
             ; no link, so return false
             #f)))
-    
-    ; format text for tooltip: add <html></html> tags around text, and
-    ; put in <br> every 50 characters
-    (define (format-node-text in-text)
-      ; recursively add in <br> every 50 characters
-      (define (format-node-text-helper in-sub-text)
-        (let ((slashn-index (string-indexof in-sub-text "\n"))
-              (len (string-length in-sub-text)))
-          ; first check if there's a \n before character 50
-          (if (and (> slashn-index -1)
-                   (< slashn-index 50))
-              ; break at the \n
-              (string-append (substring in-sub-text 0 slashn-index)
-                             "<br>"
-                             (format-node-text-helper (substring in-sub-text (+ slashn-index 1) len)))
-              ; otherwise, check the length
-              (if (> len 50)
-                  (let* ((this-line (substring in-sub-text 0 50))
-                         (last-space-index (string-lastindexof this-line " "))
-                         ; be careful in case there is no " "
-                         (break-index (if (= last-space-index -1) 50 (min last-space-index 50))))
-                    (string-append (substring in-sub-text 0 break-index)
-                                   "<br>"
-                                   (format-node-text-helper (substring in-sub-text break-index len))))
-                  in-sub-text))))
-      ; return the text broken by <br>s, bracketed by html tags
-      (string-append "<html>" (format-node-text-helper in-text) "</html>"))
 
     ; message handling                  
     (obj-put this-obj 'init
@@ -598,6 +593,7 @@
                (set-bg-change! in-flag)))
     this-obj))
 
+;; TODO: move rule handling out of here (out of place)
 ;;;; RULE HANDLING
 
 ;; carry out the action from this rule
@@ -652,7 +648,7 @@
         ;; a check-condition?
         ;; b fall-through?
         ;; f - fall, b - block
-        ;; caps - #t lowcase - #f
+        ;; caps - #t lowcase - #f (eg A check-condition? #t, a check-condition #f)
         
         ;; without needing to check condition
         ;; we skip those that have condition false anyway.. because they do nothing
@@ -741,3 +737,31 @@
   (map (lambda (linkID)
          (rule-check-trigger event-type 'links linkID))
        (ask (get 'nodes nodeID) 'links)))
+
+;; format text for tooltip: add <html></html> tags around text, and
+;; put in <br> every 50 characters
+;; previously known as format-node-text
+(define (line-broken-html in-text)
+  ;; recursively add in <br> every 50 characters
+  (define (format-node-text-helper in-sub-text)
+    (let ((slashn-index (string-indexof in-sub-text "\n"))
+          (len (string-length in-sub-text)))
+      ;; first check if there's a \n before character 50
+      (if (and (> slashn-index -1)
+               (< slashn-index 50))
+          ;; break at the \n
+          (string-append (substring in-sub-text 0 slashn-index)
+                         "<br>"
+                         (format-node-text-helper (substring in-sub-text (+ slashn-index 1) len)))
+          ;; otherwise, check the length
+          (if (> len 50)
+              (let* ((this-line (substring in-sub-text 0 50))
+                     (last-space-index (string-lastindexof this-line " "))
+                     ;; be careful in case there is no " "
+                     (break-index (if (= last-space-index -1) 50 (min last-space-index 50))))
+                (string-append (substring in-sub-text 0 break-index)
+                               "<br>"
+                               (format-node-text-helper (substring in-sub-text break-index len))))
+              in-sub-text))))
+  ;; return the text broken by <br>s, bracketed by html tags
+  (string-append "<html>" (format-node-text-helper in-text) "</html>"))

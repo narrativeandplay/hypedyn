@@ -40,6 +40,7 @@
 (require "../kawa/ui/undo.scm")
 (require "../kawa/ui/tabpanel.scm")
 (require "../kawa/ui/radio.scm")
+(require "../kawa/ui/checkbox.scm")
 (require "../common/objects.scm") ;; ask
 (require "../common/datatable.scm") ;; dirty?, reset-table, del, get
 (require "../common/object-listview.scm")
@@ -890,8 +891,6 @@
         (map (lambda (o) (car o)) (get-list 'actions))))
   
   (display "[ACTION lst] ")(display actionID-lst)(newline)
-  
- 
   
   ;; wrap delete link and delete node in one operation
   ;; delete-node invokes delete-link which has its own compoundundomanager-postedit
@@ -1803,18 +1802,58 @@
   (add-component tf-panel-1 tf-1)
   (add-component tf-panel-2 tf-2)
   (add-component tf-panel-3 tf-3)
-    
+   
+  
   (add-component label-group-panel label-panel-1)
+  ;(add-component label-group-panel (invoke-static <javax.swing.Box> 'create-vertical-glue))
   (add-component label-group-panel label-panel-2)
+  ;(add-component label-group-panel (invoke-static <javax.swing.Box> 'create-vertical-glue))
   (add-component label-group-panel label-panel-3)
+  ;(add-component label-group-panel (invoke-static <javax.swing.Box> 'create-horizontal-glue))
+  
   
   (add-component tf-group-panel tf-panel-1)
+   ;(add-component tf-group-panel (invoke-static <javax.swing.Box> 'create-vertical-glue))
   (add-component tf-group-panel tf-panel-2)
+   ;(add-component tf-group-panel (invoke-static <javax.swing.Box> 'create-vertical-glue))
   (add-component tf-group-panel tf-panel-3)
+  ; (add-component tf-group-panel (invoke-static <javax.swing.Box> 'create-vertical-glue))
+  
+  ;panel.setPreferredSize(panel.getPreferredSize());
+  (define (pack-panel panel)
+    (invoke panel 'set-preferred-size 
+            (invoke panel 'get-preferred-size)))
+  
+  (pack-panel label-panel-1)
+  (pack-panel label-panel-2)
+  (pack-panel label-panel-3)
+  (pack-panel tf-panel-1)
+  (pack-panel tf-panel-2)
+  (pack-panel tf-panel-3)
+  (pack-panel tf-group-panel)
+  (pack-panel label-group-panel)
+  
+  (set-border tf-panel-1 black-border)
+  (set-border tf-panel-2 black-border)
+  (set-border tf-panel-3 black-border)
+  (set-border label-panel-1 black-border)
+  (set-border label-panel-2 black-border)
+  (set-border label-panel-3 black-border)
   
   (set-container-layout general-tab 'horizontal)
-  (add-component general-tab label-group-panel)
-  (add-component general-tab tf-group-panel)
+  ;(define general-group-panel (make-panel))
+  ;(set-container-layout general-group-panel 'horizontal)
+  
+  ;(add-component general-tab label-group-panel)
+  ;(add-component general-tab tf-group-panel)
+  ;(add-component general-tab general-group-panel)
+  
+  (add-components general-tab 
+                  label-group-panel
+                  tf-group-panel
+                  ;(invoke-static <javax.swing.Box> 'create-horizontal-glue)
+                  )
+  (pack-panel general-tab)
   
   ;; Reader tab
   (define sep-1 (make-separator))
@@ -1832,6 +1871,7 @@
   (define label-panel-6 (make-panel))
   (define label-panel-7 (make-panel))
   
+  ;; style
   (define button-grp (make-button-group))
   (define rbutton-1 (make-radio-button "default"))
   (define rbutton-2 (make-radio-button "fancy"))
@@ -1841,6 +1881,7 @@
                        rbutton-2
                        rbutton-3)
   (define rbutton-group-panel (make-panel))
+  (set-container-layout rbutton-group-panel 'vertical)
   (add-components rbutton-group-panel
                   rbutton-1
                   rbutton-2
@@ -1855,6 +1896,30 @@
   (add-component label-panel-6 label-6)
   (add-component label-panel-7 label-7)
   
+  ;; control
+  (define disable-back-cb (make-checkbox "Disable Back Button"))
+  (define disable-restart-cb (make-checkbox "Disable Restart Button"))
+  
+  ;; web-reader
+  (define disable-resize-cb (make-checkbox "Disable Resize"))
+  
+  (define width-tf-panel (make-panel))
+  (define width-label (make-label-with-title "Width"))
+  (define width-tf (make-textfield "" 5))
+  (add-components width-tf-panel 
+                  width-label
+                  width-tf)
+  
+  (define height-tf-panel (make-panel))
+  (define height-label (make-label-with-title "Height"))
+  (define height-tf (make-textfield "" 5))
+  (add-components height-tf-panel 
+                  height-label
+                  height-tf)
+  
+  ;; mobile reader
+  (define disable-page-break-cb (make-checkbox "Disable Page Breaks"))
+  
   (set-container-layout reader-tab 'vertical)
   (add-components reader-tab 
                   sep-1
@@ -1862,10 +1927,16 @@
                   rbutton-group-panel
                   sep-2
                   label-panel-5
+                  disable-back-cb
+                  disable-restart-cb
                   sep-3
                   label-panel-6
+                  disable-resize-cb
+                  width-tf-panel
+                  height-tf-panel
                   sep-4
-                  label-panel-7)
+                  label-panel-7
+                  disable-page-break-cb)
                   
 ;  (add-component reader-tab sep-1)
 ;  (add-component reader-tab label-panel-4)

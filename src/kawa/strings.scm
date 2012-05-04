@@ -29,7 +29,7 @@
                string-indexof string-lastindexof
                jstring->fstring ;fstring->string 
                to-fstring to-string
-               string-contains)
+               string-contains string-replace)
 
 ;;
 ;; strings
@@ -138,6 +138,9 @@
 
 (define (jstring->fstring jstring :: <java.lang.String>) :: <gnu.lists.FString>
   (<gnu.lists.FString> jstring))
+
+(define (string-replace str inserted start-index end-index)
+  (string-append (substring str 0 start-index) inserted (substring str end-index (string-length str))))
 
 ;;(define (string-replace2 main-str :: <string> 
 ;;                        match-str :: <string> 

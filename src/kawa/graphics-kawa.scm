@@ -25,6 +25,7 @@
   (require "../kawa/file.scm")
   (require "../kawa/color.scm")
   (require "../kawa/ui/events.scm")
+  (require "../kawa/arrays.scm")
   )
 
 ; export
@@ -166,7 +167,7 @@
 ; note col is just a list here
 (define (drawline buffer :: <java.awt.Graphics> x-p1 y-p1 x-p2 y-p2 col style . args)
   (let ((the-colour (make-colour-from-list col)))
-    (set-colour buffer the-colour style (if (pair? args) (car args))) ;changed from solid 
+    (set-colour buffer the-colour style (if (pair? args) (car args))) ;changed from solid\
     (if (and x-p1 y-p1 x-p2 y-p2)
         (invoke (as <java.awt.Graphics> buffer) 'drawLine x-p1 y-p1 x-p2 y-p2))
     ))

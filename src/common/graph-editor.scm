@@ -123,8 +123,7 @@
                               (drawline dc sx sy tx ty red-color 'solid))
                             (begin
                               ;(display "drawing black line ")(display selected?)(newline)
-                              (drawline dc sx sy tx ty black-color 'solid))
-                            )
+                              (drawline dc sx sy tx ty black-color 'solid)))
                         )
                       
                       ;;drawing the data--name of line
@@ -155,8 +154,7 @@
                       (if custom-line-draw
                           (custom-line-draw dc source target selected? show? data)
                           (default-line-draw dc source target selected? show? data))
-                      )
-                    ) ;; end of draw
+                      )) ;; end of draw
 
                   ;; line's on-mouse callback (used by find-clicked)
                   (define (line-on-mouse self event-type cx cy)

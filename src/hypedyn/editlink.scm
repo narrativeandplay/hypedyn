@@ -360,7 +360,8 @@
 (define editlink-dialog-andor-operator #f) ;; Any/All combobox
 (define editlink-dialog-label #f) ;; "of the following conditions are true:" message label
 
-(define node-choice-combobox #f)
+(define node-choice-combobox #f) ;; for follow link
+(define node-choice-combobox2 #f) ;; for popup
 
 ;; remove all the condition and action panels from the condition action editing panel
 ;; obj-type : 'node 'link 'anywhere 'doc
@@ -452,6 +453,11 @@
          ;; disable the checkbox of this action (so it can't be deleted)
          (set-component-enabled (car (get-container-children panel-to-return)) #f)
          )
+        ((equal? action-type "show in popup")
+         (if (= (length args-lst) 1)
+             (set! node-choice-combobox2 (create-node-choice (car args-lst) #t -1))
+             (set! node-choice-combobox2 (create-node-choice #f #t -1)))
+         (add-component panel-to-return node-choice-combobox2))
         )
   
   panel-to-return)
@@ -575,9 +581,9 @@
   )
 
 ;; kept to ensure some actions are only added once
-(define action-type-list-link (list "update text using" "follow link to" "update fact"))
+(define action-type-list-link (list "update text using" "follow link to" "update fact" "show in popup"))
 (define action-type-list-node (list "update fact"))
-(define-constant unique-choices (list "update text using" "follow link to")) ;; choices that shouldnt be duplicated
+(define-constant unique-choices (list "update text using" "follow link to" "show in popup")) ;; choices that shouldnt be duplicated
 
 
 ;; an instance of the action type selector panel
@@ -712,6 +718,10 @@
                  )
                 ((equal? 'add-anywhere-link (car action-sexpr))
                  (add-specific-action "enable links to this node from anywhere")
+                 )
+                ((equal? 'show-in-popup (car action-sexpr))
+                 (define target-nodeID (list-ref action-sexpr 1))
+                 (add-specific-action "show in popup" target-nodeID)
                  )
                 )
 
@@ -1128,12 +1138,19 @@
 
 ;;;; update node graph lines
 ;; remove or add the line display associated with the follow link action of this rule
-(define (remove-follow-link-rule-display ruleID)
-  (update-follow-link-rule-display ruleID 'remove))
+;; will check whether the rule has follow link first
 (define (add-follow-link-rule-display ruleID)
-  (update-follow-link-rule-display ruleID 'add))
+  (update-rule-line-display ruleID 'add 'follow-link))
+(define (remove-follow-link-rule-display ruleID)
+  (update-rule-line-display ruleID 'remove 'follow-link))
 
-(define-private (update-follow-link-rule-display ruleID add-or-remove)
+;; the popup analogous of follow link
+(define (add-show-popup-rule-display ruleID)
+  (update-rule-line-display ruleID 'add 'show-in-popup))
+(define (remove-show-popup-rule-display ruleID)
+  (update-rule-line-display ruleID 'remove 'show-in-popup))
+
+(define-private (update-rule-line-display ruleID add-or-remove action-type)
   (define rule (get 'rules ruleID))
   (if rule
       (begin
@@ -1147,9 +1164,12 @@
               (map (lambda (actionID)
                      (define action (get 'actions actionID))
                      (define expr (ask action 'expr))
-                     (if (eq? (car expr) 'follow-link)
+                     (if (eq? (car expr) action-type);; was 'follow-link
                          (begin
-                           (define dest-nodeID (list-ref expr 4))
+                           (define dest-nodeID 
+                             (case action-type
+                               ((follow-link) (list-ref expr 4))
+                               ((show-in-popup) (list-ref expr 1))))
                            
                            ;; Question: should we not allow the user to press ok
                            ;; when the dest node is set to none?
@@ -1161,9 +1181,13 @@
                                        (ask rule 'name)
                                        source-nodeID
                                        dest-nodeID
-                                       ruleID) ;; use ruleID as the display ID of line for the moment))
+                                       ruleID ;; use ruleID as the display ID of line for the moment))
+                                       (case action-type
+                                         ((follow-link) 'default)
+                                         ((show-in-popup) 'dashed))
+                                       )
                                   ;(ask node-graph 'refresh-display) ;; check show-IDs? and display id accordingly for the new line
-                                  ) 
+                                  )
                                  ((remove) ;; remove the line in the node-graph 
                                   (ask node-graph 'del-line
                                         ;                                   (ask node-graph 'get-line-by-ID
@@ -1193,12 +1217,15 @@
     (if the-link
         (begin
           (define rule-lst (ask the-link 'rule-lst))
-          (map
-           ;; choose the lambda
-           (case add-or-remove
-            ((add) add-follow-link-rule-display)
-            ((remove) remove-follow-link-rule-display))
-               rule-lst))))
+          
+          (case add-or-remove
+            ((add) 
+             (map add-follow-link-rule-display rule-lst)
+             (map add-show-popup-rule-display rule-lst))
+            ((remove)
+             (map remove-follow-link-rule-display rule-lst)
+             (map remove-show-popup-rule-display rule-lst)))
+          )))
 
 ; user clicked "ok" button on the edit rule UI
 ;; NOTE: we now recycle the rule object
@@ -1418,6 +1445,12 @@
                   (create-action "Enable Link" 'anywhere-check
                                (list 'add-anywhere-link edited-nodeID)
                                edited-ruleID))
+                 ((equal? action-type "show in popup")
+                  (define target-nodeID (get-comboboxwithdata-selecteddata node-choice-combobox2))
+                  (create-action "Show in Popup" 'clicked-link
+                               (list 'show-in-popup target-nodeID)
+                               edited-ruleID)
+                  )
                  ) ;; end of action-type cond
            ) (get-container-children action-list-panel))
 
