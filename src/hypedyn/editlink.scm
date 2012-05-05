@@ -105,6 +105,7 @@
   ; reset the editor, in case this failed when we closed last time
   (reset-rule-editor)
   
+  (display "do edit link ")(display edited-linkID)(newline)
   ; remember what we're editing
   (set! edited-linkID selected-linkID)
   (set! edited-nodeID in-edited-nodeID)
@@ -1284,6 +1285,8 @@
     ;; remove the line associated with this rule before we edit it
     (if (eq? edit-mode 'link)
         (remove-follow-link-rule-display edited-ruleID))  ;; remove the line display from the previous edited-ruleID
+    (if (eq? edit-mode 'link)
+        (remove-show-popup-rule-display edited-ruleID))  ;; remove the line display from the previous edited-ruleID
     
     ;; empty current rule's contents before making the changes
     (let ((the-rule (get 'rules edited-ruleID)))
@@ -1348,10 +1351,12 @@
       (define action-label (cadr children))
       (get-text action-label))
 
+    (display "mapping through action panel ")(display (length (get-container-children action-list-panel)))(newline)
     ;; map through the list of action panel and add the actions to the rule
     (map (lambda (action-panel)
            (define action-type (get-action-panel-type action-panel))
            ;; Update Text Action
+           (display "action type ")(display action-type)(newline)
            (cond ((equal? action-type "update text using")
                   ;; text of fact?
                   (define text-or-fact (get-combobox-selecteditem action-type-combobox))
@@ -1372,7 +1377,7 @@
                                         ;(set! text-value (to-string factID))
                      (set! text-value factID)
                      ))
-
+                  (display "replace text edited linkID on confirm ")(display edited-linkID)(newline)
                   (create-action obj-name 'displayed-node
                                  (list 'replace-link-text
                                        (list 'quote text-type)
@@ -1447,6 +1452,7 @@
                                edited-ruleID))
                  ((equal? action-type "show in popup")
                   (define target-nodeID (get-comboboxwithdata-selecteddata node-choice-combobox2))
+                  (display "edited linkID on confirm ")(display edited-linkID)(newline)
                   (create-action "Show in Popup" 'clicked-link
                                (list 'show-in-popup target-nodeID)
                                edited-ruleID)
@@ -1469,6 +1475,8 @@
     ;; only need to do for links that have follow link actions
     (if (eq? edit-mode 'link)
         (add-follow-link-rule-display edited-ruleID))
+    (if (eq? edit-mode 'link)
+        (add-show-popup-rule-display edited-ruleID))
 
     ;;===============
     ;; End of Actions

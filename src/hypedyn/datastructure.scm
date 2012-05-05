@@ -23,6 +23,8 @@
 (begin
   (require "../common/objects.scm")
   (require "../common/datatable.scm") ;;get, del, put
+  (require "../common/myhashtable.scm")
+  (require 'hash-table)
   (require "../common/fileio.scm")
   (require "../common/list-helpers.scm") ;; list-replace
   ;(require "../common/inspector.scm")
@@ -108,7 +110,10 @@
                        (rule-container (rule-containing-object))
                        (this-obj (new-object uniqueID-obj rule-container))
                        (visited? 0)
-                       (inspectable-fields (list (list 'visited? 'number "visited: "))))
+                       (inspectable-fields (list (list 'visited? 'number "visited: ")))
+                       (start-indices (make-hash-table))
+                       (end-indices (make-hash-table))
+                       )
                   (obj-put this-obj 'content
                            (lambda (self)
                              content))
@@ -137,6 +142,9 @@
                   (obj-put this-obj 'dellink
                            (lambda (self link)
                              (set! links (delete! link links))))
+                  
+                  (obj-put this-obj 'start-indices (lambda (self) start-indices))
+                  (obj-put this-obj 'end-indices (lambda (self) end-indices))
                   
                   (obj-put this-obj 'to-save-sexpr
                            (lambda (self)

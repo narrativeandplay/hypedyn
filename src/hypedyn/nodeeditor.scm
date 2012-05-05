@@ -619,7 +619,6 @@
             ; show edit rule dialog
             ;(doeditlink newlink-ID (get-edited-nodeID) (get-link-text newlink-ID))
             (rmgr-edit 'link newlink-ID)
-            
             ))))
   
   ;; cancel return #!null (dont do anything if null)

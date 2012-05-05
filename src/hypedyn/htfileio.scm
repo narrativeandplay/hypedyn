@@ -691,45 +691,35 @@
 
 
 (define (copy-js-framework)
-;; assuming .dyn is always appended to the filename get-filename-callback returns
-  
+  ;; assuming .dyn is always appended to the filename get-filename-callback returns
+
+  (display "before folder name")(newline)
   (define folder-name
     (let ((tmp (get-saved-filename-string)))
       (if (not tmp)
           (set! tmp "Untitled.dyn"))
-      
+
       (display "folder name ")(display tmp)(newline)
       ;; removes the extension
       (string-append (substring tmp 0 (- (string-length tmp) 4)) "-JS")
       ))
-  
+  (display "after folder name ")(display folder-name)(newline)
+
   (let ((export-folder (get-safe-new-filename (get-last-exported-dir) #f '() folder-name))) ;; third arg was #t
     (if (not (eq? #f export-folder))
         (begin
           (display "export folder ")(display export-folder)(newline)
-          ; create folder, first deleting if it already exists
+          ;; create folder, first deleting if it already exists
           (export-create-folder export-folder)
           (update-last-exported-dir! export-folder)
 
-          ; Note: put try-catch around this and cleanup on failure
+          ;; Note: put try-catch around this and cleanup on failure
           (let* ((source-folder-string (path-file (get-content-file "js"))))
-            (try-catch
-                (begin
-                  (recursively-copy-directory (make-file source-folder-string)
-                                    export-folder)
-                  (write-jscode-to 
-                   (string-append (path-file export-folder) "/dynfile.js")
-                   ;;(string-append source-folder-string "\\" "dynfile.js")
-                   ;"dynfile.js"
-                   (generate-jscode))
-                  ;(copy-file-nio (make-file "dynfile.js")
-                  ;               (make-file (string-append (path-file export-folder) "/dynfile.js")))
-                  )
-              (ex <java.lang.Throwable>
-                  (begin
-                    (display (*:toString ex))(newline)
-                                        ;(*:printStackTrace ex)
-                    ))))
+            (recursively-copy-directory (make-file source-folder-string)
+                                        export-folder)
+            (write-jscode-to
+             (string-append (path-file export-folder) "/dynfile.js")
+             (generate-jscode)))
           #t)
         #f))
   )
@@ -821,7 +811,9 @@
                  ((follow-link) "gotoNode")
                  ((replace-link-text) "replaceText")
                  ((set-value! assert retract) "setFact")
-                 ((add-anywhere-link) "addAnywhereLink")))
+                 ((add-anywhere-link) "addAnywhereLink")
+                 ((show-in-popup) "popup")
+                 ))
          (args (case (car expr)
                  ((follow-link)
                   (string-append "[" (to-string (list-ref expr 4)) "]"))
@@ -849,6 +841,9 @@
                            ((number? val)
                             (to-string val))))
                    "]"))
+                 ((show-in-popup)
+                  (string-append "[" (to-string (list-ref expr 1)) "]")
+                  )
                  )))
     
 ;    (display "actionID ")(display actionID)(newline)
@@ -932,6 +927,7 @@
   (if (not fact-lst)
       (set! fact-lst '()))
            
+  (display "generating js code ")(newline)
   ;; go through all the nodes
   (apply string-append
          (append 

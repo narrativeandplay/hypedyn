@@ -570,7 +570,7 @@
           (set! read-nodeID next-nodeID)
           
           ;; cache link bounds before the replace link text is triggered by displayed-node
-          (cache-link-bounds)
+          (cache-link-bounds next-nodeID)
           
           ;; trigger rules
           (rule-check-trigger-links 'displayed-node next-nodeID) ;; trigger links text display
@@ -918,18 +918,25 @@
   (if (>= this-index insert-index)
       (hash-table-put! this-hashtable this-key (+ this-index offset))))
 
-(define (cache-link-bounds)
+(define (cache-link-bounds nodeID)
   ; first pass - make copy of link positions, to be offset when
   ; text is changed by alternate links
   ;; moved to reader.scm from reader-pane's highlight-links
-  (map (lambda (l)
-         (let* ((thislink (get 'links l))
-                (start-index (ask thislink 'start-index))
-                (end-index (ask thislink 'end-index)))
-           (hash-table-put! start-indices l start-index)
-           (hash-table-put! end-indices l end-index)
-           ))
-       (ask (get 'nodes (ask nodereader-pane 'get-nodeID)) 'links)))
+  (let ((node (get 'nodes nodeID)))
+    (map (lambda (l)
+           (let* ((thislink (get 'links l))
+                  (start-index (ask thislink 'start-index))
+                  (end-index (ask thislink 'end-index))
+                  (start-indices (ask node 'start-indices))
+                  (end-indices (ask node 'end-indices))
+                  )
+             (display "caching ")(display l)(newline)
+             (hash-table-put! start-indices l start-index)
+             (hash-table-put! end-indices l end-index)
+             ))
+                                        ;(ask (get 'nodes (ask nodereader-pane 'get-nodeID)) 'links)
+         (ask node 'links)
+         )))
 
 ;; new addition to htlanguage
 
@@ -939,7 +946,12 @@
     ;; part of htlanguage
 (define (replace-link-text text-type value linkID)
   (if nodereader-pane
-      (let* ((start-index (hash-table-get start-indices linkID))
+      (let* ((link (get 'links linkID))
+             (parent-node-ID (ask link 'source))
+             (parent-node (get 'nodes parent-node-ID))
+             (start-indices (ask parent-node 'start-indices))
+             (end-indices (ask parent-node 'end-indices))
+             (start-index (hash-table-get start-indices linkID))
              (end-index (hash-table-get end-indices linkID))
              (newtext (cond ((eq? text-type 'text)
                              value)
@@ -1083,7 +1095,7 @@
 ;; it would be set from show-in-popup and goto-node
 
 (define display-mode #f)
-(define (show-in-popup nodeID) 
+(define (show-in-popup nodeID)
   (set! display-mode 'popup)
   (display "SHOW POPUP HERE!")(newline)
 ;  (show-popup (make-popup (ask nodereader-pane 'getcomponent)
@@ -1091,6 +1103,7 @@
 ;                                  100 100))
   (set! current-node-content (ask (get 'nodes nodeID) 'content))
   
+  (cache-link-bounds nodeID)
   (rule-check-trigger-links 'displayed-node nodeID) ;; trigger links text display
   (rule-check-trigger 'entered-node 'nodes nodeID) ;; trigger the node 
   
@@ -1104,7 +1117,6 @@
   (show-popup (make-popup text-pane (make-label-with-title 
                                      ;(to-string node-content)
                                      ;node-content
-                                     (to-string (line-broken-html current-node-content))
-                                     )
+                                     (to-string (line-broken-html current-node-content)))
                           (+ tp-x 10) (+ tp-y 10) ))
   )

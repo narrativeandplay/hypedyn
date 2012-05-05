@@ -182,6 +182,8 @@
                (let* ((nodereader-doc (ask htpane-obj 'getdocument))
                       (thislink (get 'links l))
                       (this-linkID (ask thislink 'ID))
+                      (start-indices (ask thisnode 'start-indices))
+                      (end-indices (ask thisnode 'end-indices))
                       (start-index (hash-table-get start-indices l #f))
                       (end-index (hash-table-get end-indices l #f)))
                  
