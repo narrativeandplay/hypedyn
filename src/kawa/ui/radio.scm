@@ -19,7 +19,8 @@
 
 (module-export make-radio-button make-button-group
                add-to-button-group
-               radio-button-selected?)
+               radio-button-selected?
+               radio-button-set-selected)
 
 ;(define (make-radio . label-lst)
 ;  (define button-grp (<javax.swing.ButtonGroup>))
@@ -49,3 +50,7 @@
 
 (define (radio-button-selected? radio :: <javax.swing.JRadioButton>)
   (invoke radio 'is-selected))
+
+(define (radio-button-set-selected (radio :: <javax.swing.JRadioButton>)
+                                   (value :: <boolean>))
+  (invoke radio 'set-selected value))

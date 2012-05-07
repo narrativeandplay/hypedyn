@@ -714,12 +714,33 @@
           (update-last-exported-dir! export-folder)
 
           ;; Note: put try-catch around this and cleanup on failure
-          (let* ((source-folder-string (path-file (get-content-file "js"))))
-            (recursively-copy-directory (make-file source-folder-string)
-                                        export-folder)
-            (write-jscode-to
-             (string-append (path-file export-folder) "/dynfile.js")
-             (generate-jscode)))
+;          (let* ((source-folder-string (path-file (get-content-file "js"))))
+;            (recursively-copy-directory (make-file source-folder-string)
+;                                        export-folder)
+          (define source-folder (get-content-file "js"))
+          (recursively-copy-directory source-folder
+                                      export-folder)
+          (display "css choice ")(display (get-stylesheet-choice))(newline)
+            ;; copy css files
+          (define styling-css 
+            (case (get-stylesheet-choice)
+              (("css1") "css/styling.css")
+              (("css2") "css/styling2.css")
+              (("css3") "css/styling2.css")))
+          
+          (define dimension-css 
+            (case (get-stylesheet-choice)
+              (("css1") "css/dimension.css")
+              (("css2") "css/dimension2.css")
+              (("css3") "css/dimension2.css")))
+          (display "css styling ")(display styling-css)(newline)
+          (copy-file-nio (get-content-file styling-css) (make-file (string-append (to-string export-folder) "/styling.css")))
+          (copy-file-nio (get-content-file dimension-css) (make-file (string-append (to-string export-folder) "/dimension.css")))
+            
+          (write-jscode-to
+           (string-append (path-file export-folder) "/dynfile.js")
+           (generate-jscode))
+          ;)
           #t)
         #f))
   )
@@ -952,8 +973,9 @@
                (map (lambda (e) (car e)) fact-lst))
           
           ;; config from properties menu
-          "\n"
+          
           (list
+           "\n"
            (if (disable-back-button?)
                "write_config_flag( 'back_button_flag', false );\n"
                "write_config_flag( 'back_button_flag', true );\n" )
@@ -964,7 +986,8 @@
            
            (if (disable-pagebreak?)
                "write_config_flag( 'page_flipping_mode', false );\n"
-               "write_config_flag( 'page_flipping_mode', true );\n" ))
+               "write_config_flag( 'page_flipping_mode', true );\n" )
+           )
            
           ;; resize
            (if (disable-page-resize?)
@@ -974,10 +997,7 @@
                 (string-append "fixed_page_width = " (get-width-tf-value) ";\n")
                 (string-append "fixed_page_height = " (get-height-tf-value) ";\n")
                )
-               (list"write_config_flag( 'window_resize_flag', true );\n" ))
-           
-
-          
+               (list "write_config_flag( 'window_resize_flag', true );\n" ))
           
           (list "}")
           )))

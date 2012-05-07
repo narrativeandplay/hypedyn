@@ -1,0 +1,64 @@
+/* in text links */
+a.intextlink:link {
+	text-decoration: underline; 
+	color: blue;
+	//background-color:#B2FF99;
+	font-size: 26px;
+}
+a.intextlink:visited {
+	text-decoration: underline;
+	color: purple;
+	//background-color:#FFFF85;
+	font-size: 26px;
+}
+a.intextlink:hover {
+	text-decoration: overline;
+	color: salmon;
+	//background-color:#FF704D;
+	font-size: 26px;
+}
+a.intextlink:active {
+	text-decoration: none;
+	color: salmon;
+	background-color: gold;
+	font-size: 26px;
+}
+
+/* anywhere links */
+a.anywhere:link {
+	text-decoration: underline; 
+	color: blue;
+	//background-color:#B2FF99;
+	font-size: 26px;
+}
+a.anywhere:visited {
+	text-decoration: underline;
+	color: purple;
+	//background-color:#FFFF85;
+	font-size: 26px;
+}
+a.anywhere:hover {
+	text-decoration: overline;
+	color: chartreuse;//green;
+	//background-color:#FF704D;
+	font-size: 26px;
+}
+a.anywhere:active {
+	text-decoration: none;
+	color: green;
+	background-color: chartreuse;
+	font-size: 26px;
+}
+
+/* unformatted text */
+.plaintext {
+	color: navy;
+	font-size: 26px;
+}
+
+/* dormant link (might be activated next time to be clickable)*/
+.dormant{
+	color: navy;
+	font-size: 26px;
+	font-weight: bold;
+}

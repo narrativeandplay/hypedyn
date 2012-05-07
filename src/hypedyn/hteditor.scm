@@ -78,6 +78,7 @@
 
                get-width-tf-value
                get-height-tf-value
+               get-stylesheet-choice
                )
 
 ; some global variables
@@ -1796,12 +1797,14 @@
 (define rbutton-2 #f)
 (define rbutton-3 #f)
 (define (get-stylesheet-choice)
+  (define to-return #f)
   (if (radio-button-selected? rbutton-1)
-      #f)
+      (set! to-return "css1"))
   (if (radio-button-selected? rbutton-2)
-      #f)
+      (set! to-return "css2"))
   (if (radio-button-selected? rbutton-3)
-      #f))
+      (set! to-return "css3"))
+  to-return)
 
 (define (make-properties-ui) 
   (set! propt-dialog (make-dialog (get-main-ui-frame) "Properties" #t))
@@ -1918,6 +1921,7 @@
                        rbutton-1
                        rbutton-2
                        rbutton-3)
+  (radio-button-set-selected rbutton-1 #t)
   (define rbutton-group-panel (make-panel))
   (set-container-layout rbutton-group-panel 'vertical)
   (add-components rbutton-group-panel
