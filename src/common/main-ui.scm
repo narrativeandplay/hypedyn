@@ -49,7 +49,7 @@
 ; export
 (module-export get-main-ui-frame get-main-ui-menu 
                get-file-menu get-control-menu get-help-menu get-language-menu get-examples-menu get-window-menu get-main-ui-button-panel
-               set-window-activated-callback!
+               set-window-activated-callback! set-window-iconified-callback! set-window-deiconified-callback! 
                set-about-callback!
                get-double-clicked-filename
                create-main-UI
@@ -197,8 +197,15 @@
         (display "don't exit")(newline))))
 
 (define window-activated-callback #f)
+(define window-iconified-callback #f)
+(define window-deiconified-callback #f)
+
 (define (set-window-activated-callback! in-callback)
   (set! window-activated-callback in-callback))
+(define (set-window-iconified-callback! cb)
+  (set! window-iconified-callback cb))
+(define (set-window-deiconified-callback! cb)
+  (set! window-deiconified-callback cb))
 
 ;window callback ; future work
 (define (window-opened o)
@@ -206,9 +213,9 @@
 (define (window-closed o)
   (display "window-closed")(newline)
   (remove-from-window-menu frame))
-(define (window-iconified o)
+(define (window-iconified o) ;; minimize
   (display "window-incon")(newline))
-(define (window-deiconified o)
+(define (window-deiconified o) ;; restore
   (display "window-deinco")(newline))
 (define (window-activated o)
   ;(display "window-act")(newline)

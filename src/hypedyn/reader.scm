@@ -51,6 +51,7 @@
   (require "../common/myhashtable.scm") ;;hash-table-for-each
   (require "../common/links.scm") ;; for style-link 
   (require "../common/hypertextpane.scm") ;; set-attribute-linkAction
+  (require "../common/main-ui.scm") ;; get-main-ui-frame for debug
   
   (require "config-options.scm")
   (require "datastructure.scm")
@@ -86,7 +87,9 @@
                
                get-anywhere-nodes
                
-               replace-link-text follow-link2 add-anywhere-link show-in-popup)
+               replace-link-text follow-link2 add-anywhere-link show-in-popup
+               show-curr-popup hide-curr-popup
+               )
 
 ;;
 ;; config flags
@@ -1095,6 +1098,10 @@
 ;; it would be set from show-in-popup and goto-node
 
 (define display-mode #f)
+(define curr-popup #f)
+
+;; this should only be called from the action
+;; as this triggers rule 
 (define (show-in-popup nodeID)
   (set! display-mode 'popup)
   (display "SHOW POPUP HERE!")(newline)
@@ -1107,16 +1114,28 @@
   (rule-check-trigger-links 'displayed-node nodeID) ;; trigger links text display
   (rule-check-trigger 'entered-node 'nodes nodeID) ;; trigger the node 
   
+  (show-curr-popup)
+  )
+
+;; this is called by ui object to hide and show
+;; note this is the correct use of popup - create a new one everytime you need to show it
+(define (show-curr-popup)
   (define text-pane (ask nodereader-pane 'getcomponent))
   (define tp-loc (get-location-on-screen text-pane))
   (define tp-x (vector-ref tp-loc 0))
   (define tp-y (vector-ref tp-loc 1))
-  
-  (define node-content (ask (get 'nodes nodeID) 'content))
 
-  (show-popup (make-popup text-pane (make-label-with-title 
-                                     ;(to-string node-content)
-                                     ;node-content
-                                     (to-string (line-broken-html current-node-content)))
-                          (+ tp-x 10) (+ tp-y 10) ))
-  )
+  (define hdmainframe (get-main-ui-frame))
+  (define popup-container (make-panel))
+  (define popup-label (make-label-with-title 
+                       (to-string (line-broken-html current-node-content))))
+  (add-component popup-container popup-label)
+  ;; nodereader-frame 
+  (set! curr-popup (make-popup text-pane popup-container
+                          (+ tp-x 10) (+ tp-y 10)
+                          ;tp-x tp-y
+                          ))
+  (show-popup curr-popup))
+
+(define (hide-curr-popup)
+  (hide-popup curr-popup))

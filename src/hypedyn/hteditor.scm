@@ -75,6 +75,9 @@
                
                ;; for datastructure.scm (create-node hack)
                update-display-nodes
+
+               get-width-tf-value
+               get-height-tf-value
                )
 
 ; some global variables
@@ -1740,6 +1743,9 @@
   (set-get-prefs-callback! get-hteditor-prefs)
   (set-set-prefs-callback! set-hteditor-prefs!)
   (set-window-activated-callback! window-activated-callback)
+  ;(set-window-iconified-callback! window-minimize-callback)
+  ;(set-window-deiconified-callback! window-restore-callback)
+  
   (set-about-callback! show-about-window))
 
 ; callback when window is activated
@@ -1747,6 +1753,14 @@
   (format #t "window-activated-callback~%~!")
   (update-undo-action undo-action)
   (update-redo-action redo-action))
+
+(define (window-minimize-callback)
+  (display "hypedyn minimized")(newline)
+  (hide-curr-popup))
+
+(define (window-restore-callback)
+  (display "hypedyn restore")(newline)
+  (show-curr-popup))
 
 ; special init for sculptural mode
 (define (check-init-sculptural)
@@ -1764,6 +1778,30 @@
 (define propt-tabpanel #f)
 (define general-tab #f)
 (define reader-tab #f)
+
+(define disable-back-cb #f)
+(define disable-restart-cb #f)
+(define disable-page-break-cb #f)
+
+(define disable-resize-cb #f)
+(define width-tf #f)
+(define height-tf #f)
+(define (get-width-tf-value)
+  (get-text width-tf))
+(define (get-height-tf-value)
+  (get-text height-tf))
+
+;; radio button for stylesheet
+(define rbutton-1 #f)
+(define rbutton-2 #f)
+(define rbutton-3 #f)
+(define (get-stylesheet-choice)
+  (if (radio-button-selected? rbutton-1)
+      #f)
+  (if (radio-button-selected? rbutton-2)
+      #f)
+  (if (radio-button-selected? rbutton-3)
+      #f))
 
 (define (make-properties-ui) 
   (set! propt-dialog (make-dialog (get-main-ui-frame) "Properties" #t))
@@ -1873,9 +1911,9 @@
   
   ;; style
   (define button-grp (make-button-group))
-  (define rbutton-1 (make-radio-button "default"))
-  (define rbutton-2 (make-radio-button "fancy"))
-  (define rbutton-3 (make-radio-button "custom"))
+  (set! rbutton-1 (make-radio-button "default"))
+  (set! rbutton-2 (make-radio-button "fancy"))
+  (set! rbutton-3 (make-radio-button "custom"))
   (add-to-button-group button-grp
                        rbutton-1
                        rbutton-2
@@ -1897,28 +1935,30 @@
   (add-component label-panel-7 label-7)
   
   ;; control
-  (define disable-back-cb (make-checkbox "Disable Back Button"))
-  (define disable-restart-cb (make-checkbox "Disable Restart Button"))
+  (set! disable-back-cb (make-checkbox "Disable Back Button"))
+  (set! disable-restart-cb (make-checkbox "Disable Restart Button"))
   
   ;; web-reader
-  (define disable-resize-cb (make-checkbox "Disable Resize"))
+  (set! disable-resize-cb (make-checkbox "Disable Resize"))
   
   (define width-tf-panel (make-panel))
   (define width-label (make-label-with-title "Width"))
-  (define width-tf (make-textfield "" 5))
+  (set! width-tf (make-textfield "800" 5)) ;;
+  (set-component-enabled width-tf #f)
   (add-components width-tf-panel 
                   width-label
                   width-tf)
   
   (define height-tf-panel (make-panel))
   (define height-label (make-label-with-title "Height"))
-  (define height-tf (make-textfield "" 5))
+  (set! height-tf (make-textfield "600" 5))
+  (set-component-enabled height-tf #f)
   (add-components height-tf-panel 
                   height-label
                   height-tf)
   
   ;; mobile reader
-  (define disable-page-break-cb (make-checkbox "Disable Page Breaks"))
+  (set! disable-page-break-cb (make-checkbox "Disable Page Breaks"))
   
   (set-container-layout reader-tab 'vertical)
   (add-components reader-tab 
@@ -1949,6 +1989,36 @@
 ;  (add-component reader-tab label-panel-7)
   
   (add-component propt-dialog propt-tabpanel)
+  
+  ;; setup action listeners
+  (add-actionlistener 
+   disable-back-cb
+   (make-actionlistener
+    (lambda (e)
+      (set-disable-back-button! (get-checkbox-value disable-back-cb)))))
+  
+  (add-actionlistener 
+   disable-restart-cb
+   (make-actionlistener
+    (lambda (e)
+      (set-disable-restart-button! (get-checkbox-value disable-restart-cb)))))
+  
+  ;disable-page-break-cb
+  (add-actionlistener 
+   disable-page-break-cb
+   (make-actionlistener
+    (lambda (e)
+      (set-disable-pagebreak! (get-checkbox-value disable-page-break-cb)))))
+  
+  (add-actionlistener 
+   disable-resize-cb
+   (make-actionlistener
+    (lambda (e)
+      (let ((disable-resize? (get-checkbox-value disable-resize-cb)))
+        (set-disable-page-resize! disable-resize?)
+        (set-component-enabled width-tf disable-resize?)
+        (set-component-enabled height-tf disable-resize?)
+        ))))
   )
 
 (define (show-properties) 

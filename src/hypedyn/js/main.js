@@ -22,7 +22,6 @@ var device_width, device_height, page_width, btm_height, text_area_height;
 
 // display mode can be 'browser' or 'mobile'
 var display_mode;
-var page_flipping_mode;
 
 // determine whether it is a browser or a mobile
 function device_detection() {
@@ -59,9 +58,10 @@ function get_device_dimension() {
 	
 	btm_height = device_height - button_panel_height;// - page_indicator_height;
 	text_area_height = btm_height - page_indicator_height;
-	disp("device height "+device_height);
-	disp("btm_height "+btm_height);
-	disp('text area height '+text_area_height);
+	 disp("device height "+device_height);
+	 disp("device width "+device_width);
+	// disp("btm_height "+btm_height);
+	// disp('text area height '+text_area_height);
 	
 	$('page-indicate-canvas').style.left = page_width/4;
 	$('page-indicate-canvas').width = page_width/2;
@@ -80,6 +80,10 @@ function get_device_dimension() {
 	// make sure test_bed has same styling as actual page
 	$('test_bed').className = "pagesdiv";
 	$('test_bed').style.width = page_width;
+}
+
+function adjust_size() {
+
 }
 
 function nonpageflip_init() {
@@ -271,13 +275,17 @@ function insert_peek_back() {
 	}
 }
 
+// check whether back_button is valid or not 
+// it is invalid when we're at the first node
 function back_button_check() {
 	back_button = $("back_button");
-	if (back_button)
+	
+	if (back_button) {
 		if (prev_read_nodes.length <= 1) // we're at the first node (wont be 0 normally..)
 			back_button.setAttribute("disabled", "disabled");
 		else
 			back_button.removeAttribute("disabled"); //enable it 
+	}
 }
 
 // note this function shares a huge chunk of similar code with gotoNode
@@ -385,7 +393,6 @@ function gotoNode(nodeID) {
 			insert_peek_back();
 		else 
 			style_pages();
-			
 		
 		//anywherelink_buttons(); // original anywhere nodes
 		add_anywhere_button(); // choice links
@@ -466,10 +473,12 @@ function add_anywhere_button() {
 window.onload = function() {
 	device_detection();
 	get_device_dimension();
-	init_event_listeners ();
-	//drawPageIndicator(page, page.length, false);
+	
+	init_event_listeners();
 	
 	loadStory(); // defined in dynfile.js (the story data file)
+	read_config_flag();
+	
 	runhypedyn(); // entrance point of the story logic
 	setTimeout('window.scrollTo(0, 0)', 1000); // for mobile to hide the url
 	

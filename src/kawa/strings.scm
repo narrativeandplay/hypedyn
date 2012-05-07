@@ -121,6 +121,9 @@
         #f)))
 
 (define (string-indexof mystring :: <String> substring :: <String>)
+  (display "string index of ")(display mystring)(newline)
+  (display "substring ")(display substring)(newline)
+  (display "hard code test ")(display (invoke (as <java.lang.String> "bbbb\nbb\nbb\nbb\nbb") 'indexOf (as <java.lang.String> "\n")))(newline)
   (invoke (as <java.lang.String> mystring) 'indexOf (as <java.lang.String> substring)))
 
 (define (string-lastindexof mystring :: <String> substring :: <String>)

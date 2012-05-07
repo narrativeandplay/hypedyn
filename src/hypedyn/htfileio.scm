@@ -951,6 +951,34 @@
           (map js-fact-code
                (map (lambda (e) (car e)) fact-lst))
           
+          ;; config from properties menu
+          "\n"
+          (list
+           (if (disable-back-button?)
+               "write_config_flag( 'back_button_flag', false );\n"
+               "write_config_flag( 'back_button_flag', true );\n" )
+
+           (if (disable-restart-button?)
+               "write_config_flag( 'restart_button_flag', false );\n"
+               "write_config_flag( 'restart_button_flag', true );\n" )
+           
+           (if (disable-pagebreak?)
+               "write_config_flag( 'page_flipping_mode', false );\n"
+               "write_config_flag( 'page_flipping_mode', true );\n" ))
+           
+          ;; resize
+           (if (disable-page-resize?)
+               (list 
+                "write_config_flag( 'window_resize_flag', false );\n"
+                ;; TODO check whether string is numeric
+                (string-append "fixed_page_width = " (get-width-tf-value) ";\n")
+                (string-append "fixed_page_height = " (get-height-tf-value) ";\n")
+               )
+               (list"write_config_flag( 'window_resize_flag', true );\n" ))
+           
+
+          
+          
           (list "}")
           )))
 

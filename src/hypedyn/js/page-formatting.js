@@ -309,7 +309,3 @@ function escape_special( str ) {
 	else 
 		return result + escape_special( str.substring (1, str.length) );
 }
-
-// propose new design.
-// pass arr of arrs representing pages.
-// replace alt text ...

@@ -27,6 +27,8 @@
                sculptural? set-sculptural!
                disable-back-button? set-disable-back-button! reset-back-button
                disable-restart-button? set-disable-restart-button! reset-restart-button
+               disable-pagebreak? set-disable-pagebreak! reset-pagebreak
+               disable-page-resize? set-disable-page-resize! reset-page-resize
                show-actions? set-show-actions!
                show-facts? set-show-facts!
                show-docrule? set-show-docrule!
@@ -35,7 +37,8 @@
                allow-overlap? set-allow-overlap!
                snap-to-grid? set-snap-to-grid!
                user-study? set-user-study!
-               set-basic-version! set-normal-version! set-sculptural-version! set-full-version!)
+               set-basic-version! set-normal-version! set-sculptural-version! set-full-version!
+               )
 
 ; enable/disable undo
 (define-private undo-enabled #t)
@@ -218,3 +221,30 @@
   (set-show-IDs! #t)
   (set-disable-back-button-default! #f)
   (set-disable-back-button! #f))
+
+;; Javascript reader options
+(define-private disable-pagebreak #f) ;; its really pageflip  (mobile only)
+(define-private disable-pagebreak-default #f)
+(define (disable-pagebreak?)
+  disable-pagebreak)
+(define (set-disable-pagebreak! in-flag)
+  (set! disable-pagebreak in-flag))
+(define (set-disable-pagebreak-default! in-flag)
+  (set! disable-pagebreak-default in-flag))
+(define (reset-pagebreak)
+  (set-disable-pagebreak! disable-pagebreak-default))
+
+;; a thought can we create a generic definition manager
+;; where we generate the get, set, reset functions with the correct name 
+;; to prevent these duplicate code - teong leong
+(define-private disable-page-resize #f) ;; word wrap changes with resize (browser only)
+(define-private disable-page-resize-default #f)
+(define (disable-page-resize?)
+  disable-page-resize)
+(define (set-disable-page-resize! in-flag)
+  (set! disable-page-resize in-flag))
+(define (set-disable-page-resize-default! in-flag)
+  (set! disable-page-resize-default in-flag))
+(define (reset-page-resize)
+  (set-disable-page-resize! disable-page-resize-default))
+

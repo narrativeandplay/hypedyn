@@ -744,10 +744,14 @@
 ;; put in <br> every 50 characters
 ;; previously known as format-node-text
 (define (line-broken-html in-text)
+  (display "line broken html ")(display in-text)(newline)
   ;; recursively add in <br> every 50 characters
   (define (format-node-text-helper in-sub-text)
+    (display "format helper ")(display in-sub-text)(newline)
     (let ((slashn-index (string-indexof in-sub-text "\n"))
           (len (string-length in-sub-text)))
+      (display "slashn index ")(display slashn-index)(newline)
+      (display "len ")(display len)(newline)
       ;; first check if there's a \n before character 50
       (if (and (> slashn-index -1)
                (< slashn-index 50))

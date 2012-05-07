@@ -18,7 +18,8 @@
 ;; 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 (module-export make-radio-button make-button-group
-               add-to-button-group)
+               add-to-button-group
+               radio-button-selected?)
 
 ;(define (make-radio . label-lst)
 ;  (define button-grp (<javax.swing.ButtonGroup>))
@@ -45,3 +46,6 @@
          (if (javax.swing.AbstractButton? button)
              (invoke button-grp 'add button))
          ) button-lst))
+
+(define (radio-button-selected? radio :: <javax.swing.JRadioButton>)
+  (invoke radio 'is-selected))

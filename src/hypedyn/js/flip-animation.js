@@ -98,6 +98,17 @@ function style_pages() {
 	}
 }
 
+// resize the div when we resize the windows
+// this is a code snippet of the code in  style_pages() on top
+function resize_page () {
+	var contents = document.getElementsByName("pagecontent");
+	for (var i = 0, len = contents.length; i < len; i++) {
+		//contents[i].className = 'pagecontent';
+		//disp("setting page content width2 "+page_width);
+		contents[i].style.width = (page_width - (2*20));
+	}
+}
+
 // cloning a flip into a multiflip with trailing/leading flips and put inside multiflips[]
 function make_multiflip( flip, dir ) {
 	
