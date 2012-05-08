@@ -127,6 +127,7 @@ function replaceText(linkID, altcontent) {
 }
 
 function findReplaceText(linkID) {
+	disp("find replace text "+linkID);
 	var result;
 	for (var i in text_to_replace) {
 		if (text_to_replace[i][0] == linkID) {

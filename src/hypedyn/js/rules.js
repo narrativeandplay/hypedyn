@@ -134,13 +134,12 @@ function ruleRelevant(eventType, rule) {
  // goes through all the rules in this obj
  function eventTrigger(eventType, obj) {
 	var rules_to_fire = firingCandidate( obj, eventType, true);
-	
+	//disp("rules to fire "+rules_to_fire.length); 
 	for (var i in rules_to_fire) {
 		var rule = rules_to_fire[i];
 		//var fired = false;
 		for (var j in rule.actions) {
 			var action = rule.actions[j];
-			//fired = 
 			action.doaction(eventType); //|| fired;
 		}
 		// stop evaluating if it is not suppose to fall_through

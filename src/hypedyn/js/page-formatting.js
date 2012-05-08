@@ -181,8 +181,6 @@ function htmlFormat(content, links, noformat) {
 		var end = link.end;
 		var altcontent = findReplaceText(link.id);
 		var linktext = (altcontent == undefined) ? content.substring(start, end) : altcontent;
-		disp("linktext "+linktext);
-		disp("altcontent "+altcontent);
 		
 		// note export process does not ensure that rules have actions
 		// therefore we have to check whether a link is clickable by checking the actions in its rules
@@ -234,11 +232,9 @@ function htmlFormat(content, links, noformat) {
 			links.splice(links.indexOf(link), 1);
 			return pagebreak_check2( code, end );
 		} else if (!noformat) {  // just plain text
-			disp("linktext "+linktext);
 			return plain_text_code2( offset, linktext, link );
 		} else if (noformat) {
 			// remove link from links array
-			disp("linktext "+linktext);
 			links.splice(links.indexOf(link), 1);
 			return pagebreak_check2( start_tag + linktext + end_tag, end );
 		}

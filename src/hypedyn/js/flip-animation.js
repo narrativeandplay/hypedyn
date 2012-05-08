@@ -479,7 +479,7 @@ function popup(nodeID) {
 	//var node = nodelist.get(nodeID);
 	var node = nodelist[nodeID];
 	if (node != undefined) {
-
+		//disp("popup "+node.links.length);
 		// event trigger
 		eventTrigger("enteredNode", node);
 		for (var i in node.links) {
@@ -491,7 +491,7 @@ function popup(nodeID) {
 		update_anywhere_visibility();
 
 		cleanup_scroll();
-		$('popup').innerHTML = "<div>" + htmlFormat( node.content, node.links, true ) + "</div>";
+		$('popup').innerHTML = "<div>" + htmlFormat( node.content, clone_arr(node.links), true ) + "</div>";
 		setup_scroll();
 		
 		// bring lighting canvas in front
