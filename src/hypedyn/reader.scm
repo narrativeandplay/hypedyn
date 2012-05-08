@@ -1147,6 +1147,11 @@
                           (+ tp-x 10) (+ tp-y 10)
                           ;tp-x tp-y
                           ))
+  (add-mouselistener popup-label
+                     (make-mouselistener
+                      (lambda (e)
+                        (if (equal? (get-mouseevent-type e) 'left-clicked)
+                            (hide-popup curr-popup)))))
   (show-popup curr-popup))
 
 (define (hide-curr-popup)

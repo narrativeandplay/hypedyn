@@ -1967,7 +1967,7 @@
 
   (define width-tf-panel (make-panel))
   (define width-label (make-label-with-title "Width"))
-  (set! width-tf (make-textfield "800" 5)) ;;
+  (set! width-tf (make-textfield "800" 5))
   (set-component-enabled width-tf #f)
   (add-components width-tf-panel
                   width-label
