@@ -241,13 +241,21 @@ function render() {
 	
 	// black out 
 	alpha_step();
-	drawBlackOut ();
+	draw_black_out ();
 }
 
-function drawBlackOut () {
+function draw_black_out () {
+	disp("curret alpha "+current_alpha);
+	disp("lights off Z "+ $('lightsoff-canvas').style.zIndex );
+	disp("outt "+ $('outer-popup').style.zIndex);
+	disp("inn "+ $('popup').style.zIndex);
+	disp("lights off wh "+$('lightsoff-canvas').style.width);
+	disp("lights off wh "+$('lightsoff-canvas').style.height);
+	disp("locanvas height "+lo_canvas.height);
+	
 	// also draw lightsout canvas
 	// black out when needed
-	lo_context.clearRect( 0, 0, canvas.width, canvas.height );
+	lo_context.clearRect( 0, 0, lo_canvas.width, lo_canvas.height );
 	lo_context.fillStyle = "rgba(0, 0, 0, "+ current_alpha + ")";
 	lo_context.fillRect(0,0,lo_canvas.width,lo_canvas.height);
 }
@@ -444,7 +452,7 @@ function drawPageIndicator(curr_page, page_count, draw_back_page) {
 /*
 	black out animation
 */
-// drawBlackOut uses current_alpha this to draw the black background
+// draw_black_out uses current_alpha this to draw the black background
 var current_alpha = 0;
 var target_alpha = 0;
 var max_alpha = 0.5;
@@ -454,6 +462,7 @@ var step_amt = 0;
 
 // fading in or out the black background
 function alpha_step() { 
+	disp("alpha step");
 	if ( Math.abs(step_amt) > 0 && current_alpha != target_alpha ) 
 	{
 		if ( ( step_amt > 0 && current_alpha < target_alpha )  ||
@@ -507,6 +516,7 @@ function popup(nodeID) {
 		
 		target_alpha = max_alpha; 
 		step_amt = (target_alpha - current_alpha) / delta_time;
+		
 	} else {
 		alert("cant find popup node");
 	}

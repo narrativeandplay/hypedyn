@@ -39,5 +39,10 @@ function init_element_height() {
 	$('popup').style.width = page_width - 60;
 	$('outer-popup').style.width = page_width - 30;
 	
-	$("lightsoff-canvas").style.height = device_height;
+	lo_canvas.width = page_width;
+	lo_canvas.height = device_height;
+	lo_canvas.style.width = page_width;
+	lo_canvas.style.height = device_height;
+	//lo_canvas = $("lightsoff-canvas");
+	//lo_context = lo_canvas.getContext("2d");
 }

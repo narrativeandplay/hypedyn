@@ -71,11 +71,11 @@ function get_device_dimension() {
 	
 	$('lightsoff-canvas').width = page_width; //320
 	$('lightsoff-canvas').style.width = page_width; //320
-	$('lightsoff-canvas').height = 480;
+	//$('lightsoff-canvas').height = 480;
 	
 	$('pageflip-canvas').width = page_width; //320
 	$('pageflip-canvas').style.width = page_width; //320
-	$('pageflip-canvas').height = 480;
+	//$('pageflip-canvas').height = 480;
 	
 	// make sure test_bed has same styling as actual page
 	$('test_bed').className = "pagesdiv";
@@ -89,7 +89,7 @@ function adjust_size() {
 function nonpageflip_init() {
 	if (!page_flipping_mode) {
 		$("pageflip-canvas").style.visibility = "hidden";
-		$("lightsoff-canvas").style.visibility = "hidden";
+		//$("lightsoff-canvas").style.visibility = "hidden";
 		$("popup").style.visibility = "hidden";
 	}
 }

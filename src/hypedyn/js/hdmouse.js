@@ -244,6 +244,9 @@ function init_event_listeners () {
 	var canvas = $("myCanvas");
 	var pageflip_canvas = $("pageflip-canvas");
 	
+	$('popup').addEventListener('mousedown', popup_mouse_handler, false); // was popup
+	$('lightsoff-canvas').addEventListener('mousedown', black_fade_out, false);	
+	
 	if (page_flipping_mode) {
 		$("pages").addEventListener('mouseup', mouseUpHandler, false);
 		$("pages").addEventListener('mousedown', mouseDownHandler, false);
@@ -254,8 +257,6 @@ function init_event_listeners () {
 		$("pages").addEventListener('touchend', touchHandler, false);
 		$("pages").addEventListener('touchmove', touchHandler, false);
 		
-		$('popup').addEventListener('mousedown', popup_mouse_handler, false); // was popup
-		$('lightsoff-canvas').addEventListener('mousedown', black_fade_out, false);
 	} else {
 		disp("no mouse event added ");
 	}
