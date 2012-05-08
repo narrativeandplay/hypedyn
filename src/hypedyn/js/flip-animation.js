@@ -245,14 +245,6 @@ function render() {
 }
 
 function draw_black_out () {
-	disp("curret alpha "+current_alpha);
-	disp("lights off Z "+ $('lightsoff-canvas').style.zIndex );
-	disp("outt "+ $('outer-popup').style.zIndex);
-	disp("inn "+ $('popup').style.zIndex);
-	disp("lights off wh "+$('lightsoff-canvas').style.width);
-	disp("lights off wh "+$('lightsoff-canvas').style.height);
-	disp("locanvas height "+lo_canvas.height);
-	
 	// also draw lightsout canvas
 	// black out when needed
 	lo_context.clearRect( 0, 0, lo_canvas.width, lo_canvas.height );
@@ -462,7 +454,6 @@ var step_amt = 0;
 
 // fading in or out the black background
 function alpha_step() { 
-	disp("alpha step");
 	if ( Math.abs(step_amt) > 0 && current_alpha != target_alpha ) 
 	{
 		if ( ( step_amt > 0 && current_alpha < target_alpha )  ||
@@ -497,7 +488,7 @@ function popup(nodeID) {
 		node.visited = true;
 		currNodeID = nodeID;
 		
-		update_anywhere_visibility ();
+		update_anywhere_visibility();
 
 		cleanup_scroll();
 		$('popup').innerHTML = "<div>" + htmlFormat( node.content, node.links, true ) + "</div>";

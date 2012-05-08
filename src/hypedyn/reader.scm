@@ -376,6 +376,9 @@
   (set! visited-node-count 0)
   (set! available-node-count 0)
   (reset-show-node-counter)
+  
+  ;; if theres a popup hide it
+  (hide-curr-popup)
 
   ; set label
   (if (not applet-mode)
@@ -1127,9 +1130,18 @@
 
   (define hdmainframe (get-main-ui-frame))
   (define popup-container (make-panel))
+  
+  (define truncated-node-content 
+    (if (> (string-length current-node-content) 550) ;; hardcoded for our current reader dimension
+        (string-append (substring current-node-content 0 547) "...")
+        current-node-content
+        ))
+  (display "trun node contnet ")(display truncated-node-content)(newline)
+  
   (define popup-label (make-label-with-title 
-                       (to-string (line-broken-html current-node-content))))
+                       (to-string (line-broken-html truncated-node-content))))
   (add-component popup-container popup-label)
+  (hide-curr-popup)
   ;; nodereader-frame 
   (set! curr-popup (make-popup text-pane popup-container
                           (+ tp-x 10) (+ tp-y 10)
@@ -1138,4 +1150,5 @@
   (show-popup curr-popup))
 
 (define (hide-curr-popup)
-  (hide-popup curr-popup))
+  (if curr-popup
+      (hide-popup curr-popup)))

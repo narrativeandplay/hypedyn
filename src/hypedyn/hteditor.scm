@@ -1757,12 +1757,10 @@
   (update-redo-action redo-action))
 
 (define (window-minimize-callback)
-  (display "hypedyn minimized")(newline)
-  (hide-curr-popup))
+  (display "hypedyn minimized")(newline))
 
 (define (window-restore-callback)
-  (display "hypedyn restore")(newline)
-  (show-curr-popup))
+  (display "hypedyn restore")(newline))
 
 ; special init for sculptural mode
 (define (check-init-sculptural)

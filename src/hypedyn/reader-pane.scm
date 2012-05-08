@@ -74,9 +74,15 @@
 (define (make-reader-pane
          w h
          basic-mode)
+  
+  ;; called when a link isnt clicked in hypertextpane
+  (define (reader-mouse-callback e)
+    ;; dismiss popup
+    (hide-curr-popup))
+  
   (let* ((htpane-obj (make-hypertextpane-readonly
                       w h
-                      #f
+                      reader-mouse-callback
                       #f
                       #f
                       'content
@@ -120,7 +126,7 @@
 
     (define (is-basic-mode?)
       basic-mode)
-
+    
     ; which node is being edited
     ; note: override hypertextpane as we don't want to use setlinks
     (define (set-node! in-node)

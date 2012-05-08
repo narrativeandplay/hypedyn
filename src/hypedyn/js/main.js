@@ -58,8 +58,8 @@ function get_device_dimension() {
 	
 	btm_height = device_height - button_panel_height;// - page_indicator_height;
 	text_area_height = btm_height - page_indicator_height;
-	 disp("device height "+device_height);
-	 disp("device width "+device_width);
+	 //disp("device height "+device_height);
+	 //disp("device width "+device_width);
 	// disp("btm_height "+btm_height);
 	// disp('text area height '+text_area_height);
 	
@@ -461,7 +461,7 @@ function add_anywhere_button() {
 		var new_button = document.createElement("button");
 		new_button.setAttribute("type", 'button');
 		new_button.setAttribute("style", 'position: static; left: 0px; top: 5px; font: 16px/20px Helvetica, sans-serif;');
-		new_button.setAttribute("onClick", ''); // popup here
+		new_button.setAttribute("onClick", 'popup(' + nodeID + ')'); // popup here
 		//new_button.setAttribute("disabled", 'disabled');
 		new_button.innerHTML = "<font size=5>" + nodeName +  "</font>";
 		$("buttons-panel").appendChild( new_button );
