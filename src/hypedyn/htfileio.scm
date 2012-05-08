@@ -722,20 +722,20 @@
                                       export-folder)
           (display "css choice ")(display (get-stylesheet-choice))(newline)
             ;; copy css files
-          (define styling-css 
+          (define styling-css-file
             (case (get-stylesheet-choice)
-              (("css1") "css/styling.css")
-              (("css2") "css/styling2.css")
-              (("css3") "css/styling2.css")))
+              (("css1") (get-content-file "css/styling.css"))
+              (("css2") (get-content-file "css/styling2.css"))
+              (else (make-file (car (get-browse-css-result)) ))))
           
-          (define dimension-css 
+          (define dimension-css-file
             (case (get-stylesheet-choice)
-              (("css1") "css/dimension.css")
-              (("css2") "css/dimension2.css")
-              (("css3") "css/dimension2.css")))
-          (display "css styling ")(display styling-css)(newline)
-          (copy-file-nio (get-content-file styling-css) (make-file (string-append (to-string export-folder) "/styling.css")))
-          (copy-file-nio (get-content-file dimension-css) (make-file (string-append (to-string export-folder) "/dimension.css")))
+              (("css1") (get-content-file "css/dimension.css"))
+              (("css2") (get-content-file "css/dimension2.css"))
+              (else (make-file (cadr (get-browse-css-result))))))
+          
+          (copy-file-nio styling-css-file (make-file (string-append (to-string export-folder) "/styling.css")))
+          (copy-file-nio dimension-css-file (make-file (string-append (to-string export-folder) "/dimension.css")))
             
           (write-jscode-to
            (string-append (path-file export-folder) "/dynfile.js")

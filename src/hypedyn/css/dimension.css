@@ -50,7 +50,7 @@ body {
 
 #popup {
 	position: absolute;
-	width: 260px;
+	//width: 260px;
 	z-Index: -104;
 	opacity: 1.0;
 	overflow: scroll;
@@ -64,7 +64,7 @@ body {
 
 #outer-popup {
 	position: absolute;
-	width: 290px;
+	//width: 290px;
 	z-Index: -104;
 	border-radius: 15px;
 	

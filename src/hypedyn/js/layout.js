@@ -35,5 +35,9 @@ function init_element_height() {
 	// popup
 	$('popup').style.height = ( device_height - button_panel_height * 2 - 30 ) + "px";
 	$('outer-popup').style.height = (device_height - button_panel_height * 2) + "px";
+	
+	$('popup').style.width = page_width - 60;
+	$('outer-popup').style.width = page_width - 30;
+	
 	$("lightsoff-canvas").style.height = device_height;
 }
