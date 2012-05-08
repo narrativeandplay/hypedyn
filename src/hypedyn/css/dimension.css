@@ -49,7 +49,7 @@ body {
 }
 
 #popup {
-	position: absolute;
+	position: relative;
 	//width: 260px;
 	z-Index: -104;
 	opacity: 1.0;
@@ -63,17 +63,17 @@ body {
 }
 
 #outer-popup {
-	position: absolute;
+	position: fixed;
 	//width: 290px;
 	z-Index: -104;
 	border-radius: 15px;
 	
-	top: 50px; //button_panel_height
-	left: 20px;
+	top: 50px;
+	left: 30px;
 }
 
 #lightsoff-canvas {
-	position: absolute;
+	position: fixed;
 	height: 480px;
 	z-Index: -102;
 	opacity: 1.0;
