@@ -1,6 +1,6 @@
 body {
 	//background-image: url(page_back_320_480.png);
-	background-color: aliceblue;
+	background-color: white;
 	background-size: 100%;
 }
 
@@ -16,7 +16,7 @@ body {
 	
 	padding: 0px;
 	left: 0px;
-	top: 50px;
+	top: 30px;
 }
 
 /* makes sure the div in the page do not scale with parent section (ie keep constant width) used to be #pages div*/
@@ -30,10 +30,16 @@ body {
 */
 
 #buttons-panel {
-	position: absolute;
-	height: 50px;
+	background-color: #EEEEEE;
+	opacity: 1.0;
+	/* maintain position when content scrolls */
+	position: fixed; 
+    /* keep the button-panel in front of the text */
+    z-Index: 10; 
+	height: 30px;
 	left: 0px;
 	top: 0px;
+    padding: 5px;
 }
 
 #page-indicate-canvas {
@@ -54,7 +60,7 @@ body {
 	z-Index: -104;
 	opacity: 1.0;
 	overflow: scroll;
-	border-radius: 15px;
+	border-radius: 0px;
 
 	top: 15px;
 	left: 15px;

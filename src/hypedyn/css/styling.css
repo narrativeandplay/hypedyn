@@ -1,64 +1,64 @@
 /* in text links */
 a.intextlink:link {
 	text-decoration: underline; 
-	color: blue;
+	color: black;
 	//background-color:#B2FF99;
-	font-size: 26px;
+	font-size: 18px;
 }
 a.intextlink:visited {
 	text-decoration: underline;
-	color: purple;
+	color: black;
 	//background-color:#FFFF85;
-	font-size: 26px;
+	font-size: 18;
 }
 a.intextlink:hover {
-	text-decoration: overline;
-	color: salmon;
+	text-decoration: underline;
+	color: blue;
 	//background-color:#FF704D;
-	font-size: 26px;
+	font-size: 18;
 }
 a.intextlink:active {
 	text-decoration: none;
-	color: salmon;
-	background-color: gold;
-	font-size: 26px;
+	color: red;
+	//background-color: gold;
+	font-size: 18;
 }
 
 /* anywhere links */
 a.anywhere:link {
 	text-decoration: underline; 
-	color: blue;
+	color: black;
 	//background-color:#B2FF99;
-	font-size: 26px;
+	font-size: 18;
 }
 a.anywhere:visited {
 	text-decoration: underline;
-	color: purple;
+	color: black;
 	//background-color:#FFFF85;
-	font-size: 26px;
+	font-size: 18;
 }
 a.anywhere:hover {
-	text-decoration: overline;
-	color: chartreuse;//green;
+	text-decoration: underline;
+	color: blue;//green;
 	//background-color:#FF704D;
-	font-size: 26px;
+	font-size: 18px;
 }
 a.anywhere:active {
 	text-decoration: none;
-	color: green;
-	background-color: chartreuse;
-	font-size: 26px;
+	color: red;
+	//background-color: chartreuse;
+	font-size: 18px;
 }
 
 /* unformatted text */
 .plaintext {
-	color: navy;
-	font-size: 26px;
+	color: black;
+	font-size: 18px;
 }
 
 /* dormant link (might be activated next time to be clickable)*/
 .dormant{
-	color: navy;
-	font-size: 26px;
+	color: black;
+	font-size: 18px;
 	font-weight: bold;
 }
