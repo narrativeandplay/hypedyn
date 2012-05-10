@@ -1737,6 +1737,10 @@
                #f
                #f
                #f)
+  
+  (set-fileformat-version! 2.2)
+  (set-fileformat-type! 'htfe)
+  
   (set-get-prefs-callback! get-hteditor-prefs)
   (set-set-prefs-callback! set-hteditor-prefs!)
   (set-window-activated-callback! window-activated-callback)

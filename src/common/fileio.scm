@@ -52,6 +52,7 @@
   fileformat-version)
 (define (set-fileformat-version! new-version)
   (set! fileformat-version new-version))
+
 (define loaded-fileformat-version 0)
 (define loaded-fileformat-type #f)
 (define fileformat-type 'generic)
