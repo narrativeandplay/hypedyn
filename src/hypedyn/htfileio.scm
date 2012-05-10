@@ -918,16 +918,34 @@
 ;        ((eq? operator 1) (list 'holds? targetID)))))
 
 (define (js-condition-code conditionID)
+  (define condition (get 'conditions conditionID))
+  (define func (case (ask condition 'type)
+                 ((0) "nodeVisited");; node TODO: previous not done in js
+                 ((1) "linkFollowed") ;; link
+                 ((2) "checkBoolFact"))
+               
+               ) ;; boolean fact
+  (display "func here ")(display func)(newline)
+  (display "null? ")(display (equal? func #!null))(newline)
+  (display "what type ")(display (ask condition 'type))(newline)
+  
   (let* ((condition (get 'conditions conditionID))
          (ruleID (ask condition 'ruleID))
          (func (case (ask condition 'type)
                  ((0) "nodeVisited");; node TODO: previous not done in js
                  ((1) "linkFollowed") ;; link
-                 ((2) "checkBoolFact"))) ;; boolean fact 
+                 ((2) "checkBoolFact")
+                 )
+               
+               ) ;; boolean fact 
          (func-target-id (ask condition 'targetID))
          (negate (case (ask condition 'operator)
                    ((0) "true")
-                   ((1) "false"))))
+                   ((1) "false")
+                   ((2) 
+                    (set! func "nodeIsPrevious")
+                    "true")
+                   )))
     ;; return string
     (string-append "\t\t\tcreateCondition("
                    func ", "

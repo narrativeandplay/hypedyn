@@ -218,6 +218,10 @@ function ruleRelevant(eventType, rule) {
 	}
  }
  
+ function nodeIsPrevious(nodeID) {
+	return prev_read_nodes[prev_read_nodes.length - 1] == nodeID;
+ }
+ 
  function createCondition(func, func_target_ID, ruleID, not, id) {
 	not = (not == undefined) ? false : not;
 	id = (id == undefined) ? genID(conditionlist) : id;
