@@ -38,6 +38,13 @@
                snap-to-grid? set-snap-to-grid!
                user-study? set-user-study!
                set-basic-version! set-normal-version! set-sculptural-version! set-full-version!
+               
+               reset-properties
+               get-fixed-page-width set-fixed-page-width! reset-fixed-page-width
+               get-fixed-page-height set-fixed-page-height! reset-fixed-page-height
+               get-css-type set-css-type! reset-css-type
+               get-custom-css-location set-custom-css-location! reset-custom-css-location
+               get-custom-css-location2 set-custom-css-location2! reset-custom-css-location2
                )
 
 ; enable/disable undo
@@ -247,4 +254,74 @@
   (set! disable-page-resize-default in-flag))
 (define (reset-page-resize)
   (set-disable-page-resize! disable-page-resize-default))
+
+(define fixed-page-width-default 800)
+(define fixed-page-height-default 600)
+(define fixed-page-width fixed-page-width-default)
+(define fixed-page-height fixed-page-height-default)
+
+(define (get-fixed-page-width) fixed-page-width)
+(define (set-fixed-page-width! w) (set! fixed-page-width w))
+(define (reset-fixed-page-width) (set! fixed-page-width fixed-page-width-default))
+
+(define (get-fixed-page-height) fixed-page-height)
+(define (set-fixed-page-height! h) (set! fixed-page-height h))
+(define (reset-fixed-page-height) (set! fixed-page-height fixed-page-height-default))
+
+;; css selection
+(define css-type-default 'default)
+(define css-type 'default) ;; can be default, fancy, custom
+(define (get-css-type) css-type)
+(define (set-css-type! new-css-type)
+  (if (member new-css-type (list 'default 'fancy 'custom))
+      (set! css-type new-css-type)))
+(define (reset-css-type)
+  (set! css-type css-type-default))
+
+;; style.css
+(define custom-css-location "")
+(define (get-custom-css-location) custom-css-location)
+(define (set-custom-css-location! new-loc) (set! custom-css-location new-loc))
+(define (reset-custom-css-location) (set! custom-css-location ""))
+
+;; dimension.css
+(define custom-css-location2 "")
+(define (get-custom-css-location2) custom-css-location2)
+(define (set-custom-css-location2! new-loc) (set! custom-css-location2 new-loc))
+(define (reset-custom-css-location2) (set! custom-css-location2 ""))
+
+;; do this when we start a new story
+(define (reset-properties)
+  (reset-back-button)
+  (reset-restart-button)
+  (reset-pagebreak)
+  (reset-page-resize)
+  (reset-fixed-page-width)
+  (reset-fixed-page-height)
+  (reset-css-type)
+  (reset-custom-css-location)
+  (reset-custom-css-location2))
+
+;; my attempt at a generic getter setter generator
+#|
+(define (make-var val #!rest default-val) 
+  (append (list val) default-val))
+(define (make-setter var) 
+  (lambda (new-var) (set-car! var new-var)))
+(define (make-getter var)
+  (lambda () (car var)))
+(define (make-resetter var)
+  (lambda () 
+    (if (> (length var) 2)
+        (set-car! var (cadr var)))))
+
+(set! fixed-page-width (make-var fixed-page-width-default))
+(set! fixed-page-height (make-var fixed-page-height-default))
+
+(set! set-fixed-page-width! (make-setter fixed-page-width))
+(set! set-fixed-page-height! (make-setter fixed-page-height))
+
+(set! get-fixed-page-width! (make-getter fixed-page-width))
+(set! get-fixed-page-height! (make-getter fixed-page-height))
+|#
 

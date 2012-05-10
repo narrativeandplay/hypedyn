@@ -25,6 +25,7 @@
   (require "config-options.scm")
   (require "datastructure.scm")
   (require "hteditor.scm")
+  (require "properties-ui.scm")
   (require "nodeeditor.scm")
   (require "../common/objects.scm")
   (require "../common/datatable.scm") ;; get
@@ -471,7 +472,22 @@
          '())
      
      ; run through all facts and generate sexpr
-     (ht-build-sexpr-from-objectlist the-facts))))
+     (ht-build-sexpr-from-objectlist the-facts)
+     
+     ;; config options
+     (list 
+      (list 'set-disable-restart-button! (disable-restart-button?))
+      (list 'set-disable-back-button! (disable-back-button?))
+      (list 'set-disable-pagebreak! (disable-pagebreak?))
+      (list 'set-disable-page-resize! (disable-page-resize?))
+      (list 'set-fixed-page-width! (get-fixed-page-width))
+      (list 'set-fixed-page-height! (get-fixed-page-height))
+      (list 'set-css-type! (list 'quote (get-css-type)))
+      (list 'set-custom-css-location! (get-custom-css-location))
+      (list 'set-custom-css-location2! (get-custom-css-location2))
+      )
+         
+     )))
 
 ;;  ==============================
 ;;;; pre 2.2 save file conversion
@@ -720,19 +736,19 @@
           (define source-folder (get-content-file "js"))
           (recursively-copy-directory source-folder
                                       export-folder)
-          (display "css choice ")(display (get-stylesheet-choice))(newline)
+          
             ;; copy css files
           (define styling-css-file
             (case (get-stylesheet-choice)
-              (("css1") (get-content-file "css/styling.css"))
-              (("css2") (get-content-file "css/styling2.css"))
-              (else (make-file (car (get-browse-css-result)) ))))
+              ((default) (get-content-file "css/styling.css"))
+              ((fancy) (get-content-file "css/styling2.css"))
+              ((custom) (make-file (get-custom-css-location) ))))
           
           (define dimension-css-file
             (case (get-stylesheet-choice)
-              (("css1") (get-content-file "css/dimension.css"))
-              (("css2") (get-content-file "css/dimension2.css"))
-              (else (make-file (cadr (get-browse-css-result))))))
+              ((default) (get-content-file "css/dimension.css"))
+              ((fancy) (get-content-file "css/dimension2.css"))
+              ((custom) (make-file (get-custom-css-location2)))))
           
           (copy-file-nio styling-css-file (make-file (string-append (to-string export-folder) "/styling.css")))
           (copy-file-nio dimension-css-file (make-file (string-append (to-string export-folder) "/dimension.css")))
@@ -994,8 +1010,8 @@
                (list 
                 "write_config_flag( 'window_resize_flag', false );\n"
                 ;; TODO check whether string is numeric
-                (string-append "fixed_page_width = " (get-width-tf-value) ";\n")
-                (string-append "fixed_page_height = " (get-height-tf-value) ";\n")
+                (string-append "fixed_page_width = " (get-fixed-page-width) ";\n")
+                (string-append "fixed_page_height = " (get-fixed-page-height) ";\n")
                )
                (list "write_config_flag( 'window_resize_flag', true );\n" ))
           

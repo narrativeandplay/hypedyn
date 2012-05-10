@@ -64,7 +64,8 @@
     (invoke (as <javax.swing.JSlider> action-producer) 'addChangeListener action-listener))
    ((instance? action-producer <javax.swing.JSpinner>)
     (invoke (as <javax.swing.JSpinner> action-producer) 'addChangeListener action-listener))
-   ))
+   )
+  )
 
 
 ;;

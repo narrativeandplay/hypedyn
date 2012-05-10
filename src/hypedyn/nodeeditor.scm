@@ -854,7 +854,7 @@
 (define (nodeeditor-clear-dirty!)
   (ask node-editor 'clear-dirty!)
   (update-dirty-state))
-(define (nodeeditor-set-dirty!)
+(define (nodeeditor-set-dirty!) ;; no longer used
   (ask node-editor 'set-dirty!)
   (update-dirty-state))
 

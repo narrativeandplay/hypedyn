@@ -128,6 +128,17 @@
   (primitive-procedure-add! 'add-anywhere-link add-anywhere-link)
   (primitive-procedure-add! 'show-in-popup show-in-popup)
   
+  ;; config options
+  (primitive-procedure-add! 'set-disable-restart-button! set-disable-restart-button!)
+  (primitive-procedure-add! 'set-disable-back-button! set-disable-back-button!)
+  (primitive-procedure-add! 'set-disable-pagebreak! set-disable-pagebreak!)
+  (primitive-procedure-add! 'set-disable-page-resize! set-disable-page-resize!)
+  (primitive-procedure-add! 'set-fixed-page-width! set-fixed-page-width!)
+  (primitive-procedure-add! 'set-fixed-page-height! set-fixed-page-height!)
+  (primitive-procedure-add! 'set-css-type! set-css-type!)
+  (primitive-procedure-add! 'set-custom-css-location! set-custom-css-location!)
+  (primitive-procedure-add! 'set-custom-css-location2! set-custom-css-location2!)
+  
   ; some additional useful primitives
   (primitive-procedure-add! 'random generate-random-int)
   

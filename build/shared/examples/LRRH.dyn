@@ -35,4 +35,7 @@ false 151) (begin (create-typed-rule2 "THEN" (quote link) (quote and) #f 151
 154 156) (create-action "continue" (quote clicked-link) (list (quote
 follow-link) 154 156 (list (quote quote) (quote default)) 4) 156 158)) (begin
 (create-typed-rule2 "ELSE" (quote link) (quote and) #t 154 157)))
-(set-start-node! 2))
+(set-start-node! 2) (set-disable-restart-button! #f) (set-disable-back-button!
+#f) (set-disable-pagebreak! #t) (set-disable-page-resize! #f)
+(set-fixed-page-width! "800") (set-fixed-page-height! "600") (set-css-type!
+(quote default)) (set-custom-css-location! "") (set-custom-css-location2! ""))
