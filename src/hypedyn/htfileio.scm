@@ -673,8 +673,9 @@
 
 ;; preserves \n when we print out the string,
 ;; replaces "\n" with "\\n"
+;; replaces "\r" with ""
 (define (preserve-newline str)
-  (replace-char str #\newline "\\n"))
+  (replace-char (replace-char str #\x0D "") #\newline "\\n"))
 
 (define (preserve-quotes str)
   ;; escaping both \ and " here so that 
