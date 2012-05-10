@@ -675,31 +675,77 @@
 ;; replaces "\n" with "\\n"
 ;; replaces "\r" with ""
 (define (preserve-newline str)
-  (replace-char (replace-char str #\x0D "") #\newline "\\n"))
+  ;(define r-replaced (replace-char str #\x0D ""))
+  ;(replace-char r-replaced #\newline "\\n")
+  (define r-replaced (string-replace-all "\r" "" str))
+  (string-replace-all "\n" "\\n" r-replaced))
 
 (define (preserve-quotes str)
   ;; escaping both \ and " here so that 
   ;; \" shows up in the printed display
-  (replace-char str #\" "\\\""))
+  ;(replace-char str #\" "\\\"")
+  
+  ;(display "preserve quotes ")(newline)
+  ;(display "convert1 ")(display (to-string #\"))(newline)
+  ;(display "convert2 ")(display (substring (to-string #\") 1 2))(newline)
+  ;(display "str ")(display str)(newline)
+  (string-replace-all "\"" "\\\"" str)
+  )
+
+;(define debug-count 0)
+;(define debug-cache #f)
+
+;(define debug-cache2 #f)
 
 ;; can consider changing this to use (<string> #\a #\p #\p #\l #\e) to form the final string
 ;; need a helper to get the list of char
 ;; then apply <string> to the list of char
 ;; idea is to replace the char we are looking for with two char #\\  and original char 
 ;; so that the char we want to preserve is escaped
-(define (replace-char str :: <string>
-                      char :: <char>
-                      char-str :: <string>)
-  (if (= (string-length str) 0)
-      "" ;; terminate
-      (begin
-        (string-append
-         (if (equal? (string-ref str 0) char)
-             char-str
-             ;; cast original char to string
-             (<string> (string-ref str 0)))
-         (replace-char (substring str 1 (string-length str)) char char-str))
-        )))
+;(define (replace-char str :: <string>
+;                      char :: <char>
+;                      char-str :: <string>)
+;  
+;  (if (equal? debug-cache str)
+;      (set! debug-count (+ debug-count 1))
+;      (set! debug-count 0)
+;      )
+;  (if (> debug-count 1)
+;      (begin
+;        (display "debug str ")(display debug-cache)(newline)
+;        (display "str ")(display str)(newline)
+;        (display "len same? ")(display (= (string-length str) (string-length debug-cache)))(newline)
+;        (display "infinite loop in replace-char")(newline)
+;        (sleep 1000)
+;        ))
+;  (set! debug-cache str)
+;  
+;  
+;  (if (= (string-length str) 0)
+;      "" ;; terminate
+;      (begin
+;        (string-append
+;         (if (equal? (string-ref str 0) char)
+;             char-str
+;             ;; cast original char to string
+;             (<string> (string-ref str 0)))
+;         (replace-char (substring str 1 (string-length str)) char char-str))
+;        )))
+
+;(define (replace-char str :: <string>
+;                      char :: <char>
+;                      char-str :: <string>)
+;  (define (helper index)
+;    (define find (string-indexof str (to-string char) index))
+;    (if (not (= find -1))
+;        (begin
+;          (set! str (string-replace str char-str find (+ find 1)))
+;          (display "replacing ")(newline)
+;          (helper (+ find 1))))
+;    )
+;  (helper 0)
+;  str
+;  )
 
 ;;=====================
 ;;;; javascript export
@@ -744,14 +790,14 @@
               ((fancy) (get-content-file "css/styling2.css"))
               ((custom) (make-file (get-custom-css-location) ))))
           
-          (define dimension-css-file
-            (case (get-stylesheet-choice)
-              ((default) (get-content-file "css/dimension.css"))
-              ((fancy) (get-content-file "css/dimension2.css"))
-              ((custom) (make-file (get-custom-css-location2)))))
+;          (define dimension-css-file
+;            (case (get-stylesheet-choice)
+;              ((default) (get-content-file "css/dimension.css"))
+;              ((fancy) (get-content-file "css/dimension2.css"))
+;              ((custom) (make-file (get-custom-css-location2)))))
           
           (copy-file-nio styling-css-file (make-file (string-append (to-string export-folder) "/styling.css")))
-          (copy-file-nio dimension-css-file (make-file (string-append (to-string export-folder) "/dimension.css")))
+          ;; (copy-file-nio dimension-css-file (make-file (string-append (to-string export-folder) "/dimension.css")))
             
           (write-jscode-to
            (string-append (path-file export-folder) "/dynfile.js")
@@ -778,7 +824,9 @@
                   (quote-nest name) ", " ;; assume no funny characters in these names
                   (quote-nest 
                    (preserve-newline 
-                    (preserve-quotes (ask node 'content)))) ", "
+                    (preserve-quotes (ask node 'content))
+                    ;(ask node 'content)
+                    )) ", "
                   (to-string anywhere?) ", "
                   (to-string (ask node 'ID)) ");\n")
             (map js-link-code links)     ;; convert its links
@@ -874,7 +922,9 @@
                      (cond ((string? val)
                             (quote-nest
                              (preserve-newline
-                              (preserve-quotes val))))
+                              (preserve-quotes val)
+                              ;val
+                              )))
                            ((number? val)
                             (to-string val))))
                    "]"))
@@ -892,12 +942,20 @@
 ;    (display "expr ")(display expr)(newline)
 ;    (display "car expr ")(display (car expr))(newline)
     ;; return string
-    (string-append "\t\t\tcreateAction(" 
-                   (quote-nest event-type) ", "
-                   (to-string parent-rule-id) ", "
-                   func ", "
-                   args ", "
-                   (to-string actionID) ");\n")
+    ;(display "func void test ")(display (equal? func #!void))(newline)
+    ;(display "func null test ")(display (equal? func #!null))(newline)
+    (if (and (not (equal? func #!void))
+             (not (equal? args #!void)))
+
+        (string-append "\t\t\tcreateAction("
+                       (quote-nest event-type) ", "
+                       (to-string parent-rule-id) ", "
+                       func ", "
+                       args ", "
+                       (to-string actionID) ");\n")
+        (begin
+          (display "UNKNOWN ACTION ENCOUNTERED (in JS ACTION EXPORT) ")(display expr)(newline)
+        "")) ;; ignore if func and args not recognised
   ))
 ;;(make-condition name type targetID operator ruleID . args)
 ;; createCondition(func, func_target_ID, ruleID, not, id)
@@ -918,16 +976,6 @@
 ;        ((eq? operator 1) (list 'holds? targetID)))))
 
 (define (js-condition-code conditionID)
-  (define condition (get 'conditions conditionID))
-  (define func (case (ask condition 'type)
-                 ((0) "nodeVisited");; node TODO: previous not done in js
-                 ((1) "linkFollowed") ;; link
-                 ((2) "checkBoolFact"))
-               
-               ) ;; boolean fact
-  (display "func here ")(display func)(newline)
-  (display "null? ")(display (equal? func #!null))(newline)
-  (display "what type ")(display (ask condition 'type))(newline)
   
   (let* ((condition (get 'conditions conditionID))
          (ruleID (ask condition 'ruleID))

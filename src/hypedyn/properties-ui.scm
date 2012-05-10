@@ -48,8 +48,10 @@
       (set! to-return 'custom))
   to-return)
 
+(define confirm-button #f)
+
 (define browse-css-tf #f)
-(define browse-css-tf2 #f)
+;(define browse-css-tf2 #f)
 ;(define (get-browse-css-tf)
 ;  (get-text browse-css-tf))
 ;(define (get-browse-css-tf2)
@@ -179,12 +181,12 @@
   (set-component-enabled browse-css-tf #f)
   (add-components browse-css-panel browse-css-button browse-css-tf)
 
-  (define browse-css-panel2 (make-panel))
-  (define browse-css-button2 (make-button "Find dimension"))
-  (set! browse-css-tf2 (make-textfield "" 16))
-  (set-component-enabled browse-css-button2 #f)
-  (set-component-enabled browse-css-tf2 #f)
-  (add-components browse-css-panel2 browse-css-button2 browse-css-tf2)
+;  (define browse-css-panel2 (make-panel))
+;  (define browse-css-button2 (make-button "Find dimension"))
+;  (set! browse-css-tf2 (make-textfield "" 16))
+;  (set-component-enabled browse-css-button2 #f)
+;  (set-component-enabled browse-css-tf2 #f)
+;  (add-components browse-css-panel2 browse-css-button2 browse-css-tf2)
 
   (set-container-layout rbutton-group-panel 'vertical)
   (add-components rbutton-group-panel
@@ -192,7 +194,8 @@
                   rbutton-2
                   rbutton-3
                   browse-css-panel
-                  browse-css-panel2)
+                  ;browse-css-panel2
+                  )
 
   (set-container-layout label-panel-4 'flow 'left)
   (set-container-layout label-panel-5 'flow 'left)
@@ -239,31 +242,35 @@
   ;; setup action listeners
 
   ;; callback used by all 3 radio button in css selection
-  (define (css-radio-callback e)
+  (define (css-radio-callback e selected?)
     ;; only enable when rbutton3 (custom) is selected
     (set-component-enabled browse-css-button (radio-button-selected? rbutton-3))
-    (set-component-enabled browse-css-button2 (radio-button-selected? rbutton-3)))
+    (set-component-enabled confirm-button (not (radio-button-selected? rbutton-3)))
+    ;(set-component-enabled browse-css-button2 (radio-button-selected? rbutton-3))
+    )
   
   ;; 3 css radio buttons 
-  (add-actionlistener rbutton-1 (make-actionlistener css-radio-callback))
-  (add-actionlistener rbutton-2 (make-actionlistener css-radio-callback))
-  (add-actionlistener rbutton-3 (make-actionlistener css-radio-callback))
+  (add-itemlistener rbutton-1 (make-itemlistener css-radio-callback))
+  (add-itemlistener rbutton-2 (make-itemlistener css-radio-callback))
+  (add-itemlistener rbutton-3 (make-itemlistener css-radio-callback))
   
   (add-actionlistener browse-css-button
                       (make-actionlistener
                        (lambda (e)
                          (define filename (get-file-to-open (get-last-saved-dir) #f (list ".css")))
                          (if filename
-                             (set-text browse-css-tf filename))
+                             (begin
+                               (set-component-enabled confirm-button #t)
+                               (set-text browse-css-tf filename)))
                          )))
   
-  (add-actionlistener browse-css-button2
-                      (make-actionlistener
-                       (lambda (e)
-                         (define filename (get-file-to-open (get-last-saved-dir) #f (list ".css")))
-                         (if filename
-                             (set-text browse-css-tf2 filename))
-                         )))
+;  (add-actionlistener browse-css-button2
+;                      (make-actionlistener
+;                       (lambda (e)
+;                         (define filename (get-file-to-open (get-last-saved-dir) #f (list ".css")))
+;                         (if filename
+;                             (set-text browse-css-tf2 filename))
+;                         )))
   
   reader-tab)
 
@@ -281,10 +288,10 @@
     ((fancy) (radio-button-set-selected rbutton-2 #t))
     ((custom) (radio-button-set-selected rbutton-3 #t)))
   (set-text browse-css-tf (get-custom-css-location))
-  (set-text browse-css-tf2 (get-custom-css-location2))
+  ;(set-text browse-css-tf2 (get-custom-css-location2))
   )
 
-(define (set-properties back restart break resize width height csstype css-loc1 css-loc2)
+(define (set-properties back restart break resize width height csstype css-loc1) ;;css-loc2
   (set-disable-back-button! back)
   (set-disable-restart-button! restart)
   (set-disable-pagebreak! break)
@@ -293,7 +300,8 @@
   (set-fixed-page-height! height)
   (set-css-type! csstype)
   (set-custom-css-location! css-loc1)
-  (set-custom-css-location2! css-loc2))
+  ;(set-custom-css-location2! css-loc2)
+  )
 
 (define (make-properties-ui)
   (define propt-dialog (make-dialog (get-main-ui-frame) "Properties" #t))
@@ -301,11 +309,12 @@
   (add-tabpanel-tab propt-tabpanel "General" (make-general-tab))
   (add-tabpanel-tab propt-tabpanel "Reader" (make-reader-tab))
 
-  (define confirm-button (make-button "Ok"))
+  (set! confirm-button (make-button "Ok"))
   (define cancel-button (make-button "Cancel"))
   (define button-panel (make-panel))
   (add-components button-panel
                   confirm-button cancel-button)
+  (set-component-enabled confirm-button #f)
   
   (set-container-layout (get-dialog-content-pane propt-dialog) 'vertical)
   (add-components (get-dialog-content-pane propt-dialog) 
@@ -327,7 +336,7 @@
                                  (get-fixed-page-height)
                                  (get-css-type)
                                  (get-custom-css-location)
-                                 (get-custom-css-location2)
+                                 ;(get-custom-css-location2)
                                  ))
                          
                          ;; gotten from ui
@@ -340,7 +349,7 @@
                                  (get-text height-tf)
                                  (get-stylesheet-choice)
                                  (get-text browse-css-tf)
-                                 (get-text browse-css-tf2)
+                                 ;(get-text browse-css-tf2)
                                  ))
                          
                          (apply set-properties new-properties)
@@ -362,6 +371,13 @@
                          ;(set-component-enabled height-tf (get-checkbox-value disable-resize-cb))
                          (set-component-enabled width-tf selected?)
                          (set-component-enabled height-tf selected?)
+                         )))
+  (add-actionlistener browse-css-tf
+                      (make-actionlistener
+                       (lambda (e)
+                         ;; enable confirm button only when there are text inside
+                         (set-component-enabled confirm-button 
+                                                (equal? (get-text browse-css-tf) ""))
                          )))
   
   (properties-ui-refresh)

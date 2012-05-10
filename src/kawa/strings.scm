@@ -29,7 +29,7 @@
                string-indexof string-lastindexof
                jstring->fstring ;fstring->string 
                to-fstring to-string
-               string-contains string-replace)
+               string-contains string-replace string-replace-all)
 
 ;;
 ;; strings
@@ -120,11 +120,16 @@
         #t
         #f)))
 
-(define (string-indexof mystring :: <String> substring :: <String>)
-  (display "string index of ")(display mystring)(newline)
-  (display "substring ")(display substring)(newline)
-  (display "hard code test ")(display (invoke (as <java.lang.String> "bbbb\nbb\nbb\nbb\nbb") 'indexOf (as <java.lang.String> "\n")))(newline)
-  (invoke (as <java.lang.String> mystring) 'indexOf (as <java.lang.String> substring)))
+(define (string-indexof mystring :: <String> substring :: <String>
+                        #!optional from-index :: <int>)
+  ;(display "string index of ")(display mystring)(newline)
+  ;(display "substring ")(display substring)(newline)
+  ;(display "hard code test ")(display (invoke (as <java.lang.String> "bbbb\rbb\nbb\nbb\nbb") 'indexOf (as <java.lang.String> "\r")))(newline)
+  (if from-index
+      (invoke (as <java.lang.String> mystring) 'indexOf (as <java.lang.String> substring) from-index)
+      (invoke (as <java.lang.String> mystring) 'indexOf (as <java.lang.String> substring)))
+  ;(display "returning index ")(display to-ret)(newline)
+  )
 
 (define (string-lastindexof mystring :: <String> substring :: <String>)
   (invoke (as <java.lang.String> mystring) 'lastIndexOf (as <java.lang.String> substring)))
@@ -144,6 +149,23 @@
 
 (define (string-replace str inserted start-index end-index)
   (string-append (substring str 0 start-index) inserted (substring str end-index (string-length str))))
+
+;(define (string-replace-with search-str replace-str in-str)
+;  (define find (string-indexof in-str search-str index))
+;  (if (not (= find -1))
+;      (string-replace in-str replace-str find (+ find (string-length search-str))))
+;  )
+
+(define (string-replace-all search-str replace-str in-str)
+  (define (helper index str)
+    (let ((find (string-indexof str search-str index)))
+      (if (not (= find -1))
+          (helper (+ find (string-length replace-str))
+                  (string-replace str replace-str find (+ find (string-length search-str))))
+          str
+          )))
+  (helper 0 in-str)
+  )
 
 ;;(define (string-replace2 main-str :: <string> 
 ;;                        match-str :: <string> 
