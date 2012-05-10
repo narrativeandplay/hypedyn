@@ -245,7 +245,10 @@
   (define (css-radio-callback e selected?)
     ;; only enable when rbutton3 (custom) is selected
     (set-component-enabled browse-css-button (radio-button-selected? rbutton-3))
-    (set-component-enabled confirm-button (not (radio-button-selected? rbutton-3)))
+    (set-component-enabled confirm-button (or (not (radio-button-selected? rbutton-3))
+                                              (and (radio-button-selected? rbutton-3)
+                                                   (equal? (get-text browse-css-tf) ""))
+                                              ))
     ;(set-component-enabled browse-css-button2 (radio-button-selected? rbutton-3))
     )
   
