@@ -75,7 +75,7 @@ function htmlFormat(content, links, noformat) {
 
 		// if we pass in linktext then we are breaking that link
 		var plaintext = (linktext == undefined) ? content.substring(offset, content.length) : linktext.substring(alt_offset, linktext.length);
-		
+		plaintext = escape_special( plaintext );
 		var space_pos = plaintext.indexOf(" ");
 		var nlpos = plaintext.indexOf("\n");
 		
@@ -181,7 +181,9 @@ function htmlFormat(content, links, noformat) {
 		var end = link.end;
 		var altcontent = findReplaceText(link.id);
 		var linktext = (altcontent == undefined) ? content.substring(start, end) : altcontent;
-		
+		disp("linktext "+linktext);
+		linktext = escape_special( linktext );
+
 		// note export process does not ensure that rules have actions
 		// therefore we have to check whether a link is clickable by checking the actions in its rules
 		if ( link_clickable ( link, true ) && !noformat ) {
@@ -202,11 +204,11 @@ function htmlFormat(content, links, noformat) {
 					link.name = linktext;
 					
 					cache_choice_link( link );
-					var escaped_string = escape_special( linktext );
+					//var escaped_string = escape_special( linktext );
 					// negative margin to conteract that introduced by div elements
 
 					code = "<div name='button-placeholders' style='height: 50px; margin-top: -10px; background-color: green' id='" 
-						+ escaped_string
+						+ linktext //escaped_string
 						+ "'>" 
 						+ "<a href='javascript:void(0)' "
 						+ "onMouseUp='"

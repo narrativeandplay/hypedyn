@@ -388,6 +388,7 @@ function gotoNode(nodeID) {
 		}
 		
 		var htmlcode = htmlFormat( node.content, clone_arr(node.links).concat(activated_anywhere_nodes), false );
+		disp("htmlcode "+htmlcode);
 		$("pages").innerHTML = htmlcode;
 		
 		if (page_flipping_mode)
