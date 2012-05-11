@@ -300,6 +300,10 @@ function escape_special( str ) {
 		result = "&#39;";
 	if (result == "\\") 
 		result = "&apos;";
+	if (result == "<") 
+		result = "&lt;";
+	if (result == ">") 
+		result = "&gt;";
 	if (str == "")
 		return "";
 	else 
