@@ -108,6 +108,7 @@
 (define m-control-stop #f) ; stop
 (define m-control-inspector #f) ; language help
 (define menu-bar #f) ; menu bar
+(define dummy-mac-menu-bar #f) ; dummy menu bar for file new/open/save on macos
 (define button-panel #f) ; panel for button
 (define status-panel #f) ; panel for status bar    
 
@@ -268,6 +269,19 @@
 (define (macos-application-re-open-application e)
   (display "re-open-application")(newline))
 
+; make the dummy mac menu bar for use during file new/open/save
+; to avoid user doing these repeatedly
+(define (make-dummy-mac-menu-bar)
+  ; create the menu bar
+  (set! dummy-mac-menu-bar (make-menu-bar)))
+
+; swap in dummy menu bar
+(define (activate-dummy-menu-bar)
+  (add-menu-bar frame dummy-mac-menu-bar))
+
+(define (deactivate-dummy-menu-bar)
+  (add-menu-bar frame menu-bar))
+
 ; create the main UI
 (define (create-main-UI)
   ; mac-os specific stuff here
@@ -283,7 +297,10 @@
                                   macos-application-re-open-application)
         
         ; enable mac menus
-        (enable-mac-menus)))
+        (enable-mac-menus)
+        
+        ; build dummy menu for use during file new/open/save
+        (make-dummy-mac-menu-bar)))
                                 
   (set! frame (make-window ""))
   (set-frame-dont-exit frame) ; make sure it doesn't exit automatically so we can catch
@@ -584,26 +601,48 @@
 
 ; newfile : check for changes and save if necessary, then clear code window
 (define (new-file new)
-  (if new-callback (new-callback))
-  (update-label)
-  )
+  (if (is-mac-os?) (activate-dummy-menu-bar))
+  (if new-callback
+      (try-catch
+          (new-callback)
+        (ex <java.lang.Throwable>
+            (begin
+              (display (*:toString ex))(newline)))))
+  (if (is-mac-os?) (deactivate-dummy-menu-bar))
+  (update-label))
 
 ; save a file - specifying #t as filename will open file dialog,
 ; specifying #f will use existing filename, if any, 
+; specifying "" as filename will open file dialog
 (define (saveit filename)
+  (if (is-mac-os?) (activate-dummy-menu-bar))
+
   ;; remove * at the back of the filename if it exists
   (if filename
       (let* ((namelen (string-length filename))
              (lastchar (substring filename (- namelen 1) namelen)))
         (if (equal? lastchar "*")
             (set! filename (substring filename 0 (- namelen 1))))))
-  
-  (if save-callback (save-callback filename))
+
+  (if save-callback
+      (try-catch
+          (save-callback filename)
+        (ex <java.lang.Throwable>
+            (begin
+              (display (*:toString ex))(newline)))))
+  (if (is-mac-os?) (deactivate-dummy-menu-bar))
   (update-label))
 
-; load a file - specifying "" as filename will open file dialog
+; load a file
 (define (loadit load)
-  (if load-callback (load-callback))
+  (if (is-mac-os?) (activate-dummy-menu-bar))
+  (if load-callback
+      (try-catch
+          (load-callback)
+        (ex <java.lang.Throwable>
+            (begin
+              (display (*:toString ex))(newline)))))
+  (if (is-mac-os?) (deactivate-dummy-menu-bar))
   (update-label))
 
 ; update the main window label
