@@ -27,7 +27,7 @@
 	<key>CFBundleIconFile</key>
 	<string>hypedyn.icns</string>
 	<key>CFBundleIdentifier</key>
-	<string>org.processing.app</string>
+	<string>org.partechgroup.hypedyn</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
