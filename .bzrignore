@@ -6,3 +6,11 @@ src/tptest
 bin
 temp
 src/hypedyn/myprefs
+*.aux
+*.log
+*.out
+*.toc
+temp-js
+./export
+export
+.texlipse

@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Demo</title>
+  </head>
+  <body>
+    <a href="http://jquery.com/">jQuery</a>
+
+<!-- debugging -->
+<script type="application/javascript" src="jquery.js"></script>
+<script src="debug.js"></script>
+<!-- end debugging -->
+
+    <script>
+		 $(document).ready(function(){
+		   $("a").click(function(event){
+		     send_debug("test", "Alex");
+		     event.preventDefault();
+		   });
+		 });
+     </script>
+  </body>
+</html>
