@@ -42,6 +42,8 @@
          (set-sculptural-version!))
         ((equal? "-undo" arg)
          (set-undo-enabled! #t))
+        ((equal? "-no-java-reader" arg)
+         (set-java-reader! #f))
         ((equal? "-full" arg)
          (set-full-version!))))
      command-line-arguments))

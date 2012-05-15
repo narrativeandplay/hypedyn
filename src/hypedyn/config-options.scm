@@ -45,6 +45,9 @@
                get-css-type set-css-type! reset-css-type
                get-custom-css-location set-custom-css-location! reset-custom-css-location
                get-custom-css-location2 set-custom-css-location2! reset-custom-css-location2
+               
+               java-reader? set-java-reader!
+               get-temp-dir set-temp-dir! get-local-port set-local-port!
                )
 
 ; enable/disable undo
@@ -325,3 +328,26 @@
 (set! get-fixed-page-height! (make-getter fixed-page-height))
 |#
 
+
+; enable/disable java reader
+(define-private java-reader #t)
+(define (java-reader?)
+  java-reader)
+(define (set-java-reader! in-flag)
+  (set! java-reader in-flag))
+
+; settings for launching js reader from editor
+
+; temp directory
+(define-private temp-dir "./temp-js")
+(define (get-temp-dir)
+  temp-dir)
+(define (set-temp-dir! in-dir)
+  (set! temp-dir in-dir))
+
+; port number
+(define-private local-port 8888)
+(define (get-local-port)
+  local-port)
+(define (set-local-port! in-port)
+  (set! local-port in-port))

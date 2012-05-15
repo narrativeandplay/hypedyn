@@ -47,6 +47,7 @@
 (module-export set-ht-build-sexpr-callback!
                donew doopen open-file-by-name 
                doimport doexport-hypedyn-web doexport-standalone doexport-text doexport-js
+               copy-js-framework-to-folder
                dosave-wrapper confirm-save ht-save-to-file
                ht-build-sexpr-from-object-with-rule ht-build-sexpr-from-rule
                clear-loaded-file-version ;; used by clear-data in hteditor.scm
@@ -771,41 +772,46 @@
     (if (not (eq? #f export-folder))
         (begin
           (display "export folder ")(display export-folder)(newline)
-          ;; create folder, first deleting if it already exists
-          (export-create-folder export-folder)
           (update-last-exported-dir! export-folder)
 
-          ;; Note: put try-catch around this and cleanup on failure
+          ;; export to the export folder
+          (copy-js-framework-to-folder export-folder))
+        #f)))
+
+
+(define (copy-js-framework-to-folder export-folder)
+  ;; create folder, first deleting if it already exists
+  (export-create-folder export-folder)
+
+  ;; Note: put try-catch around this and cleanup on failure
 ;          (let* ((source-folder-string (path-file (get-content-file "js"))))
 ;            (recursively-copy-directory (make-file source-folder-string)
 ;                                        export-folder)
-          (define source-folder (get-content-file "js"))
-          (recursively-copy-directory source-folder
-                                      export-folder)
-          
-            ;; copy css files
-          (define styling-css-file
-            (case (get-stylesheet-choice)
-              ((default) (get-content-file "css/styling.css"))
-              ((fancy) (get-content-file "css/styling2.css"))
-              ((custom) (make-file (get-custom-css-location) ))))
-          
+  (define source-folder (get-content-file "js"))
+  (recursively-copy-directory source-folder
+                              export-folder)
+
+  ;; copy css files
+  (define styling-css-file
+    (case (get-stylesheet-choice)
+      ((default) (get-content-file "css/styling.css"))
+      ((fancy) (get-content-file "css/styling2.css"))
+      ((custom) (make-file (get-custom-css-location) ))))
+
 ;          (define dimension-css-file
 ;            (case (get-stylesheet-choice)
 ;              ((default) (get-content-file "css/dimension.css"))
 ;              ((fancy) (get-content-file "css/dimension2.css"))
 ;              ((custom) (make-file (get-custom-css-location2)))))
-          
-          (copy-file-nio styling-css-file (make-file (string-append (to-string export-folder) "/styling.css")))
-          ;; (copy-file-nio dimension-css-file (make-file (string-append (to-string export-folder) "/dimension.css")))
-            
-          (write-jscode-to
-           (string-append (path-file export-folder) "/dynfile.js")
-           (generate-jscode))
-          ;)
-          #t)
-        #f))
-  )
+
+  (copy-file-nio styling-css-file (make-file (string-append (to-string export-folder) "/styling.css")))
+  ;; (copy-file-nio dimension-css-file (make-file (string-append (to-string export-folder) "/dimension.css")))
+
+  (write-jscode-to
+   (string-append (path-file export-folder) "/dynfile.js")
+   (generate-jscode))
+  ;)
+  #t)
 
 (define (doexport-js) 
   (copy-js-framework))

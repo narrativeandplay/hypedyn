@@ -56,6 +56,7 @@
                set-language!
                no-language-set
                set-runstate enable-run enable-step enable-stop
+               hide-run hide-step hide-stop
                set-run-label! set-step-label! set-stop-label!
                enable-save enable-saveas
                show-language-help
@@ -713,6 +714,25 @@
       (set-button button-stop flag))
   (if m-control-stop
       (set-menuitem-component m-control-stop flag)))
+  
+; hide run button/menu item
+(define (hide-run)
+  (if button-run
+      (remove-component button-panel button-run))
+  (if m-control-run
+      (remove-component m-control m-control-run)))
+; hide step button/menu item
+(define (hide-step)
+  (if button-step
+      (remove-component button-panel button-step))
+  (if m-control-step
+      (remove-component m-control m-control-step)))
+; hide stop button/menu item
+(define (hide-stop)
+  (if button-stop
+      (remove-component button-panel button-stop))
+  (if m-control-stop
+      (remove-component m-control m-control-stop)))
   
 ; change labels on run/step/stop buttons
 (define (set-run-label! in-label)

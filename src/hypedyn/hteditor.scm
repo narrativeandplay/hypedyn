@@ -1622,12 +1622,17 @@
 ; start reading when start button in main-ui is pressed
 (define (nodereader-start)
   (nodeeditor-save) ;; save the edited node's content
-  (if (not (doreadstartnode (get-saved-filename-string)))
+  (if (java-reader?)
+      (if (not (doreadstartnode (get-saved-filename-string)))
+          (begin
+            (make-confirm-dialogbox #!null 1 "Sorry, no start node defined.")
+            (set-runstate #f))
+          (add-to-window-menu nrf "Reader"))
       (begin
-        (make-confirm-dialogbox #!null 1 "Sorry, no start node defined.")
-        (set-runstate #f))
-      (add-to-window-menu nrf "Reader")
-      ))
+        (copy-js-framework-to-folder (make-file (get-temp-dir)))
+        (invoke (java.awt.Desktop:getDesktop) 'browse
+                (<java.net.URI> (string-append "http://localhost:" (number->string (get-local-port)) "/index.html")))
+        (set-runstate #f))))
 
 ; stop reading when stop button in main-ui is pressed
 (define (nodereader-stop)
@@ -1678,6 +1683,11 @@
  
   ; disable step button
   (enable-step #f)
+  
+  (if (not (java-reader?))
+      (begin
+        (hide-step)
+        (hide-stop)))
   
   ; intialize data
   (clear-data)

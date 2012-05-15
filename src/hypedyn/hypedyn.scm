@@ -21,6 +21,7 @@
 (begin
   (require "hteditor.scm")
   (require "htlanguage.scm")
+  (require "config-options.scm")
   )
 
 ; export
@@ -33,4 +34,10 @@
 
   ; register the ui
   (use-hteditor-ui)
+  
+  ; start server
+  (if (not (java-reader?))
+      (begin
+        (gnu.kawa.servlet.KawaHttpHandler:addAutoHandler "/" (get-temp-dir))
+        (gnu.kawa.servlet.KawaHttpHandler:startServer (get-local-port))))
   )
