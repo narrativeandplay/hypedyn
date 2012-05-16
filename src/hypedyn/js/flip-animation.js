@@ -420,7 +420,9 @@ function drawPageIndicator(curr_page, page_count, draw_back_page) {
 	
 	gcontext.clearRect( 0, 0, canvas.width, canvas.height );
 	
-	canvas.style.top = device_height - button_panel_height;
+	// canvas.style.top = device_height - button_panel_height;
+	// this is wrong but i dunno why this works the above suppose to be correct
+	canvas.style.top = device_height - button_panel_height - page_indicator_height * 0.5;
 	canvas.style.zIndex = 99;
 	
 	// boundary checking
@@ -430,6 +432,9 @@ function drawPageIndicator(curr_page, page_count, draw_back_page) {
 	var half_height = canvas.height / 2;
 	var width = canvas.width;
 	var radius = half_height * 0.15;
+	
+	// for debugging page indicator canvas position
+	//drawRect(gcontext, 0, 0, canvas.width, canvas.height, "black", "stroke");
 	
 	for (var i=0; i<page_count; i++) {
 		var color = (i == curr_page) ? "black" : "lightgrey"; //"blue" : "#8ED6FF";

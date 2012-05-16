@@ -45,3 +45,19 @@ function arr_find ( arr, pred ) {
 	}
 	return undefined;
 }
+
+// this is time/cpu consuming but works to block the thread
+function sleep(delay) {
+    //var start = new Date().getTime();
+	var unlocked = false;
+	var accuracy_ms = 1000; // accurate to 10 ms
+	
+	function check_delay () {
+		//if ( new Date().getTime() < start + delay )
+		delay -= accuracy_ms;
+		disp("tick "+delay);
+		if ( delay < 0 )
+			return;
+	}
+	setInterval( check_delay, accuracy_ms ); 
+}

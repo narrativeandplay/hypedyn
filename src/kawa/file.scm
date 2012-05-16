@@ -158,7 +158,8 @@
 ;;  (if (and (not (boolean? extension))
 ;;           (not (java.lang.String? extension)))
 ;;      (set! extension (to-string extension)))
-  
+  (display "file extension check ")(display file-name)(newline)
+  (display "extension ")(display extension)(newline)
   (if (or (not (string-contains file-name "."))
           (string-ends-with? file-name ".")  ;; freak case of . in the end
           (string-starts-with? file-name ".")) ;; freak case of . in front 

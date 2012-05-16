@@ -32,7 +32,7 @@ function device_detection() {
 		disp("touch detected!");
 	} else {//browser
 		display_mode = "browser";
-		page_flipping_mode = false;
+		page_flipping_mode = true; //debug was false
 	}
 }
 
@@ -48,9 +48,12 @@ function get_device_dimension() {
 	device_width = (window.innerWidth > 0) ? window.innerWidth : screen.width;
 	device_height = (window.innerHeight > 0) ? window.innerHeight : screen.height;
 	
-	if (display_mode == "browser")
-		page_width = device_width; // 320 hardcoded for mobile
-	else if (display_mode == "mobile") {
+	if (display_mode == "browser") {
+		//page_width = device_width; // 320 hardcoded for mobile
+		//debug
+		page_width = 320;
+		device_height = 410;
+	}else if (display_mode == "mobile") {
 		page_width = 320;
 		if (page_flipping_mode)
 			device_height = 410;
@@ -127,7 +130,7 @@ function replaceText(linkID, altcontent) {
 }
 
 function findReplaceText(linkID) {
-	disp("find replace text "+linkID);
+	//disp("find replace text "+linkID);
 	var result;
 	for (var i in text_to_replace) {
 		if (text_to_replace[i][0] == linkID) {
@@ -300,7 +303,7 @@ function backPrevNode() {
 	back_button_check();
 	
 	if (nodeID) { // if not undefined
-		disp("gotoNODE " +nodeID);
+		disp("back's gotoNODE " +nodeID);
 		var node = nodelist[nodeID];
 		if (node) {
 			clicked_link_flag = false;
@@ -309,20 +312,23 @@ function backPrevNode() {
 			for (var i in node.links) {
 				eventTrigger("enteredNode", node.links[i]); 
 			}
+			disp("after trigger");
 			
 			//node.visited = true;
 			currNodeID = nodeID;
 			
 			update_anywhere_visibility();
-			
+			disp("update vis");
 			if (page_flipping_mode) {
 				if (peek_back_mode)
 					cache_peek_back();
 				flips = [];
 				page = 0;
 			}
+			disp("page_flip things");
 			
-			var htmlcode = htmlFormat( node.content, clone_arr(node.links).concat(activated_anywhere_nodes), false );
+			//var htmlcode = htmlFormat( node.content, clone_arr(node.links).concat(activated_anywhere_nodes), false );
+			htmlcode = node_to_html( node, activated_anywhere_nodes, false );
 			$("pages").innerHTML = htmlcode;
 			
 			if (page_flipping_mode)
@@ -354,8 +360,11 @@ function restartStory() {
 
 function gotoNode(nodeID) {
 	disp("gotoNODE " +nodeID);
+	disp("really here?");
 	var node = nodelist[nodeID];
+	disp("node here "+node);
 	if (node != undefined) {
+		disp("start of goto");
 		clicked_link_flag = false;
 		
 		eventTrigger("enteredNode", node);
@@ -363,9 +372,7 @@ function gotoNode(nodeID) {
 			eventTrigger("enteredNode", node.links[i]); 
 		}
 		
-		disp("before push " + prev_read_nodes.length);
 		prev_read_nodes.push( currNodeID );
-		disp("after push " + prev_read_nodes.length);
 		
 		//alert($("back_button"));
 		/*
@@ -387,15 +394,25 @@ function gotoNode(nodeID) {
 			page = 0;
 		}
 		
-		var htmlcode = htmlFormat( node.content, clone_arr(node.links).concat(activated_anywhere_nodes), false );
-		disp("htmlcode "+htmlcode);
-		$("pages").innerHTML = htmlcode;
+		//debug
+		disp("b4 html code ");
+		var new_html_code = node_to_html( node, activated_anywhere_nodes, false );
+		disp("aft html code ");
+		//check_gtg( new_html_code );
+		//disp("end of gtg");
 		
+		//var htmlcode = htmlFormat( node.content, clone_arr(node.links).concat(activated_anywhere_nodes), false );
+		//disp("htmlcode "+htmlcode);
+		//disp("new_html_code "+new_html_code);
+		
+		$("pages").innerHTML = new_html_code;//htmlcode;
+		//$("pages").innerHTML = htmlcode;
+		disp("here ");
 		if (page_flipping_mode)
 			insert_peek_back();
 		else 
 			style_pages();
-		
+		disp("here2 ");
 		//anywherelink_buttons(); // original anywhere nodes
 		add_anywhere_button(); // choice links
 		init_element_height();
@@ -404,6 +421,7 @@ function gotoNode(nodeID) {
 		if (page_flipping_mode)
 				//drawPageIndicator(page, flips.length, (last_page_flip != undefined));
 				drawPageIndicator(page, flips.length, back_page_check());
+		disp('end of goto');
 	}
 }
 

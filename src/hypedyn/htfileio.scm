@@ -693,6 +693,16 @@
   (string-replace-all "\"" "\\\"" str)
   )
 
+(define (preserve-forward-slash str)
+  (string-replace-all "\\" "\\\\" str))
+
+(define (escape-special str)
+  (define retval str)
+  (set! retval (preserve-forward-slash retval))
+  (set! retval (preserve-quotes retval))
+  (set! retval (preserve-newline retval))
+  retval)
+
 ;(define debug-count 0)
 ;(define debug-cache #f)
 
@@ -829,10 +839,12 @@
             (list "\tcreateNode("
                   (quote-nest name) ", " ;; assume no funny characters in these names
                   (quote-nest 
-                   (preserve-newline 
-                    (preserve-quotes (ask node 'content))
-                    ;(ask node 'content)
-                    )) ", "
+;                   (preserve-newline 
+;                    (preserve-quotes (ask node 'content))
+;                    ;(ask node 'content)
+;                    )
+                   (escape-special (ask node 'content))
+                   ) ", "
                   (to-string anywhere?) ", "
                   (to-string (ask node 'ID)) ");\n")
             (map js-link-code links)     ;; convert its links
@@ -927,10 +939,12 @@
                    (let ((val (list-ref expr 2)))
                      (cond ((string? val)
                             (quote-nest
-                             (preserve-newline
-                              (preserve-quotes val)
-                              ;val
-                              )))
+;                             (preserve-newline
+;                              (preserve-quotes val)
+;                              ;val
+;                              )
+                             (escape-special val)
+                             ))
                            ((number? val)
                             (to-string val))))
                    "]"))

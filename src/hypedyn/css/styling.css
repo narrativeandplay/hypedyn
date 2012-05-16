@@ -4,6 +4,7 @@ a.intextlink:link {
 	color: black;
 	//background-color:#B2FF99;
 	font-size: 18px;
+	font-weight: bold;
 }
 a.intextlink:visited {
 	text-decoration: underline;
@@ -30,6 +31,7 @@ a.anywhere:link {
 	color: black;
 	//background-color:#B2FF99;
 	font-size: 18;
+	font-weight: bold;
 }
 a.anywhere:visited {
 	text-decoration: underline;
