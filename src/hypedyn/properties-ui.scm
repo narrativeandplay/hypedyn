@@ -175,11 +175,11 @@
   (define rbutton-group-panel (make-panel))
 
   (define browse-css-panel (make-panel))
-  (define browse-css-button (make-button "Find styling"))
+  (define browse-css-button (make-button "Choose..."))
   (set! browse-css-tf (make-textfield "" 16))
   (set-component-enabled browse-css-button #f)
   (set-component-enabled browse-css-tf #f)
-  (add-components browse-css-panel browse-css-button browse-css-tf)
+  (add-components browse-css-panel browse-css-tf browse-css-button)
 
 ;  (define browse-css-panel2 (make-panel))
 ;  (define browse-css-button2 (make-button "Find dimension"))
@@ -309,7 +309,7 @@
 (define (make-properties-ui)
   (define propt-dialog (make-dialog (get-main-ui-frame) "Properties" #t))
   (define propt-tabpanel (make-tab-panel))
-  (add-tabpanel-tab propt-tabpanel "General" (make-general-tab))
+  ;(add-tabpanel-tab propt-tabpanel "General" (make-general-tab))
   (add-tabpanel-tab propt-tabpanel "Reader" (make-reader-tab))
 
   (set! confirm-button (make-button "Ok"))
@@ -322,6 +322,8 @@
   (set-container-layout (get-dialog-content-pane propt-dialog) 'vertical)
   (add-components (get-dialog-content-pane propt-dialog) 
                   propt-tabpanel button-panel)
+  ;(add-components (get-dialog-content-pane propt-dialog) 
+  ;                (make-reader-tab) button-panel)
   
   (add-actionlistener cancel-button
                       (make-actionlistener hide-properties))

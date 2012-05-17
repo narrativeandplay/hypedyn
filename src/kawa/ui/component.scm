@@ -24,7 +24,7 @@
                set-opaque set-border set-background-color get-background-color 
                get-component-size set-component-visible get-component-visible set-component-enabled set-location
                get-width get-height
-               get-bounds request-focus transfer-focus remove-self-from-parent
+               get-bounds request-focus request-focus-in-window transfer-focus remove-self-from-parent
                
                get-location-on-screen
                get-parent
@@ -192,6 +192,9 @@
 
 (define (request-focus component :: <java.awt.Component>)
   (invoke component 'requestFocus))
+
+(define (request-focus-in-window component :: <java.awt.Component>)
+  (invoke component 'requestFocusInWindow))
 
 (define (transfer-focus component :: <java.awt.Component>)
   (invoke component 'transferFocus))
