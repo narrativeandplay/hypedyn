@@ -32,7 +32,7 @@ function device_detection() {
 		disp("touch detected!");
 	} else {//browser
 		display_mode = "browser";
-		page_flipping_mode = true; //debug was false
+		page_flipping_mode = false; //debug was false
 	}
 }
 
@@ -49,10 +49,10 @@ function get_device_dimension() {
 	device_height = (window.innerHeight > 0) ? window.innerHeight : screen.height;
 	
 	if (display_mode == "browser") {
-		//page_width = device_width; // 320 hardcoded for mobile
+		page_width = device_width; // 320 hardcoded for mobile
 		//debug
-		page_width = 320;
-		device_height = 410;
+		//page_width = 320;
+		//device_height = 410;
 	}else if (display_mode == "mobile") {
 		page_width = 320;
 		if (page_flipping_mode)
