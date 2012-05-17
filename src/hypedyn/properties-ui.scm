@@ -247,7 +247,7 @@
     (set-component-enabled browse-css-button (radio-button-selected? rbutton-3))
     (set-component-enabled confirm-button (or (not (radio-button-selected? rbutton-3))
                                               (and (radio-button-selected? rbutton-3)
-                                                   (equal? (get-text browse-css-tf) ""))
+                                                   (not (equal? (get-text browse-css-tf) "")))
                                               ))
     ;(set-component-enabled browse-css-button2 (radio-button-selected? rbutton-3))
     )
@@ -317,7 +317,7 @@
   (define button-panel (make-panel))
   (add-components button-panel
                   confirm-button cancel-button)
-  (set-component-enabled confirm-button #f)
+  (set-component-enabled confirm-button #t)
   
   (set-container-layout (get-dialog-content-pane propt-dialog) 'vertical)
   (add-components (get-dialog-content-pane propt-dialog) 
