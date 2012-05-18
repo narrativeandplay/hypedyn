@@ -57,10 +57,14 @@ a.anywhere:active {
 }
 
 /* dormant link (might be activated next time to be clickable)*/
-.dormant{
+.dormant_not_visited{
 	color: navy;
 	font-size: 26px;
 	font-weight: bold;
+}
+.dormant_visited{
+	color: navy;
+	font-size: 26px;
 }
 
 body {

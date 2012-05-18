@@ -92,6 +92,7 @@ function adjust_size() {
 function nonpageflip_init() {
 	if (!page_flipping_mode) {
 		$("pageflip-canvas").style.visibility = "hidden";
+		$("pageflip-canvas").style.zIndex = -1000;
 		//$("lightsoff-canvas").style.visibility = "hidden";
 		$("popup").style.visibility = "hidden";
 	}
@@ -119,6 +120,7 @@ function clickedLink(linkID) {
 // eventTrigger("nodeEntered", link) trigger all the replaceText that is suppose to fire
 // replaceText place a pair of linkID and content into text_to_replace
 // in htmlFormat use findReplaceText(linkID) to find out whether the link need replacing or not
+
 // text_to_replace is emptied for next time
 var text_to_replace = [];
 function replaceText(linkID, altcontent) {
@@ -130,13 +132,13 @@ function replaceText(linkID, altcontent) {
 }
 
 function findReplaceText(linkID) {
+	
 	//disp("find replace text "+linkID);
 	var result;
 	for (var i in text_to_replace) {
 		if (text_to_replace[i][0] == linkID) {
 			// need to differentiate between 
 			// text from fact or just text
-			
 			if (typeof text_to_replace[i][1] == "string") {
 				disp("string");
 				result = text_to_replace[i][1];

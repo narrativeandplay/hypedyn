@@ -197,10 +197,18 @@ function ruleRelevant(eventType, rule) {
  */	
  
  function nodeVisited(nodeID) {
+	//if (nodeID == 78) {
+	//	alert("node visited check ");
+	//}
 	//var node = nodelist.get(nodeID);
 	node = nodelist[nodeID];
 	if (node != undefined) {
+		//if (nodeID == 78) {
+		//	alert("node visited? "+node.visited);
+		//}
 		return node.visited;
+	} else {
+		alert("node undefined");
 	}
  }
  

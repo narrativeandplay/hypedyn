@@ -25,8 +25,11 @@ var page_start_tag = "<div name='page'><div name='pagecontent'>"//"<section><div
 var page_end_tag = "</div></div>";//</section>";
 var test_bed_html_cache = "";
 
-var dormant_start_tag = "<font class='dormant'>";
-var dormant_end_tag = "</font>"
+var dormant_start_tag_not_visited = "<font class='dormant_not_visited'>";
+var dormant_end_tag_not_visited = "</font>"
+
+var dormant_start_tag_visited = "<font class='dormant_visited'>";
+var dormant_end_tag_visited = "</font>"
 
 // given the content(text) of the node, and the arr of links
 // this returns the html code to display the node's content and the links
@@ -471,9 +474,16 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 							tag.end_tag = "</a></div>";
 							break;
 					}
-				} else if ( link_clickable ( link, false ) && !noformat ) {
-					tag.start_tag = dormant_start_tag;
-					tag.end_tag = dormant_end_tag;
+				// Note different from java version
+				// this check whether the link has been followed as opposed to whether the destination node has been visited
+				} else if ( link_clickable ( link, false ) && !noformat) {
+					if  ( !link.followed ) {
+						tag.start_tag = dormant_start_tag_not_visited;
+						tag.end_tag = dormant_end_tag_not_visited;
+					} else {
+						tag.start_tag = dormant_start_tag_visited;
+						tag.end_tag = dormant_end_tag_visited;
+					}
 				} else if (!noformat) {  // just normal plain text
 					tag.start_tag = start_tag;
 					tag.end_tag = end_tag;
@@ -750,6 +760,9 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 	// dont try to break page when page flipping mode off
 	// pages_tg_arr is an array of tg_arr
 	var pages_tg_arr = (!plain_only && page_flipping_mode) ? page_break_tg( tg_arr ) : [ tg_arr ];
+	
+	text_to_replace = []; // clear after use
+	
 	disp("how many page? "+pages_tg_arr.length);
 	for (var i in pages_tg_arr ) {
 		print_tg( pages_tg_arr[i] );
