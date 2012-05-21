@@ -111,7 +111,19 @@
      	<istrue value="${macosx}"/> 
     </condition>
      	
-    <property name="dist.applet.package" value="${dist.dir}/HypeDyn-applet" />
+    <condition property="build.httpserver.classpath" value="${java.home}/lib/rt.jar" >
+ 		<istrue value="${windows}"/> 
+    </condition>
+ 	
+    <condition property="build.httpserver.classpath" value="${java.home}/lib/rt.jar" >
+ 	<istrue value="${linux}"/> 
+    </condition>
+     	
+     <condition property="build.httpserver.classpath" value="/System/Library/Frameworks/JavaVM.framework/Classes/classes.jar" >
+    	<istrue value="${macosx}"/> 
+    </condition>
+  	
+  	<property name="dist.applet.package" value="${dist.dir}/HypeDyn-applet" />
   	 
      <!-- only used in macosx -->
  	<condition property="dist.reader.package" value="${dist.dir}/HypeDynReader.app">
@@ -169,6 +181,7 @@
         version=${version}
     	build.hypedyn.jar=${build.hypedyn.jar}
         temp.dir=${temp.dir}
+    	build.httpserver.classpath=${build.httpserver.classpath}
     </echo>
   	
   <!-- set up directory structure -->
@@ -187,7 +200,7 @@
   	</echo>
 	<java failonerror="true"
 		classname="kawa.repl"
-	    classpath="${build.kawa.jar};${appletlib.dir}/AppleJavaExtensions.jar">
+	    classpath="${build.kawa.jar};${appletlib.dir}/AppleJavaExtensions.jar;${build.httpserver.classpath}">
 	    <arg line="-d ${temp.dir} --warn-invoke-unknown-method --warn-undefined-variable --main -C ${editor-mainclass}"/>
 	</java>
 	<!-- put into jar file -->
