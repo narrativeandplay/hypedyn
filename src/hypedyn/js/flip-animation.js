@@ -496,7 +496,9 @@ function popup(nodeID) {
 		update_anywhere_visibility();
 
 		cleanup_scroll();
-		$('popup').innerHTML = "<div>" + htmlFormat( node.content, clone_arr(node.links), true ) + "</div>";
+		//$('popup').innerHTML = "<div>" + htmlFormat( node.content, clone_arr(node.links), true ) + "</div>";
+		var htmlcode = node_to_html( node, [], true );
+		$('popup').innerHTML = "<div>" + htmlcode + "</div>";
 		setup_scroll();
 		
 		// bring lighting canvas in front
