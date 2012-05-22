@@ -16,6 +16,8 @@
   
   <property name="kawa.dir"      value="/usr/local/share/java/"/>
 
+  <property name="mac.javavm.framework"     value="/System/Library/Frameworks/JavaVM.framework/"/>
+
   <property name="src.dir"      value="${basedir}/../src/hypedyn/"/>
   <property name="temp.dir"    value="${basedir}/temp"/>
   <property name="build.dir"    value="${basedir}"/>
@@ -119,7 +121,7 @@
  	<istrue value="${linux}"/> 
     </condition>
      	
-     <condition property="build.httpserver.classpath" value="/System/Library/Frameworks/JavaVM.framework/Classes/classes.jar" >
+     <condition property="build.httpserver.classpath" value="${mac.javavm.framework}/Classes/classes.jar" >
     	<istrue value="${macosx}"/> 
     </condition>
   	
@@ -311,9 +313,12 @@
   	<!-- <move file="${dist.editor.package.javadir}/${base.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar" /> -->
 	<copy file="${appletlib.dir}/AppleJavaExtensions.jar" todir="${dist.editor.package.javadir}" />
 
-	<!-- copy the js files -->
+	<!-- copy the js and css files for export -->
 	<copy todir="${dist.editor.package}/js">
 	  	<fileset dir="${src.dir}/js"/>
+	</copy>
+	<copy todir="${dist.editor.package}/css">
+	  	<fileset dir="${src.dir}/css"/>
 	</copy>
   	
   </target>
@@ -333,9 +338,12 @@
   	 <!-- <move file="${dist.editor.package.javadir}/${base.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar" /> -->
 	<copy file="${appletlib.dir}/AppleJavaExtensions.jar" todir="${dist.editor.package.javadir}" />
 
-	<!-- copy the js files -->
+	<!-- copy the js and css files for export -->
 	<copy todir="${dist.editor.package}/js">
 	  	<fileset dir="${src.dir}/js"/>
+	</copy>
+	<copy todir="${dist.editor.package}/css">
+	  	<fileset dir="${src.dir}/css"/>
 	</copy>
   </target>
   		
@@ -355,9 +363,12 @@
   	</copy>
 	<chmod file="${dist.editor.package.appstub}" perm="a+x"/>
 
-	<!-- copy the js files -->
+	<!-- copy the js and css files for export -->
 	<copy todir="${dist.editor.package.javadir}/js">
 	  	<fileset dir="${src.dir}/js"/>
+	</copy>
+	<copy todir="${dist.editor.package.javadir}/css">
+	  	<fileset dir="${src.dir}/css"/>
 	</copy>
 
   </target>
