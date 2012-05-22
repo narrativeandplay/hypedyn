@@ -50,7 +50,7 @@
 (module-export get-main-ui-frame get-main-ui-menu 
                get-file-menu get-control-menu get-help-menu get-language-menu get-examples-menu get-window-menu get-main-ui-button-panel
                set-window-activated-callback! set-window-iconified-callback! set-window-deiconified-callback! 
-               set-about-callback!
+               set-about-callback! set-appexit-callback!
                get-double-clicked-filename
                create-main-UI
                set-language!
@@ -145,6 +145,7 @@
 (define confirm-save-callback #f)
 (define init-ui-callback #f)
 (define close-ui-callback #f)
+(define exit-callback #f)
 
 ; used to display current language in coding ui
 (define ui-welcomemsg-callback #f)
@@ -174,6 +175,9 @@
   (if (or (not (procedure? confirm-save-callback))
           (confirm-save-callback))
       (begin
+        ; exit callback
+        (if (procedure? exit-callback) (exit-callback))
+
         ; save prefs
         (init-prefs)
         ; only save language info if its NOT standalone
@@ -843,6 +847,8 @@
   (set! get-prefs-callback in-callback))
 (define (set-set-prefs-callback! in-callback)
   (set! set-prefs-callback in-callback))
+(define (set-appexit-callback! in-callback)
+  (set! exit-callback in-callback))
 
 ; clear all callbacks
 (define (clear-ui-callbacks!)
@@ -861,7 +867,9 @@
   (set-ui-display-callback! #f)
   (set-ui-newline-callback! #f)
   (set-get-prefs-callback! #f)
-  (set-set-prefs-callback! #f))
+  (set-set-prefs-callback! #f)
+  (set-about-callback! #f)
+  (set-appexit-callback! #f))
 
 ; register ui
 (define (register-ui in-panel

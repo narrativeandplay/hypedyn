@@ -1728,6 +1728,11 @@
   (remove-component (get-main-ui-button-panel) toolbar-nodecount-label)
   (remove-component (get-main-ui-button-panel) toolbar-nodecount-textarea))
 
+; cleanup on exit
+(define (cleanup-on-exit)
+  (if (not (java-reader?))
+      (export-remove-folder (make-file (get-temp-dir)))))
+
 ; set callbacks
 (define (use-hteditor-ui)
   (start-hteditor)
@@ -1757,7 +1762,8 @@
   ;(set-window-iconified-callback! window-minimize-callback)
   ;(set-window-deiconified-callback! window-restore-callback)
   
-  (set-about-callback! show-about-window))
+  (set-about-callback! show-about-window)
+  (set-appexit-callback! cleanup-on-exit))
 
 ; callback when window is activated
 (define (window-activated-callback)

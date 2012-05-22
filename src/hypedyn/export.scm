@@ -43,7 +43,7 @@
 
 (module-export get-last-exported-dir set-last-exported-dir! update-last-exported-dir!
                get-content-file export-web export-standalone
-               export-create-folder
+               export-create-folder export-remove-folder
                export-standalone-folder)
 
 ; last exported directory, a <java.io.File>, or #!null if none
@@ -414,6 +414,11 @@
 (define (export-create-folder export-folder)
   (display "****** export-create-folder: ")(display export-folder)(newline)
   ; create folder, first deleting if it already exists
+  (export-remove-folder export-folder)
+  (create-directory export-folder))
+
+; helper fn to remove export folder
+(define (export-remove-folder export-folder)
   (if (file-exists? export-folder)
       (if (file-directory? export-folder)
           (recursively-delete-directory export-folder)
@@ -423,6 +428,5 @@
                 (begin
                   (display (*:toString ex))(newline)
                   ;(*:printStackTrace ex)
-                  )))))
-  (create-directory export-folder))
-
+                  ))))))
+  
