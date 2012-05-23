@@ -294,7 +294,9 @@
                 (define fall-through? #t)
                 
                 (obj-put this-obj 'fall-through? (lambda (self) fall-through?))
-                (obj-put this-obj 'set-fall-through? (lambda (self new-ft) (set! fall-through? new-ft)))
+                (obj-put this-obj 'set-fall-through? (lambda (self new-ft) 
+                                                       (display "set fall through message received ")(display new-ft)(newline)
+                                                       (set! fall-through? new-ft)))
                 
                 ;; add new features and override rule-expr and to-save-sexpr
                 (obj-put this-obj 'negate? (lambda (self) negate?)) 

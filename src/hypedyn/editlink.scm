@@ -55,6 +55,7 @@
                create-if-condition-panel
                create-actions-main-panel
                create-update-text-action-panel
+               
                ;create-facts-main-panel
                ;create-then-action-panel
                ;update-nodegraph-display
@@ -127,6 +128,8 @@
           "")))
     
     ;; add appropriate panels to editlink-dialog
+    (clear-container editlink-panel-top)
+    (add-component editlink-panel-top (create-rules-rename-panel in-ruleID))
     (add-component editlink-panel-top editlink-panel-if)
     (add-component editlink-panel-top actions-main-panel)
     
@@ -185,6 +188,8 @@
     )
 
   ;; add if panel to editlink-dialog
+  (clear-container editlink-panel-top)
+  (add-component editlink-panel-top (create-rules-rename-panel in-ruleID))
   (add-component editlink-panel-top editlink-panel-if)
   (add-component editlink-panel-top actions-main-panel)
 
@@ -329,7 +334,12 @@
   ;;condition panel
   (set! condition-list-panel (make-panel))
   (set-container-layout condition-list-panel 'vertical)
-  (add-component editlink-panel-if condition-list-panel)
+  ;(add-component editlink-panel-if condition-list-panel)
+  
+  ;; container scrollpane for condition panel
+  (define condition-scrollpane (make-scrollpane-with-policy condition-list-panel 'needed 'needed))
+  (set-component-preferred-size condition-scrollpane 400 100)
+  (add-component editlink-panel-if condition-scrollpane)
 
   ;; Add a horizontal panel to the dialog, with centering for buttons
   (set! editlink-panel-main-buttons (make-panel))
@@ -555,7 +565,13 @@
   ;; list of actions
   (set! action-list-panel (make-panel))
   (set-container-layout action-list-panel 'vertical)
-  (add-component actions-main-panel action-list-panel 'border-center)
+  ;(add-component actions-main-panel action-list-panel 'border-center)
+  
+    ;; scrollpane for condition panel
+  (define action-scrollpane (make-scrollpane-with-policy action-list-panel 'needed 'needed))
+  (set-component-preferred-size action-scrollpane 400 100)
+  (add-component actions-main-panel action-scrollpane 'border-center)
+  ;;(add-component actions-main-panel action-list-panel 'border-center)
   
   ;; action type list contains the remaining available types left (after previous adding of actions)
   (set! action-type-choice (make-combobox))
@@ -569,8 +585,8 @@
   (add-component actions-main-panel actions-buttons-panel 'border-south)
   
   ;; Add action choice
-  (add-component actions-buttons-panel action-type-choice-container)
   (add-component actions-buttons-panel add-action-button)
+  (add-component actions-buttons-panel action-type-choice-container)  
   (add-component actions-buttons-panel delete-action-button)
   
   ;; action listeners
@@ -580,6 +596,20 @@
   (add-actionlistener delete-action-button 
                       (make-actionlistener delete-action-callback))
   )
+
+(define rule-rename-tf #f)
+(define (get-new-rule-name)
+  (if rule-rename-tf (get-text rule-rename-tf) "rule-rename-tf not init'd"))
+(define (create-rules-rename-panel ruleID)
+  (define name-panel (make-panel))
+  (add-component name-panel (make-label-with-title "Rule name: "))
+  (define rule (get 'rules ruleID))
+  (set! rule-rename-tf
+        (if rule
+            (make-textfield (ask rule 'name) 15)
+            (make-textfield "!!rule not found!!" 15)))
+  (add-component name-panel rule-rename-tf)
+  name-panel)
 
 ;; kept to ensure some actions are only added once
 (define action-type-list-link (list "update text using" "follow link to" "update fact" "show in popup"))
@@ -1246,13 +1276,15 @@
   (let* ((rule-parent-obj (cond ((eq? edit-mode 'link) (get 'links edited-linkID))
                                 ((eq? edit-mode 'node) (get 'nodes edited-nodeID))
                                 ((eq? edit-mode 'doc) #f)))
-         (new-rulename (if (eq? edit-mode 'doc)
-                           "document"
-                           ;(ask rule-parent-obj 'name)
-                           (let ((edited-rule (get 'rules edited-ruleID)))
-                             (if edited-rule 
-                                 (ask edited-rule 'name)))
-                           ))
+         (new-rulename 
+;          (if (eq? edit-mode 'doc)
+;              "document"
+;                                        ;(ask rule-parent-obj 'name)
+;              (let ((edited-rule (get 'rules edited-ruleID)))
+;                (if edited-rule
+;                    (ask edited-rule 'name)))
+;              )
+          (get-new-rule-name))
          
          ; get boolean operator
          (new-rule-and-or-pos (get-combobox-selectedindex editlink-dialog-andor-operator))
@@ -1288,17 +1320,22 @@
     (if (eq? edit-mode 'link)
         (remove-show-popup-rule-display edited-ruleID))  ;; remove the line display from the previous edited-ruleID
     
+    
+    (define the-rule (get 'rules edited-ruleID))
+    
     ;; empty current rule's contents before making the changes
-    (let ((the-rule (get 'rules edited-ruleID)))
-      (if the-rule
-          (ask the-rule 'empty-rule)))
+    (if the-rule
+        (ask the-rule 'empty-rule))
     
     ;; set the and-or and negate? properties
-    (let ((the-rule (get 'rules edited-ruleID)))
-      (if the-rule
-          (begin
-            (ask the-rule 'set-and-or! new-rule-and-or)
-            (ask the-rule 'set-negate! negate?))))
+    (if the-rule
+        (begin
+          (ask the-rule 'set-and-or! new-rule-and-or)
+          (ask the-rule 'set-negate! negate?)))
+    
+    ;; set the new name of the rule
+    (if the-rule
+        (ask the-rule 'set-name! new-rulename))
     
     ;; Conditions
     ; run through conditions and add to rule
@@ -1471,7 +1508,7 @@
        ((node) edited-nodeID))
      edited-ruleID)
 
-    ;; update the display on node-graph 
+    ;; reflect changes in node-graph 
     ;; only need to do for links that have follow link actions
     (if (eq? edit-mode 'link)
         (add-follow-link-rule-display edited-ruleID))
@@ -1481,6 +1518,9 @@
     ;;===============
     ;; End of Actions
     ;;===============
+    
+    ;; reflect changes in rule manager
+    (rmgr-update)
     
     ; hide link editor, and reset (for next time)
     (set-component-visible editlink-dialog #f)

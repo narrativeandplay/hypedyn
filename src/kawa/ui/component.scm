@@ -20,11 +20,14 @@
 ; export
 (module-export add-component add-components remove-component
                set-component-size set-component-preferred-size set-component-minimum-size set-component-maximum-size
-               set-component-non-resizable-size
-               set-opaque set-border set-background-color get-background-color 
-               get-component-size set-component-visible get-component-visible set-component-enabled set-location
-               get-width get-height
+               set-component-non-resizable-size set-component-visible
+               set-opaque set-border set-background-color 
+               set-component-enabled set-location
+               get-component-size get-component-preferred-size
+               get-component-visible 
+               get-width get-height 
                get-bounds request-focus request-focus-in-window transfer-focus remove-self-from-parent
+               get-background-color
                
                get-location-on-screen
                get-parent
@@ -159,6 +162,9 @@
                           #!null)))
     (values (invoke the-size 'getWidth)
             (invoke the-size 'getHeight))))
+
+(define (get-component-preferred-size component :: <java.awt.Component>) :: <java.awt.Dimension>
+  (invoke component 'get-preferred-size))
 
 ; get width
 (define (get-width component :: <java.awt.Component>)

@@ -28,7 +28,12 @@
 (require "../kawa/ui/checkbox.scm") ;; make-checkbox
 (require "../kawa/ui/frame.scm") ;; pack-frame 
 (require "../kawa/ui/undo.scm") ;; compoundundomanager-postedit
+(require "../kawa/ui/scrollpane.scm") ;; make-scrollpane
+(require "../kawa/ui/text.scm") ;; set-text
+
 (require "../kawa/strings.scm") ;; to-string
+(require "../kawa/geometry.scm") ;; make-dimension
+(require "../kawa/color.scm") ;; make-colour-rgb
 
 (require "../common/datatable.scm") ;; get
 (require "../common/objects.scm") ;; ask
@@ -44,10 +49,16 @@
 
 (module-export rmgr-init
                rmgr-edit
-               rmgr-close)
+               rmgr-close
+               rmgr-update)
 ;; rmgr stands for rule manager
 (define rules-manager-main-dialog #f)
 (define rmgr-rules-list-panel #f) ;; the panel that contain all the rule panels
+(define center-panel #f) ;; the scrollpane rmgr-rules-list-panel is in
+
+(define rule-edit-button #f)
+(define up-button #f)
+(define down-button #f)
 
 
 ;;;; helper functions
@@ -67,6 +78,13 @@
 (define (rule-panel-position rule-panel)
   (list-index (lambda (obj) (eq? rule-panel obj)) (get-container-children rmgr-rules-list-panel) ))
 
+(define (get-nth-rule-panel n)
+  (display "n here1 ")(display n)(newline)
+  (set! n (quotient n 2))
+  (display "n here2 ")(display n)
+  (get-container-children rmgr-rules-list-panel)
+  )
+
 (define (get-rule-panel-for ruleID)
   (display "get-rule-panel ")(display ruleID)(newline)
   (display "rmrg-rule-lst ")(display (rmgr-rule-lst))(newline)
@@ -75,11 +93,12 @@
       (list-ref (get-container-children rmgr-rules-list-panel) index)
       #f))
 
-;;;; components of rule-panel 
-;(define (rule-panel-checkbox rule-panel)
-;  (list-ref (get-container-children rule-panel) 0))
-(define (rule-panel-fall-button rule-panel)
-  (list-ref (get-container-children rule-panel) 3))
+(define (get-ruleID-for-rule-panel pnl)
+  (define index (list-index (lambda (this-pnl) (equal? pnl this-pnl)) (get-container-children rmgr-rules-list-panel)))
+  (if index
+      (list-ref (rmgr-rule-lst) index)
+      #f)
+  )
 
 ;; get the object current edited by rule manager
 (define (rmgr-get-currently-edited)
@@ -101,23 +120,17 @@
   
   ;; make components
   (define top-panel (make-panel))
-  (define rule-checkbox (make-checkbox ""))
   (define rule-name-label #f)
-  ;; make buttons
-  (define rule-edit-button (make-button "Edit Rule"))
-  (define fall-through-button (make-button "Fall"))
-  (define shift-up-button (make-button "Up"))
-  (define shift-down-button (make-button "Down"))
   
-  ;; TODO: Make a rename button or have some method to rename the rule.
-  ;;       Be sure to update rule-panel-fall-button to use the correct position
-  ;;       if you add new components to the rule panel.
+  ;; make buttons
+  ;; new replacement for the previous "Fall" button for fall through
+  (define fall-checkbox (make-checkbox "Stop if true"))
+  (set-checkbox-text-alignment fall-checkbox 'left)
 
   (set-container-layout top-panel 'flow 'left)
   
   ;; assume ruleID valid
   (define rule-obj (get 'rules ruleID))
-  
   (if rule-obj
       (let ((rule-name (ask rule-obj 'name))
             (rule-fall-through? (ask rule-obj 'fall-through?)))
@@ -128,44 +141,57 @@
         
         (set! rule-name-label (make-label-with-title rule-name))
   
-        ;; set initial state of the fall-through-button (its label)
-        (if rule-fall-through?
-            (set-button-label fall-through-button "Fall")
-            (set-button-label fall-through-button "Stop")))
+        ;; set initial state of the fall-checkbox
+        (set-checkbox-value fall-checkbox (not rule-fall-through?))
+        )
       (begin
         (display "ERROR make-rule-panel given invalid ruleID")(newline)))
+    
+  (add-mouselistener 
+   top-panel
+   (make-mouselistener
+    (lambda (e)
+      (if (equal? (get-mouseevent-type e) 'left-clicked)
+          (begin
+            ;; if control key not held down unselect the others
+            (if (not (ctrl-key-down? (get-mouseevent-rawevent e)))
+                (map (lambda (rID)
+                       (if (not (= rID ruleID))
+                           (select-rule-panel rID #f))
+                       ) (rmgr-rule-lst)))
+            
+            (select-rule-panel ruleID (not (get-panel-selected top-panel)))))
+      (action-restrict-check)
+            )))
+    
+  (add-itemlistener
+   fall-checkbox
+   (make-itemlistener
+    (fall-cb-callback ruleID)
+    ))
   
   ;; buttons listeners
-  (add-actionlistener 
-   rule-edit-button
-   (make-actionlistener
-    (edit-rule-button-callback ruleID)))
-
-  (add-actionlistener 
-   fall-through-button
-   (make-actionlistener
-    (fall-through-button-callback ruleID)))
-  
-  (add-actionlistener
-   shift-up-button
-   (make-actionlistener
-    (shift-rule-button-callback ruleID 'up)))
-  
-  (add-actionlistener 
-   shift-down-button
-   (make-actionlistener
-    (shift-rule-button-callback ruleID 'down)))
-  
-  (add-component top-panel rule-checkbox)
   (add-component top-panel rule-name-label)
+  (add-component top-panel fall-checkbox)
   
-  (add-component top-panel rule-edit-button)
-  (add-component top-panel fall-through-button)
-  (add-component top-panel shift-up-button)
-  (add-component top-panel shift-down-button)
+  (set-border top-panel bevel-in-border)
   
   ;; make rule panel
   top-panel)
+
+(define (update-rule-panel ruleID)
+  (define pnl (get-rule-panel-for ruleID))
+  
+  ;; update the name of the rule
+  (define name-label (get-rule-panel-name-label pnl))
+  (define rule (get 'rules ruleID))
+  
+  (if rule
+      (set-text name-label (ask rule 'name))
+      (begin (display "[update-rule-panel] invalid ruleID")(newline)))
+  )
+
+
 
 ;;;; add/remove rule panel
 
@@ -175,8 +201,12 @@
   (if (and rmgr-rules-list-panel
            rules-manager-main-dialog)
       (begin
-        (add-component rmgr-rules-list-panel (make-rule-panel ruleID))
-        (pack-frame rules-manager-main-dialog))
+        (define new-panel (make-rule-panel ruleID))
+        (add-component rmgr-rules-list-panel new-panel)
+        
+        (display "panel size ")(display (get-component-preferred-size new-panel))(newline)
+        (component-revalidate center-panel) ;; revalidate the scrollpane
+        ) 
       (begin
         (display "ERROR: in rmgr-add-rule-panel")(newline))))
 
@@ -194,11 +224,11 @@
   (define deleted-ID-lst '())
   
   (map (lambda (rule-panel ruleID)
-         (define component-lst (get-container-children rule-panel))
-         (define this-checkbox (car component-lst))
+         ;(define component-lst (get-container-children rule-panel))
+         ;(define this-checkbox (car component-lst))
 
          ;; if checkbox checked remove
-         (if (get-checkbox-value this-checkbox)
+         (if (get-panel-selected rule-panel);(get-checkbox-value this-checkbox)
              (begin
                (remove-component rmgr-rules-list-panel rule-panel)
                (pack-frame rules-manager-main-dialog)
@@ -209,16 +239,77 @@
   ;; return a list of the deleted ID
   deleted-ID-lst)
 
+;;;; components of rule-panel 
+;(define (get-rule-panel-checkbox rule-panel)
+;  (list-ref (get-container-children rule-panel) 0))
+;(define (rule-panel-fall-button rule-panel)
+;  (list-ref (get-container-children rule-panel) 3))
+(define (get-rule-panel-fall-checkbox rule-panel)
+  (list-ref (get-container-children rule-panel) 1))
+(define (get-rule-panel-name-label rule-panel)
+  (list-ref (get-container-children rule-panel) 0))
+
+(define (get-panel-selected pnl)
+  (equal? (get-background-color pnl) selected-color))
+  
+;; return a list of the position of the selected rule panels
+(define (get-selected-pos-lst)
+  (define (helper lst pos) 
+    (if (null? lst)
+        '()
+        (begin
+          (define rule-panel (car lst))
+          (append 
+           ;; condition append
+           (if (get-panel-selected rule-panel)
+               (list pos)
+               '())
+           (helper (cdr lst) (+ pos 1)))
+          )))
+  ;; traverse through the list of rule panels
+  (helper (get-container-children rmgr-rules-list-panel) 0))
+
+
+;;=========================
+;;;; rule panel selection
+;;=========================
+
+;; get the ruleID of the selected panel
+(define (selected-rule-lst)
+  (map (lambda (index)
+         (list-ref (rmgr-rule-lst) index))
+         (get-selected-pos-lst)))
+
+(define selected-color (make-colour-rgb 135 206 250))  ;; sky blue
+(define unselected-color (make-colour-rgb 238 238 238))
+
+  ;; some actions are disabled depending on the number of rules selected
+(define (action-restrict-check)
+  ;; only activate these buttons when only one is selected
+  (set-component-enabled rule-edit-button (= (length (selected-rule-lst)) 1))
+  (set-component-enabled up-button (= (length (selected-rule-lst)) 1))
+  (set-component-enabled down-button (= (length (selected-rule-lst)) 1))
+  )
+
 ;; assume rule manager is correctly loaded (rule-panel-lst correspond to rmgr-rule-lst)
-;; we're deleting a rule within rule manager 
-(define (check-rule-panel ruleID)
+;; check the checkbox in the panel this ruleID
+(define (select-rule-panel ruleID selected?)
   (define rule-panel-lst (get-container-children rmgr-rules-list-panel))
   (map (lambda (rule-panel this-ruleID)
          (define component-lst (get-container-children rule-panel))
-         (define this-checkbox (car component-lst))
-         ;; if checkbox checked remove
+         (define rule-name-label (get-rule-panel-name-label rule-panel))
+         (define fall-checkbox (get-rule-panel-fall-checkbox rule-panel))
          (if (= this-ruleID ruleID)
-             (set-checkbox-value this-checkbox #t))
+             (if selected?
+                 (begin
+                   (set-background-color rule-panel selected-color)
+                   (set-background-color rule-name-label selected-color)
+                   (set-background-color fall-checkbox selected-color))
+                 (begin
+                   (set-background-color rule-panel unselected-color)
+                   (set-background-color rule-name-label unselected-color)
+                   (set-background-color fall-checkbox unselected-color))
+                 ))
          ) rule-panel-lst (rmgr-rule-lst)))
 
 ;; remove rule assumes that obj is the currently 
@@ -258,6 +349,8 @@
       (rmgr-remove-rule-panel new-rule-ID)
       (rmgr-set-rule-lst (remove (lambda (rid) (= rid new-rule-ID)) (rmgr-rule-lst)))
       (del 'rules new-rule-ID)
+      ;; the last panel does not disappear even after we do remove-component thus we do this
+      (component-update rmgr-rules-list-panel)
       )
     (lambda () ;; redo
       (rmgr-edit curr-edit-mode edited-obj-ID)
@@ -286,6 +379,9 @@
                ;; delete from 'rules 
                (del 'rules ruleID)
                ) deleted-ID-lst)
+        
+        ;; the last panel does not disappear even after we do remove-component thus we do this
+        (component-update rmgr-rules-list-panel)
 
         ;; post undo
         (compoundundomanager-postedit
@@ -316,12 +412,44 @@
                    (rmgr-remove-rule-panel ruleID)
                    (rmgr-set-rule-lst (remove (lambda (thisruleID) (= ruleID thisruleID)) (rmgr-rule-lst)))
                    ) deleted-ID-lst)
+            (component-update rmgr-rules-list-panel)
             ;; remove from rule-lst and 'rules 
             (map (lambda (ruleID)
                    ;; delete from 'rules 
                    (del 'rules ruleID)
                    ) deleted-ID-lst)
             ))))))
+
+;; used by the external rule button (as opposed to the rule button on the panel)
+(define (edit-rule-button-callback2 e)
+  ;; reusing the old code for now
+  (define selected-ruleID-lst (selected-rule-lst))
+  (if (= (length selected-ruleID-lst) 1)
+      (begin
+        ;; get the lambda object and run it on the spot
+        ((edit-rule-button-callback (car selected-ruleID-lst)) #f)
+        ))
+  )
+
+(define (shift-up-callback2 e)
+  (define selected-ruleID-lst (selected-rule-lst))
+  (if (= (length selected-ruleID-lst) 1)
+      (begin
+        ;; get the lambda object and run it on the spot
+        ((shift-rule-button-callback (car selected-ruleID-lst) 'up) #f)
+        ))
+  ;(shift-rule-button-callback ruleID up-or-down)
+  )
+
+(define (shift-down-callback2 e)
+  (define selected-ruleID-lst (selected-rule-lst))
+  (if (= (length selected-ruleID-lst) 1)
+      (begin
+        ;; get the lambda object and run it on the spot
+        ((shift-rule-button-callback (car selected-ruleID-lst) 'down) #f)
+        ))
+  ;(shift-rule-button-callback ruleID up-or-down)
+  )
 
 ;;;; rule swapping 
 
@@ -404,7 +532,7 @@
     (else (display "ERROR: up-or-down to shift-rule-button-callback wrong")(newline)))
   )
 
-;;;; fall through
+;;;; fall through (not used anymore)
 ;; returns the callback that is has the parameter ruleID and ft-button (these differs for different button)
 (define (fall-through-button-callback ruleID)
   
@@ -457,6 +585,50 @@
   
   ft-button-callback)
 
+(define (fall-cb-callback ruleID)
+
+  ;; set fall through or not for this rule (negation of checkbox value)
+  (define (set-fall value :: <boolean>)
+    (define rule-obj (get 'rules ruleID))
+
+    (if rule-obj
+        (ask rule-obj 'set-fall-through? value))
+
+    ;; pop the rules manager out again
+    (rmgr-edit edit-mode (rmgr-get-currently-edited-ID))
+
+    ;; right most button of dialog box is getting pushed out
+    ;;(pack-frame rules-manager-main-dialog)
+    )
+  
+  
+  (define (ft-checkbox-callback e stop?)
+    ;;(define ft-checkbox (get-rule-panel-fall-checkbox (get-rule-panel-for ruleID)))
+    ;; alternate button display between "Fall" and "Stop"
+
+    (if stop?
+        (begin
+          (set-fall #f)
+          (compoundundomanager-postedit
+           undo-manager
+           (make-undoable-edit "Set Stop"
+                               (lambda () ;; undo
+                                 (set-fall #t))
+                               (lambda () ;; redo
+                                 (set-fall #f)))))
+        (begin
+          (set-fall #t)
+          (compoundundomanager-postedit
+           undo-manager
+           (make-undoable-edit "Set Fall"
+                               (lambda () ;; undo
+                                 (set-fall #f))
+                               (lambda () ;; redo
+                                 (set-fall #t)))))
+        ))
+
+  ft-checkbox-callback)
+
 ;; edit rule button
 ;; returns a callback parameterized by ruleID
 (define (edit-rule-button-callback ruleID)
@@ -506,6 +678,7 @@
 
 ;; edit the rules of this object, target-type ('link 'node)
 (define (rmgr-edit target-type obj-ID)
+  (display "rmgr-edit ")(newline)
   (set! edit-mode target-type)
   (populate-rules-manager target-type obj-ID)
   
@@ -530,6 +703,9 @@
   (if rules-manager-main-dialog
       (set-component-visible rules-manager-main-dialog #f)))
 
+(define (rmgr-update)
+  (map update-rule-panel (rmgr-rule-lst)))
+
 ;; target type might be 'link 'node 'doc
 ;; display the dialog with the list of rules attached to the object (which can be any of the target-type)
 (define (rmgr-init)
@@ -553,42 +729,72 @@
         (add-component rules-menu-bar rules-menu)
         ))
   
-  ;; label display
-  (define rules-label (make-label-with-title "Rules"))
+  ;; top panel
+  (define rules-label (make-label-with-title "Rules (applied in order shown) "))
+  (define up-down-label (make-label-with-title "Change rule order: "))
   (define rules-label-panel (make-panel))
+  (set! up-button (make-button "Up"))
+  (set! down-button (make-button "Down"))
   (add-component rules-label-panel rules-label)
+  (add-component rules-label-panel up-down-label)
+  (add-component rules-label-panel up-button)
+  (add-component rules-label-panel down-button)
   (add-component rules-manager-main-panel rules-label-panel 'border-north)
-  
-  (define center-panel (make-panel))
-  (set-container-layout center-panel 'vertical)
-  (add-component rules-manager-main-panel center-panel 'border-center)
   
   ;; list of rules
   (set! rmgr-rules-list-panel (make-panel))
-  (set-container-layout rmgr-rules-list-panel 'vertical)
-  (add-component center-panel rmgr-rules-list-panel)
+  (set-component-size rmgr-rules-list-panel 400 200)
+  ;(set-component-minimum-size rmgr-rules-list-panel 400 200)
+  ;;(set-component-maximum-size rmgr-rules-list-panel 400 200)
   
-  ;; rule list buttons
-  (define add-rule-button (make-button "Add Rule"))
-  (define delete-rule-button (make-button "Delete Selected"))
-  (define rule-list-button-panel (make-panel))
-  (add-component rule-list-button-panel add-rule-button)
-  (add-component rule-list-button-panel delete-rule-button)
-  (add-component center-panel rule-list-button-panel)
+  (set-container-layout rmgr-rules-list-panel 'vertical)
+  ;(add-component center-panel rmgr-rules-list-panel)
+  
+  ;;(define center-panel (make-panel))
+  (set! center-panel (make-scrollpane-with-policy rmgr-rules-list-panel 'needed 'needed))
+  (set-component-preferred-size center-panel 400 200)
+  ;(define center-panel (make-scrollpane rmgr-rules-list-panel))
+  ;(set-container-layout center-panel 'vertical)
+  (add-component rules-manager-main-panel center-panel 'border-center)
   
   (define rules-dialog-button-panel (make-panel))
   (set-container-layout rules-dialog-button-panel 'flow 'right)
   (add-component rules-manager-main-panel rules-dialog-button-panel 'border-south)
   
+    ;; rule list buttons
+  (define add-rule-button (make-button "Add Rule"))
+  (define delete-rule-button (make-button "Delete Selected"))
+  (set! rule-edit-button (make-button "Edit Rule"))
+  ;;(define rule-list-button-panel (make-panel))
+  ;;(add-component rule-list-button-panel add-rule-button)
+  ;;(add-component rule-list-button-panel delete-rule-button)
+  (add-component rules-dialog-button-panel add-rule-button)
+  (add-component rules-dialog-button-panel delete-rule-button)
+  (add-component rules-dialog-button-panel rule-edit-button)
+  ;;(add-component center-panel rule-list-button-panel)
+  
+  (set-component-enabled rule-edit-button #f)
+  (set-component-enabled up-button #f)
+  (set-component-enabled down-button #f)
+  
   ;; dialog button
   (define rules-dialog-close (make-button "Close"))
   (add-component rules-dialog-button-panel rules-dialog-close)
+  
+  (add-actionlistener up-button 
+                      (make-actionlistener shift-up-callback2))
+  
+  (add-actionlistener down-button 
+                      (make-actionlistener shift-down-callback2))
   
   (add-actionlistener add-rule-button 
                       (make-actionlistener add-rule-button-callback))
   
   (add-actionlistener delete-rule-button 
                       (make-actionlistener delete-selected-rule-button-callback))
+  
+   (add-actionlistener rule-edit-button
+                       (make-actionlistener edit-rule-button-callback2))
   
   (add-actionlistener rules-dialog-close
                       (make-actionlistener

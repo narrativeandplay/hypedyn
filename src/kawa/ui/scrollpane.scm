@@ -17,7 +17,7 @@
 ;; with this program; if not, write to the Free Software Foundation, Inc.,
 ;; 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-(module-export make-scrollpane make-scrollpane-2
+(module-export make-scrollpane make-scrollpane-with-policy
                scroll-rect-to-visible
                scroll-set-vertical-unit-increment scroll-set-horizontal-unit-increment)
 
@@ -25,13 +25,49 @@
 ;; scrollpane
 ;; 
 
+(define-alias vert-sb-always <javax.swing.ScrollPaneConstants>:VERTICAL_SCROLLBAR_ALWAYS)  
+(define-alias vert-sb-needed <javax.swing.ScrollPaneConstants>:VERTICAL_SCROLLBAR_AS_NEEDED)  
+(define-alias vert-sb-never <javax.swing.ScrollPaneConstants>:VERTICAL_SCROLLBAR_NEVER) 
+
+(define-alias hori-sb-always <javax.swing.ScrollPaneConstants>:HORIZONTAL_SCROLLBAR_ALWAYS)
+(define-alias hori-sb-needed <javax.swing.ScrollPaneConstants>:HORIZONTAL_SCROLLBAR_AS_NEEDED)  
+(define-alias hori-sb-never <javax.swing.ScrollPaneConstants>:HORIZONTAL_SCROLLBAR_NEVER) 
+
+
+
+;(define vert-sb-always <javax.swing.JScrollPane>:VERTICAL_SCROLLBAR_ALWAYS)  
+;(define vert-sb-needed <javax.swing.JScrollPane>:VERTICAL_SCROLLBAR_AS_NEEDED)  
+;(define vert-sb-never <javax.swing.JScrollPane>:VERTICAL_SCROLLBAR_NEVER) 
+
+;(define hori-sb-always <javax.swing.JScrollPane>:HORIZONTAL_SCROLLBAR_ALWAYS)
+;(define hori-sb-needed <javax.swing.JScrollPane>:HORIZONTAL_SCROLLBAR_AS_NEEDED)  
+;(define hori-sb-never <javax.swing.JScrollPane>:HORIZONTAL_SCROLLBAR_NEVER) 
 ;make a scrollpane
 (define (make-scrollpane in-component :: <javax.swing.JComponent>)
   (<javax.swing.JScrollPane> in-component))
 
 ;; make a scrollpane with policy
-(define (make-scrollpane-2 in-component :: <javax.swing.JComponent> x :: <int> y :: <int>)
-  (<javax.swing.JScrollPane> in-component))
+(define (make-scrollpane-with-policy in-component :: <javax.swing.JComponent> 
+                                     vp-sym :: <symbol> 
+                                     hp-sym :: <symbol> )
+  (define vpolicy
+    (case vp-sym
+      ((always) vert-sb-always)
+      ((needed) vert-sb-needed)
+      ((never) vert-sb-never)
+      (else (display "Error unknown policy ")(display vp-sym)
+            vert-sb-needed)))
+  
+   (define hpolicy
+    (case hp-sym
+      ((always) hori-sb-always)
+      ((needed) hori-sb-needed)
+      ((never) hori-sb-never)
+      (else (display "Error unknown policy ")(display hp-sym)
+            hori-sb-needed)))
+  (display "vpolicy")(display vert-sb-needed)(newline)
+   (<javax.swing.JScrollPane> in-component vert-sb-needed hori-sb-needed)
+  )
 
 ; scroll containing scrollpane, if any, to given rect; must be JComponent
 (define (scroll-rect-to-visible component :: <javax.swing.JComponent> rect :: <java.awt.Rectangle>)

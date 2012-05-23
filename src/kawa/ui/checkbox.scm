@@ -18,7 +18,8 @@
 ;; 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 (module-export make-checkbox set-checkbox-selected 
-               get-checkbox-value set-checkbox-value)
+               get-checkbox-value set-checkbox-value
+               set-checkbox-text-alignment)
                
 ;;
 ;; check box
@@ -28,7 +29,7 @@
 (define (make-checkbox in-title :: <String>)
   (<javax.swing.JCheckBox> (as <java.lang.String> in-title)))
 
-; set selected a checkbox.
+; set selected a checkbox. (duplicate of set-checkbox-value)
 (define (set-checkbox-selected checkbox :: <javax.swing.JToggleButton> boolean :: <java.lang.Boolean>)
   (invoke checkbox 'setSelected boolean))
 
@@ -39,5 +40,11 @@
 ; set value of checkbox
 (define (set-checkbox-value in-checkbox :: <javax.swing.JCheckBox> in-flag :: <boolean>)
   (invoke in-checkbox 'setSelected in-flag))
+
+(define (set-checkbox-text-alignment cb :: <javax.swing.JCheckBox>
+                                 align :: <symbol>)
+  (case align
+    ((left) (invoke cb 'setHorizontalTextPosition <javax.swing.JCheckBox>:LEFT))
+    ((right) (invoke cb 'setHorizontalTextPosition <javax.swing.JCheckBox>:RIGHT))))
 
 

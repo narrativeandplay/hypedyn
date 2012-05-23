@@ -20,7 +20,8 @@
 (module-export get-color-red get-color-green get-color-blue
                get-colorjava-red get-colorjava-green get-colorjava-blue
                colorjava->colorlist
-               get-red-javacolor get-green-javacolor get-blue-javacolor
+               get-red-javacolor get-green-javacolor get-blue-javacolor get-gray-javacolor
+               get-darkgray-javacolor get-lightgray-javacolor
                make-colour-from-list ;make-colour-from-list4 
                make-colour-rgb
                white-color black-color grey-color light-grey-color dark-grey-color bg-color 
@@ -73,6 +74,15 @@
 
 (define (get-blue-javacolor) :: <java.awt.Color>
   (<java.awt.Color>:.blue))
+
+(define (get-gray-javacolor) :: <java.awt.Color>
+  ;(<java.awt.Color>:gray)
+  <java.awt.Color>:gray
+  )
+(define (get-darkgray-javacolor) :: <java.awt.Color>
+  <java.awt.Color>:darkGray)
+(define (get-lightgray-javacolor) :: <java.awt.Color>
+  <java.awt.Color>:lightGray)
 
 ;; note all these colours are just a list of 3 numbers
 ;; you need to call (make-colour-from-list color) to make the actual java color

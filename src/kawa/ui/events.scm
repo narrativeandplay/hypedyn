@@ -27,6 +27,7 @@
                w-key-event? s-key-event? a-key-event? d-key-event? space-key-event? tab-key-event? backspace-key-event?
                p-key-event? e-key-event? forward-slash-key-event?
                ctrl-key-modifier?
+               ctrl-key-down? alt-key-down? altgraph-key-down? shift-key-down? meta-key-down?
                set-keystroke-listener
                make-documentlistener add-documentlistener
                make-documentfilter add-documentfilter filter-bypass-insert filter-bypass-remove filter-bypass-replace
@@ -213,6 +214,20 @@
 ;; leftward slash "/"
 (define (forward-slash-key-event? e :: <java.awt.event.KeyEvent>)
   (eq? (invoke e 'getKeyCode) java.awt.event.KeyEvent:VK_SLASH))
+
+;; TODO phase out the ctrl-key-modifier? and similar such events
+;; the following is a better way to do it since it handles input events which are both key and mouse events
+(define (ctrl-key-down? e :: <java.awt.event.InputEvent>)
+  (invoke e 'is-control-down))
+(define (alt-key-down? e :: <java.awt.event.InputEvent>)
+  (invoke e 'is-alt-down))
+(define (altgraph-key-down? e :: <java.awt.event.InputEvent>)
+  (invoke e 'is-alt-graph-down))
+(define (shift-key-down? e :: <java.awt.event.InputEvent>)
+  (invoke e 'is-shift-down))
+(define (meta-key-down? e :: <java.awt.event.InputEvent>)
+  (invoke e 'is-meta-down))
+
 
 (define (set-keystroke-listener component :: <javax.swing.JComponent>)
   (let(( input-map (invoke component 'getInputMap))
