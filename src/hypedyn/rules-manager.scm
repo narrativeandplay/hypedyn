@@ -127,7 +127,7 @@
   (define fall-checkbox (make-checkbox "Stop if true"))
   (set-checkbox-text-alignment fall-checkbox 'left)
 
-  (set-container-layout top-panel 'flow 'left)
+  (set-container-layout top-panel 'horizontal)
   
   ;; assume ruleID valid
   (define rule-obj (get 'rules ruleID))
@@ -172,9 +172,15 @@
   
   ;; buttons listeners
   (add-component top-panel rule-name-label)
+  (add-component top-panel (create-horizontal-glue))
   (add-component top-panel fall-checkbox)
   
   (set-border top-panel bevel-in-border)
+  
+  (display "gotten width ")(display (get-width top-panel))(newline)
+  (display "gotten height ")(display (get-height rule-name-label))(newline)
+  
+  (set-component-maximum-size top-panel 440 40)
   
   ;; make rule panel
   top-panel)

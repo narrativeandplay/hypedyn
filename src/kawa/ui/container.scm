@@ -32,6 +32,7 @@
                clear-container-from-index-onwards
                add-component-at
                shift-panel
+               create-horizontal-glue
                )
 
 ;;
@@ -144,3 +145,7 @@
           )))
   ;; call the helper
   (add-comp-helper comp-lst 0))
+
+;; active only when you're using box layout (vertical and horizontal from our set-container-layout)
+(define (create-horizontal-glue)
+  (invoke-static <javax.swing.Box> 'create-horizontal-glue))
