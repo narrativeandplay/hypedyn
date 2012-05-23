@@ -360,6 +360,40 @@ function restartStory() {
 	runhypedyn()
 }
 
+// refresh node - note: some of this duplicates gotoNode, should refactor
+function refreshNode(node) {
+    // trigger enteredNode for links to replace text
+    for (var i in node.links) {
+			eventTrigger("enteredNode", node.links[i]); 
+    }
+
+		if (page_flipping_mode) {
+			if (peek_back_mode)
+				cache_peek_back();
+			flips = [];
+			page = 0;
+		}
+		
+    // regenerate the node text
+    disp("b4 html code (refresh)");
+    var new_html_code = node_to_html( node, activated_anywhere_nodes, false );
+    disp("aft html code (refresh)");
+    $("pages").innerHTML = new_html_code;
+
+		if (page_flipping_mode)
+			insert_peek_back();
+		else 
+			style_pages();
+    
+    //anywherelink_buttons(); // original anywhere nodes
+    add_anywhere_button(); // choice links
+    init_element_height();
+    replace_button_placeholder();
+		
+    if (page_flipping_mode)
+        drawPageIndicator(page, flips.length, back_page_check());
+}
+
 function gotoNode(nodeID) {
 	disp("gotoNODE " +nodeID);
 	disp("really here?");
@@ -376,13 +410,6 @@ function gotoNode(nodeID) {
 		
 		prev_read_nodes.push( currNodeID );
 		
-		//alert($("back_button"));
-		/*
-		var back_button = $("back_button");
-		if (back_button) { // enable the button
-			back_button.removeAttribute("disabled");
-		}
-		*/
 		back_button_check();
 		node.visited = true;
 		currNodeID = nodeID;
@@ -400,21 +427,14 @@ function gotoNode(nodeID) {
 		disp("b4 html code ");
 		var new_html_code = node_to_html( node, activated_anywhere_nodes, false );
 		disp("aft html code ");
-		//check_gtg( new_html_code );
-		//disp("end of gtg");
 		
-		//var htmlcode = htmlFormat( node.content, clone_arr(node.links).concat(activated_anywhere_nodes), false );
-		//disp("htmlcode "+htmlcode);
-		//disp("new_html_code "+new_html_code);
-		
-		$("pages").innerHTML = new_html_code;//htmlcode;
-		//$("pages").innerHTML = htmlcode;
-		disp("here ");
+		$("pages").innerHTML = new_html_code;
+
 		if (page_flipping_mode)
 			insert_peek_back();
 		else 
 			style_pages();
-		disp("here2 ");
+
 		//anywherelink_buttons(); // original anywhere nodes
 		add_anywhere_button(); // choice links
 		init_element_height();

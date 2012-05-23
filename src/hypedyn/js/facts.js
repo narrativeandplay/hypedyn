@@ -40,6 +40,9 @@ function createFact(name, type, id) {
 function setFact( id, value) {
 	var fact = factlist[id];
 	fact.value = value;
+    node=nodelist[currNodeID];
+    if(node != undefined)
+        refreshNode(node);
 	//factsDebug();
 }
 

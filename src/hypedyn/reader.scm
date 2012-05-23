@@ -710,7 +710,7 @@
     (if target-fact
         (begin
           (ask target-fact 'assert)
-          ;(refresh-node)
+          (refresh-node)
           ))))
 
 ; retract an fact
@@ -719,7 +719,7 @@
     (if target-fact
         (begin
           (ask target-fact 'retract)
-          ;(refresh-node)
+          (refresh-node)
           ))))
 
 ; set the value of an fact
@@ -730,7 +730,7 @@
     (if target-fact
         (begin
           (ask target-fact 'set-value! in-value)
-          ;(refresh-node)
+          (refresh-node)
           ))))
 
 ; check if an fact holds
