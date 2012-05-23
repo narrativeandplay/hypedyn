@@ -102,8 +102,8 @@ function nonpageflip_init() {
 var clicked_link_flag = false;
 function clickedLink(linkID) {
 	if ( linklist[linkID] ) {
-		linklist[linkID].followed += 1;
 		eventTrigger("clickedLink", linklist[linkID]);
+		linklist[linkID].followed += 1; // NOTE: this must be AFTER eventTrigger
 		//disp("clicked link true in clickedLink");
 		clicked_link_flag = true;
 	}
