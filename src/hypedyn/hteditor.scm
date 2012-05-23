@@ -160,10 +160,10 @@
         (mf-separator2 (make-separator))
         (mf-openrecent (make-menu "Open Recent"))
         (mf-import (make-menu-item "Import..."))
-        (mf-export-web (make-menu-item "Export for Web..."))
+        (mf-export-web (make-menu-item "Export as Applet..."))
         (mf-export-standalone (make-menu-item "Export Standalone..."))
+        (mf-export-js (make-menu-item "Export for Web..."))
         (mf-export-text (make-menu-item "Export as Text..."))
-        (mf-export-js (make-menu-item "Export as JS"))
         
         (mf-properties (make-menu-item "Properties"))
         
@@ -248,29 +248,29 @@
                                  (show-properties))))
           ))
     (add-component m-file mf-import)
-    (add-component m-file mf-export-text)
-    
     (add-actionlistener mf-import (make-actionlistener
                                    (lambda (source)
                                      (doimport))))
-    (add-actionlistener mf-export-text (make-actionlistener
-                                       (lambda (source)
-                                         (doexport-text))))
     (if (not (is-basic-mode?))
         (begin
-          (add-component m-file mf-export-web)
-          (add-actionlistener mf-export-web (make-actionlistener
-                                             (lambda (source)
-                                               (doexport-hypedyn-web))))
-          (add-component m-file mf-export-standalone)
-          (add-actionlistener mf-export-standalone (make-actionlistener
-                                                    (lambda (source)
-                                                      (doexport-standalone))))
+          (if (java-reader?)
+              (begin
+                (add-component m-file mf-export-web)
+                (add-actionlistener mf-export-web (make-actionlistener
+                                                   (lambda (source)
+                                                     (doexport-hypedyn-web))))
+                (add-component m-file mf-export-standalone)
+                (add-actionlistener mf-export-standalone (make-actionlistener
+                                                          (lambda (source)
+                                                            (doexport-standalone))))))
           (add-component m-file mf-export-js)
           (add-actionlistener mf-export-js (make-actionlistener
                                             (lambda (source)
                                               (doexport-js))))
-          
+    (add-component m-file mf-export-text)
+    (add-actionlistener mf-export-text (make-actionlistener
+                                       (lambda (source)
+                                         (doexport-text))))
           ))
     
     ; edit menu

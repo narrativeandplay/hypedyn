@@ -393,8 +393,8 @@
   (add-component m-control m-control-step)
   (add-component m-control m-control-stop)
   (set-menuitem-component m-control-stop #f)
-  (add-component m-control (make-separator))
-  (add-component m-control m-control-inspector)
+  ;(add-component m-control (make-separator))
+  ;(add-component m-control m-control-inspector)
   
   ; window menu
   ;(add-component m-window m-window-minimize)

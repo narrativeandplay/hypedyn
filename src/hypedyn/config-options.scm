@@ -330,7 +330,7 @@
 
 
 ; enable/disable java reader
-(define-private java-reader #t)
+(define-private java-reader #f)
 (define (java-reader?)
   java-reader)
 (define (set-java-reader! in-flag)

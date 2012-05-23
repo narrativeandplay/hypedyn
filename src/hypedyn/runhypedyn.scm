@@ -44,6 +44,8 @@
          (set-undo-enabled! #t))
         ((equal? "-no-java-reader" arg)
          (set-java-reader! #f))
+        ((equal? "-java-reader" arg)
+         (set-java-reader! #t))
         ((equal? "-full" arg)
          (set-full-version!))))
      command-line-arguments))
