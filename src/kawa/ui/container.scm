@@ -136,13 +136,22 @@
 ;; at component at a certain position (java's (invoke container 'add comp index) does not work in horizontal layout)
 (define (add-component-at container comp index)
   (define comp-lst (get-container-children container))
+  (clear-container container)
+  (define new-len (+ (length comp-lst) 1))
+  
   (define (add-comp-helper comp-lst curr-index)
-    (if (not (null? comp-lst))
+    (if (not (> curr-index (- new-len 1)))
         (begin
           (if (= curr-index index)
-              (add-component container comp)
-              (add-component container (car comp-lst)))
+              (begin
+                (add-component container comp)
+                (add-comp-helper comp-lst (+ curr-index 1)))
+              (begin
+                (add-component container (car comp-lst))
+                (add-comp-helper (cdr comp-lst) (+ curr-index 1)))
+              )
           )))
+  
   ;; call the helper
   (add-comp-helper comp-lst 0))
 

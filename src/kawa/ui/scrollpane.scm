@@ -19,7 +19,9 @@
 
 (module-export make-scrollpane make-scrollpane-with-policy
                scroll-rect-to-visible
-               scroll-set-vertical-unit-increment scroll-set-horizontal-unit-increment)
+               scroll-set-vertical-unit-increment scroll-set-horizontal-unit-increment
+               scroll-viewport-width scroll-viewport-height  
+               )
 
 ;;
 ;; scrollpane
@@ -81,3 +83,11 @@
 (define (scroll-set-horizontal-unit-increment in-scrollpane :: <javax.swing.JScrollPane> inc :: <int>)
   (invoke (as <javax.swing.JScrollBar> (invoke in-scrollpane 'getHorizontalScrollBar)) 'setUnitIncrement inc))
 
+;;getViewport
+(define (scroll-viewport-width scrollpane)
+  (let ((vp-dim (invoke (invoke scrollpane 'getViewport) 'get-view-size)))
+    (invoke vp-dim 'get-width)))
+
+(define (scroll-viewport-height scrollpane)
+  (let ((vp-dim (invoke (invoke scrollpane 'getViewport) 'get-view-size)))
+    (invoke vp-dim 'get-height)))

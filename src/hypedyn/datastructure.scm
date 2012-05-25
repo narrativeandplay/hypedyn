@@ -295,7 +295,6 @@
                 
                 (obj-put this-obj 'fall-through? (lambda (self) fall-through?))
                 (obj-put this-obj 'set-fall-through? (lambda (self new-ft) 
-                                                       (display "set fall through message received ")(display new-ft)(newline)
                                                        (set! fall-through? new-ft)))
                 
                 ;; add new features and override rule-expr and to-save-sexpr
@@ -318,7 +317,7 @@
                                    (list 'quote type)                      ; type ('link/'node)
                                    (list 'quote (ask self 'and-or))        ; and-or ('and/'or)
                                    negate?
-                                   parentID                                  ; used to be linkID (int)
+                                   (ask parent-rule 'parentID)                                  ; used to be linkID (int)
                                    (ask self 'ID))))
                 this-obj)
 
@@ -336,6 +335,7 @@
                        (actions '()))   ; generalized actions, currently used for updating facts in node rules
                   
                   (obj-put this-obj 'parentID (lambda (self) parentID))
+                  (obj-put this-obj 'set-parentID! (lambda (self new-parentID) (set! parentID new-parentID)))
                   (obj-put this-obj 'and-or (lambda (self) and-or))
                   (obj-put this-obj 'set-and-or! 
                            (lambda (self in-and-or) 
@@ -346,7 +346,7 @@
                   (obj-put this-obj 'conditions (lambda (self) conditions))
                   (obj-put this-obj 'add-condition!
                            (lambda (self new-condition)
-                             (set! conditions (cons new-condition conditions))
+                             (set! conditions (append conditions (list new-condition)))
                              ;(ht-set-dirty!)
                              ))
                   (obj-put this-obj 'delcondition

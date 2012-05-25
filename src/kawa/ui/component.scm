@@ -35,6 +35,7 @@
                black-border bevel-in-border bevel-out-border
                component-revalidate
                get-component-root-pane
+               stop-expandfill
                )
 
 ;;
@@ -135,6 +136,15 @@
   (set-component-minimum-size component width height)
   (set-component-maximum-size component width height)
   (set-component-preferred-size component width height))
+
+;; prevent the default behavior of box layout to expand the component
+;; to fill the parent container
+(define (stop-expandfill component :: <java.awt.Component>)
+  (define preferred-dim (get-component-preferred-size component))
+  (set-component-non-resizable-size component (invoke preferred-dim 'get-width) (invoke preferred-dim 'get-height))
+  )
+                                      
+                                      
 
 ; set component's opaque flag
 (define (set-opaque comp :: <javax.swing.JComponent> flag)

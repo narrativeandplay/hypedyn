@@ -275,7 +275,7 @@
                            update-node-style-callback
                            in-undo-manager)
   (set! nodeeditor-frame (make-window "Text editor"))
-  (set-component-size nodeeditor-frame 400 300)
+  (set-component-size nodeeditor-frame 450 300)
   (set-container-layout nodeeditor-frame 'border)
   (add-windowlistener nodeeditor-frame (make-windowlistener
                                         nodeeditor-window-opened

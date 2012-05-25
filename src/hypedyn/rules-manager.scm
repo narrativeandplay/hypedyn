@@ -79,15 +79,11 @@
   (list-index (lambda (obj) (eq? rule-panel obj)) (get-container-children rmgr-rules-list-panel) ))
 
 (define (get-nth-rule-panel n)
-  (display "n here1 ")(display n)(newline)
   (set! n (quotient n 2))
-  (display "n here2 ")(display n)
   (get-container-children rmgr-rules-list-panel)
   )
 
 (define (get-rule-panel-for ruleID)
-  (display "get-rule-panel ")(display ruleID)(newline)
-  (display "rmrg-rule-lst ")(display (rmgr-rule-lst))(newline)
   (define index (list-index (lambda (rid) (= rid ruleID)) (rmgr-rule-lst)))
   (if index
       (list-ref (get-container-children rmgr-rules-list-panel) index)
@@ -128,6 +124,7 @@
   (set-checkbox-text-alignment fall-checkbox 'left)
 
   (set-container-layout top-panel 'horizontal)
+  (set-component-non-resizable-size top-panel 380 50) ;; width is 20 less than width of scrollpane
   
   ;; assume ruleID valid
   (define rule-obj (get 'rules ruleID))
@@ -160,7 +157,7 @@
                            (select-rule-panel rID #f))
                        ) (rmgr-rule-lst)))
             
-            (select-rule-panel ruleID (not (get-panel-selected top-panel)))))
+            (select-rule-panel ruleID (not (panel-selected? top-panel)))))
       (action-restrict-check)
             )))
     
@@ -177,10 +174,7 @@
   
   (set-border top-panel bevel-in-border)
   
-  (display "gotten width ")(display (get-width top-panel))(newline)
-  (display "gotten height ")(display (get-height rule-name-label))(newline)
-  
-  (set-component-maximum-size top-panel 440 40)
+  (set-component-non-resizable-size top-panel 440 40)
   
   ;; make rule panel
   top-panel)
@@ -203,16 +197,20 @@
 
 ;; add rule (makes a rule panel inside rmgr-rules-list-panel)
 ;; when pos is added it adds the panel and the ruleID in that particular position
-(define (rmgr-add-rule-panel ruleID)
+(define (rmgr-add-rule-panel ruleID #!optional index)
   (if (and rmgr-rules-list-panel
            rules-manager-main-dialog)
       (begin
         (define new-panel (make-rule-panel ruleID))
-        (add-component rmgr-rules-list-panel new-panel)
         
-        (display "panel size ")(display (get-component-preferred-size new-panel))(newline)
+        (if index
+            (add-component-at rmgr-rules-list-panel new-panel index)
+            (add-component rmgr-rules-list-panel new-panel))
+
+        ;(add-component rmgr-rules-list-panel new-panel)
+        
         (component-revalidate center-panel) ;; revalidate the scrollpane
-        ) 
+        )
       (begin
         (display "ERROR: in rmgr-add-rule-panel")(newline))))
 
@@ -234,7 +232,7 @@
          ;(define this-checkbox (car component-lst))
 
          ;; if checkbox checked remove
-         (if (get-panel-selected rule-panel);(get-checkbox-value this-checkbox)
+         (if (panel-selected? rule-panel);(get-checkbox-value this-checkbox)
              (begin
                (remove-component rmgr-rules-list-panel rule-panel)
                (pack-frame rules-manager-main-dialog)
@@ -251,30 +249,9 @@
 ;(define (rule-panel-fall-button rule-panel)
 ;  (list-ref (get-container-children rule-panel) 3))
 (define (get-rule-panel-fall-checkbox rule-panel)
-  (list-ref (get-container-children rule-panel) 1))
+  (list-ref (get-container-children rule-panel) 2))
 (define (get-rule-panel-name-label rule-panel)
   (list-ref (get-container-children rule-panel) 0))
-
-(define (get-panel-selected pnl)
-  (equal? (get-background-color pnl) selected-color))
-  
-;; return a list of the position of the selected rule panels
-(define (get-selected-pos-lst)
-  (define (helper lst pos) 
-    (if (null? lst)
-        '()
-        (begin
-          (define rule-panel (car lst))
-          (append 
-           ;; condition append
-           (if (get-panel-selected rule-panel)
-               (list pos)
-               '())
-           (helper (cdr lst) (+ pos 1)))
-          )))
-  ;; traverse through the list of rule panels
-  (helper (get-container-children rmgr-rules-list-panel) 0))
-
 
 ;;=========================
 ;;;; rule panel selection
@@ -286,8 +263,28 @@
          (list-ref (rmgr-rule-lst) index))
          (get-selected-pos-lst)))
 
+(define (panel-selected? pnl)
+  (equal? (get-background-color pnl) selected-color))
+
 (define selected-color (make-colour-rgb 135 206 250))  ;; sky blue
 (define unselected-color (make-colour-rgb 238 238 238))
+
+;; return a list of the position of the selected rule panels
+(define (get-selected-pos-lst)
+  (define (helper lst pos) 
+    (if (null? lst)
+        '()
+        (begin
+          (define rule-panel (car lst))
+          (append 
+           ;; condition append
+           (if (panel-selected? rule-panel)
+               (list pos)
+               '())
+           (helper (cdr lst) (+ pos 1)))
+          )))
+  ;; traverse through the list of rule panels
+  (helper (get-container-children rmgr-rules-list-panel) 0))
 
   ;; some actions are disabled depending on the number of rules selected
 (define (action-restrict-check)
@@ -325,7 +322,7 @@
 ;;       removing ruleID from the rule-lst
 (define (rmgr-remove-rule-panel ruleID)
   (define index (list-index (lambda (rid) (= rid ruleID)) (rmgr-rule-lst)))    ;; get the index in rmgr-rule-lst and rmgr-rules-list-panel
-  (display "remove rule panel ")(display index )(newline)
+  
   ;; remove corresponding panel
   (define comp-lst (get-container-children rmgr-rules-list-panel))
   (define panel-to-remove (list-ref comp-lst index))
@@ -335,14 +332,48 @@
 
 ;;;; button callback
 (define (add-rule-button-callback e)
-  (define new-rule-ID (create-typed-rule2 "new rule" edit-mode 'and #f
-                                          (rmgr-get-currently-edited-ID)))
-  (rmgr-add-rule-panel new-rule-ID)
-  (define new-rule-sexpr (cache-rule new-rule-ID))
-
+  
   ;; cache these edited obj ID and edit-mode
   (define edited-obj-ID (rmgr-get-currently-edited-ID))
   (define curr-edit-mode edit-mode)
+  (define num-selected (length (selected-rule-lst)))
+  (define index #f)
+  
+  ;; leave out the parent object ID to create-typed-rule2
+  ;; we'll add it ourselves in the right position through rmgr-set-rule-lst
+  (define new-rule-ID (create-typed-rule2 "new rule" edit-mode 'and #f #f))
+  
+  ;; adds a rule panel and the ruleID in the correct positions
+  ;; assumes create-typed-rule2 already called
+  (define (do-add-rule #!optional index)
+    ;; if index given means we're inserting a rule in between (not at the end)
+    (if index
+        (begin 
+          (rmgr-add-rule-panel new-rule-ID index)
+          (define new-rule-lst (list-insert (rmgr-rule-lst) new-rule-ID index))
+          (rmgr-set-rule-lst new-rule-lst)
+          )
+        (begin
+          (rmgr-add-rule-panel new-rule-ID)
+          (rmgr-set-rule-lst (append (rmgr-rule-lst) (list new-rule-ID)))
+          ))
+    
+    (define new-rule (get 'rules new-rule-ID))
+    (ask new-rule 'set-parentID! edited-obj-ID)
+    (display "RULE parentID after setting ")(display (ask new-rule 'parentID))(newline)
+    )
+  
+  ;; if a rule is selected, add the rule right after it
+  (if (= num-selected 0)
+      (do-add-rule)
+      (if (= num-selected 1)
+          (begin 
+            (set! index (+ (car (get-selected-pos-lst)) 1))
+            (do-add-rule index))))
+  
+  (display "new-rule-ID ")(display new-rule-ID)(newline)
+
+  ;(define new-rule-sexpr (cache-rule new-rule-ID))
 
   ;; post undo
   (compoundundomanager-postedit
@@ -352,6 +383,7 @@
     (lambda () ;; undo
       ;; pops up rmgr and make sure we're editing that obj's 
       (rmgr-edit curr-edit-mode edited-obj-ID)
+      (display "undoing add rule ")(newline)
       (rmgr-remove-rule-panel new-rule-ID)
       (rmgr-set-rule-lst (remove (lambda (rid) (= rid new-rule-ID)) (rmgr-rule-lst)))
       (del 'rules new-rule-ID)
@@ -360,8 +392,12 @@
       )
     (lambda () ;; redo
       (rmgr-edit curr-edit-mode edited-obj-ID)
-      (eval-sexpr new-rule-sexpr)                                                     ;; recreate the new rule 
-      (rmgr-add-rule-panel new-rule-ID)
+      ;(eval-sexpr new-rule-sexpr)   ;; recreate the new rule
+      
+      ;; create the rule with the same ID
+      (create-typed-rule2 "new rule" edit-mode 'and #f #f new-rule-ID)
+      (do-add-rule index)
+      ;(rmgr-add-rule-panel new-rule-ID)
       ))))
 
 (define (delete-selected-rule-button-callback e)

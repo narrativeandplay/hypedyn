@@ -524,10 +524,11 @@
     (create-nodereader-window)
     
     ;; create the panels (the components inside the editlink editnode dialogs)
-    (create-if-condition-panel)
     ;(create-then-action-panel)
     ;(create-facts-main-panel)
-    (create-actions-main-panel)
+    
+    ;(create-if-condition-panel)
+    ;(create-actions-main-panel)
     (rmgr-init)
     
     (create-update-text-action-panel)
