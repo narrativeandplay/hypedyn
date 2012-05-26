@@ -84,7 +84,7 @@ function htmlFormat(content, links, noformat) {
 		plaintext = replace_info[0];
 		replace_offset = replace_info[1];
 		if (replace_offset > 0) {
-			disp("plaintext "+plaintext);
+			//disp("plaintext "+plaintext);
 			//alert("roffset "+replace_offset);
 		}
 		//offset -= replace_offset;
@@ -194,7 +194,7 @@ function htmlFormat(content, links, noformat) {
 		var end = link.end;
 		var altcontent = findReplaceText(link.id);
 		var linktext = (altcontent == undefined) ? content.substring(start, end) : altcontent;
-		disp("linktext "+linktext);
+		//disp("linktext "+linktext);
 		
 		//escaping special char
 		replace_info = escape_special( linktext );
@@ -282,7 +282,7 @@ function htmlFormat(content, links, noformat) {
 			} else {
 				$("test_bed").innerHTML = "";
 				test_bed_html_cache = "";
-				disp("breaking page!");
+				//disp("breaking page!");
 				// remaining code goes to next page
 				return page_end_tag + page_start_tag + htmlcode + helper2(new_offset);
 			}
@@ -435,8 +435,8 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 				var offset_inc = link_index - offset;
 				return gtg_helper ( offset + offset_inc, retval );
 			} else {
-				disp("offset "+offset);
-				disp("link index "+link_index);
+				//disp("offset "+offset);
+				//disp("link index "+link_index);
 				alert(" error state in gtg helper ");
 			}
 		}
@@ -448,11 +448,11 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 		for ( var i in tg_arr ) {
 			var tag = tg_arr[i]; // tg stands for tag group
 			if ( tag.type == "plain") {
-				disp("plain text tag added");
+				//disp("plain text tag added");
 				tag.start_tag = start_tag;
 				tag.end_tag = end_tag;
 			} else if (tag.type == "link") {
-				disp("link tag added");
+				//disp("link tag added");
 				var link = tag.link;
 				var noformat = plain_only;
 				
@@ -511,7 +511,8 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 		for ( var j in activated_anywhere_nodes ) {
 			var anywherenode = activated_anywhere_nodes[j];
 			var anywhere_tg = [];
-			anywhere_tg.content = anywherenode.name;
+            // need to escape the content in case name contains special characters
+			anywhere_tg.content = escape_special(anywherenode.name);
 			anywhere_tg.start_tag = "<a href='javascript:void(0)' class='anywhere' onMouseUp='clickedLink(" 
 									+ anywherenode.id + ")'>";
 			anywhere_tg.end_tag = "</a><br>";
@@ -624,7 +625,7 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 		function adjust_break_point ( tg_to_break, front_tg_arr ) {
 			//alert("START adjust break pt ");
 			function helper ( delim_index ) {
-				disp("helper "+delim_index);
+				//disp("helper "+delim_index);
 				var broken_tg = break_tg( tg_to_break, delim_index );
 				var tg_to_break_front = broken_tg[0];
 				var tg_to_break_back = broken_tg[1];
@@ -685,7 +686,7 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 	}
 	
 	function assemble_tg ( tg ) {
-		disp("[assemble] "+tg.content);
+		//disp("[assemble] "+tg.content);
 		return tg.start_tag + tg.content + tg.end_tag;
 	}
 	
@@ -695,10 +696,10 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 			if ( isNumber(i) ) {
 				var curr_page_tg_arr = pages_tg_arr[i];
 				var curr_page_code = "";
-				disp(" curr_page_tg_arr len "+curr_page_tg_arr.length);
+				//disp(" curr_page_tg_arr len "+curr_page_tg_arr.length);
 				for ( var j in curr_page_tg_arr ) {
 					curr_page_code += assemble_tg( curr_page_tg_arr[j] );
-					disp("curr_page_code "+curr_page_code);
+					//disp("curr_page_code "+curr_page_code);
 				}
 				//disp("[curr page code]! "+curr_page_code);
 				retval += page_start_tag + curr_page_code + page_end_tag;
@@ -710,8 +711,8 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 		//	retval += curr.start_tag + curr.content + curr.end_tag;
 		//}
 		//return page_start_tag + retval + page_end_tag;
-		disp(" assemble html code ")
-		disp( retval );
+		//disp(" assemble html code ")
+		//disp( retval );
 		return retval;
 	}
 	
@@ -763,7 +764,7 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 	
 	text_to_replace = []; // clear after use
 	
-	disp("how many page? "+pages_tg_arr.length);
+	//disp("how many page? "+pages_tg_arr.length);
 	for (var i in pages_tg_arr ) {
 		print_tg( pages_tg_arr[i] );
 	}
@@ -773,21 +774,21 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 }
 
 function print_tg( tg_arr ) {
-	disp("[print tg]");
-	disp( tg_arr.type );
-	disp( tg_arr.content);
+	//disp("[print tg]");
+	//disp( tg_arr.type );
+	//disp( tg_arr.content);
 }
 
 function print_tg_arr( arr ) {
-	disp("print arr ");
-	disp("arr len "+arr.length);
+	//disp("print arr ");
+	//disp("arr len "+arr.length);
 	for( var i in arr ) {
 		print_tg( arr[i] );
 	}
 }
 
 function subarray( arr, start_index, end_index ) {
-	disp("subarray "+start_index + " " + end_index);
+	//disp("subarray "+start_index + " " + end_index);
 	var retval = clone_arr(arr);
 	retval = retval.splice( start_index, (end_index - start_index));
 	return retval;

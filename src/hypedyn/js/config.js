@@ -27,7 +27,7 @@ var fixed_page_width = 0;
 var fixed_page_height = 0;
 
 function write_config_flag( flag_name, value ) {
-	disp("write config flag "+value);
+	//disp("write config flag "+value);
 	switch ( flag_name ) {
 		case "window_resize_flag":
 			if (display_mode == "browser") // only override if its a browser

@@ -90,7 +90,7 @@ function style_pages() {
 		} );
 	}
 	
-	disp("contents leng "+contents.length);
+	//disp("contents leng "+contents.length);
 	for (var i = 0, len = contents.length; i < len; i++) {
 		contents[i].className = 'pagecontent';
 		//disp("setting page content width2 "+page_width);
@@ -529,12 +529,12 @@ function cleanup_scroll() {
 }
 
 function setup_scroll() {
-	disp("setup scroll");
+	//disp("setup scroll");
 	myScroll = new iScroll('popup',  { hScrollbar: false, vScrollbar: true, vScroll: true, bounce: false });
 }
 
 function black_fade_out(e) {
-	disp("fade out");
+	//disp("fade out");
 	target_alpha = 0;
 	step_amt = (target_alpha - current_alpha) / delta_time;
 	

@@ -1012,7 +1012,7 @@
                    ((1) "false")
                    ((2) 
                     (set! func "nodeIsPrevious")
-                    "true")
+                    "false")
                    )))
     ;; return string
     (string-append "\t\t\tcreateCondition("

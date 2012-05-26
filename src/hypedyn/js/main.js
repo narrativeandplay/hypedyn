@@ -29,7 +29,7 @@ function device_detection() {
 	if ("ontouchstart" in element) {
 		display_mode = "mobile";
 		page_flipping_mode = true; // mobile has page flipping removed as well
-		disp("touch detected!");
+		//disp("touch detected!");
 	} else {//browser
 		display_mode = "browser";
 		page_flipping_mode = false; //debug was false
@@ -44,7 +44,7 @@ var prev_read_nodes = [];
 var myScroll = null;
 
 function get_device_dimension() {
-	disp("get device dimension");
+	//disp("get device dimension");
 	device_width = (window.innerWidth > 0) ? window.innerWidth : screen.width;
 	device_height = (window.innerHeight > 0) ? window.innerHeight : screen.height;
 	
@@ -127,7 +127,7 @@ function replaceText(linkID, altcontent) {
 	function comparator ( pair1, pair2 ) {
 		pair1[0] < pair2[0];
 	}
-	disp("replace text "+altcontent);
+	//disp("replace text "+altcontent);
 	insertSorted( text_to_replace, [linkID, altcontent], comparator );
 }
 
@@ -140,10 +140,10 @@ function findReplaceText(linkID) {
 			// need to differentiate between 
 			// text from fact or just text
 			if (typeof text_to_replace[i][1] == "string") {
-				disp("string");
+				//disp("string");
 				result = text_to_replace[i][1];
 			} else if (typeof text_to_replace[i][1] == "number") {
-				disp("number");
+				//disp("number");
 				result = factlist[text_to_replace[i][1]].value;
 			} else {
 				alert("typeof result "+ typeof text_to_replace[i][1]);
@@ -296,16 +296,16 @@ function back_button_check() {
 
 // note this function shares a huge chunk of similar code with gotoNode
 function backPrevNode() {
-	disp("backprevnode");
-	disp("before pop " + prev_read_nodes.length);
+	//disp("backprevnode");
+	//disp("before pop " + prev_read_nodes.length);
 	nodeID = prev_read_nodes.pop();
-	disp("after pop " + prev_read_nodes.length);
+	//disp("after pop " + prev_read_nodes.length);
 	//if (prev_read_nodes.length == 1) // we're at the first node
 	//	$("back_button").setAttribute("disabled", "disabled");
 	back_button_check();
 	
 	if (nodeID) { // if not undefined
-		disp("back's gotoNODE " +nodeID);
+		//disp("back's gotoNODE " +nodeID);
 		var node = nodelist[nodeID];
 		if (node) {
 			clicked_link_flag = false;
@@ -314,20 +314,20 @@ function backPrevNode() {
 			for (var i in node.links) {
 				eventTrigger("enteredNode", node.links[i]); 
 			}
-			disp("after trigger");
+			//disp("after trigger");
 			
 			//node.visited = true;
 			currNodeID = nodeID;
 			
 			update_anywhere_visibility();
-			disp("update vis");
+			//disp("update vis");
 			if (page_flipping_mode) {
 				if (peek_back_mode)
 					cache_peek_back();
 				flips = [];
 				page = 0;
 			}
-			disp("page_flip things");
+			//disp("page_flip things");
 			
 			//var htmlcode = htmlFormat( node.content, clone_arr(node.links).concat(activated_anywhere_nodes), false );
 			htmlcode = node_to_html( node, activated_anywhere_nodes, false );
@@ -360,90 +360,66 @@ function restartStory() {
 	runhypedyn()
 }
 
-// refresh node - note: some of this duplicates gotoNode, should refactor
+// refresh node
 function refreshNode(node) {
     // trigger enteredNode for links to replace text
     for (var i in node.links) {
 			eventTrigger("enteredNode", node.links[i]); 
     }
 
-		if (page_flipping_mode) {
-			if (peek_back_mode)
-				cache_peek_back();
-			flips = [];
-			page = 0;
-		}
+    // check anywhere nodes
+	update_anywhere_visibility ();
+		
+	if (page_flipping_mode) {
+		if (peek_back_mode)
+			cache_peek_back();
+        flips = [];
+        page = 0;
+    }
 		
     // regenerate the node text
-    disp("b4 html code (refresh)");
     var new_html_code = node_to_html( node, activated_anywhere_nodes, false );
-    disp("aft html code (refresh)");
     $("pages").innerHTML = new_html_code;
 
-		if (page_flipping_mode)
-			insert_peek_back();
-		else 
-			style_pages();
+	if (page_flipping_mode)
+		insert_peek_back();
+	else 
+		style_pages();
     
     //anywherelink_buttons(); // original anywhere nodes
     add_anywhere_button(); // choice links
     init_element_height();
     replace_button_placeholder();
-		
+
+    // draw the page indicator if necessary
     if (page_flipping_mode)
         drawPageIndicator(page, flips.length, back_page_check());
 }
 
 function gotoNode(nodeID) {
-	disp("gotoNODE " +nodeID);
-	disp("really here?");
+	//disp("gotoNODE " +nodeID);
+	//disp("really here?");
 	var node = nodelist[nodeID];
-	disp("node here "+node);
+	//disp("node here "+node);
 	if (node != undefined) {
-		disp("start of goto");
+		//disp("start of goto");
 		clicked_link_flag = false;
 		
-		eventTrigger("enteredNode", node);
-		for (var i in node.links) {
-			eventTrigger("enteredNode", node.links[i]); 
-		}
-		
+        // update history list
 		prev_read_nodes.push( currNodeID );
-		
+
+        // update back button state
 		back_button_check();
+        
+        // update node state - should this go before or after triggering enteredNode events?
 		node.visited = true;
 		currNodeID = nodeID;
-		
-		update_anywhere_visibility ();
-		
-		if (page_flipping_mode) {
-			if (peek_back_mode)
-				cache_peek_back();
-			flips = [];
-			page = 0;
-		}
-		
-		//debug
-		disp("b4 html code ");
-		var new_html_code = node_to_html( node, activated_anywhere_nodes, false );
-		disp("aft html code ");
-		
-		$("pages").innerHTML = new_html_code;
 
-		if (page_flipping_mode)
-			insert_peek_back();
-		else 
-			style_pages();
+        // trigger enteredNode events on the node
+		eventTrigger("enteredNode", node);
 
-		//anywherelink_buttons(); // original anywhere nodes
-		add_anywhere_button(); // choice links
-		init_element_height();
-		replace_button_placeholder();
-		
-		if (page_flipping_mode)
-				//drawPageIndicator(page, flips.length, (last_page_flip != undefined));
-				drawPageIndicator(page, flips.length, back_page_check());
-		disp('end of goto');
+        // refresh the node display
+        refreshNode(node);
 	}
 }
 
@@ -455,7 +431,7 @@ function runhypedyn() {
 var back_button, restart_button;
 
 function add_anywhere_button() {
-	disp("add anywhere button");
+	//disp("add anywhere button");
 	//$("buttons-panel").innerHTML = ""; // clear any buttons from previous 
 	
 	// option button (not used anymore)
@@ -470,7 +446,7 @@ function add_anywhere_button() {
 	// back button
 	/*
 	if ( ! back_button ) {
-		disp("cant find back button ");
+		//disp("cant find back button ");
 		back_button = document.createElement("button");
 		back_button.setAttribute("id", "back_button");
 		back_button.setAttribute("type", 'button');
@@ -483,7 +459,7 @@ function add_anywhere_button() {
 	
 	// restart button
 	if ( ! restart_button ) {
-		disp("cant find back button ");
+		//disp("cant find back button ");
 		restart_button = document.createElement("button");
 		restart_button.setAttribute("id", "restart_button");
 		restart_button.setAttribute("type", 'button');

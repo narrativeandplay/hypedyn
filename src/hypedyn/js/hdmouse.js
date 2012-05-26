@@ -37,12 +37,12 @@ function stopBubbling(e) {
 }
 
 function flip_left(i) {
-	disp("flip left progress "+flips[i].progress);
+	//disp("flip left progress "+flips[i].progress);
 	flips[i].dragging = true;
 	flips[i].target = -1;
 }
 function flip_right(i) {
-	disp("flip right progress "+flips[i].progress);
+	//disp("flip right progress "+flips[i].progress);
 	flips[i].dragging = true;
 	flips[i].target = 1;
 }
@@ -103,12 +103,12 @@ function finishFlipPage( flips ) {
 		// drag successfully flip
 		if ( drag_endx > page_width_half ) {
 			flip_right(i);
-			disp("dragging release backwards");
+			//disp("dragging release backwards");
 		// flip canceled
 		} else { 
 			flip_left(i)
 			flip_canceled = true;
-			disp("page drag rightwards canceled");
+			//disp("page drag rightwards canceled");
 		}
 	}
 }
@@ -122,7 +122,7 @@ function mouseUpHandler(e) {
 		mouseDown = 0;
 		if (!clicked_link_flag && !flipping_flag ) {
 			drag_endx = e.clientX;
-			disp('mouse up instant flip');
+			//disp('mouse up instant flip');
 			finishFlipPage( flips );
 		} else
 			clicked_link_flag = false; // reset it (it has served its purpose
@@ -140,7 +140,7 @@ function mouseDownHandler(e) {
 //http://ross.posterous.com/2008/08/19/iphone-touch-events-in-javascript
 function touchHandler(event)
 {
-	disp("touch handling");
+	//disp("touch handling");
     var touches = event.changedTouches,
         first = touches[0],
         type = "";
@@ -219,7 +219,7 @@ function mouseExitHandler(event) {
 			// reset mouseDown count
 			//if ( event.clientX >= page_width/2 || event.clientX < page_width/2 )
 			if (mouseDown == 1) {
-				disp("drag flip up");
+				//disp("drag flip up");
 				finishFlipPage(flips);
 				mouseDown = 0;
 			}
@@ -258,7 +258,7 @@ function init_event_listeners () {
 		$("pages").addEventListener('touchmove', touchHandler, false);
 		
 	} else {
-		disp("no mouse event added ");
+		//disp("no mouse event added ");
 	}
 }
 

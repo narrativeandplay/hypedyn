@@ -227,25 +227,29 @@ function ruleRelevant(eventType, rule) {
  }
  
  function nodeIsPrevious(nodeID) {
+    //disp("*** nodeIsPrevious! ***");
+    //disp("nodeID: "+nodeID+", prev_read_node:"+prev_read_nodes[prev_read_nodes.length - 1]);
+    //disp("");
 	return prev_read_nodes[prev_read_nodes.length - 1] == nodeID;
  }
  
  function createCondition(func, func_target_ID, ruleID, not, id) {
-	not = (not == undefined) ? false : not;
+	//disp("*** not: "+not);
+    
+    not = (not == undefined) ? false : not;
 	id = (id == undefined) ? genID(conditionlist) : id;
 	
 	var newCond = new Object();
 	newCond.eval = function () {
-		//console.log("eval in condition ");
-		//console.log(func.toString());
+		//disp(func.toString());
 		if (not) {
-			//console.log ("in not ");
-			//console.log((! func.apply(this, [func_target_ID]) ));
+			//disp("in not ");
+			//disp((! func.apply(this, [func_target_ID]) ));
 			return (! func.apply(this, [func_target_ID]) );
 		}
 		else {
-			//console.log ("in if ");
-			//console.log( func.apply(this, [func_target_ID]));
+			//disp("in if ");
+			//disp( func.apply(this, [func_target_ID]));
 			return func.apply(this, [func_target_ID]);
 		}
 	}

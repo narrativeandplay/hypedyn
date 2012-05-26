@@ -55,7 +55,7 @@ function sleep(delay) {
 	function check_delay () {
 		//if ( new Date().getTime() < start + delay )
 		delay -= accuracy_ms;
-		disp("tick "+delay);
+		//disp("tick "+delay);
 		if ( delay < 0 )
 			return;
 	}
