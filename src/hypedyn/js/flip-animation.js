@@ -486,17 +486,24 @@ function popup(nodeID) {
 	if (node != undefined) {
 		//disp("popup "+node.links.length);
 		// event trigger
+
+        // trigger node rules for this node
 		eventTrigger("enteredNode", node);
+        
+        // update node state
+		node.visited = true;
+		//currNodeID = nodeID; // this is causing the back button problem
+        // only used in anywhere nodes, which aren't shown in a popup, so should be ok
+		
+        // trigger link rules (display only) for links in this node
 		for (var i in node.links) {
 			eventTrigger("enteredNode", node.links[i]); 
 		}
-		node.visited = true;
-		currNodeID = nodeID;
-		
+        
+        // check anywhere nodes
 		update_anywhere_visibility();
 
 		cleanup_scroll();
-		//$('popup').innerHTML = "<div>" + htmlFormat( node.content, clone_arr(node.links), true ) + "</div>";
 		var htmlcode = node_to_html( node, [], true );
 		$('popup').innerHTML = "<div>" + htmlcode + "</div>";
 		setup_scroll();

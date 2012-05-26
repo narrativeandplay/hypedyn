@@ -40,6 +40,8 @@ function createFact(name, type, id) {
 function setFact( id, value) {
 	var fact = factlist[id];
 	fact.value = value;
+    
+    // refresh the node - this is very inefficient, move it out
     node=nodelist[currNodeID];
     if(node != undefined)
         refreshNode(node);
