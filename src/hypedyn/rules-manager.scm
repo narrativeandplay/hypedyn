@@ -184,10 +184,17 @@
   
   ;; update the name of the rule
   (define name-label (get-rule-panel-name-label pnl))
+  (define fall-checkbox (get-rule-panel-fall-checkbox pnl))
   (define rule (get 'rules ruleID))
   
   (if rule
-      (set-text name-label (ask rule 'name))
+      (begin
+        (set-text name-label (ask rule 'name))
+        
+        (display "SETTTING fall check box FALLTHROUGH? ")(display (ask rule 'fall-through?))(newline)
+        ;; check means DONT fall through
+        (set-checkbox-value fall-checkbox (not (ask rule 'fall-through?)))
+        )
       (begin (display "[update-rule-panel] invalid ruleID")(newline)))
   )
 
@@ -341,7 +348,8 @@
   
   ;; leave out the parent object ID to create-typed-rule2
   ;; we'll add it ourselves in the right position through rmgr-set-rule-lst
-  (define new-rule-ID (create-typed-rule2 "new rule" edit-mode 'and #f #f))
+  ;; fall through true by default
+  (define new-rule-ID (create-typed-rule3 "new rule" edit-mode 'and #f #f fall-through?: #t))
   
   ;; adds a rule panel and the ruleID in the correct positions
   ;; assumes create-typed-rule2 already called
@@ -360,7 +368,6 @@
     
     (define new-rule (get 'rules new-rule-ID))
     (ask new-rule 'set-parentID! edited-obj-ID)
-    (display "RULE parentID after setting ")(display (ask new-rule 'parentID))(newline)
     )
   
   ;; if a rule is selected, add the rule right after it
@@ -448,7 +455,6 @@
           (lambda () ;; redo
             (rmgr-edit curr-edit-mode edited-obj-ID)
 
-            (display "deleted-ID-lst ")(display deleted-ID-lst)(newline)
             ;; remove panel first (important to do before remove rule-lst)
             (map (lambda (ruleID)
                    (rmgr-remove-rule-panel ruleID)

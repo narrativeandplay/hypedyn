@@ -17,7 +17,7 @@
 ;; with this program; if not, write to the Free Software Foundation, Inc.,
 ;; 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-(module-export make-checkbox set-checkbox-selected 
+(module-export make-checkbox
                get-checkbox-value set-checkbox-value
                set-checkbox-text-alignment)
                
@@ -28,10 +28,6 @@
 ; make a check box
 (define (make-checkbox in-title :: <String>)
   (<javax.swing.JCheckBox> (as <java.lang.String> in-title)))
-
-; set selected a checkbox. (duplicate of set-checkbox-value)
-(define (set-checkbox-selected checkbox :: <javax.swing.JToggleButton> boolean :: <java.lang.Boolean>)
-  (invoke checkbox 'setSelected boolean))
 
 ; get current value of checkbox
 (define (get-checkbox-value in-checkbox :: <javax.swing.JCheckBox>)

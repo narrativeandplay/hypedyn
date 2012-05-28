@@ -37,8 +37,10 @@
                set-nodecount-display-callback! reset-node-count inc-node-count dec-node-count get-node-count
                set-import-offsets!
                create-node deletenode
-               create-link create-rule create-typed-rule create-typed-rule2
-               create-condition create-typed-condition create-action create-fact)
+               create-link create-action create-fact
+               create-rule create-typed-rule create-typed-rule2 create-typed-rule3
+               create-condition create-typed-condition 
+               )
 
 ;; debug var 
 (define debug-node #f)
@@ -280,19 +282,44 @@
                            (lambda (self) inspectable-fields))
                   this-obj))
 
+;; this has the ability to initialize fall-through? on rule creation
+(define-private (make-rule3 name type and-or negate? parentID #!key fixedID fall-through?)
+                (define parent-rule (make-rule2 name type and-or negate? parentID fixedID))
+                (define this-obj (new-object parent-rule))
+                
+                (obj-put this-obj 'fall-through? (lambda (self) fall-through?))
+                (obj-put this-obj 'set-fall-through? (lambda (self new-ft) 
+                                                       (set! fall-through? new-ft)))
+                
+                (obj-put this-obj 'to-save-sexpr
+                           (lambda (self)
+                             (list 'create-typed-rule3
+                                   (ask self 'name)                        ; name (string)
+                                   (list 'quote (ask self 'type))                      ; type ('link/'node)
+                                   (list 'quote (ask self 'and-or))        ; and-or ('and/'or)
+                                   negate?
+                                   (ask self 'parentID)             ; used to be linkID (int)
+                                   fixedID: (ask self 'ID)
+                                   fall-through?: fall-through?
+                                   )))
+                this-obj)
 
 ;; make-rule2 provides negate? on top of what we already have
 ;; the old files uses make-rule that does not have the negate arg hence the make-rule2
 
-(define-private (make-rule2 name type and-or negate? parentID #!rest args)
-                
+(define-private (make-rule2 name type and-or negate? parentID #!optional fixedID)
                 ;; inherit make-rule
-                (define parent-rule (apply make-rule (append (list name type and-or parentID) args)))
+                ;(define parent-rule (apply make-rule (append (list name type and-or parentID) args)))
+                (define parent-rule (make-rule name type and-or parentID fixedID))
                 (define this-obj (new-object parent-rule))
                 
-                ;; fall through (triggering this rule will stop other rules below it from getting checked and fired)
-                (define fall-through? #t)
                 
+                ;(define fall-through? #t)
+                
+                ;; fall through (triggering this rule will stop other rules below it from getting checked and fired)
+                ;; kept to ensure those hypedyn story that was written and saved using this version of the rule
+                ;; does not crash when we check the fall-through checkbox
+                ;; that version however did not save the fall through value in the save file anyway 
                 (obj-put this-obj 'fall-through? (lambda (self) fall-through?))
                 (obj-put this-obj 'set-fall-through? (lambda (self new-ft) 
                                                        (set! fall-through? new-ft)))
@@ -310,15 +337,17 @@
                                  (ask parent-rule 'rule-expr))))
                 (obj-put this-obj 'type (lambda (self) type))
                 
+                ;; overridden 
                 (obj-put this-obj 'to-save-sexpr
                            (lambda (self)
                              (list 'create-typed-rule2
                                    (ask self 'name)                        ; name (string)
-                                   (list 'quote type)                      ; type ('link/'node)
+                                   (list 'quote (ask self 'type))                      ; type ('link/'node)
                                    (list 'quote (ask self 'and-or))        ; and-or ('and/'or)
                                    negate?
-                                   (ask parent-rule 'parentID)                                  ; used to be linkID (int)
-                                   (ask self 'ID))))
+                                   (ask self 'parentID)             ; used to be linkID (int)
+                                   (ask self 'ID)
+                                   )))
                 this-obj)
 
 ;; rule
@@ -419,6 +448,8 @@
                              (set! actions '())
                              (set! conditions '())
                              ))
+                  
+                  ;; overridden 
                   (obj-put this-obj 'to-save-sexpr
                            (lambda (self)
                              (list 'create-typed-rule
@@ -426,7 +457,8 @@
                                    (list 'quote type)                      ; type ('link/'node)
                                    (list 'quote and-or)                    ; and-or ('and/'or)
                                    parentID                                ; parent obj's ID (int)
-                                   (ask self 'ID))))                       ; ruleID
+                                   (ask self 'ID)                          ; ruleID
+                                   )))
                   this-obj))
 
 ;; condition
@@ -751,6 +783,8 @@
     ; set rule in parent
     (if (eq? type 'doc)
         ; document rule, so just set
+        ;; Note: this is where it is different from create-typed-rule-common (so we cant use it)
+        ;;       not sure if the old stories written in this version of rule even work
         (set-document-ruleID! rule-ID)
         ; otherwise, get the parent and set
         (let* ((the-get-symbol (if (eq? type 'link)
@@ -763,44 +797,74 @@
     ; return the rule ID
     rule-ID))
 
+(define (create-typed-rule-common new-rule type parentID)
+  
+  ; add to rule list
+  (define ruleID (ask new-rule 'ID))
+  (put 'rules ruleID new-rule)
+
+; add rule in parent
+  (if (eq? type 'doc)
+      ; document rule, so just add it
+      (add-document-ruleID ruleID)
+
+      ;; otherwise, get the parent and set
+      (let* ((get-symbol (case type
+                           ((link) 'links)
+                           ((node) 'nodes)))
+             (the-parent (get get-symbol parentID)))
+        (if the-parent
+            (ask the-parent 'add-rule ruleID))
+        )))
+
 ;; version 2 of create-typed-rule 
 ;; expression from version 1 takes either 'and or 'or (thus i renamed it as so and-or)
 ;; version 2 has a new argument negate? which takes in a boolean 
 ;; it duplicates most of the code except that it uses make-rule2 
 ;; also it adds to the rule-lst instead of setting the one and only rule
 ;; NOTE: this cannot replace create-typed-rule because we need to keep the first version for compatibility
-(define (create-typed-rule2 name type and-or negate? parentID . args)
+(define (create-typed-rule2 name type and-or negate? parentID #!optional fixedID)
   (let* ((actual-parentID (if (importing?)
                               (+ parentID import-offset-ID)
                               parentID))
-         (new-rule (make-rule2 name type and-or negate? actual-parentID
-                               (if (pair? args)
-                                   (if (importing?)
-                                       (+ (car args) import-offset-ID)
-                                       (car args)))))
+         ;; used to call make-rule2
+         ;; now calling make-rule3 so that it is using the version which supports fall-through? saved and loaded
+         (new-rule (make-rule3 name type and-or negate? actual-parentID 
+                               fixedID: (if fixedID
+                                            (if (importing?)
+                                                (+ fixedID import-offset-ID)
+                                                fixedID)
+                                            #f)
+                               fall-through?: #t ;; defaults to true
+                               ))
          (rule-ID (ask new-rule 'ID)))
     
-    ; add to rule list
-    (put 'rules rule-ID new-rule)
-    ;(format #t "New rule: ~a~%~!" new-rule)
-
-    ; add rule in parent
-    (if (eq? type 'doc)
-        ; document rule, so just set
-        ;(set-document-ruleID! rule-ID)
-        (add-document-ruleID rule-ID)
-        
-        ; otherwise, get the parent and set
-        (let* ((get-symbol (case type 
-                                 ((link) 'links)
-                                 ((node) 'nodes)))
-               (the-parent (get get-symbol actual-parentID)))
-          (if the-parent
-              (ask the-parent 'add-rule rule-ID))
-          ))
+    (create-typed-rule-common new-rule type actual-parentID)
     
     ; return the rule ID
     rule-ID))
+
+;; this adds the ability to save fall-through? value 
+;; from here on, we shouldn't need to create a new create-typed-rule number for every additional
+;; new arguments can be put it at the back with a keyword
+(define (create-typed-rule3 name type and-or negate? parentID #!key fixedID fall-through?)
+  (let* ((actual-parentID (if (importing?)
+                              (+ parentID import-offset-ID)
+                              parentID))
+         (new-rule (make-rule3 name type and-or negate? actual-parentID 
+                               fixedID: (if fixedID
+                                            (if (importing?)
+                                                (+ fixedID import-offset-ID)
+                                                fixedID) 
+                                            #f)
+                               fall-through?: fall-through?))
+         (rule-ID (ask new-rule 'ID)))
+    
+    (create-typed-rule-common new-rule type actual-parentID)
+    
+    ; return the rule ID
+    rule-ID))
+
 
 ; create a condition - for nodes, retained for backward compatability
 (define (create-condition name nodeID operator ruleID . args)
