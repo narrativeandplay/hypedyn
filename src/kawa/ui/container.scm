@@ -25,6 +25,7 @@
 
 ; export
 (module-export set-container-layout 
+               set-component-align-x set-component-align-y
                get-container-children
                validate-container
                get-nth-component
@@ -76,6 +77,25 @@
            (else (error "set-container-layout: unknown layout")))))
     (if the-layout
         (invoke container 'setLayout the-layout))))
+
+;; set component align is useful when using box layout, center is the default
+;; when doing vertical stacking, align x is relevant
+;; when doing horizontal, align y is
+(define (set-component-align-x comp :: <java.awt.Component>
+                               align :: <symbol>)
+  (case align
+    ((left) (invoke comp 'set-alignment-x <java.awt.Component>:LEFT_ALIGNMENT))
+    ((center) (invoke comp 'set-alignment-x <java.awt.Component>:CENTER_ALIGNMENT))
+    ((right) (invoke comp 'set-alignment-x <java.awt.Component>:RIGHT_ALIGNMENT)))
+  )
+
+(define (set-component-align-y comp :: <java.awt.Component>
+                               align :: <symbol>)
+  (case align
+    ((top) (invoke comp 'set-alignment-x <java.awt.Component>:TOP_ALIGNMENT))
+    ((center) (invoke comp 'set-alignment-x <java.awt.Component>:CENTER_ALIGNMENT))
+    ((bottom) (invoke comp 'set-alignment-x <java.awt.Component>:BOTTOM_ALIGNMENT)))
+  )
 
 ; get children in a container
 (define (get-container-children container :: <java.awt.Container>)

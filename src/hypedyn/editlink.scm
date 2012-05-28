@@ -512,7 +512,7 @@
     ;; get the selected type
   (define selected-action-type (get-combobox-selecteditem action-type-choice))
   (define new-action-panel (add-specific-action selected-action-type)) 
-  
+  (set-component-align-x new-action-panel 'left)
   
   (display "length of action list ")(display (length (get-selected-action-panel)))(newline)
   
@@ -544,10 +544,22 @@
                (define action-type (get-text action-label))
                ;; add the choice back if we're deleting a unique action (only a copy of the action should exist)
                (if (member (get-text action-label) unique-choices)
-                   (add-combobox-string action-type-choice action-type))
+                   (begin
+                     (add-combobox-string action-type-choice action-type)
+                     
+                     ;; these two actions "show in popup" and "follow link to" cannot exists in the same rule
+                     ;; add back the action when the action excluding it had been removed
+                     (if (equal? action-type "show in popup")
+                         (add-combobox-string action-type-choice "follow link to"))
+                     (if (equal? action-type "follow link to")
+                         (add-combobox-string action-type-choice "show in popup"))
+                     ))
                
                ;; remove that panel from action-list-panel
                (remove-component action-list-panel action-panel)
+               
+               ;; the panel does not disappear even after we do remove-component thus we do this
+               (component-update action-list-panel)
                ))
          ) (action-panel-list))
   (pack-frame editlink-dialog))
@@ -691,7 +703,16 @@
         ;; update action-type-choice combobox
         ;; ensure actions that should only have one instance is not available as a choice in the combobox
         (if (member (to-string action-type) unique-choices)
-            (remove-combobox-string action-type-choice action-type))
+            (begin
+              (remove-combobox-string action-type-choice action-type)
+              
+              ;; these two actions "show in popup" and "follow link to" cannot exists in the same rule
+              ;; so restrict adding the other action when one is added
+              (if (equal? action-type "show in popup")
+                  (remove-combobox-string action-type-choice "follow link to"))
+              (if (equal? action-type "follow link to")
+                  (remove-combobox-string action-type-choice "show in popup"))
+              ))
 
         top-panel)
       (make-panel)))
@@ -1255,6 +1276,7 @@
 (define (editlink-dialog-add-condition)
   
   (define new-cond-panel (create-condition-panel 0 -1 0 -1))
+  (set-component-align-x new-cond-panel 'left)
   
   (if (= (length (get-selected-condition-panel)) 0)
      (begin
@@ -1280,7 +1302,11 @@
     (map (lambda (panel)
            (define this-checkbox (car (get-container-children panel)))
            (if (panel-selected? panel) ;(get-checkbox-value this-checkbox)
-               (remove-component condition-list-panel panel)))
+               (begin
+                 (remove-component condition-list-panel panel)
+                 ;; the panel does not disappear even after we do remove-component thus we do this
+                 (component-update condition-list-panel)
+                 )))
          all-children)
 
     (pack-frame editlink-dialog)))

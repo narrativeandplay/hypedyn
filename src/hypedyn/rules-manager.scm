@@ -124,7 +124,10 @@
   (set-checkbox-text-alignment fall-checkbox 'left)
 
   (set-container-layout top-panel 'horizontal)
-  (set-component-non-resizable-size top-panel 380 50) ;; width is 20 less than width of scrollpane
+  
+  ;; width is 20 less than width of scrollpane
+  ;;(strangely 20 doesnt work even though it worked for condition and action so 40 then)
+  (set-component-non-resizable-size top-panel 400 50)  
   
   ;; assume ruleID valid
   (define rule-obj (get 'rules ruleID))
@@ -174,8 +177,6 @@
   
   (set-border top-panel bevel-in-border)
   
-  (set-component-non-resizable-size top-panel 440 40)
-  
   ;; make rule panel
   top-panel)
 
@@ -209,7 +210,7 @@
            rules-manager-main-dialog)
       (begin
         (define new-panel (make-rule-panel ruleID))
-        
+        (set-component-align-x new-panel 'left)
         (if index
             (add-component-at rmgr-rules-list-panel new-panel index)
             (add-component rmgr-rules-list-panel new-panel))
@@ -791,7 +792,7 @@
   
   ;; list of rules
   (set! rmgr-rules-list-panel (make-panel))
-  (set-component-size rmgr-rules-list-panel 400 200)
+  ;(set-component-size rmgr-rules-list-panel 400 200)
   ;(set-component-minimum-size rmgr-rules-list-panel 400 200)
   ;;(set-component-maximum-size rmgr-rules-list-panel 400 200)
   
