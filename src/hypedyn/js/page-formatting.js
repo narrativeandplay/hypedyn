@@ -182,7 +182,9 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 				if ( link_clickable ( link, true ) && !noformat ) {
 					switch( link.type ) {
 						case "default": 
-							tag.start_tag = "<a href='javascript:void(0)' class='intextlink' "
+							tag.start_tag = "<a href='javascript:void(0)' "
+                                            // set link to followed or normal: note that link is generated so the usual followed state doesn't work
+                                            + (link.followed ? "class='intextlink-followed' " : "class='intextlink' ")
 											+ "onMouseUp='"
 											+ "clickedLink(" + link.id + ")'>";
 							tag.end_tag = "</a>";

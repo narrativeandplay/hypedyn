@@ -1,4 +1,4 @@
-﻿/* in text links */
+/* in text links (not followed) */
 a.intextlink:link {
 	text-decoration: underline; 
 	color: black;
@@ -6,19 +6,22 @@ a.intextlink:link {
 	font-size: 18px;
 	font-weight: bold;
 }
-a.intextlink:visited {
-	text-decoration: underline;
+/* in text links (followed): note that link is generated so the usual followed state doesn't work */
+a.intextlink-followed:link {
+	text-decoration: underline; 
 	color: black;
-	//background-color:#FFFF85;
-	font-size: 18;
+	//background-color:#B2FF99;
+	font-size: 18px;
+	font-weight: normal;
 }
-a.intextlink:hover {
+/* in text links: hover and active (same for followed and not followed) */
+a.intextlink:hover,a.intextlink-followed:hover {
 	text-decoration: underline;
 	color: blue;
 	//background-color:#FF704D;
 	font-size: 18;
 }
-a.intextlink:active {
+a.intextlink:active,a.intextlink-followed:active {
 	text-decoration: none;
 	color: red;
 	//background-color: gold;
