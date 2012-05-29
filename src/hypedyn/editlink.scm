@@ -512,9 +512,7 @@
   
     ;; get the selected type
   (define selected-action-type (get-combobox-selecteditem action-type-choice))
-  (define new-action-panel (add-specific-action selected-action-type)) 
-  
-  (display "length of action list ")(display (length (get-selected-action-panel)))(newline)
+  (define new-action-panel (add-specific-action selected-action-type))
   
   (if (= (length (get-selected-action-panel)) 0)
      (begin

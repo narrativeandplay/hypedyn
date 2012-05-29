@@ -56,6 +56,7 @@
 (define rmgr-rules-list-panel #f) ;; the panel that contain all the rule panels
 (define center-panel #f) ;; the scrollpane rmgr-rules-list-panel is in
 
+(define delete-rule-button #f)
 (define rule-edit-button #f)
 (define up-button #f)
 (define down-button #f)
@@ -160,8 +161,9 @@
                            (select-rule-panel rID #f))
                        ) (rmgr-rule-lst)))
             
-            (select-rule-panel ruleID (not (panel-selected? top-panel)))))
-      (action-restrict-check)
+            (select-rule-panel ruleID (not (panel-selected? top-panel)))
+            (action-restrict-check)
+            ))
             )))
     
   (add-itemlistener
@@ -296,10 +298,26 @@
 
   ;; some actions are disabled depending on the number of rules selected
 (define (action-restrict-check)
+  
   ;; only activate these buttons when only one is selected
   (set-component-enabled rule-edit-button (= (length (selected-rule-lst)) 1))
-  (set-component-enabled up-button (= (length (selected-rule-lst)) 1))
-  (set-component-enabled down-button (= (length (selected-rule-lst)) 1))
+  
+  ;; at least one selected to delete
+  (set-component-enabled delete-rule-button (> (length (selected-rule-lst)) 0))
+  
+  ;; up button enable criteria
+  (if (and (= (length (selected-rule-lst)) 1) ;; only one selected
+           (not (= (car (selected-rule-lst)) (car (rmgr-rule-lst))))) ;; not first/top rule 
+      (set-component-enabled up-button #t)
+      (set-component-enabled up-button #f))
+  
+  ;; down button
+  (if (and (= (length (selected-rule-lst)) 1) ;; only one selected
+           (not (= (car (selected-rule-lst)) 
+                   (last (rmgr-rule-lst))))) ;; not last/btm rule 
+      (set-component-enabled down-button #t)
+      (set-component-enabled down-button #f))
+    
   )
 
 ;; assume rule manager is correctly loaded (rule-panel-lst correspond to rmgr-rule-lst)
@@ -379,6 +397,8 @@
             (set! index (+ (car (get-selected-pos-lst)) 1))
             (do-add-rule index))))
   
+  (action-restrict-check)
+  
   (display "new-rule-ID ")(display new-rule-ID)(newline)
 
   ;(define new-rule-sexpr (cache-rule new-rule-ID))
@@ -397,6 +417,7 @@
       (del 'rules new-rule-ID)
       ;; the last panel does not disappear even after we do remove-component thus we do this
       (component-update rmgr-rules-list-panel)
+      (action-restrict-check)
       )
     (lambda () ;; redo
       (rmgr-edit curr-edit-mode edited-obj-ID)
@@ -405,6 +426,7 @@
       ;; create the rule with the same ID
       (create-typed-rule2 "new rule" edit-mode 'and #f #f new-rule-ID)
       (do-add-rule index)
+      (action-restrict-check)
       ;(rmgr-add-rule-panel new-rule-ID)
       ))))
 
@@ -523,6 +545,7 @@
     ;; need to pack-frame for update?
     ;(pack-frame rules-manager-main-dialog)
     (validate-container rules-manager-main-dialog)
+    (action-restrict-check)
     )
   
   ;; shift this rule panel down, shift the rule as well
@@ -541,7 +564,8 @@
 
     ;; need to pack-frame for update?
     ;(pack-frame rules-manager-main-dialog)
-    (validate-container rules-manager-main-dialog))
+    (validate-container rules-manager-main-dialog)
+    (action-restrict-check))
   
   (define (shift-up-callback e)
     (shift-rule-up)
@@ -812,7 +836,7 @@
   
     ;; rule list buttons
   (define add-rule-button (make-button "Add Rule"))
-  (define delete-rule-button (make-button "Delete Selected"))
+  (set! delete-rule-button (make-button "Delete Selected"))
   (set! rule-edit-button (make-button "Edit Rule"))
   ;;(define rule-list-button-panel (make-panel))
   ;;(add-component rule-list-button-panel add-rule-button)

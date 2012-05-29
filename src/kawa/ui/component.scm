@@ -22,7 +22,7 @@
                set-component-size set-component-preferred-size set-component-minimum-size set-component-maximum-size
                set-component-non-resizable-size set-component-visible
                set-opaque set-border set-background-color 
-               set-component-enabled set-location
+               set-component-enabled set-location component-enabled?
                get-component-size get-component-preferred-size
                get-component-visible 
                get-width get-height 
@@ -196,6 +196,9 @@
 ; enable/disable a component
 (define (set-component-enabled in-item :: <javax.swing.JComponent> enable)
   (invoke in-item 'setEnabled enable))
+
+(define (component-enabled? comp :: <javax.swing.JComponent>)
+  (invoke comp 'is-enabled))
 
 (define (set-location comp :: <java.awt.Component> loc-x loc-y)
   (invoke comp 'setLocation loc-x loc-y)
