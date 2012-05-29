@@ -56,6 +56,7 @@
 (define rmgr-rules-list-panel #f) ;; the panel that contain all the rule panels
 (define center-panel #f) ;; the scrollpane rmgr-rules-list-panel is in
 
+(define add-rule-button #f)
 (define delete-rule-button #f)
 (define rule-edit-button #f)
 (define up-button #f)
@@ -299,6 +300,9 @@
   ;; some actions are disabled depending on the number of rules selected
 (define (action-restrict-check)
   
+  ;; add button
+  (set-component-enabled add-rule-button (<= (length (selected-rule-lst)) 1)) ;; 0 or 1 rule selected
+  
   ;; only activate these buttons when only one is selected
   (set-component-enabled rule-edit-button (= (length (selected-rule-lst)) 1))
   
@@ -435,6 +439,7 @@
   ;; it messes up the previous order, so cache it and set it back later
   (define rule-lst-before-deletion (list-copy (rmgr-rule-lst)))
   (define deleted-ID-lst (remove-selected-rule-panel))
+  (action-restrict-check)
 
   (if (not (null? deleted-ID-lst))
       (begin
@@ -835,7 +840,7 @@
   (add-component rules-manager-main-panel rules-dialog-button-panel 'border-south)
   
     ;; rule list buttons
-  (define add-rule-button (make-button "Add Rule"))
+  (set! add-rule-button (make-button "Add Rule"))
   (set! delete-rule-button (make-button "Delete Selected"))
   (set! rule-edit-button (make-button "Edit Rule"))
   ;;(define rule-list-button-panel (make-panel))

@@ -244,8 +244,8 @@
 (define editlink-panel-follow #f)
 
 (define editlink-panel-main-buttons #f)
-(define editlink-panel-main-buttons-add #f) ;; add conditions
-(define editlink-panel-main-buttons-delete #f) ;; delete conditions
+(define add-condition-button #f) ;; add conditions
+(define delete-condition-button #f) ;; delete conditions
 
 (define editlink-panel-buttons #f)
 (define editlink-panel-buttons-cancel #f)
@@ -315,18 +315,19 @@
   (add-component editlink-panel-if editlink-panel-main-buttons)
 
   ;; Add ADD button
-  (set! editlink-panel-main-buttons-add (make-button "Add condition"))
-  (add-actionlistener editlink-panel-main-buttons-add
+  (set! add-condition-button (make-button "Add condition"))
+  (add-actionlistener add-condition-button
                       (make-actionlistener (lambda (source)
                                              (editlink-dialog-add-condition))))
-  (add-component editlink-panel-main-buttons editlink-panel-main-buttons-add)
+  (add-component editlink-panel-main-buttons add-condition-button)
 
   ;; Add DELETE button
-  (set! editlink-panel-main-buttons-delete (make-button "Delete selected"))
-  (add-actionlistener editlink-panel-main-buttons-delete
+  (set! delete-condition-button (make-button "Delete selected"))
+  (add-actionlistener delete-condition-button
                       (make-actionlistener (lambda (source)
                                              (delete-selected-condition))))
-  (add-component editlink-panel-main-buttons editlink-panel-main-buttons-delete)
+  (set-component-enabled delete-condition-button #f)
+  (add-component editlink-panel-main-buttons delete-condition-button)
   
   editlink-panel-if) ;; end of IF conditions
 
@@ -369,39 +370,40 @@
   (get-container-children action-list-panel))
 
 (define (get-selected-action-panel)
-  (define (helper pnl-lst)
-    (if (null? pnl-lst)
-        '()
-        (append
-         (if (panel-selected? (car pnl-lst))
-             (list (car pnl-lst))
-             '())
-         (helper (cdr pnl-lst)))))
-  (helper (action-panel-list))
+;  (define (helper pnl-lst)
+;    (if (null? pnl-lst)
+;        '()
+;        (append
+;         (if (panel-selected? (car pnl-lst))
+;             (list (car pnl-lst))
+;             '())
+;         (helper (cdr pnl-lst)))))
+;  (helper (action-panel-list))
+  (filter panel-selected? (action-panel-list))
   )
 
 (define (condition-panel-list)
   (get-container-children condition-list-panel))
 
 (define (get-selected-condition-panel)
-  (define (helper pnl-lst)
-    (if (null? pnl-lst)
-        '()
-        (append
-         (if (panel-selected? (car pnl-lst))
-             (list (car pnl-lst))
-             '())
-         (helper (cdr pnl-lst)))))
-  (helper (condition-panel-list))
+;  (define (helper pnl-lst)
+;    (if (null? pnl-lst)
+;        '()
+;        (append
+;         (if (panel-selected? (car pnl-lst))
+;             (list (car pnl-lst))
+;             '())
+;         (helper (cdr pnl-lst)))))
+;  (helper (condition-panel-list))
+  (filter panel-selected? (condition-panel-list))
   )
 
 (define (action-panel-restrict)
-  (display "how many action selected? ")(newline)
-  (display (length (get-selected-action-panel)))(newline)
-  (if (not (or (= (length (get-selected-action-panel)) 1)
-               (= (length (get-selected-action-panel)) 0)))
-      (set-component-enabled add-action-button #f)
-      (set-component-enabled add-action-button #t))
+  ;; enable add button when 0 or 1 action panel selected 
+  (set-component-enabled add-action-button (not (> (length (get-selected-action-panel)) 1)))
+  
+  ;; enabled delete when at least 1 action panel selected
+  (set-component-enabled delete-action-button (> (length (get-selected-action-panel)) 0))
   )
 
 ;; add an action to the action list of type action-type ["update text using", "follow link to", "update fact"]
@@ -560,6 +562,7 @@
                (component-update action-list-panel)
                ))
          ) (action-panel-list))
+  (action-panel-restrict)
   (pack-frame editlink-dialog))
 
 ;; remove an action from the parent rule so that it is never 
@@ -1190,12 +1193,23 @@
 
               ;(select-rule-panel ruleID (not (panel-selected? top-panel)))
               (select-condition-panel top-panel (not (panel-selected? top-panel)))
+              (condition-panel-restrict)
               ))
         ;(action-restrict-check)
         )))
 
     ; return the panel
     top-panel))
+
+;; used to enable and disable buttons depending on the condition panels state
+(define (condition-panel-restrict)
+  
+  ;; enable add button when 0 or 1 condition panel selected 
+  (set-component-enabled add-condition-button (not (> (length (get-selected-condition-panel)) 1)))
+  
+  ;; enabled delete when at least 1 condition panel selected
+  (set-component-enabled delete-condition-button (> (length (get-selected-condition-panel)) 0))
+  )
 
 
 ;; a duplicate of how selectable rule panel
@@ -1307,7 +1321,10 @@
                  (component-update condition-list-panel)
                  )))
          all-children)
-
+    
+    ;; no more selected conditions, disable button
+    (condition-panel-restrict)
+    
     (pack-frame editlink-dialog)))
 
 ; get expression from position
