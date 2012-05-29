@@ -93,6 +93,8 @@ function nonpageflip_init() {
 	if (!page_flipping_mode) {
 		$("pageflip-canvas").style.visibility = "hidden";
 		$("pageflip-canvas").style.zIndex = -1000;
+		$("page-indicate-canvas").style.visibility = "hidden";
+		$("page-indicate-canvas").style.zIndex = -1000;
 		//$("lightsoff-canvas").style.visibility = "hidden";
 		$("popup").style.visibility = "hidden";
 	}
