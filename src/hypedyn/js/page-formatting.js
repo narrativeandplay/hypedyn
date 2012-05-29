@@ -419,6 +419,10 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 			if ( isNumber(i) ) {
 				var curr_page_tg_arr = pages_tg_arr[i];
 				var curr_page_code = "";
+
+                // process the newlines - is there a reason why this isn't done in escape_special?
+                process_newline(curr_page_tg_arr);
+
 				//disp(" curr_page_tg_arr len "+curr_page_tg_arr.length);
 				for ( var j in curr_page_tg_arr ) {
 					curr_page_code += assemble_tg( curr_page_tg_arr[j] );
@@ -439,6 +443,7 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 		return retval;
 	}
 	
+    // replace \n with <br>
 	function process_newline( tg_arr ) {
 	
 		function clone_arr_obj( obj ) {
