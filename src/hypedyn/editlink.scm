@@ -414,6 +414,7 @@
   
   (define panel-to-return (create-action-panel action-type))
   (set-container-layout panel-to-return 'horizontal)
+  (set-component-align-x panel-to-return 'left)
   
   (display "selection? ")(display (get-combobox-selecteditem action-type-choice))(newline)
   
@@ -512,7 +513,6 @@
     ;; get the selected type
   (define selected-action-type (get-combobox-selecteditem action-type-choice))
   (define new-action-panel (add-specific-action selected-action-type)) 
-  (set-component-align-x new-action-panel 'left)
   
   (display "length of action list ")(display (length (get-selected-action-panel)))(newline)
   
@@ -1168,6 +1168,8 @@
     (stop-expandfill the-link-operator-choice)
     (stop-expandfill the-fact-operator-choice)
     
+    (set-component-align-x top-panel 'left)
+    
     (display "size for combobox ")(display (get-component-preferred-size the-node-list))(newline)
     
     (add-mouselistener
@@ -1276,7 +1278,6 @@
 (define (editlink-dialog-add-condition)
   
   (define new-cond-panel (create-condition-panel 0 -1 0 -1))
-  (set-component-align-x new-cond-panel 'left)
   
   (if (= (length (get-selected-condition-panel)) 0)
      (begin
