@@ -67,7 +67,7 @@
       ((never) hori-sb-never)
       (else (display "Error unknown policy ")(display hp-sym)
             hori-sb-needed)))
-  (display "vpolicy")(display vert-sb-needed)(newline)
+  
    (<javax.swing.JScrollPane> in-component vert-sb-needed hori-sb-needed)
   )
 

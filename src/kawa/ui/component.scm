@@ -31,11 +31,11 @@
                
                get-location-on-screen
                get-parent
-               component-update set-align-x set-align-y
+               set-align-x set-align-y
                black-border bevel-in-border bevel-out-border
-               component-revalidate
                get-component-root-pane
-               stop-expandfill
+               component-update component-revalidate component-repaint
+               pack-component
                )
 
 ;;
@@ -137,13 +137,23 @@
   (set-component-maximum-size component width height)
   (set-component-preferred-size component width height))
 
-;; prevent the default behavior of box layout to expand the component
-;; to fill the parent container
-(define (stop-expandfill component :: <java.awt.Component>)
+;; this works for packing panels so far
+;; currently used to prevent the default behavior of box layout 
+;; expanding its components to fill the parent container
+(define (pack-component component :: <java.awt.Component>)
+  ;; first set the preferred size to null to reset any custom preferred size  
+  ;; that we might have set before
+  (invoke component 'set-preferred-size #!null)
+  (invoke component 'set-minimum-size #!null)
+  (invoke component 'set-maximum-size #!null)
+  
+  ;; then get the preferred size of the object based on its child components
   (define preferred-dim (get-component-preferred-size component))
-  (set-component-non-resizable-size component (invoke preferred-dim 'get-width) (invoke preferred-dim 'get-height))
+  (set-component-non-resizable-size
+   component 
+   (invoke preferred-dim 'get-width) 
+   (invoke preferred-dim 'get-height))
   )
-                                      
                                       
 
 ; set component's opaque flag
@@ -175,6 +185,12 @@
 
 (define (get-component-preferred-size component :: <java.awt.Component>) :: <java.awt.Dimension>
   (invoke component 'get-preferred-size))
+    
+(define (get-component-minimum-size component :: <java.awt.Component>) :: <java.awt.Dimension>
+  (invoke component 'get-minimum-size))
+
+(define (get-component-maximum-size component :: <java.awt.Component>) :: <java.awt.Dimension>
+  (invoke component 'get-maximum-size))
 
 ; get width
 (define (get-width component :: <java.awt.Component>)
@@ -314,6 +330,9 @@
 ; revalidate a component
 (define (component-revalidate component :: <javax.swing.JComponent>)
   (invoke (as <javax.swing.JComponent> component) 'revalidate))
+
+(define (component-repaint component :: <javax.swing.JComponent>)
+  (invoke (as <javax.swing.JComponent> component) 'repaint))
 
 ; get the root pane
 (define (get-component-root-pane component :: <javax.swing.JComponent>) :: <javax.swing.JRootPane>

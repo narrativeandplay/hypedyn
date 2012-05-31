@@ -101,7 +101,6 @@
   ; reset the editor, in case this failed when we closed last time
   (reset-rule-editor)
   
-  (display "do edit link ")(display edited-linkID)(newline)
   ; remember what we're editing
   (set! edited-linkID selected-linkID)
   (set! edited-nodeID in-edited-nodeID)
@@ -284,8 +283,6 @@
   (set! editlink-dialog-andor-operator (make-combobox "All" "Any"))
   (add-component editlink-panel-follow editlink-dialog-andor-operator)
   
-  ; 
-
   ; label for "of the following conditions are true:"
   (set! editlink-dialog-label (make-label))
   (set-text editlink-dialog-label "of the following conditions are true:")
@@ -300,15 +297,9 @@
   (define condition-scrollpane (make-scrollpane-with-policy condition-list-panel 'needed 'needed))
   (set-component-preferred-size condition-scrollpane 500 140)
   
-  (display "condition list panel preferred ")(display (get-component-preferred-size condition-list-panel))(newline)
-  (display "VIEW PORT WIDTH HERE ")(display (scroll-viewport-width condition-scrollpane))(newline)
-  
   (set! condition-scrollpane-vp-width (scroll-viewport-width condition-scrollpane))
   (add-component editlink-panel-if condition-scrollpane)
   
-  (display "condition list panel preferred2 ")(display (get-component-preferred-size condition-list-panel))(newline)
-  (display "VIEW PORT WIDTH HERE2 ")(display (scroll-viewport-width condition-scrollpane))(newline)
-
   ;; Add a horizontal panel to the dialog, with centering for buttons
   (set! editlink-panel-main-buttons (make-panel))
   (set-container-layout editlink-panel-main-buttons 'horizontal)
@@ -318,18 +309,304 @@
   (set! add-condition-button (make-button "Add condition"))
   (add-actionlistener add-condition-button
                       (make-actionlistener (lambda (source)
-                                             (editlink-dialog-add-condition))))
+                                             (add-condition-callback))))
   (add-component editlink-panel-main-buttons add-condition-button)
 
   ;; Add DELETE button
   (set! delete-condition-button (make-button "Delete selected"))
   (add-actionlistener delete-condition-button
                       (make-actionlistener (lambda (source)
-                                             (delete-selected-condition))))
+                                             (delete-condition-callback))))
   (set-component-enabled delete-condition-button #f)
   (add-component editlink-panel-main-buttons delete-condition-button)
   
   editlink-panel-if) ;; end of IF conditions
+
+; user clicked "ok" button on the edit rule UI
+;; NOTE: we now recycle the rule object
+;; TODO: Recycle objects (we don't recycle condition and action objects atm)
+;;       Action: since the 'expr is just a sexpr we can just set it, 
+;;               however the action object might have no relations to the new action 
+;;               there is no easy way to look at the UI and say which actions aren't changed atm
+;;       Condition : mechanics need changing since it stores the information in different variable (perhaps switch to sexpr)
+;;                   same as actions, there is no way to check which conditions are same compared to the previous
+;;                   so that we can reuse it (not sure if it is worth the trouble)
+
+;;       with abstraction I can see how one condition, action, rule can be assigned to many places
+;;       but it create some programming problem because each of these rule object have different parents
+;;       and condition and action have reference to a parent ruleID
+
+(define (edit-rule-confirm)
+  (let* ((rule-parent-obj (cond ((eq? edit-mode 'link) (get 'links edited-linkID))
+                                ((eq? edit-mode 'node) (get 'nodes edited-nodeID))
+                                ((eq? edit-mode 'doc) #f)))
+         (new-rulename (get-new-rule-name))
+         
+         ; get boolean operator
+         (new-rule-and-or-pos (get-combobox-selectedindex editlink-dialog-andor-operator))
+         (new-rule-and-or (get-rule-exp new-rule-and-or-pos))
+         
+         (negate-pos (get-combobox-selectedindex editlink-dialog-negate-operator))
+         (negate? (case negate-pos
+                    ((0) #f)
+                    ((1) #t)))
+         ; create the rule
+;         (new-ruleID (create-typed-rule2 new-rulename edit-mode new-rule-and-or negate?
+;                                       (cond ((eq? edit-mode 'link) edited-linkID)
+;                                             ((eq? edit-mode 'node) edited-nodeID)
+;                                             ((eq? edit-mode 'doc) -1))))
+         
+         ; get the actions, if any
+         ;(then-action-string (get-text editlink-dialog-then-actiontext))
+         ;(else-action-string (get-text editlink-dialog-else-actiontext))
+         )
+
+    (display "and-or ")(display new-rule-and-or)(newline)
+    (display "negate? ")(display negate?)(newline)
+    
+    ;; remove the line associated with this rule before we edit it
+    (if (eq? edit-mode 'link)
+        (remove-follow-link-rule-display edited-ruleID))  ;; remove the line display from the previous edited-ruleID
+    (if (eq? edit-mode 'link)
+        (remove-show-popup-rule-display edited-ruleID))  ;; remove the line display from the previous edited-ruleID
+    
+    
+    (define the-rule (get 'rules edited-ruleID))
+    
+    ;; empty current rule's contents before making the changes
+    (if the-rule
+        (ask the-rule 'empty-rule))
+    
+    ;; set the and-or and negate? properties
+    (if the-rule
+        (begin
+          (ask the-rule 'set-and-or! new-rule-and-or)
+          (ask the-rule 'set-negate! negate?)))
+    
+    ;; set the new name of the rule
+    (if the-rule
+        (ask the-rule 'set-name! new-rulename))
+    
+    ;; Conditions
+    ; run through conditions and add to rule
+    (map (lambda (panel) 
+           (let* ((children (get-container-children panel))
+                  (select-type (cadr children))  ;; link node fact combobox
+                  (select-target (caddr children)) ;; list of existent objects of select-type
+                  (select-operator (cadddr children)) ;; options specific to select-type (ie if type is link then it is followed/not followed)
+                  (the-type (if (not (is-basic-mode?)) (get-combobox-selectedindex select-type) 0))
+                  (targetID (get-comboboxwithdata-selecteddata select-target))
+                  (operator (get-combobox-selectedindex select-operator)))
+             ;(create-typed-condition new-rulename the-type targetID operator edited-ruleID)
+             (create-typed-condition new-rulename
+                                     (condition-panel-target-type panel)
+                                     (condition-panel-target-id panel)
+                                     (condition-panel-operator panel)
+                                     edited-ruleID)
+             ))
+         (condition-panel-list))
+    
+    ;; then-action-string, else-action-string
+    
+    ; if there's an action, add the action to the rule
+    ; need to read the string and break in to s-expressions; should eventually
+    ; be able to plug in an improved version of definition-editor here
+    ; NOTE: I haven't decided if actions should be stored as strings (currently)
+    ; or as s-expressions (commented out) - alex
+    ; strings: can store formatting
+    ; s-expr: seems more appropriate, but some problems with string values?
+;    (if (not (equal? then-action-string ""))
+;        (create-action new-rulename 
+;                       (cond ((eq? edit-mode 'link) 'then)
+;                             ((eq? edit-mode 'node) 'before)
+;                             ((eq? edit-mode 'doc) 'step))
+;                       then-action-string new-ruleID))
+;    (if (not (equal? else-action-string ""))
+;        (create-action new-rulename 
+;                       (cond ((eq? edit-mode 'link) 'else)
+;                             ((eq? edit-mode 'node) 'after)
+;                             ((eq? edit-mode 'doc) 'init))
+;                       else-action-string new-ruleID))
+;;        (let ((explist (open-input-string then-action-string)))
+;;          (read-action-expr 'then explist new-rulename new-ruleID)))
+;;        (let ((explist (open-input-string else-action-string)))
+;;          (read-action-expr 'else explist new-rulename new-ruleID)))
+
+    ;;=========
+    ;; Actions
+    ;;=========
+    (define obj-name (ask rule-parent-obj 'name))
+
+    ;; an action panel always has a checkbox as first component then a label with the name
+    ;; which identifies which kind of action it represents
+    (define (get-action-panel-type action-panel)
+      (define children (get-container-children action-panel))
+      (define action-label (cadr children))
+      (get-text action-label))
+
+    ;; map through the list of action panel and add the actions to the rule
+    (map (lambda (action-panel)
+           (define action-type (get-action-panel-type action-panel))
+           ;; Update Text Action
+           (display "action type ")(display action-type)(newline)
+           (cond ((equal? action-type "update text using")
+                  ;; text of fact?
+                  (define text-or-fact (get-combobox-selecteditem action-type-combobox))
+                  (define text-type #f)
+                  (define text-value #f)
+                  (case (to-string text-or-fact)
+                    (("alternative text")
+                     (set! text-type 'text)
+                     (set! text-value (get-text alt-text-textfield)))
+                    (("string fact")
+                     (set! text-type 'fact)
+                     ;; TOFIX: get fact string during runtime instead of from the start
+                     ;; (might not need to) just need to store factID
+                     ;; problem is fact is not accessible to our interpreter since it is in a different environment
+                     (define factID (get-comboboxwithdata-selecteddata fact-string-choice-combobox))
+                     (display "factID ")(display factID)(newline)
+                                        ;(define fact-text (ask (get 'facts factID) 'get-value))
+                                        ;(set! text-value (to-string factID))
+                     (set! text-value factID)
+                     ))
+                  (display "replace text edited linkID on confirm ")(display edited-linkID)(newline)
+                  (create-action obj-name 'displayed-node
+                                 (list 'replace-link-text
+                                       (list 'quote text-type)
+                                       text-value ;; this is actually factID
+                                       edited-linkID)
+                                 edited-ruleID))
+                 ;; Follow Link action
+                 ((equal? action-type "follow link to")
+                  (define dest-nodeID (get-comboboxwithdata-selecteddata node-choice-combobox))
+
+                  (create-action obj-name 'clicked-link
+                                 (list 'follow-link
+                                       edited-linkID
+                                       edited-ruleID
+                                       (list 'quote 'default)
+                                       dest-nodeID)
+                                 edited-ruleID))
+                 ;; Update Fact action
+                 ((equal? action-type "update fact")
+                  (display "I see UPDATE FACT ")(newline)
+
+                  (define fact-panel-children (get-container-children action-panel))
+                  ;; the components that follows the update fact label in the action panel
+                  (define component-list (get-container-children (caddr fact-panel-children)))
+
+                  ;; dd - dropdown
+                  (define dd1 (car component-list))
+                  (define dd2 (cadr component-list))
+                  ;; component 3 can be a textfield or dropdown depending on what is selected in dd2
+                  (define comp3 (caddr component-list))
+
+                  (define fact-type
+                    (case (to-string (get-combobox-selecteditem dd1))
+                      (("True/False") 'boolean)
+                      (("Text") 'text)
+                      (else 'error)))
+
+                  (define factID (get-comboboxwithdata-selecteddata dd2))
+                  (display "factID ")(display factID)(newline)
+
+                  ;; node rule and link rule share only update fact action for now
+                  ;; update fact is triggered by different event in the two kinds of rules
+                  (define event-type (case edit-mode
+                                       ((link) 'clicked-link)
+                                       ((node) 'entered-node)))
+
+                  (cond ((equal? fact-type 'boolean)
+                         (define bool-val-selected (to-string (get-combobox-selecteditem comp3)))
+
+                         (define bool-operator
+                           (cond ((equal? bool-val-selected "True") 'assert)
+                                 ((equal? bool-val-selected "False") 'retract)))
+
+                         (create-action obj-name event-type
+                                        (list bool-operator
+                                              factID)
+                                        edited-ruleID
+                                        ))
+                        ((equal? fact-type 'text)
+                         (create-action obj-name event-type
+                                        (list 'set-value!
+                                              factID
+                                              (get-text comp3))
+                                        edited-ruleID)
+                         )) ;; end of fact-type cond
+                  )
+;                 
+                 ;; no parameter from the ui
+                 ((equal? action-type "enable links to this node from anywhere")
+                  (create-action "Enable Link" 'anywhere-check
+                               (list 'add-anywhere-link edited-nodeID)
+                               edited-ruleID))
+                 ((equal? action-type "show in popup")
+                  (define target-nodeID (get-comboboxwithdata-selecteddata node-choice-combobox2))
+                  (display "edited linkID on confirm ")(display edited-linkID)(newline)
+                  (create-action "Show in Popup" 'clicked-link
+                               (list 'show-in-popup target-nodeID)
+                               edited-ruleID)
+                  )
+                 ) ;; end of action-type cond
+           ) (action-panel-list))
+
+    ;; cache the information of the edited link in the form of a lambda object
+    (after-edit-rule edited-ruleID)
+
+    ;; added an undoable event 
+    (post-edit-rule-undoable-event
+     edit-mode
+     (case edit-mode
+       ((link) edited-linkID)
+       ((node) edited-nodeID))
+     edited-ruleID)
+
+    ;; reflect changes in node-graph 
+    ;; only need to do for links that have follow link actions
+    (if (eq? edit-mode 'link)
+        (add-follow-link-rule-display edited-ruleID))
+    (if (eq? edit-mode 'link)
+        (add-show-popup-rule-display edited-ruleID))
+
+    ;;===============
+    ;; End of Actions
+    ;;===============
+    
+    ;; reflect changes in rule manager
+    (rmgr-update)
+    
+    ; hide link editor, and reset (for next time)
+    (set-component-visible editlink-dialog #f)
+    (reset-rule-editor)
+    ))
+
+; reset the rule editor
+(define (reset-rule-editor)
+  
+  (if condition-list-panel
+      (clear-container condition-list-panel)) ;; empty conditions panel
+  
+  (if action-list-panel
+      (clear-container action-list-panel))    ;; empty actions panel
+  
+  ; if facts are showing, reset the alt text to text, not fact
+;  (if (show-facts?)
+;      (set-combobox-selection editlink-panel-else-text-typechoice 0))
+
+  (if editlink-dialog-andor-operator
+      (set-combobox-selection editlink-dialog-andor-operator 0))
+  )
+
+;; check whether rule is valid or not then
+;; enable the ok button accordingly
+
+(define (validate-rule #!optional e)
+  (set-component-enabled 
+   editlink-panel-buttons-ok 
+   (and (all-conditions-valid?)
+        (all-actions-valid?))))
 
 ;;;; action and condition panels
 ;(define actions-main-panel #f)
@@ -370,33 +647,13 @@
   (get-container-children action-list-panel))
 
 (define (get-selected-action-panel)
-;  (define (helper pnl-lst)
-;    (if (null? pnl-lst)
-;        '()
-;        (append
-;         (if (panel-selected? (car pnl-lst))
-;             (list (car pnl-lst))
-;             '())
-;         (helper (cdr pnl-lst)))))
-;  (helper (action-panel-list))
-  (filter panel-selected? (action-panel-list))
-  )
+  (filter panel-selected? (action-panel-list)))
 
 (define (condition-panel-list)
   (get-container-children condition-list-panel))
 
 (define (get-selected-condition-panel)
-;  (define (helper pnl-lst)
-;    (if (null? pnl-lst)
-;        '()
-;        (append
-;         (if (panel-selected? (car pnl-lst))
-;             (list (car pnl-lst))
-;             '())
-;         (helper (cdr pnl-lst)))))
-;  (helper (condition-panel-list))
-  (filter panel-selected? (condition-panel-list))
-  )
+  (filter panel-selected? (condition-panel-list)))
 
 (define (action-panel-restrict)
   ;; enable add button when 0 or 1 action panel selected 
@@ -404,6 +661,60 @@
   
   ;; enabled delete when at least 1 action panel selected
   (set-component-enabled delete-action-button (> (length (get-selected-action-panel)) 0))
+  )
+
+;;;; action panel operations
+
+(define (get-action-panel-type panel)
+  (let* ((children (get-container-children panel))
+         (action-name-label (list-ref children 1)))
+    (get-text action-name-label)
+    ))
+
+(define (update-fact-panel-valid? panel)
+  (let* ((children (get-container-children panel))
+         (fact-panel (list-ref children 2))
+         (fp-children (get-container-children fact-panel))
+         (target-cb (list-ref fp-children 1))
+         )
+    (not (= (get-comboboxwithdata-selecteddata target-cb) -1))
+    ))
+
+(define (update-text-using-panel-valid? panel)
+  (let ((selected-item (to-string (get-combobox-selecteditem action-type-combobox))))
+    (case selected-item
+      (("alternative text") #t) ;; no checking required
+      (("string fact") 
+       (not (= (get-comboboxwithdata-selecteddata fact-string-choice-combobox) -1))
+       ))))
+
+;; show in popup and follow link checks does the same thing
+(define follow-link-to-panel-valid? show-in-popup-panel-valid?)
+(define (show-in-popup-panel-valid? panel)
+  (let* ((children (get-container-children panel))
+         (target-cb (list-ref children 2)))
+    (not (= (get-comboboxwithdata-selecteddata target-cb) -1))
+    ))
+
+
+(define (action-panel-valid? panel)
+  (case (get-action-panel-type panel)
+    (("update fact") (update-fact-panel-valid? panel))
+    (("follow link to") (follow-link-to-panel-valid? panel))
+    (("update text using") (update-text-using-panel-valid? panel))
+    (("show in popup") (show-in-popup-panel-valid? panel))
+    (else (display "[action panel valid?] new type ")(display (get-action-panel-type panel))(newline) #f))
+  )
+
+(define (all-actions-valid?)
+  (define (my-and lst)
+    (if (null? lst) 
+        #t
+        (and (car lst) 
+             (my-and (cdr lst)))))
+  
+  (my-and (map action-panel-valid?
+               (action-panel-list)))
   )
 
 ;; add an action to the action list of type action-type ["update text using", "follow link to", "update fact"]
@@ -422,27 +733,32 @@
   
   ;; alter the configuration of the ui objects if args-lst given
   (cond ((equal? action-type "update text using")
+         
          (if (= (length args-lst) 2)
              (let ((using-type (car args-lst))
                    (alt-text (cadr args-lst)))
-
+               
                (set-combobox-selection-object action-type-combobox (create-combobox-string-item using-type))
 
                (cond ((equal? using-type "alternative text")
                       (set-text alt-text-textfield alt-text)
                       )
                      ((equal? using-type "string fact")
-                      (display "went into string fact ")(newline)
                                         ;fact-string-choice-combobox
                       (define target-fact (get 'facts alt-text))
                       (define fact-name (ask target-fact 'name))
 
                       (define for-selection (create-combobox-string-item fact-name))
                       (set-combobox-selection-object fact-string-choice-combobox for-selection)
-                      )
-                     )
+                      ))
+               )
+             ;; if this is a new action
+             (begin
+               ;; update existing fact choices
+               (set! fact-string-choice-combobox (create-fact-choice 'string #f))
+               (pack-component fact-string-choice-combobox)
                ))
-         (stop-expandfill update-text-action-panel)
+         (pack-component update-text-action-panel)
          (add-component panel-to-return update-text-action-panel)
          )
         ((equal? action-type "follow link to")
@@ -459,7 +775,13 @@
                ;(set-combobox-selection-object node-choice-combobox (create-combobox-string-item dest-node-name))
                )
              (set! node-choice-combobox (create-node-choice #f #t -1)))
-         (stop-expandfill node-choice-combobox)
+         
+         (add-actionlistener
+          node-choice-combobox
+          (make-actionlistener
+           validate-rule))
+          
+         (pack-component node-choice-combobox)
          (add-component panel-to-return node-choice-combobox)
          )
         ((equal? action-type "update fact")
@@ -479,10 +801,13 @@
          (if (= (length args-lst) 1)
              (set! node-choice-combobox2 (create-node-choice (car args-lst) #t -1))
              (set! node-choice-combobox2 (create-node-choice #f #t -1)))
-         (stop-expandfill node-choice-combobox2)
+         (add-actionlistener
+          node-choice-combobox2
+          (make-actionlistener
+           validate-rule))
+         (pack-component node-choice-combobox2)
          (add-component panel-to-return node-choice-combobox2))
         )
-  
   
   (set-border panel-to-return bevel-in-border)
   (set-component-non-resizable-size panel-to-return 480 50) ;;action-scrollpane-vp-width
@@ -527,6 +852,9 @@
         (add-component-at action-list-panel new-action-panel (+ index 1))
         ))
   
+  ;; check whether rule is valid and enable ok button
+  (validate-rule)
+  
   ;(add-component action-list-panel new-action-panel)
   (pack-frame editlink-dialog))
 
@@ -563,6 +891,7 @@
                ))
          ) (action-panel-list))
   (action-panel-restrict)
+  (validate-rule)
   (pack-frame editlink-dialog))
 
 ;; remove an action from the parent rule so that it is never 
@@ -616,6 +945,7 @@
   
   (set! add-action-button (make-button "Add Action"))
   (set! delete-action-button (make-button "Delete Selected"))
+  (set-component-enabled delete-action-button #f)
   
   ;; label
   (define action-label (make-label-with-title "THEN perform the following actions:"))
@@ -840,37 +1170,23 @@
 (define action-type-combobox #f)
 (define fact-string-choice-combobox #f)
 (define fact-boolean-choice-combobox #f)
-(define update-text-fact-selection-panel #f)
 
+;; update the panel UI state for "update text using" action
 (define (action-update-text-combobox-callback)
-  (define (clear-all-except-first)
-    (display "clear all ")(newline)
-    (remove-component update-text-action-panel alt-text-textfield)
-    (remove-component update-text-action-panel update-text-fact-selection-panel)
-    (display "clear all done ")(newline))
 
   (define link-obj (get 'links edited-linkID))
   (define link-alttext (ask link-obj 'alt-text))
 
-  (display "combobox type selected ")
   (define selected-item (get-combobox-selecteditem action-type-combobox))
-  (display selected-item)(newline)
 
   (cond ((equal? selected-item "alternative text")
-         (display "equal alt text ")(newline)
-         (clear-all-except-first)
+         (clear-container update-text-action-panel)
+         (add-component update-text-action-panel action-type-combobox)
          (add-component update-text-action-panel alt-text-textfield)
-         (display "[link-alttext] ")(display link-alttext)(newline)
-         
-         ;; dont show the fact id number when switching from a set fact text to set text
-         (if (not (string? link-alttext))
-             (set-text alt-text-textfield "") 
-             (set-text alt-text-textfield link-alttext))
          )
         ((equal? selected-item "string fact")
-         (display "eq text from fact ")(newline)
-         (clear-all-except-first)
-                                        ;(add-component update-text-action-panel fact-choice-combobox)
+         (clear-container update-text-action-panel)
+         (add-component update-text-action-panel action-type-combobox)
 
          ;; get selection on fact-string-choice-combobox  
          ;; Note: this preserves our fact selection when we toggle between text and fact
@@ -879,19 +1195,25 @@
              (set! fact-selection (get-comboboxwithdata-selecteddata fact-string-choice-combobox)))
          
          ;; create and add the combobox containing the string facts
-         (set! fact-string-choice-combobox (create-fact-choice 'string fact-selection)) 
-
+         (set! fact-string-choice-combobox (create-fact-choice 'string fact-selection))
+         (pack-component fact-string-choice-combobox)
          
-         ;; remove the previous fact-string-choice-combobox (might be outdated) 
-         (clear-container update-text-fact-selection-panel)
+         (add-actionlistener
+          fact-string-choice-combobox
+          (make-actionlistener
+           validate-rule
+           ))
          
          ;; add to a container panel and add to the update-text-action-panel
-         (add-component update-text-fact-selection-panel fact-string-choice-combobox)
-         (add-component update-text-action-panel update-text-fact-selection-panel)
-
-                                        ;(add-component update-text-action-panel fact-string-choice-combobox)
+         (add-component update-text-action-panel fact-string-choice-combobox)
          ))
-                                        ;(set-component-visible editlink-dialog #t)
+  
+  (component-update (get-parent update-text-action-panel))
+  (component-revalidate (get-parent update-text-action-panel))
+  (component-repaint (get-parent update-text-action-panel))
+  
+  (pack-component update-text-action-panel)
+  
   (pack-frame editlink-dialog)
   )
 
@@ -901,8 +1223,6 @@
   (set! action-type-combobox (make-combobox "alternative text" "string fact"))
   (set! alt-text-textfield (make-textfield "" 20))
   
-  (set! update-text-fact-selection-panel (make-panel))
-  
   (set! fact-string-choice-combobox ;editlink-panel-else-text-factchoice 
     (create-fact-choice 'string
                         -1))
@@ -910,6 +1230,10 @@
   (set! fact-boolean-choice-combobox ;editlink-panel-else-text-factchoice 
     (create-fact-choice 'boolean
                         -1))
+  
+  ;; layout
+  (set-container-layout update-text-action-panel 'horizontal)
+  (pack-component action-type-combobox)
   
   (add-component update-text-action-panel action-type-combobox)
   (add-component update-text-action-panel alt-text-textfield)
@@ -919,7 +1243,7 @@
   (add-actionlistener action-type-combobox 
                       (make-actionlistener 
                        (lambda (e)
-                         (display "update text callback")(newline)
+                         (validate-rule)
                          (action-update-text-combobox-callback))))
   )
 
@@ -1137,8 +1461,36 @@
                                                      (selected-type-in-condition source top-panel
                                                                                  the-node-list the-node-operator-choice
                                                                                  the-link-list the-link-operator-choice
-                                                                                 the-fact-list the-fact-operator-choice)))))
+                                                                                 the-fact-list the-fact-operator-choice)
+                                                     ;(all-conditions-valid?)
+                                                     ))))
         (add-component top-panel (make-label-with-title "Node")))
+    
+    
+    ;; Check whether the condition is valid and
+    
+    ;; target type choice action listener (no need for now)
+;    (add-actionlistener 
+;     the-type-choice
+;     (make-actionlistener
+;      validate-rule))
+    
+    ;; target choice action listener
+    (add-actionlistener 
+     the-node-list
+     (make-actionlistener
+      validate-rule))
+    
+    (add-actionlistener 
+     the-link-list
+     (make-actionlistener
+      validate-rule))
+    
+    (add-actionlistener 
+     the-fact-list
+     (make-actionlistener
+      validate-rule))
+        
 
     ;; Add target choice - may have problems if loading a file that doesn't match chosen version
     (cond 
@@ -1159,19 +1511,17 @@
     (set-border top-panel bevel-in-border)
     
     ;; prevent the comboboxes from expanding to fill the panel 
-    (stop-expandfill the-node-list)
-    (stop-expandfill the-link-list)
-    (stop-expandfill the-fact-list)
+    (pack-component the-node-list)
+    (pack-component the-link-list)
+    (pack-component the-fact-list)
     
-    (stop-expandfill the-type-choice)
+    (pack-component the-type-choice)
     
-    (stop-expandfill the-node-operator-choice)
-    (stop-expandfill the-link-operator-choice)
-    (stop-expandfill the-fact-operator-choice)
+    (pack-component the-node-operator-choice)
+    (pack-component the-link-operator-choice)
+    (pack-component the-fact-operator-choice)
     
     (set-component-align-x top-panel 'left)
-    
-    (display "size for combobox ")(display (get-component-preferred-size the-node-list))(newline)
     
     (add-mouselistener
      top-panel
@@ -1210,28 +1560,6 @@
   ;; enabled delete when at least 1 condition panel selected
   (set-component-enabled delete-condition-button (> (length (get-selected-condition-panel)) 0))
   )
-
-
-;; a duplicate of how selectable rule panel
-
-(define (panel-selected? pnl)
-  (equal? (get-background-color pnl) selected-color))
-
-(define selected-color (make-colour-rgb 135 206 250))  ;; sky blue
-(define unselected-color (make-colour-rgb 238 238 238))
-
-(define (select-condition-panel pnl selected?)
-  (if selected?
-      (set-background-color pnl selected-color)
-      (set-background-color pnl unselected-color)
-      ))
-
-;; similar to how rule panel is handled
-
-;(define (get-condition-panel-fall-checkbox rule-panel)
-;  (list-ref (get-container-children rule-panel) 2))
-;(define (get-condition-panel-name-label rule-panel)
-;  (list-ref (get-container-children rule-panel) 0))
 
 
 ;;
@@ -1287,7 +1615,7 @@
   )
 
 ; add a condition
-(define (editlink-dialog-add-condition)
+(define (add-condition-callback)
   
   (define new-cond-panel (create-condition-panel 0 -1 0 -1))
   
@@ -1302,11 +1630,14 @@
         (add-component-at condition-list-panel new-cond-panel (+ index 1))
         ))
   
+  ;; check whether rule is valid and enable ok button
+  (validate-rule)
+  
   ;(add-component condition-list-panel (create-condition-panel 0 -1 0 -1))
   (pack-frame editlink-dialog))
 
 ; delete selected condition
-(define (delete-selected-condition)
+(define (delete-condition-callback)
   (let ((all-children
          (if (java.awt.Container? condition-list-panel)
              (get-container-children condition-list-panel)
@@ -1324,7 +1655,7 @@
     
     ;; no more selected conditions, disable button
     (condition-panel-restrict)
-    
+    (validate-rule)
     (pack-frame editlink-dialog)))
 
 ; get expression from position
@@ -1430,282 +1761,61 @@
              (map remove-show-popup-rule-display rule-lst)))
           )))
 
-; user clicked "ok" button on the edit rule UI
-;; NOTE: we now recycle the rule object
-;; TODO: Recycle objects (we don't recycle condition and action objects atm)
-;;       Action: since the 'expr is just a sexpr we can just set it, 
-;;               however the action object might have no relations to the new action 
-;;               there is no easy way to look at the UI and say which actions aren't changed atm
-;;       Condition : mechanics need changing since it stores the information in different variable (perhaps switch to sexpr)
-;;                   same as actions, there is no way to check which conditions are same compared to the previous
-;;                   so that we can reuse it (not sure if it is worth the trouble)
+;;;; Condition panel operations
+(define (condition-panel-target-type panel)
+  (let* ((children (get-container-children panel))
+         (select-type-cb (cadr children)))
+    (if (not (is-basic-mode?))
+        (get-combobox-selectedindex select-type-cb)
+        0)))
 
-;;       with abstraction I can see how one condition, action, rule can be assigned to many places
-;;       but it create some programming problem because each of these rule object have different parents
-;;       and condition and action have reference to a parent ruleID
-
-(define (edit-rule-confirm)
-  (let* ((rule-parent-obj (cond ((eq? edit-mode 'link) (get 'links edited-linkID))
-                                ((eq? edit-mode 'node) (get 'nodes edited-nodeID))
-                                ((eq? edit-mode 'doc) #f)))
-         (new-rulename (get-new-rule-name))
-         
-         ; get boolean operator
-         (new-rule-and-or-pos (get-combobox-selectedindex editlink-dialog-andor-operator))
-         (new-rule-and-or (get-rule-exp new-rule-and-or-pos))
-         
-         ; get conditions
-         (all-conditions (condition-panel-list))
-         
-         ; get actions
-         (actions (action-panel-list))
-         
-         (negate-pos (get-combobox-selectedindex editlink-dialog-negate-operator))
-         (negate? (case negate-pos
-                    ((0) #f)
-                    ((1) #t)))
-         ; create the rule
-;         (new-ruleID (create-typed-rule2 new-rulename edit-mode new-rule-and-or negate?
-;                                       (cond ((eq? edit-mode 'link) edited-linkID)
-;                                             ((eq? edit-mode 'node) edited-nodeID)
-;                                             ((eq? edit-mode 'doc) -1))))
-         
-         ; get the actions, if any
-         ;(then-action-string (get-text editlink-dialog-then-actiontext))
-         ;(else-action-string (get-text editlink-dialog-else-actiontext))
-         )
-
-    (display "and-or ")(display new-rule-and-or)(newline)
-    (display "negate? ")(display negate?)(newline)
-    
-    ;; remove the line associated with this rule before we edit it
-    (if (eq? edit-mode 'link)
-        (remove-follow-link-rule-display edited-ruleID))  ;; remove the line display from the previous edited-ruleID
-    (if (eq? edit-mode 'link)
-        (remove-show-popup-rule-display edited-ruleID))  ;; remove the line display from the previous edited-ruleID
-    
-    
-    (define the-rule (get 'rules edited-ruleID))
-    
-    ;; empty current rule's contents before making the changes
-    (if the-rule
-        (ask the-rule 'empty-rule))
-    
-    ;; set the and-or and negate? properties
-    (if the-rule
-        (begin
-          (ask the-rule 'set-and-or! new-rule-and-or)
-          (ask the-rule 'set-negate! negate?)))
-    
-    ;; set the new name of the rule
-    (if the-rule
-        (ask the-rule 'set-name! new-rulename))
-    
-    ;; Conditions
-    ; run through conditions and add to rule
-    (map (lambda (panel) 
-           (let* ((children (get-container-children panel))
-                  (select-type (cadr children))  ;; link node fact combobox
-                  (select-target (caddr children)) ;; list of existent objects of select-type
-                  (select-operator (cadddr children)) ;; options specific to select-type (ie if type is link then it is followed/not followed)
-                  (the-type (if (not (is-basic-mode?)) (get-combobox-selectedindex select-type) 0))
-                  (targetID (get-comboboxwithdata-selecteddata select-target))
-                  (operator (get-combobox-selectedindex select-operator)))
-             (create-typed-condition new-rulename the-type targetID operator edited-ruleID)))
-         all-conditions)
-    
-    ;; then-action-string, else-action-string
-    
-    ; if there's an action, add the action to the rule
-    ; need to read the string and break in to s-expressions; should eventually
-    ; be able to plug in an improved version of definition-editor here
-    ; NOTE: I haven't decided if actions should be stored as strings (currently)
-    ; or as s-expressions (commented out) - alex
-    ; strings: can store formatting
-    ; s-expr: seems more appropriate, but some problems with string values?
-;    (if (not (equal? then-action-string ""))
-;        (create-action new-rulename 
-;                       (cond ((eq? edit-mode 'link) 'then)
-;                             ((eq? edit-mode 'node) 'before)
-;                             ((eq? edit-mode 'doc) 'step))
-;                       then-action-string new-ruleID))
-;    (if (not (equal? else-action-string ""))
-;        (create-action new-rulename 
-;                       (cond ((eq? edit-mode 'link) 'else)
-;                             ((eq? edit-mode 'node) 'after)
-;                             ((eq? edit-mode 'doc) 'init))
-;                       else-action-string new-ruleID))
-;;        (let ((explist (open-input-string then-action-string)))
-;;          (read-action-expr 'then explist new-rulename new-ruleID)))
-;;        (let ((explist (open-input-string else-action-string)))
-;;          (read-action-expr 'else explist new-rulename new-ruleID)))
-
-    ;;=========
-    ;; Actions
-    ;;=========
-    (define obj-name (ask rule-parent-obj 'name))
-
-    ;; an action panel always has a checkbox as first component then a label with the name
-    ;; which identifies which kind of action it represents
-    (define (get-action-panel-type action-panel)
-      (define children (get-container-children action-panel))
-      (define action-label (cadr children))
-      (get-text action-label))
-
-    ;; map through the list of action panel and add the actions to the rule
-    (map (lambda (action-panel)
-           (define action-type (get-action-panel-type action-panel))
-           ;; Update Text Action
-           (display "action type ")(display action-type)(newline)
-           (cond ((equal? action-type "update text using")
-                  ;; text of fact?
-                  (define text-or-fact (get-combobox-selecteditem action-type-combobox))
-                  (define text-type #f)
-                  (define text-value #f)
-                  (case (to-string text-or-fact)
-                    (("alternative text")
-                     (set! text-type 'text)
-                     (set! text-value (get-text alt-text-textfield)))
-                    (("string fact")
-                     (set! text-type 'fact)
-                     ;; TOFIX: get fact string during runtime instead of from the start
-                     ;; (might not need to) just need to store factID
-                     ;; problem is fact is not accessible to our interpreter since it is in a different environment
-                     (define factID (get-comboboxwithdata-selecteddata fact-string-choice-combobox))
-                     (display "factID ")(display factID)(newline)
-                                        ;(define fact-text (ask (get 'facts factID) 'get-value))
-                                        ;(set! text-value (to-string factID))
-                     (set! text-value factID)
-                     ))
-                  (display "replace text edited linkID on confirm ")(display edited-linkID)(newline)
-                  (create-action obj-name 'displayed-node
-                                 (list 'replace-link-text
-                                       (list 'quote text-type)
-                                       text-value ;; this is actually factID
-                                       edited-linkID)
-                                 edited-ruleID))
-                 ;; Follow Link action
-                 ((equal? action-type "follow link to")
-                  (define dest-nodeID (get-comboboxwithdata-selecteddata node-choice-combobox))
-
-                  (create-action obj-name 'clicked-link
-                                 (list 'follow-link
-                                       edited-linkID
-                                       edited-ruleID
-                                       (list 'quote 'default)
-                                       dest-nodeID)
-                                 edited-ruleID))
-                 ;; Update Fact action
-                 ((equal? action-type "update fact")
-                  (display "I see UPDATE FACT ")(newline)
-
-                  (define fact-panel-children (get-container-children action-panel))
-                  ;; the components that follows the update fact label in the action panel
-                  (define component-list (get-container-children (caddr fact-panel-children)))
-
-                  ;; dd - dropdown
-                  (define dd1 (car component-list))
-                  (define dd2 (cadr component-list))
-                  ;; component 3 can be a textfield or dropdown depending on what is selected in dd2
-                  (define comp3 (caddr component-list))
-
-                  (define fact-type
-                    (case (to-string (get-combobox-selecteditem dd1))
-                      (("True/False") 'boolean)
-                      (("Text") 'text)
-                      (else 'error)))
-
-                  (define factID (get-comboboxwithdata-selecteddata dd2))
-                  (display "factID ")(display factID)(newline)
-
-                  ;; node rule and link rule share only update fact action for now
-                  ;; update fact is triggered by different event in the two kinds of rules
-                  (define event-type (case edit-mode
-                                       ((link) 'clicked-link)
-                                       ((node) 'entered-node)))
-
-                  (cond ((equal? fact-type 'boolean)
-                         (define bool-val-selected (to-string (get-combobox-selecteditem comp3)))
-
-                         (define bool-operator
-                           (cond ((equal? bool-val-selected "True") 'assert)
-                                 ((equal? bool-val-selected "False") 'retract)))
-
-                         (create-action obj-name event-type
-                                        (list bool-operator
-                                              factID)
-                                        edited-ruleID
-                                        ))
-                        ((equal? fact-type 'text)
-                         (create-action obj-name event-type
-                                        (list 'set-value!
-                                              factID
-                                              (get-text comp3))
-                                        edited-ruleID)
-                         )) ;; end of fact-type cond
-                  )
-;                 
-                 ;; no parameter from the ui
-                 ((equal? action-type "enable links to this node from anywhere")
-                  (create-action "Enable Link" 'anywhere-check
-                               (list 'add-anywhere-link edited-nodeID)
-                               edited-ruleID))
-                 ((equal? action-type "show in popup")
-                  (define target-nodeID (get-comboboxwithdata-selecteddata node-choice-combobox2))
-                  (display "edited linkID on confirm ")(display edited-linkID)(newline)
-                  (create-action "Show in Popup" 'clicked-link
-                               (list 'show-in-popup target-nodeID)
-                               edited-ruleID)
-                  )
-                 ) ;; end of action-type cond
-           ) (action-panel-list))
-
-    ;; cache the information of the edited link in the form of a lambda object
-    (after-edit-rule edited-ruleID)
-
-    ;; added an undoable event 
-    (post-edit-rule-undoable-event
-     edit-mode
-     (case edit-mode
-       ((link) edited-linkID)
-       ((node) edited-nodeID))
-     edited-ruleID)
-
-    ;; reflect changes in node-graph 
-    ;; only need to do for links that have follow link actions
-    (if (eq? edit-mode 'link)
-        (add-follow-link-rule-display edited-ruleID))
-    (if (eq? edit-mode 'link)
-        (add-show-popup-rule-display edited-ruleID))
-
-    ;;===============
-    ;; End of Actions
-    ;;===============
-    
-    ;; reflect changes in rule manager
-    (rmgr-update)
-    
-    ; hide link editor, and reset (for next time)
-    (set-component-visible editlink-dialog #f)
-    (reset-rule-editor)
+(define (condition-panel-target-id panel)
+  (let* ((children (get-container-children panel))
+         (select-target-cb (caddr children)))
+    (get-comboboxwithdata-selecteddata select-target-cb)
     ))
 
-; reset the rule editor
-(define (reset-rule-editor)
-  
-  (if condition-list-panel
-      (clear-container condition-list-panel)) ;; empty conditions panel
-  
-  (if action-list-panel
-      (clear-container action-list-panel))    ;; empty actions panel
-  
-  ; if facts are showing, reset the alt text to text, not fact
-;  (if (show-facts?)
-;      (set-combobox-selection editlink-panel-else-text-typechoice 0))
+(define (condition-panel-operator panel)
+  (let* ((children (get-container-children panel))
+         (select-operator-cb (cadddr children)))
+    (get-combobox-selectedindex select-operator-cb)))
 
-  (if editlink-dialog-andor-operator
-      (set-combobox-selection editlink-dialog-andor-operator 0))
+(define (condition-panel-valid? panel)
+  ;; target id cannot be -1 
+  (not (= (condition-panel-target-id panel) -1)))
+
+(define (all-conditions-valid?)
+  
+  (define (my-and lst)
+    (if (null? lst) 
+        #t
+        (and (car lst) 
+             (my-and (cdr lst)))))
+  
+  (my-and (map condition-panel-valid?
+               (get-container-children condition-list-panel)))
   )
+
+;; a duplicate of how selectable rule panel
+
+(define (panel-selected? pnl)
+  (equal? (get-background-color pnl) selected-color))
+
+(define selected-color (make-colour-rgb 135 206 250))  ;; sky blue
+(define unselected-color (make-colour-rgb 238 238 238))
+
+(define (select-condition-panel pnl selected?)
+  (if selected?
+      (set-background-color pnl selected-color)
+      (set-background-color pnl unselected-color)
+      ))
+
+;; similar to how rule panel is handled
+
+;(define (get-condition-panel-fall-checkbox rule-panel)
+;  (list-ref (get-container-children rule-panel) 2))
+;(define (get-condition-panel-name-label rule-panel)
+;  (list-ref (get-container-children rule-panel) 0))
 
 ;;  =============
 ;;;; fact panel
@@ -1731,11 +1841,11 @@
     (set-container-layout top-panel 'horizontal)
     
     ;; make sure none of the combobox expands
-    (stop-expandfill the-type-choice)
-    (stop-expandfill the-boolean-choice)
-    (stop-expandfill the-string-entry)
-    (stop-expandfill the-fact-list-boolean)
-    (stop-expandfill the-fact-list-string)
+    (pack-component the-type-choice)
+    (pack-component the-boolean-choice)
+    (pack-component the-string-entry)
+    (pack-component the-fact-list-boolean)
+    (pack-component the-fact-list-string)
     
     ;; add type choice
     (add-component top-panel the-type-choice)
@@ -1777,6 +1887,16 @@
                                                                         the-fact-list-boolean the-boolean-choice
                                                                         the-fact-list-string the-string-entry))))
 
+    (add-actionlistener
+     the-fact-list-boolean
+     (make-actionlistener
+      validate-rule))
+    
+    (add-actionlistener
+     the-fact-list-string
+     (make-actionlistener
+      validate-rule))
+    
     ; return the panel
     top-panel))
 
