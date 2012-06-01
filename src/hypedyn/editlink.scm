@@ -390,20 +390,20 @@
     ;; Conditions
     ; run through conditions and add to rule
     (map (lambda (panel) 
-           (let* ((children (get-container-children panel))
-                  (select-type (cadr children))  ;; link node fact combobox
-                  (select-target (caddr children)) ;; list of existent objects of select-type
-                  (select-operator (cadddr children)) ;; options specific to select-type (ie if type is link then it is followed/not followed)
-                  (the-type (if (not (is-basic-mode?)) (get-combobox-selectedindex select-type) 0))
-                  (targetID (get-comboboxwithdata-selecteddata select-target))
-                  (operator (get-combobox-selectedindex select-operator)))
+;           (let* ((children (get-container-children panel))
+;                  (select-type (list-ref children 0))  ;; link node fact combobox
+;                  (select-target (list-ref children 1)) ;; list of existent objects of select-type
+;                  (select-operator (list-ref children 2)) ;; options specific to select-type (ie if type is link then it is followed/not followed)
+;                  (the-type (if (not (is-basic-mode?)) (get-combobox-selectedindex select-type) 0))
+;                  (targetID (get-comboboxwithdata-selecteddata select-target))
+;                  (operator (get-combobox-selectedindex select-operator)))
              ;(create-typed-condition new-rulename the-type targetID operator edited-ruleID)
              (create-typed-condition new-rulename
                                      (condition-panel-target-type panel)
                                      (condition-panel-target-id panel)
                                      (condition-panel-operator panel)
                                      edited-ruleID)
-             ))
+             )
          (condition-panel-list))
     
     ;; then-action-string, else-action-string
@@ -437,18 +437,11 @@
     ;;=========
     (define obj-name (ask rule-parent-obj 'name))
 
-    ;; an action panel always has a checkbox as first component then a label with the name
-    ;; which identifies which kind of action it represents
-    (define (get-action-panel-type action-panel)
-      (define children (get-container-children action-panel))
-      (define action-label (cadr children))
-      (get-text action-label))
-
     ;; map through the list of action panel and add the actions to the rule
     (map (lambda (action-panel)
            (define action-type (get-action-panel-type action-panel))
            ;; Update Text Action
-           (display "action type ")(display action-type)(newline)
+           (display "action type in confirm ")(display action-type)(newline)
            (cond ((equal? action-type "update text using")
                   ;; text of fact?
                   (define text-or-fact (get-combobox-selecteditem action-type-combobox))
@@ -469,7 +462,6 @@
                                         ;(set! text-value (to-string factID))
                      (set! text-value factID)
                      ))
-                  (display "replace text edited linkID on confirm ")(display edited-linkID)(newline)
                   (create-action obj-name 'displayed-node
                                  (list 'replace-link-text
                                        (list 'quote text-type)
@@ -493,7 +485,7 @@
 
                   (define fact-panel-children (get-container-children action-panel))
                   ;; the components that follows the update fact label in the action panel
-                  (define component-list (get-container-children (caddr fact-panel-children)))
+                  (define component-list (get-container-children (list-ref fact-panel-children 1)))  ;; was caddr
 
                   ;; dd - dropdown
                   (define dd1 (car component-list))
@@ -666,14 +658,15 @@
 ;;;; action panel operations
 
 (define (get-action-panel-type panel)
+  (set-background-color panel (make-colour-rgb 255 0 0))
   (let* ((children (get-container-children panel))
-         (action-name-label (list-ref children 1)))
+         (action-name-label (list-ref children 0)))
     (get-text action-name-label)
     ))
 
 (define (update-fact-panel-valid? panel)
   (let* ((children (get-container-children panel))
-         (fact-panel (list-ref children 2))
+         (fact-panel (list-ref children 1))
          (fp-children (get-container-children fact-panel))
          (target-cb (list-ref fp-children 1))
          )
@@ -729,8 +722,6 @@
   (set-container-layout panel-to-return 'horizontal)
   (set-component-align-x panel-to-return 'left)
   
-  (display "selection? ")(display (get-combobox-selecteditem action-type-choice))(newline)
-  
   ;; alter the configuration of the ui objects if args-lst given
   (cond ((equal? action-type "update text using")
          
@@ -752,17 +743,14 @@
                       (set-combobox-selection-object fact-string-choice-combobox for-selection)
                       ))
                )
-             ;; if this is a new action
+             ;; if this is a new action, just reset fact type selection to alternative text
              (begin
-               ;; update existing fact choices
-               (set! fact-string-choice-combobox (create-fact-choice 'string #f))
-               (pack-component fact-string-choice-combobox)
+               (set-combobox-selection-object action-type-combobox (create-combobox-string-item "alternative text"))
                ))
          (pack-component update-text-action-panel)
          (add-component panel-to-return update-text-action-panel)
          )
         ((equal? action-type "follow link to")
-         (display "args lst in follow link to ")(display args-lst)(newline)
          (if (= (length args-lst) 1)
              (let* ((link-dest1 (car args-lst))
 ;                    (dest-node-name (if link-dest1
@@ -866,7 +854,7 @@
   (map (lambda (action-panel)
          (define comp-lst (get-container-children action-panel))
          ;(define action-checkbox (car comp-lst))
-         (define action-label (cadr comp-lst))
+         (define action-label (list-ref comp-lst 0))
          (if (panel-selected? action-panel);(get-checkbox-value action-checkbox)
              (begin
                (define action-type (get-text action-label))
@@ -1013,7 +1001,7 @@
 
 
 ;; an instance of the action type selector panel
-;; updates the combobox and return a panel with just a checkbox and label
+;; updates the action choice combobox and returns a panel with a name label
 (define (create-action-panel action-type) ; the-type )
   (if (not (eq? action-type #!null))
       (let* ((top-panel (make-panel))
@@ -1022,7 +1010,7 @@
         (set-container-layout top-panel 'flow 'left)
 
         ;; Add checkbox
-        (add-component top-panel the-checkbox)
+        ;(add-component top-panel the-checkbox)
 
         ;; add the action label display
         (define action-label (make-label-with-title (to-string action-type)))
@@ -1208,9 +1196,8 @@
          (add-component update-text-action-panel fact-string-choice-combobox)
          ))
   
-  (component-update (get-parent update-text-action-panel))
-  (component-revalidate (get-parent update-text-action-panel))
-  (component-repaint (get-parent update-text-action-panel))
+  ;;(component-update (get-parent update-text-action-panel))
+  ;;(component-revalidate (get-parent update-text-action-panel))
   
   (pack-component update-text-action-panel)
   
@@ -1426,7 +1413,7 @@
 ; selectedOperator: the operator for this condition (visited, not visited, or previous)
 (define (create-condition-panel the-type targetID selectedOperator in-edited-nodeID)
   (let* ((top-panel (make-panel))
-         (the-checkbox (make-checkbox ""))
+         ;(the-checkbox (make-checkbox ""))
          (the-type-choice (if (is-basic-mode?)
                               (make-combobox "Node")
                               (if (show-facts?)
@@ -1449,7 +1436,7 @@
     ;(add-component condition-list-panel top-panel)
     
     ;; Add checkbox
-    (add-component top-panel the-checkbox)
+    ;(add-component top-panel the-checkbox)
 
     ;; Add type choice
     (if (not (is-basic-mode?))
@@ -1462,19 +1449,12 @@
                                                                                  the-node-list the-node-operator-choice
                                                                                  the-link-list the-link-operator-choice
                                                                                  the-fact-list the-fact-operator-choice)
-                                                     ;(all-conditions-valid?)
+                                                     (component-update top-panel)
                                                      ))))
         (add-component top-panel (make-label-with-title "Node")))
     
     
     ;; Check whether the condition is valid and
-    
-    ;; target type choice action listener (no need for now)
-;    (add-actionlistener 
-;     the-type-choice
-;     (make-actionlistener
-;      validate-rule))
-    
     ;; target choice action listener
     (add-actionlistener 
      the-node-list
@@ -1579,11 +1559,8 @@
   (format #t "selected-type-in-condition~%~!")
   
   ; remove the current target and operator lists
-  (let* ((children (get-container-children top-panel))
-         (old-target (caddr children))
-         (old-operator (cadddr children)))
-    (remove-component top-panel old-target)
-    (remove-component top-panel old-operator))
+  (remove-component top-panel (condition-panel-target-id top-panel))
+  (remove-component top-panel (condition-panel-operator top-panel))
          
   ;; add new target and operator lists
   (let* ((new-type (get-combobox-selectedindex c))
@@ -1764,20 +1741,20 @@
 ;;;; Condition panel operations
 (define (condition-panel-target-type panel)
   (let* ((children (get-container-children panel))
-         (select-type-cb (cadr children)))
+         (select-type-cb (list-ref children 0)))
     (if (not (is-basic-mode?))
         (get-combobox-selectedindex select-type-cb)
         0)))
 
 (define (condition-panel-target-id panel)
   (let* ((children (get-container-children panel))
-         (select-target-cb (caddr children)))
+         (select-target-cb (list-ref children 1)))
     (get-comboboxwithdata-selecteddata select-target-cb)
     ))
 
 (define (condition-panel-operator panel)
   (let* ((children (get-container-children panel))
-         (select-operator-cb (cadddr children)))
+         (select-operator-cb (list-ref children 2)))
     (get-combobox-selectedindex select-operator-cb)))
 
 (define (condition-panel-valid? panel)

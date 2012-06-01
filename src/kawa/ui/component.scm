@@ -34,7 +34,7 @@
                set-align-x set-align-y
                black-border bevel-in-border bevel-out-border
                get-component-root-pane
-               component-update component-revalidate component-repaint
+               component-update component-revalidate
                pack-component
                )
 
@@ -330,9 +330,6 @@
 ; revalidate a component
 (define (component-revalidate component :: <javax.swing.JComponent>)
   (invoke (as <javax.swing.JComponent> component) 'revalidate))
-
-(define (component-repaint component :: <javax.swing.JComponent>)
-  (invoke (as <javax.swing.JComponent> component) 'repaint))
 
 ; get the root pane
 (define (get-component-root-pane component :: <javax.swing.JComponent>) :: <javax.swing.JRootPane>
