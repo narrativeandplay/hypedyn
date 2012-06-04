@@ -658,7 +658,6 @@
 ;;;; action panel operations
 
 (define (get-action-panel-type panel)
-  (set-background-color panel (make-colour-rgb 255 0 0))
   (let* ((children (get-container-children panel))
          (action-name-label (list-ref children 0)))
     (get-text action-name-label)
