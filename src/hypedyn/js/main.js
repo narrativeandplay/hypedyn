@@ -125,12 +125,11 @@ function clickedLink(linkID) {
 
 // text_to_replace is emptied for next time
 var text_to_replace = [];
-function replaceText(linkID, altcontent) {
+function replaceText(linkID, content_type, altcontent) {
 	function comparator ( pair1, pair2 ) {
 		pair1[0] < pair2[0];
 	}
-	//disp("replace text "+altcontent);
-	insertSorted( text_to_replace, [linkID, altcontent], comparator );
+	insertSorted( text_to_replace, [linkID, content_type, altcontent], comparator );
 }
 
 function findReplaceText(linkID) {
@@ -141,18 +140,40 @@ function findReplaceText(linkID) {
 		if (text_to_replace[i][0] == linkID) {
 			// need to differentiate between 
 			// text from fact or just text
-			if (typeof text_to_replace[i][1] == "string") {
-				//disp("string");
-				result = text_to_replace[i][1];
-			} else if (typeof text_to_replace[i][1] == "number") {
-				//disp("number");
-				result = factlist[text_to_replace[i][1]].value;
-			} else {
-				alert("typeof result "+ typeof text_to_replace[i][1]);
-				result = "[Text Replace Error]";
+//			if (typeof text_to_replace[i][1] == "string") {
+//				//disp("string");
+//				result = text_to_replace[i][1];
+//			} else if (typeof text_to_replace[i][1] == "number") {
+//				//disp("number");
+//				result = factlist[text_to_replace[i][1]].value;
+//			} else {
+//				alert("typeof result "+ typeof text_to_replace[i][1]);
+//				result = "[Text Replace Error]";
+//			}
+			switch (text_to_replace[i][1]) {
+				case "alternative text":
+					result = text_to_replace[i][2]; 
+					break;
+				case "string fact":
+					result = factlist[text_to_replace[i][2]].value; 
+					break;
+				case "number fact":
+					disp("fact ID "+text_to_replace[i][2]);
+					disp("fact value "+ factlist[text_to_replace[i][2]].value);
+					disp("null test " + (factlist[text_to_replace[i][2]].value === null));
+					disp("null test negate " + (! (factlist[text_to_replace[i][2]].value === null) ));
+					if (! (factlist[text_to_replace[i][2]].value === null) ) {
+						disp("setting value "+ factlist[text_to_replace[i][2]].value.toString() );
+						result = factlist[text_to_replace[i][2]].value.toString(); 
+					} else {
+						disp("setting null ");
+						result = "null";
+					}
+					break;
 			}
 		}
 	}
+	disp("result from here "+result);
 	return result;
 }
 

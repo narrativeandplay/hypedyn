@@ -449,23 +449,30 @@
                   (define text-value #f)
                   (case (to-string text-or-fact)
                     (("alternative text")
-                     (set! text-type 'text)
+                     (display "came into alt ")(newline)
+                     (set! text-type "alternative text")
                      (set! text-value (get-text alt-text-textfield)))
                     (("string fact")
-                     (set! text-type 'fact)
+                     (display "came into str fact ")(newline)
+                     (set! text-type "string fact")
                      ;; TOFIX: get fact string during runtime instead of from the start
                      ;; (might not need to) just need to store factID
                      ;; problem is fact is not accessible to our interpreter since it is in a different environment
                      (define factID (get-comboboxwithdata-selecteddata fact-string-choice-combobox))
-                     (display "factID ")(display factID)(newline)
-                                        ;(define fact-text (ask (get 'facts factID) 'get-value))
-                                        ;(set! text-value (to-string factID))
                      (set! text-value factID)
-                     ))
+                     )
+                    (("number fact")
+                     (display "came into num fact ")(newline)
+                     (set! text-type "number fact")
+                     (define factID (get-comboboxwithdata-selecteddata fact-number-choice-combobox))
+                     (set! text-value factID)
+                     )
+                    )
                   (create-action obj-name 'displayed-node
                                  (list 'replace-link-text
-                                       (list 'quote text-type)
-                                       text-value ;; this is actually factID
+                                       ;;(list 'quote text-type)
+                                       (to-string text-or-fact)
+                                       text-value
                                        edited-linkID)
                                  edited-ruleID))
                  ;; Follow Link action
@@ -481,7 +488,6 @@
                                  edited-ruleID))
                  ;; Update Fact action
                  ((equal? action-type "update fact")
-                  (display "I see UPDATE FACT ")(newline)
 
                   (define fact-panel-children (get-container-children action-panel))
                   ;; the components that follows the update fact label in the action panel
@@ -489,15 +495,15 @@
 
                   ;; dd - dropdown
                   (define dd1 (car component-list))
-                  (define dd2 (cadr component-list))
-                  ;; component 3 can be a textfield or dropdown depending on what is selected in dd2
-                  (define comp3 (caddr component-list))
+                  (define dd2 (list-ref component-list 1))
 
-                  (define fact-type
-                    (case (to-string (get-combobox-selecteditem dd1))
-                      (("True/False") 'boolean)
-                      (("Text") 'text)
-                      (else 'error)))
+;                  (define fact-type
+;                    (case (to-string (get-combobox-selecteditem dd1))
+;                      (("True/False") 'boolean)
+;                      (("Text") 'text)
+;                      (("Number") 'number)
+;                      (else 'error)))
+                  (define fact-type (to-string (get-combobox-selecteditem dd1)))
 
                   (define factID (get-comboboxwithdata-selecteddata dd2))
                   (display "factID ")(display factID)(newline)
@@ -508,8 +514,11 @@
                                        ((link) 'clicked-link)
                                        ((node) 'entered-node)))
 
-                  (cond ((equal? fact-type 'boolean)
-                         (define bool-val-selected (to-string (get-combobox-selecteditem comp3)))
+                  ;; TODO: move away from these action names. use more understandable names like
+                  ;; set-boolean-fact, set-string-fact, set-number-fact
+                  (cond ((equal? fact-type "True/False")
+                         (define value-dd (list-ref component-list 2))
+                         (define bool-val-selected (to-string (get-combobox-selecteditem value-dd)))
 
                          (define bool-operator
                            (cond ((equal? bool-val-selected "True") 'assert)
@@ -520,13 +529,54 @@
                                               factID)
                                         edited-ruleID
                                         ))
-                        ((equal? fact-type 'text)
+                        ((equal? fact-type "Text")
+                         (define fact-tf (list-ref component-list 2))
                          (create-action obj-name event-type
                                         (list 'set-value!
                                               factID
-                                              (get-text comp3))
+                                              (get-text fact-tf))
                                         edited-ruleID)
-                         )) ;; end of fact-type cond
+                         )
+                        ((equal? fact-type "Number")
+                         (define num-fact-mode-dd (list-ref component-list 3))
+                         
+                          ;; component 3 can be a textfield or dropdown depending on what is selected in dd2
+                         (define comp3 (list-ref component-list 4))
+                         (define num-fact-mode (to-string (get-combobox-selecteditem num-fact-mode-dd)))
+                         
+                         ;; hardcoded math op
+                         (define operand1 3)
+                         (define operand1-type "number")
+                         (define operand2 1)
+                         (define operand2-type "fact")
+                         (define operator "+")
+                         
+                         (define new-fact-value-expr 
+                           (list operator 
+                                 operand1 operand1-type 
+                                 operand2 operand2-type))
+                         
+                         (define new-fact-value
+                           (case num-fact-mode
+                             (("Input") (get-text comp3))
+                             (("Fact") (get-comboboxwithdata-selecteddata comp3))
+                             (("Math") new-fact-value-expr)
+                             ))
+                         
+                         ;; operand1 operator operand2
+                         ;; operand can be num or fact
+                         ;; operator can be + - *
+                         ;; javascript form shd look like 
+                         ;; 4 + factlist[factID].value
+                         
+                         (create-action obj-name event-type
+                                        (list 'set-number-fact
+                                              factID
+                                              num-fact-mode
+                                              new-fact-value)
+                                        edited-ruleID)
+                         )
+                        ) ;; end of fact-type cond
                   )
 ;                 
                  ;; no parameter from the ui
@@ -667,24 +717,50 @@
   (let* ((children (get-container-children panel))
          (fact-panel (list-ref children 1))
          (fp-children (get-container-children fact-panel))
-         (target-cb (list-ref fp-children 1))
-         )
-    (not (= (get-comboboxwithdata-selecteddata target-cb) -1))
-    ))
+         ;; in the middle of implementing number facts
+         (fact-type-cb (list-ref fp-children 0))
+
+         (target-cb
+          (case (to-string (get-combobox-selecteditem fact-type-cb))
+            (("True/False") (list-ref fp-children 1))
+            (("Text") (list-ref fp-children 1))
+            (("Number") (list-ref fp-children 1))
+            )))
+    
+    (case (to-string (get-combobox-selecteditem fact-type-cb))
+      (("True/False") (not (= (get-comboboxwithdata-selecteddata target-cb) -1)))
+      (("Text") (not (= (get-comboboxwithdata-selecteddata target-cb) -1)))
+      (("Number")
+       (let* ((num-fact-mode-cb (list-ref fp-children 3))
+              (num-fact-mode (get-combobox-selecteditem num-fact-mode-cb)))
+         (case (to-string num-fact-mode)
+           (("Input")
+            (and (not (= (get-comboboxwithdata-selecteddata target-cb) -1))
+                 (string-is-numeric? (get-text (list-ref fp-children 4)))
+                 ))
+           (("Fact")
+            (and (not (= (get-comboboxwithdata-selecteddata target-cb) -1))
+                 ;; source fact (value from which we're getting from) is selected (not none)
+                 (not (= (get-comboboxwithdata-selecteddata (list-ref fp-children 4)) -1)))
+            )))
+       )
+    )))
 
 (define (update-text-using-panel-valid? panel)
   (let ((selected-item (to-string (get-combobox-selecteditem action-type-combobox))))
     (case selected-item
       (("alternative text") #t) ;; no checking required
       (("string fact") 
-       (not (= (get-comboboxwithdata-selecteddata fact-string-choice-combobox) -1))
-       ))))
+       (not (= (get-comboboxwithdata-selecteddata fact-string-choice-combobox) -1)))
+      (("number fact") 
+       (not (= (get-comboboxwithdata-selecteddata fact-number-choice-combobox) -1)))
+      )))
 
 ;; show in popup and follow link checks does the same thing
 (define follow-link-to-panel-valid? show-in-popup-panel-valid?)
 (define (show-in-popup-panel-valid? panel)
   (let* ((children (get-container-children panel))
-         (target-cb (list-ref children 2)))
+         (target-cb (list-ref children 1)))
     (not (= (get-comboboxwithdata-selecteddata target-cb) -1))
     ))
 
@@ -727,20 +803,27 @@
          (if (= (length args-lst) 2)
              (let ((using-type (car args-lst))
                    (alt-text (cadr args-lst)))
-               
+               (display "args lst ")(display using-type)(newline)
                (set-combobox-selection-object action-type-combobox (create-combobox-string-item using-type))
 
                (cond ((equal? using-type "alternative text")
                       (set-text alt-text-textfield alt-text)
                       )
                      ((equal? using-type "string fact")
-                                        ;fact-string-choice-combobox
                       (define target-fact (get 'facts alt-text))
                       (define fact-name (ask target-fact 'name))
 
                       (define for-selection (create-combobox-string-item fact-name))
                       (set-combobox-selection-object fact-string-choice-combobox for-selection)
-                      ))
+                      )
+                     ((equal? using-type "number fact")
+                      (define target-fact (get 'facts alt-text))
+                      (define fact-name (ask target-fact 'name))
+
+                      (define for-selection (create-combobox-string-item fact-name))
+                      (set-combobox-selection-object fact-number-choice-combobox for-selection)
+                      )
+                     )
                )
              ;; if this is a new action, just reset fact type selection to alternative text
              (begin
@@ -772,14 +855,20 @@
          (add-component panel-to-return node-choice-combobox)
          )
         ((equal? action-type "update fact")
-         (if (= (length args-lst) 3)
-             (let ((the-action (car args-lst))
-                   (targetID (cadr args-lst))
-                   (the-value (caddr args-lst)))
-               (add-component panel-to-return (create-fact-panel the-action targetID the-value))
-               )
-             (add-component panel-to-return (create-fact-panel #f #f #f)))
-         )
+         (cond ((= (length args-lst) 3)
+                (let ((the-action (car args-lst))
+                      (targetID (cadr args-lst))
+                      (the-value (caddr args-lst)))
+                  (add-component panel-to-return (create-fact-panel the-action targetID the-value))))
+               ((= (length args-lst) 4)
+                (let ((the-action (car args-lst))
+                      (targetID (cadr args-lst))
+                      (num-fact-mode (caddr args-lst))
+                      (the-value (cadddr args-lst)))
+                  (add-component panel-to-return (create-fact-panel the-action targetID the-value num-fact-mode: num-fact-mode)))
+                )
+             (else (add-component panel-to-return (create-fact-panel #f #f #f)))
+         ))
         ((equal? action-type "enable links to this node from anywhere")
          ;; disable the checkbox of this action (so it can't be deleted)
          (set-component-enabled (car (get-container-children panel-to-return)) #f)
@@ -1097,15 +1186,11 @@
                (cond
                 ((equal? 'follow-link (car action-sexpr))
                  (define dest-nodeID (list-ref action-sexpr 4))
-                 (display "[inside follow link] ")(display dest-nodeID)(newline)
-                 ;; debug
-;                 (define dest-node (get 'nodes dest-nodeID))
-;                 (display "dest node name ")(display (ask dest-node 'name))(newline)
-                
                  (add-component action-list-panel (add-specific-action "follow link to" dest-nodeID)))
 
                 ((equal? 'replace-link-text (car action-sexpr))  ;(replace-link-text text-type value linkID)
                  (display "inside replace link text ")(newline)
+                 (display "action sexpr ")(display action-sexpr)(newline)
                  (define text-type (list-ref action-sexpr 1)) ;(using-type (car args-lst)) (alt-text (cadr args-lst)))
                  (define text-value (list-ref action-sexpr 2))
                  (display "text type ")(display text-type)(newline)
@@ -1113,28 +1198,38 @@
 
                  ;; 'text maps to "alternative text", 'fact maps to "string fact" 
                  (define text-type-string #f)
-                 (cond ((equal? (cadr text-type) 'text)
-                        (set! text-type-string "alternative text")
-                        )
-                       ((equal? (cadr text-type) 'fact)
-                        (set! text-type-string "string fact")
-                        ))
-                 (add-component action-list-panel (add-specific-action "update text using" text-type-string text-value))
+;                 (cond ((equal? text-type 'text)
+;                        (set! text-type-string "alternative text")
+;                        )
+;                       ((equal? text-type 'fact)
+;                        (set! text-type-string "string fact")
+;                        )
+;                       ((equal? text-type 'num-fact)
+;                        (set! text-type-string "number fact")
+;                        )
+;                       )
+                 (add-component action-list-panel (add-specific-action "update text using" text-type text-value))
                  )
                 ((or (equal? 'retract (car action-sexpr))
                      (equal? 'assert (car action-sexpr))
                      (equal? 'set-value! (car action-sexpr))
                      )
-                                        ;(define factID (list-ref action-sexpr 1))
 
-                 ;;(the-action-expr (ask action-obj 'expr))
                  (define the-action (car action-sexpr))
                  (define targetID (cadr action-sexpr)) ;; factID
-                 (define the-value (if (eq? the-action 'set-value!)
+                 (define the-value (if (or (eq? the-action 'set-value!)
+                                           (eq? the-action 'set-number-fact))
                                        (caddr action-sexpr)
                                        'NA))
 
                  (add-component action-list-panel (add-specific-action "update fact" the-action targetID the-value))
+                 )
+                ((equal? 'set-number-fact (car action-sexpr))
+                 (define the-action (list-ref action-sexpr 0))
+                 (define targetID (list-ref action-sexpr 1)) ;; factID
+                 (define num-fact-mode (list-ref action-sexpr 2))
+                 (define the-value (list-ref action-sexpr 3))
+                 (add-component action-list-panel (add-specific-action "update fact" the-action targetID num-fact-mode the-value))
                  )
                 ((equal? 'add-anywhere-link (car action-sexpr))
                  (add-component action-list-panel (add-specific-action "enable links to this node from anywhere"))
@@ -1144,7 +1239,6 @@
                  (add-component action-list-panel (add-specific-action "show in popup" target-nodeID))
                  )
                 )
-
                ) actions)
         )))
 
@@ -1157,6 +1251,7 @@
 (define action-type-combobox #f)
 (define fact-string-choice-combobox #f)
 (define fact-boolean-choice-combobox #f)
+(define fact-number-choice-combobox #f)
 
 ;; update the panel UI state for "update text using" action
 (define (action-update-text-combobox-callback)
@@ -1164,36 +1259,66 @@
   (define link-obj (get 'links edited-linkID))
   (define link-alttext (ask link-obj 'alt-text))
 
-  (define selected-item (get-combobox-selecteditem action-type-combobox))
+  (define selected-item (to-string (get-combobox-selecteditem action-type-combobox)))
 
   (cond ((equal? selected-item "alternative text")
          (clear-container update-text-action-panel)
          (add-component update-text-action-panel action-type-combobox)
          (add-component update-text-action-panel alt-text-textfield)
          )
-        ((equal? selected-item "string fact")
+        ((or (equal? selected-item "string fact")
+             (equal? selected-item "number fact"))
          (clear-container update-text-action-panel)
          (add-component update-text-action-panel action-type-combobox)
+         
+         (display "selected-item class ")(display (invoke selected-item 'get-class))(newline)
+         (display "equal? still correct? ")(display (equal? selected-item "string fact"))(newline)
+         (display "equal? still correct? ")(display (equal? selected-item "number fact"))(newline)
+         ;; string/number fact differentiation
+         (define fact-choice
+           (case selected-item
+             (("string fact") (location fact-string-choice-combobox))
+             (("number fact") (location fact-number-choice-combobox))
+             (else "HUH")
+             ))
+         (define fact-type
+           (case selected-item
+             (("string fact") 'string)
+             (("number fact") 'number)))
+         
+         ;; **** Explanation of how location and setter works 
+         ;; location just gets a "pointer" to the variable, it is a getter function of the variable
+         ;; eg 
+         ;; (define x 1)
+         ;; (define lx (location x))
+         ;; (display (lx)) ==> 1
+         ;; setter when given a location gets the setter function of that 
+         ;;   particular variable associated with the location
+         ;; ((setter lx) 4)
+         ;; (display x) ==> 4
+         ;; the pair of function therefore gives a means to pass a variable by reference
 
          ;; get selection on fact-string-choice-combobox  
          ;; Note: this preserves our fact selection when we toggle between text and fact
          (define fact-selection #f)
-         (if fact-string-choice-combobox
-             (set! fact-selection (get-comboboxwithdata-selecteddata fact-string-choice-combobox)))
+         (display "fact-choice ")(display fact-choice)(newline)
+         (if (fact-choice)
+             (set! fact-selection (get-comboboxwithdata-selecteddata (fact-choice))))
          
          ;; create and add the combobox containing the string facts
-         (set! fact-string-choice-combobox (create-fact-choice 'string fact-selection))
-         (pack-component fact-string-choice-combobox)
+         ((setter fact-choice) (create-fact-choice fact-type fact-selection))
+         (pack-component (fact-choice))
          
          (add-actionlistener
-          fact-string-choice-combobox
+          (fact-choice)
           (make-actionlistener
            validate-rule
            ))
          
          ;; add to a container panel and add to the update-text-action-panel
-         (add-component update-text-action-panel fact-string-choice-combobox)
-         ))
+         (add-component update-text-action-panel (fact-choice))
+         )
+        )
   
   ;;(component-update (get-parent update-text-action-panel))
   ;;(component-revalidate (get-parent update-text-action-panel))
@@ -1206,16 +1331,18 @@
 ;; the panel that comes behind the combobox selecting actions type
 (define (create-update-text-action-panel)
   (set! update-text-action-panel (make-panel))
-  (set! action-type-combobox (make-combobox "alternative text" "string fact"))
+  (set! action-type-combobox (make-combobox "alternative text" "string fact" "number fact"))
   (set! alt-text-textfield (make-textfield "" 20))
   
-  (set! fact-string-choice-combobox ;editlink-panel-else-text-factchoice 
-    (create-fact-choice 'string
-                        -1))
+  (set! fact-string-choice-combobox
+    (create-fact-choice 'string -1))
   
-  (set! fact-boolean-choice-combobox ;editlink-panel-else-text-factchoice 
-    (create-fact-choice 'boolean
-                        -1))
+  ;; TODO: we should be able to show boolean as well 
+  (set! fact-boolean-choice-combobox
+    (create-fact-choice 'boolean -1))
+  
+  (set! fact-number-choice-combobox
+    (create-fact-choice 'number -1))
   
   ;; layout
   (set-container-layout update-text-action-panel 'horizontal)
@@ -1393,11 +1520,11 @@
 
     ; make sure the "None" entry is explicitly inserted at the start of the list
     (insert-comboboxwithdata-string-at fact-list "<None>" -1 0)
-
-    ; select the chosen fact
+    (set-combobox-selection fact-list 0) ;; default selection
+    
+    ;; select the chosen fact (if factID isn't one of the entry, selection isn't changed)
     (if factID
-        (set-comboboxwithdata-selection-bydata fact-list factID)
-        (set-combobox-selection fact-list 0)) ;; no fact selected
+        (set-comboboxwithdata-selection-bydata fact-list factID))
     
     ; return the list
     fact-list))
@@ -1799,29 +1926,26 @@
 
 ; create an fact panel
 ; the-action: the type of action 'assert, 'retract or 'set-value!
-; targetID: the currently selected fact, if any (pass in -1 if none selected)
+; factID: the currently selected fact, if any (pass in -1 if none selected)
 ; the-value: value that will be set (for 'set-value! only)
 ;; fact type is only needed if a factID is selected
 
-(define (create-fact-panel fact-type factID the-value)
-  
+(define (create-fact-panel fact-type factID the-value #!key num-fact-mode)
   (let* ((top-panel (make-panel))
          ;(the-checkbox (make-checkbox ""))
-         (the-type-choice (make-combobox "True/False" "Text"))
+         (the-type-choice (make-combobox "True/False" "Text" "Number"))
          (the-boolean-choice (make-combobox "True" "False"))
          (the-string-entry (make-textfield "[the fact text...........]" 20))
+         (the-number-entry (make-textfield "0" 4))
          (the-fact-list-boolean (create-fact-choice 'boolean factID))
-         (the-fact-list-string (create-fact-choice 'string factID)))
+         (the-fact-list-string (create-fact-choice 'string factID))
+         (the-fact-list-number (create-fact-choice 'number factID))
+         (number-fact-target-cb (create-fact-choice 'number #f))
+         (num-fact-mode-choice (make-combobox "Input" "Fact" "Math"))
+         )
     
     ; add top-panel
     (set-container-layout top-panel 'horizontal)
-    
-    ;; make sure none of the combobox expands
-    (pack-component the-type-choice)
-    (pack-component the-boolean-choice)
-    (pack-component the-string-entry)
-    (pack-component the-fact-list-boolean)
-    (pack-component the-fact-list-string)
     
     ;; add type choice
     (add-component top-panel the-type-choice)
@@ -1829,39 +1953,74 @@
     ;; choose the fact type index
     (define (fact-type-index)
       (cond ((or (equal? 'assert fact-type)
-                 (equal? 'retract fact-type)) 0)
-            ((equal? 'set-value! fact-type) 1)
-            (else 0)
+                 (equal? 'retract fact-type)) "True/False")
+            ((equal? 'set-value! fact-type) "Text")
+            ((equal? 'set-number-fact fact-type) "Number")
+            ((equal? #f fact-type) "True/False")
+            (else (display "wrong type in create-fact-panel")(display fact-type)(newline)
+                  "HUH")
             ))
-    (display "fact type index ")(display fact-type)(newline)
     
     ; set type choice
-    (set-combobox-selection the-type-choice (fact-type-index))
+    ;(set-combobox-selection the-type-choice (fact-type-index))
+    (set-combobox-selection-object the-type-choice (create-combobox-string-item (fact-type-index)))
     
     ;; add the appropriate components
-    (set-fact-panel-components top-panel (fact-type-index)
-                               the-fact-list-string the-string-entry
-                               the-fact-list-boolean the-boolean-choice)
-    
-    ;; set current value of fact
-    (if factID ;; if factID false
-        (cond ((equal? fact-type 'boolean)
-               (cond ((equal? the-value #t) (set-combobox-selection the-boolean-choice 0))
-                     ((equal? the-value #f) (set-combobox-selection the-boolean-choice 1))))
-              ((equal? fact-type 'assert)
-               (set-combobox-selection the-boolean-choice 0))
-              ((equal? fact-type 'retract)
-               (set-combobox-selection the-boolean-choice 1))
-              ((or (equal? fact-type 'string)
-                   (equal? fact-type 'set-value!))
-               (set-text the-string-entry the-value))))
+;    (set-fact-panel-components top-panel (fact-type-index)
+;                               the-fact-list-string the-string-entry
+;                               the-fact-list-boolean the-boolean-choice
+;                               the-fact-list-number the-number-entry num-fact-mode-choice)
+    (case (fact-type-index)
+      (("True/False")
+       (add-component top-panel the-fact-list-boolean)
+       (add-component top-panel the-boolean-choice))
+      (("Text")
+       (add-component top-panel the-fact-list-string)
+       (add-component top-panel the-string-entry))
+      (("Number")
+       (add-component top-panel the-fact-list-number)
+       (add-component top-panel (make-label-with-title " using "))
+       (add-component top-panel num-fact-mode-choice)
+       (add-component top-panel the-number-entry)))
     
     ; add type callback
     (add-actionlistener the-type-choice
                         (make-actionlistener (lambda (source)
-                                               (selected-type-in-action source top-panel
-                                                                        the-fact-list-boolean the-boolean-choice
-                                                                        the-fact-list-string the-string-entry))))
+;                                               (selected-type-in-action source top-panel
+;                                                                        the-fact-list-boolean the-boolean-choice
+;                                                                        the-fact-list-string the-string-entry
+;                                                                        the-fact-list-number the-number-entry num-fact-mode-choice)
+                                                ; remove the current target and operator lists
+                                               (let* ((children (get-container-children top-panel))
+                                                      (fact-type-choice (car children))
+                                                      )
+                                                 (clear-container top-panel)
+                                                 (add-component top-panel fact-type-choice))
+
+                                               ;; add the appropriate components and set value
+;                                               (set-fact-panel-components top-panel (to-string (get-combobox-selecteditem c));(get-combobox-selectedindex c)
+;                                                                          the-fact-list-string the-string-entry
+;                                                                          the-fact-list-boolean the-boolean-choice
+;                                                                          the-fact-list-number the-number-entry num-fact-mode-choice)
+                                               (case (to-string (get-combobox-selecteditem source))
+                                                 (("True/False")
+                                                  (add-component top-panel the-fact-list-boolean)
+                                                  (add-component top-panel the-boolean-choice))
+                                                 (("Text")
+                                                  (add-component top-panel the-fact-list-string)
+                                                  (add-component top-panel the-string-entry))
+                                                 (("Number")
+                                                  (add-component top-panel the-fact-list-number)
+                                                  (add-component top-panel (make-label-with-title " using "))
+                                                  (add-component top-panel num-fact-mode-choice)
+                                                  (add-component top-panel the-number-entry)))
+                                               
+                                               
+                                               (pack-component top-panel)
+                                               (pack-frame editlink-dialog)
+                                             
+                                               (validate-rule)
+                                               )))
 
     (add-actionlistener
      the-fact-list-boolean
@@ -1873,39 +2032,100 @@
      (make-actionlistener
       validate-rule))
     
+    (add-actionlistener
+     the-fact-list-number
+     (make-actionlistener
+      validate-rule))
+    
+    (add-actionlistener
+     number-fact-target-cb
+     (make-actionlistener
+      (lambda (e)
+        (display "num fact mode change")(newline)
+        (validate-rule))))
+    
+    ;; check content of number entry to be numeric
+;    (let ((callback 
+;           (lambda (e)
+;             ;; disable ok button is non numeric
+;             (set-component-enabled
+;              editlink-panel-buttons-ok
+;              (string-is-numeric? (get-text the-number-entry)))
+;             )))
+    (add-documentlistener
+     the-number-entry
+     (make-documentlistener
+      validate-rule
+      validate-rule
+      validate-rule
+      ))
+    
+    ;; number facts has different mode
+    (add-actionlistener
+     num-fact-mode-choice
+     (make-actionlistener
+      (lambda (e)
+        (remove-component top-panel the-number-entry)
+        (remove-component top-panel number-fact-target-cb)
+        
+        ;;(display "top-panel ")(display top-panel)(newline)
+        ;;(display "number-fact-target-cb ")(display number-fact-target-cb)(newline)
+        
+        (case (to-string (get-combobox-selecteditem num-fact-mode-choice))
+          (("Input") (add-component top-panel the-number-entry))
+          (("Fact") (add-component top-panel number-fact-target-cb)))
+        (component-revalidate top-panel)
+        (pack-component top-panel)
+        )))
+    
+    ;; set current value of fact
+    ;; call after all the action listener to fire them when needed
+    (if factID ;; if factID false
+        (cond ((equal? fact-type 'boolean)
+               (display "boolean fact ")(display the-value)(newline)
+               (cond ((equal? the-value #t) (set-combobox-selection the-boolean-choice 0))
+                     ((equal? the-value #f) (set-combobox-selection the-boolean-choice 1))))
+              ((equal? fact-type 'assert)
+                (display "boolean fact assert")(newline)
+               (set-combobox-selection the-boolean-choice 0))
+              ((equal? fact-type 'retract)
+               (display "boolean fact retract")(newline)
+               (set-combobox-selection the-boolean-choice 1))
+              ;;  ;; is 'string ever used? -teongleong
+              ((or (equal? fact-type 'string)
+                   (equal? fact-type 'set-value!))
+               (display "string fact")(display the-value)(newline)
+               (set-text the-string-entry the-value))
+              ((equal? fact-type 'set-number-fact)
+               (set-combobox-selection-object num-fact-mode-choice (create-combobox-string-item num-fact-mode))
+               (case num-fact-mode
+                 (("Input") (set-text the-number-entry (to-string the-value)))
+                 (("Fact") (set-comboboxwithdata-selection-bydata number-fact-target-cb the-value))
+                 (("Math") #f)
+                 )
+               )
+              ))
+    
+    (pack-component top-panel)
     ; return the panel
     top-panel))
 
 ; set fact panel components
 (define (set-fact-panel-components top-panel the-type
                                    the-fact-list-string the-string-entry
-                                   the-fact-list-boolean the-boolean-choice)
-  (if (eq? the-type 1)
-      ; string
-      (begin
-        (add-component top-panel the-fact-list-string)
-        (add-component top-panel the-string-entry))
-      ; boolean
-      (begin
-        (add-component top-panel the-fact-list-boolean)
-        (add-component top-panel the-boolean-choice))))
-
-; selection of assertion type changed, so change the fact list and value entry/choice
-(define (selected-type-in-action c top-panel
-                                    the-fact-list-boolean the-boolean-choice
-                                    the-fact-list-string the-string-entry)
-  (format #t "selected-type-in-assertion~%~!")
-  
-  ; remove the current target and operator lists
-  (let* ((children (get-container-children top-panel))
-         (old-target (cadr children))
-         (old-operator (caddr children)))
-    (remove-component top-panel old-target)
-    (remove-component top-panel old-operator))
-  
-  ; add the appropriate components and set value
-  (set-fact-panel-components top-panel (get-combobox-selectedindex c)
-                             the-fact-list-string the-string-entry
-                             the-fact-list-boolean the-boolean-choice)
-  
-  (pack-frame editlink-dialog))
+                                   the-fact-list-boolean the-boolean-choice
+                                   the-fact-list-number the-number-entry num-fact-mode-choice)
+  (display "[set fact panel components]")(newline)
+  (case the-type
+    (("True/False") 
+     (add-component top-panel the-fact-list-boolean)
+     (add-component top-panel the-boolean-choice))
+    (("Text")
+     (add-component top-panel the-fact-list-string)
+     (add-component top-panel the-string-entry))
+    (("Number")
+     (add-component top-panel the-fact-list-number)
+     (add-component top-panel (make-label-with-title " using "))
+     (add-component top-panel num-fact-mode-choice)
+     (add-component top-panel the-number-entry)))
+  )

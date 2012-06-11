@@ -66,12 +66,16 @@
     ))
 
 (define (string-is-numeric? string :: <String>)
-  (let* (;(length (invoke-static <java.lang.String> 'length string))
-         ;(char-array (invoke-static <java.lang.String> 'toCharArray string))
-         (list (string->list string));(array-to-list char-array length))
-         (return-val #t))
-    (set! return-val (list-is-numeric? list))
-    return-val))
+;  (let* (;(length (invoke-static <java.lang.String> 'length string))
+;         ;(char-array (invoke-static <java.lang.String> 'toCharArray string))
+;         (list (string->list string));(array-to-list char-array length))
+;         (return-val #t))
+;    (set! return-val (list-is-numeric? list))
+;    return-val)
+  
+  ;; at least one digit
+  (invoke string 'matches "[0-9]+") 
+  )
 
 (define (string-is-double? string :: <String>)
   (let ((list (string->list string)))

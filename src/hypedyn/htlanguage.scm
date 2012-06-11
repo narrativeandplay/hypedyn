@@ -91,6 +91,7 @@
   (primitive-procedure-add! 'assert assert)                                          ; (assert factID): sets a true/false fact to #t
   (primitive-procedure-add! 'retract retract)                                        ; (retract factID): sets a true/false fact to #f
   (primitive-procedure-add! 'set-value! set-fact-value!)                             ; (set-value! factID "string"): sets value of a text fact
+  (primitive-procedure-add! 'set-number-fact set-fact-value!)
   (primitive-procedure-add! 'set-link-type! set-link-type!)                          ; (set-link-type! linkID 'symbol): sets link type: 'hover or 'default, hover links show dest text if hover links turned on
   (primitive-procedure-add! 'set-custom-cursor-image! set-custom-cursor-image!)      ; (set-custom-cursor-image! linkID "filename.gif"): sets image for given link, shows on roll-over if custom cursors turned on
   (primitive-procedure-add! 'set-user-data! set-user-data!)                          ; (set-link-type! linkID data): sets user data for a link

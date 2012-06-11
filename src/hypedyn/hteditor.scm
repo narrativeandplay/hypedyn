@@ -194,7 +194,7 @@
         (ma-newfact (make-menu "New"))
         (ma-newfact-boolean (make-menu-item "True/False"))
         (ma-newfact-string (make-menu-item "Text"))
-        ;(ma-newfact-number (make-menu-item "Number"))
+        (ma-newfact-number (make-menu-item "Number"))
         (ma-renamefact (make-menu-item "Rename"))
         (ma-delfact (make-menu-item "Delete"))
         
@@ -371,6 +371,11 @@
           (add-actionlistener ma-newfact-string (make-actionlistener
                                                (lambda (source)
                                                  (donewfact 'string "Text"))))
+          (add-component ma-newfact ma-newfact-number)
+          (add-actionlistener ma-newfact-number (make-actionlistener
+                                               (lambda (source)
+                                                 (donewfact 'number "Number"))))
+          
           (add-component m-fact ma-renamefact)
           (add-actionlistener ma-renamefact (make-actionlistener (lambda (source) (dorenamefact))))
           (set-menuitem-component ma-renamefact #f)
@@ -1352,9 +1357,11 @@
                                                      ")")
                                       "")
                                   " ("
-                                  (if (eq? the-type 'string)
-                                      "text"
-                                      "true/false")
+                                  (case the-type
+                                    ((string) "text")
+                                    ((boolean) "true/false")
+                                    ((number) "number")
+                                    (else "unknown type"))
                                   ")")))
             (ask parent-obj 'add-object new-factID name))))
     

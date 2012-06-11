@@ -914,9 +914,12 @@
                  ((follow-link) "gotoNode")
                  ((replace-link-text) "replaceText")
                  ((set-value! assert retract) "setFact")
+                 ((set-number-fact) "setNumberFact")
                  ((add-anywhere-link) "addAnywhereLink")
                  ((show-in-popup) "popup")
                  ))
+         
+         ;; a javascript array of argument
          (args (case (car expr)
                  ((follow-link)
                   (string-append "[" (to-string (list-ref expr 4)) "]"))
@@ -935,14 +938,13 @@
                  ((replace-link-text)
                   (string-append
                    "[" (to-string (list-ref expr 3)) ", "
+                   (quote-nest (list-ref expr 1)) ", " ;; content_type
+                   
                    ;; differentiate between fact text or just alt text
                    (let ((val (list-ref expr 2)))
+                     (display "val ")(display val)(newline)
                      (cond ((string? val)
                             (quote-nest
-;                             (preserve-newline
-;                              (preserve-quotes val)
-;                              ;val
-;                              )
                              (escape-special val)
                              ))
                            ((number? val)
@@ -951,19 +953,55 @@
                  ((show-in-popup)
                   (string-append "[" (to-string (list-ref expr 1)) "]")
                   )
+                 ((set-number-fact)
+;                  (string-append "[" (to-string (list-ref expr 1)) ", "
+;                                 ;; give in number form
+;                                 (list-ref expr 2) 
+;                                 "]")
+                  
+                  (define target-factID (list-ref expr 1))
+                  (define num-fact-mode (list-ref expr 2))
+                  (define fact-value
+                    (case num-fact-mode
+                      (("Input" "Fact") (string-append "[" (to-string (list-ref expr 3)) "]" ))
+                      (("Math")
+                       ;; (list op opr1 opr1-type opr2 opr2-type)
+                       (let* ((op            (list-ref (list-ref expr 3) 0))
+                              (operand1      (list-ref (list-ref expr 3) 1))
+                              (operand1-type (list-ref (list-ref expr 3) 2))
+                              (operand2      (list-ref (list-ref expr 3) 3))
+                              (operand2-type (list-ref (list-ref expr 3) 4))
+;                              (opr1-expr     (case operand1-type
+;                                               (("number") operand1)
+;                                               (("fact") (string-append
+;                                                          "factlist["
+;                                                          (to-string operand1)
+;                                                          "].value"
+;                                                          ))))
+;                              (opr2-expr     (case operand2-type
+;                                               (("number") operand2)
+;                                               (("fact") (string-append
+;                                                          "factlist["
+;                                                          (to-string operand2)
+;                                                          "].value"
+;                                                          ))))
+                             )
+                         (string-append "[" (quote-nest op) ", "
+                                        operand1 ", "
+                                        (quote-nest operand1-type) ", "
+                                        operand2 ", "
+                                        (quote-nest operand2-type) "]"
+                                        )
+                         ))
+                      ))
+                  (string-append "[" (to-string target-factID) ", "
+                                 (quote-nest num-fact-mode) ", "
+                                 fact-value
+                                 "]")
+                  )
                  )))
     
-;    (display "actionID ")(display actionID)(newline)
-;    (display "class? ")(display (invoke actionID 'get-class))(newline)
-;    (display "event type ")(display event-type)(newline)
-;    (display "parent rule id ")(display parent-rule-id)(newline)
-;    (display "func ")(display func)(newline)
-;    (display "args ")(display args)(newline)
-;    (display "expr ")(display expr)(newline)
-;    (display "car expr ")(display (car expr))(newline)
     ;; return string
-    ;(display "func void test ")(display (equal? func #!void))(newline)
-    ;(display "func null test ")(display (equal? func #!null))(newline)
     (if (and (not (equal? func #!void))
              (not (equal? args #!void)))
 

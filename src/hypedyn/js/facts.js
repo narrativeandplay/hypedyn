@@ -38,6 +38,8 @@ function createFact(name, type, id) {
 
 // assume value is of the correct type
 function setFact( id, value) {
+	disp("set fact "+id);
+	disp(" value "+value);
 	var fact = factlist[id];
 	fact.value = value;
     
@@ -47,6 +49,53 @@ function setFact( id, value) {
         refreshNode(node);
 	//factsDebug();
 }
+
+function getFact( id ) {
+	return factlist[id];
+}
+
+// args is an array
+function setNumberFact( id, mode, args ) {
+	disp(" set number fact ");
+	disp(" id "+id);
+	disp(" mode "+mode);
+	disp(" args "+args);
+	disp(" array "+ [4]);
+	disp(" typeof "+args.constructor);
+	
+	switch ( mode ) {
+		case "Input": 
+			setFact( id, args[0] );
+			break;
+		case "Fact":
+			setFact( id, getFact( args[0] ).value );
+			break;
+		case "Math":
+			var operator = args[0];
+			var operand1 = args[1];
+			var operand1_type = args[2];
+			var operand2 = args[3];
+			var operand2_type = args[4];
+			
+			// the real value
+			var operand1_val, operand2_val;
+			switch ( operand1_type ) {
+				case "number":
+					operand1_val = operand1;
+				case "fact":
+					operand1_val = getFact( operand1 );
+			}
+			switch ( operand2_type ) {
+				case "number":
+					operand1_val = operand2;
+				case "fact":
+					operand1_val = getFact( operand2 );
+			}
+			setFact( id, eval( operand1_val.toString() + operator + operand2_val.toString ) );
+	}
+}
+
+
 
 // return the html code 
 function factsDebug() {

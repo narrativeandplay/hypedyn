@@ -127,7 +127,6 @@
                            action-listener :: <javax.swing.event.CaretListener>)
   (invoke action-producer 'add-caret-listener action-listener))
 
-
 ;;
 ;; key listener
 ;; 
