@@ -155,16 +155,33 @@
     (lambda (e)
       (if (equal? (get-mouseevent-type e) 'left-clicked)
           (begin
-            ;; if control key not held down unselect the others
-            (if (not (ctrl-key-down? (get-mouseevent-rawevent e)))
-                (map (lambda (rID)
-                       (if (not (= rID ruleID))
-                           (select-rule-panel rID #f))
-                       ) (rmgr-rule-lst)))
-            
-            (select-rule-panel ruleID (not (panel-selected? top-panel)))
-            (action-restrict-check)
-            ))
+            (display "number of clicks ")(display (get-mouseevent-click-count e))(newline)
+            (if (>= (get-mouseevent-click-count e) 1)
+                (begin
+                  ;; if control key not held down unselect the others
+                  (if (not (ctrl-key-down? (get-mouseevent-rawevent e)))
+                      (map (lambda (rID)
+                             (if (not (= rID ruleID))
+                                 (select-rule-panel rID #f))
+                             ) (rmgr-rule-lst)))
+
+                  (select-rule-panel ruleID (not (panel-selected? top-panel)))
+                  (action-restrict-check)
+                  ))
+            (if (= (get-mouseevent-click-count e) 2)
+                (begin
+                  (display "click count 2, editing rule ")(newline)
+                  ((edit-rule-button-callback ruleID) #f)
+                  ))
+                
+              ))
+;      (if (equal? (get-mouseevent-type e) 'left-clicked)
+;        (let ((event-click-count (get-mouseevent-click-count e)))
+;          (if (= 2 event-click-count)
+;              (begin
+;                (edit-rule-button-callback ruleID)
+;                )
+;              )))
             )))
     
   (add-itemlistener
