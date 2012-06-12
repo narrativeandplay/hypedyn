@@ -781,11 +781,16 @@
                   (("Input") (string-is-numeric? (get-text (cadr comp-lst))))
                   (("Fact") (not (= (get-comboboxwithdata-selecteddata (cadr comp-lst)) -1)))
                 )))
-            #f
-            ;(let ((comp-lst (get-container-children  
+            
+            (let* ((math-panel (list-ref fp-children 4))
+                   (math-panel-lst (get-container-children math-panel))
+                   (operand1-panel (list-ref math-panel-lst 0))
+                   (operand2-panel (list-ref math-panel-lst 2)))
+              (and (operand-panel-valid? operand1-panel)
+                   (operand-panel-valid? operand2-panel))))
            )
-       )))
-    )))
+       ))) ;; end of case
+    ))
 
 (define (update-text-using-panel-valid? panel)
   (let ((selected-item (to-string (get-combobox-selecteditem action-type-combobox))))
@@ -2020,6 +2025,8 @@
                                    (("Input") (add-component operand-panel number-entry))
                                    (("Fact") (add-component operand-panel number-choice)))
                                  
+                                 (validate-rule)
+                                 
                                  ;; update thie panel and parent panels
                                  (component-revalidate operand-panel)
                                  (component-update operand-panel)
@@ -2027,6 +2034,19 @@
                                  (pack-component math-panel)
                                  (pack-component top-panel)
                                  )))
+          
+          (add-actionlistener 
+           number-choice
+           (make-actionlistener
+            validate-rule))
+          
+          (add-documentlistener
+           number-entry
+           (make-documentlistener
+            validate-rule
+            validate-rule
+            validate-rule
+            ))
           
           ;; set the selection and trigger the action listener above to add the correct component
           (if opr-type
