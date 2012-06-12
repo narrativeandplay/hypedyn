@@ -30,6 +30,10 @@ function createFact(name, type, id) {
 		id = genID(factlist);
 	}
 	
+	// default value for number
+	if ( newfact.type === "number" )
+		newfact.value = 0;
+	
 	newfact.id = id;
 	factlist[id] = newfact;
 	
@@ -56,12 +60,6 @@ function getFact( id ) {
 
 // args is an array
 function setNumberFact( id, mode, args ) {
-	disp(" set number fact ");
-	disp(" id "+id);
-	disp(" mode "+mode);
-	disp(" args "+args);
-	disp(" array "+ [4]);
-	disp(" typeof "+args.constructor);
 	
 	switch ( mode ) {
 		case "Input": 
@@ -80,18 +78,23 @@ function setNumberFact( id, mode, args ) {
 			// the real value
 			var operand1_val, operand2_val;
 			switch ( operand1_type ) {
-				case "number":
+				case "Input":
 					operand1_val = operand1;
-				case "fact":
-					operand1_val = getFact( operand1 );
+					break;
+				case "Fact":
+					operand1_val = getFact( operand1 ).value;
+					break;
 			}
 			switch ( operand2_type ) {
-				case "number":
-					operand1_val = operand2;
-				case "fact":
-					operand1_val = getFact( operand2 );
+				case "Input":
+					operand2_val = operand2;
+					break;
+				case "Fact":
+					operand2_val = getFact( operand2 ).value;
+					break;
 			}
-			setFact( id, eval( operand1_val.toString() + operator + operand2_val.toString ) );
+			
+			setFact( id, eval( operand1_val.toString() + operator + operand2_val.toString() ) );
 	}
 }
 

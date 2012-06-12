@@ -942,7 +942,6 @@
                    
                    ;; differentiate between fact text or just alt text
                    (let ((val (list-ref expr 2)))
-                     (display "val ")(display val)(newline)
                      (cond ((string? val)
                             (quote-nest
                              (escape-special val)

@@ -540,27 +540,58 @@
                         ((equal? fact-type "Number")
                          (define num-fact-mode-dd (list-ref component-list 3))
                          
-                          ;; component 3 can be a textfield or dropdown depending on what is selected in dd2
+                          ;; component 3 can be a textfield/dropdown/math-panel depending on what is selected in dd2
                          (define comp3 (list-ref component-list 4))
                          (define num-fact-mode (to-string (get-combobox-selecteditem num-fact-mode-dd)))
-                         
-                         ;; hardcoded math op
-                         (define operand1 3)
-                         (define operand1-type "number")
-                         (define operand2 1)
-                         (define operand2-type "fact")
-                         (define operator "+")
-                         
-                         (define new-fact-value-expr 
-                           (list operator 
-                                 operand1 operand1-type 
-                                 operand2 operand2-type))
                          
                          (define new-fact-value
                            (case num-fact-mode
                              (("Input") (get-text comp3))
                              (("Fact") (get-comboboxwithdata-selecteddata comp3))
-                             (("Math") new-fact-value-expr)
+                             (("Math")  ;; hardcoded math op
+                              (display "[new fact value MATH]")(newline)
+                              
+                              ;; layout of a math panel
+                              ;; [[operand1-type-dd operand1-choice] operator-dd [operand2-type-dd operand2-choice] ]
+                              ;; operand choice can be a text field or drop down depending on the current selection in operand type dd 
+                              (define math-panel-lst (get-container-children comp3))
+                              (define operand1-panel (car math-panel-lst))
+                              (define operator-dd (cadr math-panel-lst))
+                              (define operand2-panel (caddr math-panel-lst))
+                              
+                              (define operand1-panel-lst (get-container-children operand1-panel))
+                              (define operand2-panel-lst (get-container-children operand2-panel))
+                              
+                              (define operand1-type (to-string (get-combobox-selecteditem (list-ref operand1-panel-lst 0))))
+                              (define operand2-type (to-string (get-combobox-selecteditem (list-ref operand2-panel-lst 0))))
+                              (define operator (to-string (get-combobox-selecteditem operator-dd)))
+                              
+                              (define operand1 
+                                (case operand1-type
+                                  (("Input") (get-text (list-ref operand1-panel-lst 1)))
+                                  (("Fact") (to-string (get-comboboxwithdata-selecteddata (list-ref operand1-panel-lst 1))))))
+                              
+                              (define operand2
+                                (case operand2-type
+                                  (("Input") (get-text (list-ref operand2-panel-lst 1)))
+                                  (("Fact") (to-string (get-comboboxwithdata-selecteddata (list-ref operand2-panel-lst 1))))))
+                              
+                              (display "operand1-type ")(display operand1-type)(newline)
+                              (display "operand2-type ")(display operand2-type)(newline)
+                              
+                              (display "operand1 ")(display operand1)(newline)
+                              (display "operand2 ")(display operand2)(newline)
+                              (display "operator ")(display operator)(newline)
+                              
+                              ;; conversion of visual to actual programming function
+                              (if (equal? operator "x")
+                                  (set! operator "*"))
+
+                              (define new-fact-value-expr
+                                (list operator
+                                      operand1 operand1-type
+                                      operand2 operand2-type))
+                              new-fact-value-expr)
                              ))
                          
                          ;; operand1 operator operand2
@@ -764,7 +795,6 @@
     (not (= (get-comboboxwithdata-selecteddata target-cb) -1))
     ))
 
-
 (define (action-panel-valid? panel)
   (case (get-action-panel-type panel)
     (("update fact") (update-fact-panel-valid? panel))
@@ -886,7 +916,7 @@
         )
   
   (set-border panel-to-return bevel-in-border)
-  (set-component-non-resizable-size panel-to-return 480 50) ;;action-scrollpane-vp-width
+  (set-component-non-resizable-size panel-to-return 650 50) ;;action-scrollpane-vp-width was 480 for width
   
   (add-mouselistener
      panel-to-return
@@ -1014,6 +1044,7 @@
       
 (define add-action-button #f)
 (define delete-action-button #f)
+(define action-scrollpane #f)
 (define (create-actions-main-panel)
   
   (set! actions-main-panel (make-panel))
@@ -1036,7 +1067,7 @@
   ;(add-component actions-main-panel action-list-panel 'border-center)
   
     ;; scrollpane for condition panel
-  (define action-scrollpane (make-scrollpane-with-policy action-list-panel 'needed 'needed))
+  (set! action-scrollpane (make-scrollpane-with-policy action-list-panel 'needed 'needed))
   (set-component-preferred-size action-scrollpane 500 140)
   (set! action-scrollpane-vp-width (scroll-viewport-width action-scrollpane))
   (add-component actions-main-panel action-scrollpane 'border-center)
@@ -1414,7 +1445,8 @@
         (add-component editlink-panel-buttons editlink-panel-buttons-ok)))
   
   ; pack
-  (pack-frame editlink-dialog))
+  ;(pack-frame editlink-dialog)
+  )
 
 ;;  =============
 ;;;; Node/Link/Fact Choice (combobox)
@@ -1949,6 +1981,77 @@
     
     ;; add type choice
     (add-component top-panel the-type-choice)
+    
+    ;; create math UI
+    (define (make-math-panel #!optional op opr1 opr1-type opr2 opr2-type)
+      (define math-panel (make-panel))
+      
+      ;; operand choice returns a panel for inputing number facts value
+      ;; 2 modes are provided now "Input" and "Fact" 
+      (define (make-operand-choice opr opr-type)
+        (let ((operand-panel (make-panel))
+              (mode-choice (make-combobox "Input" "Fact"))
+              (number-entry (make-textfield "0" 4))
+              (number-choice (create-fact-choice 'number #f))
+              )
+          (set-container-layout operand-panel 'horizontal)
+          (add-component operand-panel mode-choice)
+          ;;(add-component operand-panel number-entry)
+          
+          (add-actionlistener mode-choice
+                              (make-actionlistener
+                               (lambda (e)
+                                 (remove-component operand-panel number-entry)
+                                 (remove-component operand-panel number-choice)
+                                 
+                                 ;; add appropriate component
+                                 (case (to-string (get-combobox-selecteditem mode-choice))
+                                   (("Input") (add-component operand-panel number-entry))
+                                   (("Fact") (add-component operand-panel number-choice)))
+                                 
+                                 ;; update thie panel and parent panels
+                                 (component-revalidate operand-panel)
+                                 (component-update operand-panel)
+                                 (pack-component operand-panel)
+                                 (pack-component math-panel)
+                                 (pack-component top-panel)
+                                 )))
+          
+          ;; set the selection and trigger the action listener above to add the correct component
+          (if opr-type
+              (set-combobox-selection-object mode-choice (create-combobox-string-item opr-type))
+              (set-combobox-selection-object mode-choice (create-combobox-string-item "Input")))
+          
+          (display "[mode choice selection] ")(display (to-string (get-combobox-selecteditem mode-choice)))(newline)
+          ;; set the value in the UI
+          (case (to-string (get-combobox-selecteditem mode-choice))
+            (("Input") 
+             (if opr
+                 (set-text number-entry opr)
+                 (set-text number-entry "0")
+                 ))
+            (("Fact")
+             (if opr
+                 (set-comboboxwithdata-selection-bydata number-choice (string->number opr))
+                 (set-comboboxwithdata-selection-bydata number-choice -1))
+             ))
+          
+          (pack-component operand-panel)
+          operand-panel))
+      
+      (define operator-choice (make-combobox "+" "-" "x"))
+      (if op
+          (set-combobox-selection-object operator-choice (create-combobox-string-item op)))
+      
+      (set-container-layout math-panel 'horizontal)
+      (add-components math-panel 
+                      (make-operand-choice opr1 opr1-type)
+                      operator-choice
+                      (make-operand-choice opr2 opr2-type))
+;      (component-revalidate math-panel)
+;      (component-update math-panel)
+      (pack-component math-panel)
+      math-panel)
   
     ;; choose the fact type index
     (define (fact-type-index)
@@ -2065,15 +2168,24 @@
      num-fact-mode-choice
      (make-actionlistener
       (lambda (e)
-        (remove-component top-panel the-number-entry)
-        (remove-component top-panel number-fact-target-cb)
+        ;; remove fourth component
+        (remove-component top-panel (list-ref (get-container-children top-panel) 4))
+        ;(remove-component top-panel the-number-entry)
+        ;(remove-component top-panel number-fact-target-cb)
+        
         
         ;;(display "top-panel ")(display top-panel)(newline)
         ;;(display "number-fact-target-cb ")(display number-fact-target-cb)(newline)
         
         (case (to-string (get-combobox-selecteditem num-fact-mode-choice))
           (("Input") (add-component top-panel the-number-entry))
-          (("Fact") (add-component top-panel number-fact-target-cb)))
+          (("Fact") (add-component top-panel number-fact-target-cb))
+          (("Math") 
+           (if (pair? the-value)
+               (add-component top-panel (make-math-panel the-value))
+               (add-component top-panel (make-math-panel))
+               ))
+          )
         (component-revalidate top-panel)
         (pack-component top-panel)
         )))
