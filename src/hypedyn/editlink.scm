@@ -2014,6 +2014,27 @@
           (add-component operand-panel mode-choice)
           ;;(add-component operand-panel number-entry)
           
+          ;; set the value in the UI if provided
+          (if (and opr-type opr)
+              (begin
+                (set-combobox-selection-object mode-choice (create-combobox-string-item opr-type))
+                (case opr-type
+                  (("Input")
+                   (set-text number-entry opr)
+                   (add-component operand-panel number-entry))
+                  (("Fact")
+                   (set-comboboxwithdata-selection-bydata number-choice (string->number opr))
+                   (add-component operand-panel number-choice)
+                   ))
+                )
+              (begin
+                (set-text number-entry "0")
+                (add-component operand-panel number-entry)
+                (set-comboboxwithdata-selection-bydata number-choice -1)
+                ;;(add-component operand-panel number-choice)
+                )
+              )
+          
           (add-actionlistener mode-choice
                               (make-actionlistener
                                (lambda (e)
@@ -2023,7 +2044,8 @@
                                  ;; add appropriate component
                                  (case (to-string (get-combobox-selecteditem mode-choice))
                                    (("Input") (add-component operand-panel number-entry))
-                                   (("Fact") (add-component operand-panel number-choice)))
+                                   (("Fact") (add-component operand-panel number-choice))
+                                   )
                                  
                                  (validate-rule)
                                  
@@ -2034,11 +2056,11 @@
                                  (pack-component math-panel)
                                  (pack-component top-panel)
                                  )))
-          
-          (add-actionlistener 
+          (add-actionlistener
            number-choice
            (make-actionlistener
-            validate-rule))
+            validate-rule
+            ))
           
           (add-documentlistener
            number-entry
@@ -2047,25 +2069,6 @@
             validate-rule
             validate-rule
             ))
-          
-          ;; set the selection and trigger the action listener above to add the correct component
-          (if opr-type
-              (set-combobox-selection-object mode-choice (create-combobox-string-item opr-type))
-              (set-combobox-selection-object mode-choice (create-combobox-string-item "Input")))
-          
-          (display "[mode choice selection] ")(display (to-string (get-combobox-selecteditem mode-choice)))(newline)
-          ;; set the value in the UI
-          (case (to-string (get-combobox-selecteditem mode-choice))
-            (("Input") 
-             (if opr
-                 (set-text number-entry opr)
-                 (set-text number-entry "0")
-                 ))
-            (("Fact")
-             (if opr
-                 (set-comboboxwithdata-selection-bydata number-choice (string->number opr))
-                 (set-comboboxwithdata-selection-bydata number-choice -1))
-             ))
           
           (pack-component operand-panel)
           operand-panel))
