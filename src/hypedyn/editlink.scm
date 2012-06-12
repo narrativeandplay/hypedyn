@@ -773,8 +773,18 @@
             (and (not (= (get-comboboxwithdata-selecteddata target-cb) -1))
                  ;; source fact (value from which we're getting from) is selected (not none)
                  (not (= (get-comboboxwithdata-selecteddata (list-ref fp-children 4)) -1)))
-            )))
-       )
+            )
+           (("Math")
+            (define (operand-panel-valid? panel)
+              (let ((comp-lst (get-container-children panel)))
+                (case (to-string (get-combobox-selecteditem (car comp-lst)))
+                  (("Input") (string-is-numeric? (get-text (cadr comp-lst))))
+                  (("Fact") (not (= (get-comboboxwithdata-selecteddata (cadr comp-lst)) -1)))
+                )))
+            #f
+            ;(let ((comp-lst (get-container-children  
+           )
+       )))
     )))
 
 (define (update-text-using-panel-valid? panel)
@@ -1986,6 +1996,7 @@
     (define (make-math-panel #!optional op opr1 opr1-type opr2 opr2-type)
       (define math-panel (make-panel))
       
+      (display "op ")(display op)(newline)
       ;; operand choice returns a panel for inputing number facts value
       ;; 2 modes are provided now "Input" and "Fact" 
       (define (make-operand-choice opr opr-type)
@@ -2182,7 +2193,7 @@
           (("Fact") (add-component top-panel number-fact-target-cb))
           (("Math") 
            (if (pair? the-value)
-               (add-component top-panel (make-math-panel the-value))
+               (add-component top-panel (apply make-math-panel the-value))
                (add-component top-panel (make-math-panel))
                ))
           )
