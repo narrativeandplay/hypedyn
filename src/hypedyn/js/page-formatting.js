@@ -22,6 +22,7 @@ var start_tag = "<font class='plaintext'>"; // used to be size=5 inside font tag
 var end_tag = "</font>";
 
 var page_start_tag = "<div name='page'><div name='pagecontent'>"//"<section><div>";
+var plain_page_start_tag = "<div name='plainpage'><div name='plainpagecontent'>"// for plain pages
 var page_end_tag = "</div></div>";//</section>";
 var test_bed_html_cache = "";
 
@@ -415,8 +416,10 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 		return tg.start_tag + tg.content + tg.end_tag;
 	}
 	
-	function assemble_html_code( pages_tg_arr ) {
-		var retval = "";
+	function assemble_html_code( pages_tg_arr, plain_only ) {
+        var retval = "";
+        // need to make sure plain pages are tagged differently so they don't get styled
+        var actual_page_start_tag = plain_only ? plain_page_start_tag : page_start_tag;
 		for ( var i in pages_tg_arr ) {
 			if ( isNumber(i) ) {
 				var curr_page_tg_arr = pages_tg_arr[i];
@@ -431,7 +434,7 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 					//disp("curr_page_code "+curr_page_code);
 				}
 				//disp("[curr page code]! "+curr_page_code);
-				retval += page_start_tag + curr_page_code + page_end_tag;
+				retval += actual_page_start_tag + curr_page_code + page_end_tag;
 			}
 		}
 		//retval +="<br><br>"; // empty line before anywhere nodes come in
@@ -499,7 +502,7 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 		print_tg( pages_tg_arr[i] );
 	}
 
-	var htmlcode = assemble_html_code( pages_tg_arr );
+	var htmlcode = assemble_html_code( pages_tg_arr, plain_only );
 	return htmlcode;
 }
 
