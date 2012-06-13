@@ -175,13 +175,6 @@
                   ))
                 
               ))
-;      (if (equal? (get-mouseevent-type e) 'left-clicked)
-;        (let ((event-click-count (get-mouseevent-click-count e)))
-;          (if (= 2 event-click-count)
-;              (begin
-;                (edit-rule-button-callback ruleID)
-;                )
-;              )))
             )))
     
   (add-itemlistener

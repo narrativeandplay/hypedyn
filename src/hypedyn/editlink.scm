@@ -1643,7 +1643,6 @@
      the-fact-list
      (make-actionlistener
       validate-rule))
-        
 
     ;; Add target choice - may have problems if loading a file that doesn't match chosen version
     (cond 
@@ -1729,11 +1728,10 @@
                                     the-node-list the-node-operator-choice
                                     the-link-list the-link-operator-choice
                                     the-fact-list the-fact-operator-choice)
-  (format #t "selected-type-in-condition~%~!")
   
   ; remove the current target and operator lists
-  (remove-component top-panel (condition-panel-target-id top-panel))
-  (remove-component top-panel (condition-panel-operator top-panel))
+  (clear-container top-panel)
+  (add-component top-panel c)
          
   ;; add new target and operator lists
   (let* ((new-type (get-combobox-selectedindex c))
@@ -1746,8 +1744,9 @@
                         ((= 1 new-type) the-link-operator-choice)
                         ((= 2 new-type) the-fact-operator-choice))))
     (add-component top-panel new-target)
-    (set-combobox-selection new-target 0)
     (add-component top-panel new-operator)
+    
+    (set-combobox-selection new-target 0)
     (set-combobox-selection new-operator 0))
   
   (pack-frame editlink-dialog))
@@ -1912,23 +1911,33 @@
           )))
 
 ;;;; Condition panel operations
+
+;; getting the components in the condition panel
+(define (condition-panel-component panel index)
+  (let ((children (get-container-children panel)))
+    ;;(display "condition panel component length ")(display (length children))(newline)
+    ;;(display "children ")(display children)(newline)
+    (if (< index (length children))
+        (list-ref children index))))
+(define (condition-panel-target-type-cb panel)
+  (condition-panel-component panel 0))
+(define (condition-panel-target-choice-cb panel)
+  (condition-panel-component panel 1))
+(define (condition-panel-operator-cb panel)
+  (condition-panel-component panel 2))
+
 (define (condition-panel-target-type panel)
-  (let* ((children (get-container-children panel))
-         (select-type-cb (list-ref children 0)))
-    (if (not (is-basic-mode?))
-        (get-combobox-selectedindex select-type-cb)
-        0)))
+  (if (not (is-basic-mode?))
+      (get-combobox-selectedindex (condition-panel-target-type-cb panel))
+      0))
 
 (define (condition-panel-target-id panel)
-  (let* ((children (get-container-children panel))
-         (select-target-cb (list-ref children 1)))
-    (get-comboboxwithdata-selecteddata select-target-cb)
-    ))
+    (get-comboboxwithdata-selecteddata (condition-panel-target-choice-cb panel)))
 
 (define (condition-panel-operator panel)
-  (let* ((children (get-container-children panel))
-         (select-operator-cb (list-ref children 2)))
-    (get-combobox-selectedindex select-operator-cb)))
+  (display "condition panel operator ")(newline)
+  (display (condition-panel-operator-cb panel))(newline)
+  (get-combobox-selectedindex (condition-panel-operator-cb panel)))
 
 (define (condition-panel-valid? panel)
   ;; target id cannot be -1 
