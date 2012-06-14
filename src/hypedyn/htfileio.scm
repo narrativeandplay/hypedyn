@@ -612,7 +612,7 @@
                   ;; add a new action panel
                   (create-action link-name 'displayed-node
                                  (list 'replace-link-text
-                                       (list 'quote 'text)
+                                       "alternative text"
                                        link-alttext
                                        ;(string-append "\"" link-alttext "\"")
                                        linkID)
@@ -621,7 +621,7 @@
                 (begin ;; show fact text 
                   (create-action link-name 'displayed-node
                                  (list 'replace-link-text
-                                       (list 'quote 'fact)
+                                       "string fact"
                                         ;(string-append "\"" link-alttext "\"")
                                        link-alttext ;; this is actually factID
                                        linkID)

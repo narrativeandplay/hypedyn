@@ -1,138 +1,154 @@
 (begin (make-hypertext (quote htfe) 2.2) (set-card-shark! (quote #f)) (begin
 (create-node "end 2"
 "Frustrated, the wolf snuck off to try his luck at the mall instead.\n\n*** The End ***"
-383 286 false false 66) (begin (create-typed-rule2 "Set fact" (quote node)
-(quote and) #f 66 269))) (begin (create-node "start"
+383 286 false false 66) (begin (create-typed-rule3 "Set fact" (quote node)
+(quote and) #f 66 fixedID: 269 fall-through?: #t))) (begin (create-node "start"
 "This is the story of a naive street-smart girl named Little Red Riding Hood, which she was called because of the red hood that she often wore.\n\nOne day she was walking through the forest."
-296 53 false false 2) (begin (create-typed-rule2 "Set fact" (quote node) (quote
-and) #f 2 268))) (begin (create-node "end 1"
+296 53 false false 2) (begin (create-typed-rule3 "Set fact" (quote node) (quote
+and) #f 2 fixedID: 268 fall-through?: #t))) (begin (create-node "end 1"
 "Quickly the wolf ran ahead to Grandma's house, swallowed Grandma whole, and disguised himself as the poor old lady. When Red arrived, he finished her off too. Yum!\n\n*** The End ***"
-219 286 false false 3) (begin (create-typed-rule2 "Set fact" (quote node)
-(quote and) #f 3 267))) (begin (create-node "forest"
+219 286 false false 3) (begin (create-typed-rule3 "Set fact" (quote node)
+(quote and) #f 3 fixedID: 267 fall-through?: #t))) (begin (create-node "forest"
 "In the forest, Red came across a young man with a nasty smile.\n\n\"Where are you going, little girl?\" he asked.\n\n\"I'm off to see my sick granny,\" she said.\n\nWell, you can probably guess what happened next."
-297 165 false false 4) (begin (create-typed-rule2 "Set fact" (quote node)
-(quote and) #f 4 266))) (begin (create-node "Red is naive"
-"Red is naive.\n\nback" 536 47 false false 32) (begin (create-typed-rule2
-"Set fact" (quote node) (quote and) #f 32 265))) (begin (create-node
-"Red is street-smart" "Red is street-smart.\n\nback" 546 227 false false 33)
-(begin (create-typed-rule2 "Set fact" (quote node) (quote and) #f 33 264)))
-(begin (create-node "Red's character" "Is Red naive or street-smart?" 538 130
-false false 34) (begin (create-typed-rule2 "Set fact" (quote node) (quote and)
-#f 34 263))) (begin (create-node "summary"
+297 165 false false 4) (begin (create-typed-rule3 "Set fact" (quote node)
+(quote and) #f 4 fixedID: 266 fall-through?: #t))) (begin (create-node
+"Red is naive" "Red is naive.\n\nback" 536 47 false false 32) (begin
+(create-typed-rule3 "Set fact" (quote node) (quote and) #f 32 fixedID: 265
+fall-through?: #t))) (begin (create-node "Red is street-smart"
+"Red is street-smart.\n\nback" 546 227 false false 33) (begin
+(create-typed-rule3 "Set fact" (quote node) (quote and) #f 33 fixedID: 264
+fall-through?: #t))) (begin (create-node "Red's character"
+"Is Red naive or street-smart?" 538 130 false false 34) (begin
+(create-typed-rule3 "Set fact" (quote node) (quote and) #f 34 fixedID: 263
+fall-through?: #t))) (begin (create-node "summary"
 "Red is a naive street-smart little girl.\nShe told the wolf where she is going.\nShe refused to speak to the wolf.\nThe wolf had a tasty meal.\nThe wolf gave up in frustration."
-74 55 true false 49) (begin (create-typed-rule2 "Set fact" (quote node) (quote
-and) #f 49 261) (create-action "Enable Link" (quote anywhere-check) (list
-(quote add-anywhere-link) 49) 261 262))) (begin (create-link "Next" 2 4 180 186
-true false false -1 "" false 7) (begin (create-typed-rule2 "THEN" (quote link)
-(quote or) #f 7 254) (create-typed-condition "If-rule" 0 33 1 254 259)
-(create-typed-condition "If-rule" 0 32 1 254 257) (create-action "Next" (quote
+74 55 true false 49) (begin (create-typed-rule3 "Set fact" (quote node) (quote
+and) #f 49 fixedID: 261 fall-through?: #t) (create-action "Enable Link" (quote
+anywhere-check) (list (quote add-anywhere-link) 49) 261 262))) (begin
+(create-link "Next" 2 4 180 186 true false false -1 "" false 7) (begin
+(create-typed-rule3 "THEN" (quote link) (quote or) #f 7 fixedID: 254
+fall-through?: #t) (create-typed-condition "If-rule" 0 33 1 254 257)
+(create-typed-condition "If-rule" 0 32 1 254 259) (create-action "Next" (quote
 clicked-link) (list (quote follow-link) 7 254 (list (quote quote) (quote
-default)) 4) 254 256)) (begin (create-typed-rule2 "ELSE" (quote link) (quote
-or) #t 7 255) (create-typed-condition "else-rule" 0 33 1 255 260)
-(create-typed-condition "else-rule" 0 32 1 255 258))) (begin (create-link
-"to the end" 4 3 198 202 true true false 66 "" false 144) (begin
-(create-typed-rule2 "THEN" (quote link) (quote and) #f 144 246)
-(create-typed-condition "If-rule" 0 32 1 246 252) (create-typed-condition
-"If-rule" 0 33 0 246 250) (create-action "to the end" (quote clicked-link)
-(list (quote follow-link) 144 246 (list (quote quote) (quote default)) 3) 246
-248)) (begin (create-typed-rule2 "ELSE" (quote link) (quote and) #t 144 247)
-(create-typed-condition "else-rule" 0 32 1 247 253) (create-typed-condition
-"else-rule" 0 33 0 247 251) (create-action "to the end" (quote clicked-link)
-(list (quote follow-link) 144 247 (list (quote quote) (quote default)) 66) 247
-249))) (begin (create-link "naive" 2 -1 23 29 false false true -1 "" false 85)
-(begin (create-typed-rule2 "THEN" (quote link) (quote and) #f 85 239)
-(create-typed-condition "If-rule" 0 32 1 239 244) (create-typed-condition
-"If-rule" 0 34 1 239 242)) (begin (create-typed-rule2 "ELSE" (quote link)
-(quote and) #t 85 240) (create-typed-condition "else-rule" 0 32 1 240 245)
-(create-typed-condition "else-rule" 0 34 1 240 243) (create-action "naive"
-(quote displayed-node) (list (quote replace-link-text) (list (quote quote)
-(quote text)) "" 85) 240 241))) (begin (create-link "street-smart" 2 -1 29 42
-false false true -1 "" false 89) (begin (create-typed-rule2 "THEN" (quote link)
-(quote and) #f 89 232) (create-typed-condition "If-rule" 0 33 1 232 237)
-(create-typed-condition "If-rule" 0 34 1 232 235)) (begin (create-typed-rule2
-"ELSE" (quote link) (quote and) #t 89 233) (create-typed-condition "else-rule"
-0 33 1 233 238) (create-typed-condition "else-rule" 0 34 1 233 236)
-(create-action "street-smart" (quote displayed-node) (list (quote
-replace-link-text) (list (quote quote) (quote text)) "" 89) 233 234))) (begin
-(create-link "street-smart" 49 -1 15 28 false false true -1 "" false 95) (begin
-(create-typed-rule2 "THEN" (quote link) (quote and) #f 95 225)
-(create-typed-condition "If-rule" 0 33 1 225 230) (create-typed-condition
-"If-rule" 0 34 1 225 228)) (begin (create-typed-rule2 "ELSE" (quote link)
-(quote and) #t 95 226) (create-typed-condition "else-rule" 0 33 1 226 231)
-(create-typed-condition "else-rule" 0 34 1 226 229) (create-action
-"street-smart" (quote displayed-node) (list (quote replace-link-text) (list
-(quote quote) (quote text)) "" 95) 226 227))) (begin (create-link "naive" 34 32
-7 12 true false false -1 "" false 35) (begin (create-typed-rule2 "THEN" (quote
-link) (quote and) #f 35 218) (create-typed-condition "If-rule" 0 33 0 218 223)
-(create-typed-condition "If-rule" 0 32 0 218 221) (create-action "naive" (quote
-clicked-link) (list (quote follow-link) 35 218 (list (quote quote) (quote
-default)) 32) 218 220)) (begin (create-typed-rule2 "ELSE" (quote link) (quote
-and) #t 35 219) (create-typed-condition "else-rule" 0 33 0 219 224)
-(create-typed-condition "else-rule" 0 32 0 219 222))) (begin (create-link
-"forest1" 49 -1 41 79 false false true -1 "" false 102) (begin
-(create-typed-rule2 "THEN" (quote link) (quote and) #f 102 211)
-(create-typed-condition "If-rule" 0 4 1 211 216) (create-typed-condition
-"If-rule" 0 32 1 211 214)) (begin (create-typed-rule2 "ELSE" (quote link)
-(quote and) #t 102 212) (create-typed-condition "else-rule" 0 4 1 212 217)
-(create-typed-condition "else-rule" 0 32 1 212 215) (create-action "forest1"
-(quote displayed-node) (list (quote replace-link-text) (list (quote quote)
-(quote text)) "" 102) 212 213))) (begin (create-link "street-smart" 34 33 16 28
-true false false -1 "" false 40) (begin (create-typed-rule2 "THEN" (quote link)
-(quote and) #f 40 204) (create-typed-condition "If-rule" 0 33 0 204 209)
-(create-typed-condition "If-rule" 0 32 0 204 207) (create-action "street-smart"
-(quote clicked-link) (list (quote follow-link) 40 204 (list (quote quote)
-(quote default)) 33) 204 206)) (begin (create-typed-rule2 "ELSE" (quote link)
-(quote and) #t 40 205) (create-typed-condition "else-rule" 0 33 0 205 210)
-(create-typed-condition "else-rule" 0 32 0 205 208))) (begin (create-link
-"forest2" 49 -1 79 113 false false true -1 "" false 105) (begin
-(create-typed-rule2 "THEN" (quote link) (quote and) #f 105 197)
-(create-typed-condition "If-rule" 0 4 1 197 202) (create-typed-condition
-"If-rule" 0 33 1 197 200)) (begin (create-typed-rule2 "ELSE" (quote link)
-(quote and) #t 105 198) (create-typed-condition "else-rule" 0 4 1 198 203)
-(create-typed-condition "else-rule" 0 33 1 198 201) (create-action "forest2"
-(quote displayed-node) (list (quote replace-link-text) (list (quote quote)
-(quote text)) "" 105) 198 199))) (begin (create-link "choose" 2 34 53 75 true
-false false -1 "" false 42) (begin (create-typed-rule2 "THEN" (quote link)
-(quote and) #f 42 192) (create-typed-condition "If-rule" 0 34 0 192 195)
-(create-action "choose" (quote clicked-link) (list (quote follow-link) 42 192
-(list (quote quote) (quote default)) 34) 192 194)) (begin (create-typed-rule2
-"ELSE" (quote link) (quote and) #t 42 193) (create-typed-condition "else-rule"
-0 34 0 193 196))) (begin (create-link "end1" 49 -1 113 140 false false true -1
-"" false 108) (begin (create-typed-rule2 "THEN" (quote link) (quote and) #f 108
-185) (create-typed-condition "If-rule" 0 3 1 185 190) (create-typed-condition
-"If-rule" 0 32 1 185 188)) (begin (create-typed-rule2 "ELSE" (quote link)
-(quote and) #t 108 186) (create-typed-condition "else-rule" 0 3 1 186 191)
-(create-typed-condition "else-rule" 0 32 1 186 189) (create-action "end1"
-(quote displayed-node) (list (quote replace-link-text) (list (quote quote)
-(quote text)) "" 108) 186 187))) (begin (create-link "back" 33 2 22 26 true
-false false -1 "" false 45) (begin (create-typed-rule2 "THEN" (quote link)
-(quote and) #f 45 182) (create-action "back" (quote clicked-link) (list (quote
+default)) 4) 254 256)) (begin (create-typed-rule3 "ELSE" (quote link) (quote
+or) #t 7 fixedID: 255 fall-through?: #t) (create-typed-condition "else-rule" 0
+33 1 255 258) (create-typed-condition "else-rule" 0 32 1 255 260))) (begin
+(create-link "to the end" 4 3 198 202 true true false 66 "" false 144) (begin
+(create-typed-rule3 "THEN" (quote link) (quote and) #f 144 fixedID: 246
+fall-through?: #t) (create-typed-condition "If-rule" 0 32 1 246 250)
+(create-typed-condition "If-rule" 0 33 0 246 252) (create-action "to the end"
+(quote clicked-link) (list (quote follow-link) 144 246 (list (quote quote)
+(quote default)) 3) 246 248)) (begin (create-typed-rule3 "ELSE" (quote link)
+(quote and) #t 144 fixedID: 247 fall-through?: #t) (create-typed-condition
+"else-rule" 0 32 1 247 251) (create-typed-condition "else-rule" 0 33 0 247 253)
+(create-action "to the end" (quote clicked-link) (list (quote follow-link) 144
+247 (list (quote quote) (quote default)) 66) 247 249))) (begin (create-link
+"naive" 2 -1 23 29 false false true -1 "" false 85) (begin (create-typed-rule3
+"THEN" (quote link) (quote and) #f 85 fixedID: 239 fall-through?: #t)
+(create-typed-condition "If-rule" 0 32 1 239 242) (create-typed-condition
+"If-rule" 0 34 1 239 244)) (begin (create-typed-rule3 "ELSE" (quote link)
+(quote and) #t 85 fixedID: 240 fall-through?: #t) (create-typed-condition
+"else-rule" 0 32 1 240 243) (create-typed-condition "else-rule" 0 34 1 240 245)
+(create-action "naive" (quote displayed-node) (list (quote replace-link-text)
+"alternative text" "" 85) 240 241))) (begin (create-link "street-smart" 2 -1 29
+42 false false true -1 "" false 89) (begin (create-typed-rule3 "THEN" (quote
+link) (quote and) #f 89 fixedID: 232 fall-through?: #t) (create-typed-condition
+"If-rule" 0 33 1 232 235) (create-typed-condition "If-rule" 0 34 1 232 237))
+(begin (create-typed-rule3 "ELSE" (quote link) (quote and) #t 89 fixedID: 233
+fall-through?: #t) (create-typed-condition "else-rule" 0 33 1 233 236)
+(create-typed-condition "else-rule" 0 34 1 233 238) (create-action
+"street-smart" (quote displayed-node) (list (quote replace-link-text)
+"alternative text" "" 89) 233 234))) (begin (create-link "street-smart" 49 -1
+15 28 false false true -1 "" false 95) (begin (create-typed-rule3 "THEN" (quote
+link) (quote and) #f 95 fixedID: 225 fall-through?: #t) (create-typed-condition
+"If-rule" 0 33 1 225 228) (create-typed-condition "If-rule" 0 34 1 225 230))
+(begin (create-typed-rule3 "ELSE" (quote link) (quote and) #t 95 fixedID: 226
+fall-through?: #t) (create-typed-condition "else-rule" 0 33 1 226 229)
+(create-typed-condition "else-rule" 0 34 1 226 231) (create-action
+"street-smart" (quote displayed-node) (list (quote replace-link-text)
+"alternative text" "" 95) 226 227))) (begin (create-link "naive" 34 32 7 12
+true false false -1 "" false 35) (begin (create-typed-rule3 "THEN" (quote link)
+(quote and) #f 35 fixedID: 218 fall-through?: #t) (create-typed-condition
+"If-rule" 0 33 0 218 221) (create-typed-condition "If-rule" 0 32 0 218 223)
+(create-action "naive" (quote clicked-link) (list (quote follow-link) 35 218
+(list (quote quote) (quote default)) 32) 218 220)) (begin (create-typed-rule3
+"ELSE" (quote link) (quote and) #t 35 fixedID: 219 fall-through?: #t)
+(create-typed-condition "else-rule" 0 33 0 219 222) (create-typed-condition
+"else-rule" 0 32 0 219 224))) (begin (create-link "forest1" 49 -1 41 79 false
+false true -1 "" false 102) (begin (create-typed-rule3 "THEN" (quote link)
+(quote and) #f 102 fixedID: 211 fall-through?: #t) (create-typed-condition
+"If-rule" 0 4 1 211 214) (create-typed-condition "If-rule" 0 32 1 211 216))
+(begin (create-typed-rule3 "ELSE" (quote link) (quote and) #t 102 fixedID: 212
+fall-through?: #t) (create-typed-condition "else-rule" 0 4 1 212 215)
+(create-typed-condition "else-rule" 0 32 1 212 217) (create-action "forest1"
+(quote displayed-node) (list (quote replace-link-text) "alternative text" ""
+102) 212 213))) (begin (create-link "street-smart" 34 33 16 28 true false false
+-1 "" false 40) (begin (create-typed-rule3 "THEN" (quote link) (quote and) #f
+40 fixedID: 204 fall-through?: #t) (create-typed-condition "If-rule" 0 33 0 204
+207) (create-typed-condition "If-rule" 0 32 0 204 209) (create-action
+"street-smart" (quote clicked-link) (list (quote follow-link) 40 204 (list
+(quote quote) (quote default)) 33) 204 206)) (begin (create-typed-rule3 "ELSE"
+(quote link) (quote and) #t 40 fixedID: 205 fall-through?: #t)
+(create-typed-condition "else-rule" 0 33 0 205 208) (create-typed-condition
+"else-rule" 0 32 0 205 210))) (begin (create-link "forest2" 49 -1 79 113 false
+false true -1 "" false 105) (begin (create-typed-rule3 "THEN" (quote link)
+(quote and) #f 105 fixedID: 197 fall-through?: #t) (create-typed-condition
+"If-rule" 0 4 1 197 200) (create-typed-condition "If-rule" 0 33 1 197 202))
+(begin (create-typed-rule3 "ELSE" (quote link) (quote and) #t 105 fixedID: 198
+fall-through?: #t) (create-typed-condition "else-rule" 0 4 1 198 201)
+(create-typed-condition "else-rule" 0 33 1 198 203) (create-action "forest2"
+(quote displayed-node) (list (quote replace-link-text) "alternative text" ""
+105) 198 199))) (begin (create-link "choose" 2 34 53 75 true false false -1 ""
+false 42) (begin (create-typed-rule3 "THEN" (quote link) (quote and) #f 42
+fixedID: 192 fall-through?: #t) (create-typed-condition "If-rule" 0 34 0 192
+195) (create-action "choose" (quote clicked-link) (list (quote follow-link) 42
+192 (list (quote quote) (quote default)) 34) 192 194)) (begin
+(create-typed-rule3 "ELSE" (quote link) (quote and) #t 42 fixedID: 193
+fall-through?: #t) (create-typed-condition "else-rule" 0 34 0 193 196))) (begin
+(create-link "end1" 49 -1 113 140 false false true -1 "" false 108) (begin
+(create-typed-rule3 "THEN" (quote link) (quote and) #f 108 fixedID: 185
+fall-through?: #t) (create-typed-condition "If-rule" 0 3 1 185 188)
+(create-typed-condition "If-rule" 0 32 1 185 190)) (begin (create-typed-rule3
+"ELSE" (quote link) (quote and) #t 108 fixedID: 186 fall-through?: #t)
+(create-typed-condition "else-rule" 0 3 1 186 189) (create-typed-condition
+"else-rule" 0 32 1 186 191) (create-action "end1" (quote displayed-node) (list
+(quote replace-link-text) "alternative text" "" 108) 186 187))) (begin
+(create-link "back" 33 2 22 26 true false false -1 "" false 45) (begin
+(create-typed-rule3 "THEN" (quote link) (quote and) #f 45 fixedID: 182
+fall-through?: #t) (create-action "back" (quote clicked-link) (list (quote
 follow-link) 45 182 (list (quote quote) (quote default)) 2) 182 184)) (begin
-(create-typed-rule2 "ELSE" (quote link) (quote and) #t 45 183))) (begin
-(create-link "end2" 49 -1 140 172 false false true -1 "" false 111) (begin
-(create-typed-rule2 "THEN" (quote link) (quote and) #f 111 175)
-(create-typed-condition "If-rule" 0 66 1 175 180) (create-typed-condition
-"If-rule" 0 33 1 175 178)) (begin (create-typed-rule2 "ELSE" (quote link)
-(quote and) #t 111 176) (create-typed-condition "else-rule" 0 66 1 176 181)
-(create-typed-condition "else-rule" 0 33 1 176 179) (create-action "end2"
-(quote displayed-node) (list (quote replace-link-text) (list (quote quote)
-(quote text)) "" 111) 176 177))) (begin (create-link "back" 32 2 15 19 true
-false false -1 "" false 47) (begin (create-typed-rule2 "THEN" (quote link)
-(quote and) #f 47 172) (create-action "back" (quote clicked-link) (list (quote
-follow-link) 47 172 (list (quote quote) (quote default)) 2) 172 174)) (begin
-(create-typed-rule2 "ELSE" (quote link) (quote and) #t 47 173))) (begin
-(create-link "naive" 49 -1 9 15 false false true -1 "" false 50) (begin
-(create-typed-rule2 "THEN" (quote link) (quote and) #f 50 165)
-(create-typed-condition "If-rule" 0 34 1 165 170) (create-typed-condition
-"If-rule" 0 32 1 165 168)) (begin (create-typed-rule2 "ELSE" (quote link)
-(quote and) #t 50 166) (create-typed-condition "else-rule" 0 34 1 166 171)
-(create-typed-condition "else-rule" 0 32 1 166 169) (create-action "naive"
-(quote displayed-node) (list (quote replace-link-text) (list (quote quote)
-(quote text)) "" 50) 166 167))) (begin (create-link "response" 4 -1 111 143
-false false true -1 "\"I'm not supposed to talk to strangers,\"" false 61)
-(begin (create-typed-rule2 "THEN" (quote link) (quote and) #f 61 160)
-(create-typed-condition "If-rule" 0 33 0 160 163)) (begin (create-typed-rule2
-"ELSE" (quote link) (quote and) #t 61 161) (create-typed-condition "else-rule"
-0 33 0 161 164) (create-action "response" (quote displayed-node) (list (quote
-replace-link-text) (list (quote quote) (quote text))
-"\"I'm not supposed to talk to strangers,\"" 61) 161 162))) (set-start-node! 2))
+(create-typed-rule3 "ELSE" (quote link) (quote and) #t 45 fixedID: 183
+fall-through?: #t))) (begin (create-link "end2" 49 -1 140 172 false false true
+-1 "" false 111) (begin (create-typed-rule3 "THEN" (quote link) (quote and) #f
+111 fixedID: 175 fall-through?: #t) (create-typed-condition "If-rule" 0 66 1
+175 178) (create-typed-condition "If-rule" 0 33 1 175 180)) (begin
+(create-typed-rule3 "ELSE" (quote link) (quote and) #t 111 fixedID: 176
+fall-through?: #t) (create-typed-condition "else-rule" 0 66 1 176 179)
+(create-typed-condition "else-rule" 0 33 1 176 181) (create-action "end2"
+(quote displayed-node) (list (quote replace-link-text) "alternative text" ""
+111) 176 177))) (begin (create-link "back" 32 2 15 19 true false false -1 ""
+false 47) (begin (create-typed-rule3 "THEN" (quote link) (quote and) #f 47
+fixedID: 172 fall-through?: #t) (create-action "back" (quote clicked-link)
+(list (quote follow-link) 47 172 (list (quote quote) (quote default)) 2) 172
+174)) (begin (create-typed-rule3 "ELSE" (quote link) (quote and) #t 47 fixedID:
+173 fall-through?: #t))) (begin (create-link "naive" 49 -1 9 15 false false
+true -1 "" false 50) (begin (create-typed-rule3 "THEN" (quote link) (quote and)
+#f 50 fixedID: 165 fall-through?: #t) (create-typed-condition "If-rule" 0 34 1
+165 168) (create-typed-condition "If-rule" 0 32 1 165 170)) (begin
+(create-typed-rule3 "ELSE" (quote link) (quote and) #t 50 fixedID: 166
+fall-through?: #t) (create-typed-condition "else-rule" 0 34 1 166 169)
+(create-typed-condition "else-rule" 0 32 1 166 171) (create-action "naive"
+(quote displayed-node) (list (quote replace-link-text) "alternative text" ""
+50) 166 167))) (begin (create-link "response" 4 -1 111 143 false false true -1
+"\"I'm not supposed to talk to strangers,\"" false 61) (begin
+(create-typed-rule3 "THEN" (quote link) (quote and) #f 61 fixedID: 160
+fall-through?: #t) (create-typed-condition "If-rule" 0 33 0 160 163)) (begin
+(create-typed-rule3 "ELSE" (quote link) (quote and) #t 61 fixedID: 161
+fall-through?: #t) (create-typed-condition "else-rule" 0 33 0 161 164)
+(create-action "response" (quote displayed-node) (list (quote
+replace-link-text) "alternative text"
+"\"I'm not supposed to talk to strangers,\"" 61) 161 162))) (set-start-node! 2)
+(set-disable-restart-button! #f) (set-disable-back-button! #f)
+(set-disable-pagebreak! #f) (set-disable-page-resize! #f)
+(set-fixed-page-width! 800) (set-fixed-page-height! 600) (set-css-type! (quote
+default)) (set-custom-css-location! "") (set-custom-css-location2! ""))

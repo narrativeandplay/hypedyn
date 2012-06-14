@@ -1,41 +1,48 @@
 (begin (make-hypertext (quote htfe) 2.2) (set-card-shark! (quote #f)) (begin
 (create-node "start"
 "This is the story of a little girl named Little Red Riding Hood, which she was called because of the red hood that she often wore.\n\nOne day she was walking through the forest."
-334 61 false false 2) (begin (create-typed-rule2 "Set fact" (quote node) (quote
-and) #f 2 176))) (begin (create-node "end" "*** The End ***\n\nback to start"
-332 302 false false 3) (begin (create-typed-rule2 "Set fact" (quote node)
-(quote and) #f 3 175))) (begin (create-node "forest"
+334 61 false false 2) (begin (create-typed-rule3 "Set fact" (quote node) (quote
+and) #f 2 fixedID: 176 fall-through?: #t))) (begin (create-node "end"
+"*** The End ***\n\nback to start" 332 302 false false 3) (begin
+(create-typed-rule3 "Set fact" (quote node) (quote and) #f 3 fixedID: 175
+fall-through?: #t))) (begin (create-node "forest"
 "In the forest, Red came across a young man with a nasty smile.\n\n\"Where are you going, little girl?\" he asked.\n\n\"I'm off to see my sick granny,\" she said.\n\nWell, you can probably guess what happened next."
-245 189 false false 4) (begin (create-typed-rule2 "Set fact" (quote node)
-(quote and) #f 4 174))) (begin (create-node "Hood details"
+245 189 false false 4) (begin (create-typed-rule3 "Set fact" (quote node)
+(quote and) #f 4 fixedID: 174 fall-through?: #t))) (begin (create-node
+"Hood details"
 "Her hood was a magic garment, given to her by her grandmother. It could kill anyone who tried to harm the wearer.\n\nBut not immediately. And in a most painful manner.\n\nMeanwhile, in the forest..."
-99 119 false false 144) (begin (create-typed-rule2 "Set fact" (quote node)
-(quote and) #f 144 173))) (begin (create-link "to forest" 2 4 168 174 true
-false false -1 "" false 145) (begin (create-typed-rule2 "THEN" (quote link)
-(quote and) #f 145 170) (create-action "to forest" (quote clicked-link) (list
-(quote follow-link) 145 170 (list (quote quote) (quote default)) 4) 170 172))
-(begin (create-typed-rule2 "ELSE" (quote link) (quote and) #t 145 171))) (begin
-(create-link "to the end" 4 3 198 202 true false false -1 "" false 147) (begin
-(create-typed-rule2 "THEN" (quote link) (quote and) #f 147 167) (create-action
-"to the end" (quote clicked-link) (list (quote follow-link) 147 167 (list
-(quote quote) (quote default)) 3) 167 169)) (begin (create-typed-rule2 "ELSE"
-(quote link) (quote and) #t 147 168))) (begin (create-link "restart" 3 2 25 30
-true false false -1 "" false 149) (begin (create-typed-rule2 "THEN" (quote
-link) (quote and) #f 149 164) (create-action "restart" (quote clicked-link)
-(list (quote follow-link) 149 164 (list (quote quote) (quote default)) 2) 164
-166)) (begin (create-typed-rule2 "ELSE" (quote link) (quote and) #t 149 165)))
-(begin (create-link "more about the hood" 2 144 101 109 true false false -1 ""
-false 151) (begin (create-typed-rule2 "THEN" (quote link) (quote and) #f 151
-159) (create-typed-condition "If-rule" 0 3 1 159 162) (create-action
-"more about the hood" (quote clicked-link) (list (quote follow-link) 151 159
-(list (quote quote) (quote default)) 144) 159 161)) (begin (create-typed-rule2
-"ELSE" (quote link) (quote and) #t 151 160) (create-typed-condition "else-rule"
-0 3 1 160 163))) (begin (create-link "continue" 144 4 185 191 true false false
--1 "" false 154) (begin (create-typed-rule2 "THEN" (quote link) (quote and) #f
-154 156) (create-action "continue" (quote clicked-link) (list (quote
+99 119 false false 144) (begin (create-typed-rule3 "Set fact" (quote node)
+(quote and) #f 144 fixedID: 173 fall-through?: #t))) (begin (create-link
+"to forest" 2 4 168 174 true false false -1 "" false 145) (begin
+(create-typed-rule3 "THEN" (quote link) (quote and) #f 145 fixedID: 170
+fall-through?: #t) (create-action "to forest" (quote clicked-link) (list (quote
+follow-link) 145 170 (list (quote quote) (quote default)) 4) 170 172)) (begin
+(create-typed-rule3 "ELSE" (quote link) (quote and) #t 145 fixedID: 171
+fall-through?: #t))) (begin (create-link "to the end" 4 3 198 202 true false
+false -1 "" false 147) (begin (create-typed-rule3 "THEN" (quote link) (quote
+and) #f 147 fixedID: 167 fall-through?: #t) (create-action "to the end" (quote
+clicked-link) (list (quote follow-link) 147 167 (list (quote quote) (quote
+default)) 3) 167 169)) (begin (create-typed-rule3 "ELSE" (quote link) (quote
+and) #t 147 fixedID: 168 fall-through?: #t))) (begin (create-link "restart" 3 2
+25 30 true false false -1 "" false 149) (begin (create-typed-rule3 "THEN"
+(quote link) (quote and) #f 149 fixedID: 164 fall-through?: #t) (create-action
+"restart" (quote clicked-link) (list (quote follow-link) 149 164 (list (quote
+quote) (quote default)) 2) 164 166)) (begin (create-typed-rule3 "ELSE" (quote
+link) (quote and) #t 149 fixedID: 165 fall-through?: #t))) (begin (create-link
+"more about the hood" 2 144 101 109 true false false -1 "" false 151) (begin
+(create-typed-rule3 "THEN" (quote link) (quote and) #f 151 fixedID: 159
+fall-through?: #t) (create-typed-condition "If-rule" 0 3 1 159 162)
+(create-action "more about the hood" (quote clicked-link) (list (quote
+follow-link) 151 159 (list (quote quote) (quote default)) 144) 159 161)) (begin
+(create-typed-rule3 "ELSE" (quote link) (quote and) #t 151 fixedID: 160
+fall-through?: #t) (create-typed-condition "else-rule" 0 3 1 160 163))) (begin
+(create-link "continue" 144 4 185 191 true false false -1 "" false 154) (begin
+(create-typed-rule3 "THEN" (quote link) (quote and) #f 154 fixedID: 156
+fall-through?: #t) (create-action "continue" (quote clicked-link) (list (quote
 follow-link) 154 156 (list (quote quote) (quote default)) 4) 156 158)) (begin
-(create-typed-rule2 "ELSE" (quote link) (quote and) #t 154 157)))
-(set-start-node! 2) (set-disable-restart-button! #f) (set-disable-back-button!
-#f) (set-disable-pagebreak! #t) (set-disable-page-resize! #f)
-(set-fixed-page-width! "800") (set-fixed-page-height! "600") (set-css-type!
-(quote default)) (set-custom-css-location! "") (set-custom-css-location2! ""))
+(create-typed-rule3 "ELSE" (quote link) (quote and) #t 154 fixedID: 157
+fall-through?: #t))) (set-start-node! 2) (set-disable-restart-button! #f)
+(set-disable-back-button! #f) (set-disable-pagebreak! #f)
+(set-disable-page-resize! #f) (set-fixed-page-width! 800)
+(set-fixed-page-height! 600) (set-css-type! (quote default))
+(set-custom-css-location! "") (set-custom-css-location2! ""))
