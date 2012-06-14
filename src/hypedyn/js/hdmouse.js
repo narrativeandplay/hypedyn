@@ -137,7 +137,10 @@ function mouseDownHandler(e) {
 	mouseDown = 1;
 }
 
-//http://ross.posterous.com/2008/08/19/iphone-touch-events-in-javascript
+var clickHandled = false; // flag to determine if a click was handled
+
+// simulates mouse events on mobile 
+// based on http://ross.posterous.com/2008/08/19/iphone-touch-events-in-javascript
 function touchHandler(event)
 {
 	//disp("touch handling");
@@ -151,22 +154,22 @@ function touchHandler(event)
     switch(event.type)
     {
         case "touchstart": type = "mousedown"; break;
-        case "touchmove":  type = "mousemove"; canBubble = true; break;        //event.preventDefault()
+        case "touchmove":  type = "mousemove"; canBubble = true; break;        
         case "touchend":   type = "mouseup"; break;
         default: return;
     }
 	
-    //initMouseEvent(type, canBubble, cancelable, view, clickCount, 
-    //           screenX, screenY, clientX, clientY, ctrlKey, 
-    //           altKey, shiftKey, metaKey, button, relatedTarget);
-    
     var simulatedEvent = document.createEvent("MouseEvent");
     simulatedEvent.initMouseEvent(type, canBubble, true, window, 1, 
                               first.screenX, first.screenY, 
                               first.clientX, first.clientY, false, 
                               false, false, false, 0/*left*/, null);
-	
+
+    clickHandled=false;
 	first.target.dispatchEvent(simulatedEvent);
+    // if the dispatched event resulted in clickedLink getting called, stop
+    if(clickHandled) event.preventDefault();
+    //disp("after dispatchEvent");
 }
 
 function draggingHandler(e) {

@@ -108,6 +108,7 @@ function clickedLink(linkID) {
 		linklist[linkID].followed += 1; // NOTE: this must be AFTER eventTrigger
 		//disp("clicked link true in clickedLink");
 		clicked_link_flag = true;
+        clickHandled = true; // tell touchHandler that the click was handled
 	}
 	var anywhere_node_check = get_activated_anywhere_node ( linkID );
 	if ( anywhere_node_check ) {
@@ -115,6 +116,7 @@ function clickedLink(linkID) {
 		gotoNode( linkID ); // anywhere node has no explicit goto actions in its rules.
 		//disp("clicked link true in clickedLink");
 		clicked_link_flag = true;
+        clickHandled = true; // tell touchHandler that the click was handled
 	}
 }
 
