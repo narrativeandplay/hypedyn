@@ -39,7 +39,7 @@
                create-node deletenode
                create-link create-action create-fact
                create-rule create-typed-rule create-typed-rule2 create-typed-rule3
-               create-condition create-typed-condition 
+               create-condition create-typed-condition  create-typed-condition2
                )
 
 ;; debug var 
@@ -471,8 +471,8 @@
 ;; ruleID: the ID of the containing rule
 ;; TODO: when free, we should convert this to sexpr.
 ;;       the operator and type is too troublesome to process mentally
-(define-private (make-condition name type targetID operator ruleID . args)
-                (let* ((uniqueID-obj (make-uniqueID-object name (if (pair? args) (car args))))
+(define-private (make-condition name type targetID operator ruleID #!optional fixedID)
+                (let* ((uniqueID-obj (make-uniqueID-object name fixedID))
                        (this-obj (new-object uniqueID-obj)))
                   (obj-put this-obj 'type (lambda (self) type))
                   (obj-put this-obj 'targetID (lambda (self) targetID))
@@ -480,6 +480,7 @@
                   (obj-put this-obj 'operator (lambda (self) operator))
                   
                   ;; new needs testing TODO in progress
+                  ;; this is for java reader
                   (obj-put this-obj 'expr (lambda (self) 
                                             (cond
                                              ((eq? type 0)
@@ -492,20 +493,52 @@
                                               (cond ((eq? operator 0) (list 'not (list 'followed? targetID)))
                                                     ((eq? operator 1) (list 'followed? targetID))))
                                              ((eq? type 2)
-                                              ;; fact
+                                              ;; bool fact 
                                               (cond ((eq? operator 0) (list 'not (list 'holds? targetID)))
-                                                    ((eq? operator 1) (list 'holds? targetID)))))))
+                                                    ((eq? operator 1) (list 'holds? targetID))))
+                                             ((eq? type 3)
+                                              ;; num fact
+                                              (let ((comparator (string->symbol (car operator)))
+                                                    (operand-type (cadr operator))
+                                                    (operand-choice (caddr operator))
+                                                    (operand-expr 
+                                                     (case operand-type
+                                                       (("Input") (string->number operand-choice))
+                                                       (("Fact") (list 'get-value (string->number operand-choice))))))
+                                                ;; comparator is one of these ( '= '< '> '<= '>= )
+                                                (list comparator (list 'get-value targetID) operand-expr)
+                                                ))
+                                             )))
                   
                   (obj-put this-obj 'to-save-sexpr
                            (lambda (self)
                              (list 'create-typed-condition
                                    (ask self 'name)                       ; name (string)
-                                   type                                   ; type (see above)
+                                   type                                   ; type (string)
                                    targetID                               ; target nodeID or linkID (int)
-                                   operator                               ; operator (see above)
+                                   operator                               ; operator (int)
                                    ruleID                                 ; parent ruleID (int)
                                    (ask self 'ID))))                      ; conditionID (int)
                   this-obj))
+
+;; make-condition2 adds support to number fact comparing
+(define-private (make-condition2 name type targetID operator ruleID #!key fixedID numfact-args)
+                (define parent-rule (make-condition name type targetID operator ruleID fixedID))
+                (define this-obj (new-object parent-rule))
+                
+                (obj-put this-obj 'numfact-args (lambda (self) numfact-args))
+                (obj-put this-obj 'to-save-sexpr
+                         (lambda (self)
+                           (list 'create-typed-condition2
+                                 (ask self 'name)                       ; name (string)
+                                 type                                   ; type (string)
+                                 targetID                               ; target nodeID or linkID (int)
+                                 operator                               ; operator (int)
+                                 ruleID                                 ; parent ruleID (int)
+                                 fixedID: (ask self 'ID)                ; conditionID (int)
+                                 numfact-args: (cons 'list numfact-args)       ; list of arguments
+                                 )))
+                )
 
 ;; create an sexpr that creates the sexpr
 ;; example (list 'do-action (quote text) "\""string"\"" 1)
@@ -827,7 +860,7 @@
   (let* ((actual-parentID (if (importing?)
                               (+ parentID import-offset-ID)
                               parentID))
-         ;; used to call make-rule2
+         ;; was using make-rule2 before
          ;; now calling make-rule3 so that it is using the version which supports fall-through? saved and loaded
          (new-rule (make-rule3 name type and-or negate? actual-parentID 
                                fixedID: (if fixedID
@@ -867,25 +900,24 @@
 
 
 ; create a condition - for nodes, retained for backward compatability
-(define (create-condition name nodeID operator ruleID . args)
-  (create-typed-condition name 0 nodeID operator ruleID (if (pair? args) (car args))))
+(define (create-condition name nodeID operator ruleID #!optional fixedID)
+  (create-typed-condition name 0 nodeID operator ruleID fixedID))
 
 ; create a condition
-(define (create-typed-condition name type targetID operator ruleID . args)
+(define (create-typed-condition name type targetID operator ruleID #!optional fixedID)
   (let* ((actual-ruleID (if (importing?)
                             (+ ruleID import-offset-ID)
                             ruleID))
          (actual-targetID (if (importing?)
                               (+ targetID import-offset-ID)
                               targetID))
-         (new-condition (make-condition name type actual-targetID operator actual-ruleID
-                                        (if (pair? args)
-                                            (if (importing?)
-                                                (+ (car args) import-offset-ID)
-                                                (car args)))))
+         (new-condition (make-condition2 name type actual-targetID operator actual-ruleID
+                                         fixedID: (if fixedID
+                                                      (if (importing?)
+                                                          (+ fixedID import-offset-ID)
+                                                          fixedID)
+                                                      #f)))
          (the-rule (get 'rules actual-ruleID)))
-    
-    ;(format #t "Creating condition: ~a(~a), targetID:~a~%~!" name (ask new-condition 'ID) actual-targetID)
     
     ; add to condition list
     (put 'conditions (ask new-condition 'ID) new-condition)
@@ -893,6 +925,31 @@
     ; add condition to rule
     (if the-rule
         (ask the-rule 'add-condition! (ask new-condition 'ID)))))
+
+(define (create-typed-condition2 name type targetID operator ruleID #!key fixedID numfact-args)
+  (let* ((actual-ruleID (if (importing?)
+                            (+ ruleID import-offset-ID)
+                            ruleID))
+         (actual-targetID (if (importing?)
+                              (+ targetID import-offset-ID)
+                              targetID))
+         (new-condition (make-condition2 name type actual-targetID operator actual-ruleID
+                                         fixedID: (if fixedID
+                                                      (if (importing?)
+                                                          (+ fixedID import-offset-ID)
+                                                          fixedID)
+                                                      #f)
+                                         numfact-args: numfact-args
+                                         ))
+         (the-rule (get 'rules actual-ruleID)))
+    
+    ; add to condition list
+    (put 'conditions (ask new-condition 'ID) new-condition)
+
+    ; add condition to rule
+    (if the-rule
+        (ask the-rule 'add-condition! (ask new-condition 'ID))))
+  )
 
 ; create an action
 (define (create-action name type expr ruleID . args)

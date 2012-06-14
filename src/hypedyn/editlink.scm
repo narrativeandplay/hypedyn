@@ -371,11 +371,41 @@
     ;; Conditions
     ; run through conditions and add to rule
     (map (lambda (panel)
-           (create-typed-condition new-rulename
-                                   (condition-panel-target-type panel)
-                                   (condition-panel-target-id panel)
-                                   (condition-panel-operator panel)
-                                   edited-ruleID))
+           (if (or (= (condition-panel-target-type panel) 0)
+                   (= (condition-panel-target-type panel) 1)
+                   (= (condition-panel-target-type panel) 2))
+               (create-typed-condition2 new-rulename
+                                       (condition-panel-target-type panel)
+                                       (condition-panel-target-id panel)
+                                       (condition-panel-operator panel)
+                                       edited-ruleID)
+               ;; if target type index is 3 it is number fact comparing conditions
+               ;; [ [comparator-operator-cb] [[operand-type-cb] [operand-choice]] ] - comparator panel layout
+               (let* ((comparator-panel (condition-panel-operator-cb panel))
+                      (cmpr-lst (get-container-children comparator-panel))
+                      (comparator-cb (car cmpr-lst))
+
+                      (operand-panel (cadr cmpr-lst))
+                      (oprd-lst (get-container-children operand-panel))
+                      (operand-type-cb (car oprd-lst))
+                      (operand-choice (cadr oprd-lst))
+
+                      (comparator (to-string (get-combobox-selecteditem comparator-cb)))
+                      (operand-type (to-string (get-combobox-selecteditem operand-type-cb)))
+                      (operand-choice
+                       (case operand-type
+                         (("Input") (get-text operand-choice))
+                         (("Fact") (to-string (get-comboboxwithdata-selecteddata operand-choice)))
+                         ))
+                      )
+                 (create-typed-condition2 new-rulename
+                                         (condition-panel-target-type panel)
+                                         (condition-panel-target-id panel)
+                                         #f
+                                         edited-ruleID
+                                         numfact-args: (list comparator operand-type operand-choice)
+                                         )
+                 )))
          (condition-panel-list))
     
     ;; then-action-string, else-action-string
@@ -383,7 +413,7 @@
     ; if there's an action, add the action to the rule
     ; need to read the string and break in to s-expressions; should eventually
     ; be able to plug in an improved version of definition-editor here
-    ; NOTE: I haven't decided if actions should be stored as strings (currently)
+    ; NOTE: I haven't decided if actions cashould be stored as strings (currently)
     ; or as s-expressions (commented out) - alex
     ; strings: can store formatting
     ; s-expr: seems more appropriate, but some problems with string values?
@@ -1158,25 +1188,8 @@
         (if (show-IDs?)
             (string-append rule-name "(" (to-string (ask rule-obj 'ID)) ")"))
         (define expr (ask rule-obj 'and-or))
-        
-        ;;(define then-action-ID (ask rule-obj 'then-action))
-        ;;(define else-action-ID (ask rule-obj 'else-action))
-        
-        ; set actions in code editor
-;        (if then-action-ID
-;            (let ((the-action (get 'actions then-action-ID)))
-;              (if the-action
-;                  (begin
-;                    (set-text editlink-dialog-then-actiontext (ask the-action 'expr))
-;                    (set-cursor-pos editlink-dialog-then-actiontext 0)))))
-;        (if else-action-ID
-;            (let ((the-action (get 'actions else-action-ID)))
-;              (if the-action
-;                  (begin
-;                    (set-text editlink-dialog-else-actiontext (ask the-action 'expr))
-;                    (set-cursor-pos editlink-dialog-else-actiontext 0)))))
 
-                                        ; set boolean operator "all/any"
+        ;; set boolean operator "all/any"
         (set-combobox-selection editlink-dialog-andor-operator
                                 (get-rule-pos expr)) ; add setting of operator
 
@@ -1185,8 +1198,11 @@
                (let* ((cond-obj (get 'conditions mycond))
                       (the-type (ask cond-obj 'type))
                       (targetID (ask cond-obj 'targetID))
-                      (operator (ask cond-obj 'operator)))
-                 (add-component condition-list-panel (create-condition-panel the-type targetID operator -1)))) ;; should allow edited note to be a choice in condition?
+                      (operator (ask cond-obj 'operator))
+                      (numfact-args (ask cond-obj 'numfact-args)))
+                 
+                 ;; should allow edited note to be a choice in condition?
+                 (add-component condition-list-panel (create-condition-panel the-type targetID operator -1 numfact-args: numfact-args))))
              conditions)
 
         ;; build actions (show them in the ui)
@@ -1209,16 +1225,6 @@
 
                  ;; 'text maps to "alternative text", 'fact maps to "string fact" 
                  (define text-type-string #f)
-;                 (cond ((equal? text-type 'text)
-;                        (set! text-type-string "alternative text")
-;                        )
-;                       ((equal? text-type 'fact)
-;                        (set! text-type-string "string fact")
-;                        )
-;                       ((equal? text-type 'num-fact)
-;                        (set! text-type-string "number fact")
-;                        )
-;                       )
                  (add-component action-list-panel (add-specific-action "update text using" text-type text-value))
                  )
                 ((or (equal? 'retract (car action-sexpr))
@@ -1282,9 +1288,6 @@
          (clear-container update-text-action-panel)
          (add-component update-text-action-panel action-type-combobox)
          
-         (display "selected-item class ")(display (invoke selected-item 'get-class))(newline)
-         (display "equal? still correct? ")(display (equal? selected-item "string fact"))(newline)
-         (display "equal? still correct? ")(display (equal? selected-item "number fact"))(newline)
          ;; string/number fact differentiation
          (define fact-choice
            (case selected-item
@@ -1299,7 +1302,6 @@
          
          ;; **** Explanation of how location and setter works 
          ;; location just gets a "pointer" to the variable, it is a getter function of the variable
-         ;; eg 
          ;; (define x 1)
          ;; (define lx (location x))
          ;; (display (lx)) ==> 1
@@ -1381,15 +1383,6 @@
   (set-dialog-resizable editlink-dialog (show-actions?))
   (set! editlink-dialog-pane (get-dialog-content-pane editlink-dialog))
   (set-container-layout editlink-dialog-pane 'border)
-  
-;  (set! editlink-dialog-tabpanel (make-tab-panel))
-;  (if (show-actions?)
-;      (add-component editlink-dialog-pane editlink-dialog-tabpanel 'border-center))
-  
-  ;; link
-;  (set! editlink-dialog-linkpanel (make-panel))
-;  (add-tabpanel-tab editlink-dialog-tabpanel "Link" editlink-dialog-linkpanel)
-;  (set-container-layout editlink-dialog-linkpanel 'border)
   
   ;; Add a horizontal panel for conditions and condition buttons
   (set! editlink-panel-top (make-panel))
@@ -1549,7 +1542,28 @@
 ; the-type: the type of condition (0=node, 1=link, 2=fact)
 ; targetID: the currently selected node/link, if any (pass in -1 if none selected)
 ; selectedOperator: the operator for this condition (visited, not visited, or previous)
-(define (create-condition-panel the-type targetID selectedOperator in-edited-nodeID)
+(define (create-condition-panel the-type targetID selectedOperator in-edited-nodeID #!key numfact-args)
+  
+      ;; number fact comparator
+  (define (make-comparator-panel)
+    (let ((comparator-panel (make-panel))
+          (comparator-cb (make-combobox "=" "<" ">" "<=" ">=")))
+      (add-component comparator-panel comparator-cb)
+      (add-component comparator-panel (make-operand-choice #f #f))
+      (pack-component comparator-panel)
+      comparator-panel))
+  
+  ;; operations on comparator panel
+  (define (comparator-panel-sign-cb panel)
+    (car (get-container-children panel))
+    )
+  (define (comparator-panel-operand-type-cb panel)
+    (car (get-container-children
+          (cadr (get-container-children panel)))))
+  (define (comparator-panel-choice-comp panel)
+    (cadr (get-container-children
+          (cadr (get-container-children panel)))))
+  
   (let* ((top-panel (make-panel))
          ;(the-checkbox (make-checkbox ""))
          (the-type-choice (if (is-basic-mode?)
@@ -1566,23 +1580,15 @@
                                        (make-combobox "Not Visited" "Visited" "Previous Node")
                                        (make-combobox "Not Visited" "Visited")))
          (the-link-operator-choice (make-combobox "Not Followed" "Followed"))
-         (the-fact-operator-choice (make-combobox "False" "True")))
+         (the-fact-operator-choice (make-combobox "False" "True"))
+         (comparator-panel (make-comparator-panel))
+         )
 
     (format #t "Creating condition-panel: targetID:~a, in-edited-nodeID:~a~%~!" targetID in-edited-nodeID)
     
     ; add top-panel
     (set-container-layout top-panel 'horizontal)
     
-    ;(add-component condition-list-panel top-panel)
-    
-    ;; Add checkbox
-    ;(add-component top-panel the-checkbox)
-    
-    ;; number fact comparator
-;    (define (make-comparator-panel)
-;      (let ((comparator-panel 
-;      )
-
     ;; Add type choice
     (if (not (is-basic-mode?))
         (begin
@@ -1590,11 +1596,6 @@
           (set-combobox-selection the-type-choice the-type)
           (add-actionlistener the-type-choice
                               (make-actionlistener (lambda (source)
-;                                                     (selected-type-in-condition source top-panel
-;                                                                                 the-node-list the-node-operator-choice
-;                                                                                 the-link-list the-link-operator-choice
-;                                                                                 the-fact-list the-fact-operator-choice)
-                                                     
                                                      ;; remove the current target and operator lists
                                                      (clear-container top-panel)
                                                      (add-component top-panel the-type-choice)
@@ -1611,13 +1612,20 @@
                                                                            ((= 0 new-type) the-node-operator-choice)
                                                                            ((= 1 new-type) the-link-operator-choice)
                                                                            ((= 2 new-type) the-fact-operator-choice)
-                                                                           ((= 3 new-type) (make-combobox "Math Comparator"))
+                                                                           ((= 3 new-type) comparator-panel)
                                                                            )))
-                                                       (add-component top-panel new-target)
-                                                       (add-component top-panel new-operator)
-
-                                                       (set-combobox-selection new-target 0)
-                                                       (set-combobox-selection new-operator 0))
+                                                             (add-component top-panel new-target)
+                                                             (add-component top-panel new-operator)
+                                                       ;; not the same for type 3 (num fact conditions)
+                                                       (if (or (= 0 new-type)
+                                                               (= 1 new-type)
+                                                               (= 2 new-type))
+                                                           (begin
+                                                             (set-combobox-selection new-target 0)
+                                                             (set-combobox-selection new-operator 0))
+                                                           )
+                                                       
+                                                       )
 
                                                      (pack-frame editlink-dialog)
                                                      
@@ -1647,15 +1655,36 @@
     (cond 
      ((= 0 the-type) (add-component top-panel the-node-list))
      ((= 1 the-type) (add-component top-panel the-link-list))
-     ((= 2 the-type) (add-component top-panel bool-fact-list)))
+     ((= 2 the-type) (add-component top-panel bool-fact-list))
+     ((= 3 the-type) (add-component top-panel num-fact-list))
+     )
 
     ;; add condition
     (let ((the-choice (cond 
                        ((= 0 the-type) the-node-operator-choice)
                        ((= 1 the-type) the-link-operator-choice)
-                       ((= 2 the-type) the-fact-operator-choice))))
+                       ((= 2 the-type) the-fact-operator-choice)
+                       ((= 3 the-type) comparator-panel))))
       (add-component top-panel the-choice)
-      (set-combobox-selection the-choice selectedOperator))
+      (if (not (= 3 the-type))
+          (set-combobox-selection the-choice selectedOperator)
+          (if (pair? numfact-args)
+              (begin
+                (set-combobox-selection-object
+                 (comparator-panel-sign-cb comparator-panel)
+                 (create-combobox-string-item (car numfact-args)))
+                
+                (set-combobox-selection-object
+                 (comparator-panel-operand-type-cb comparator-panel)
+                 (create-combobox-string-item (cadr numfact-args)))
+                
+                (case (cadr numfact-args)
+                  (("Input") (set-text (comparator-panel-choice-comp comparator-panel) (caddr numfact-args)))
+                  (("Fact") 
+                   (set-comboboxwithdata-selection-bydata
+                             (comparator-panel-choice-comp comparator-panel)
+                             (string->number (caddr numfact-args))))))
+              )))
     
     ;; specify a fixed size
     (set-component-non-resizable-size top-panel 480 50) ;;condition-scrollpane-vp-width
@@ -1683,10 +1712,6 @@
             (begin
               ;; if control key not held down unselect the others
               (if (not (ctrl-key-down? (get-mouseevent-rawevent e)))
-;                  (map (lambda (rID)
-;                         (if (not (= rID ruleID))
-;                             (select-rule-panel rID #f))
-;                         ) (rmgr-rule-lst))
                   (map (lambda (pnl)
                          (if (not (equal? pnl top-panel))
                              (select-condition-panel pnl #f)))
@@ -1697,7 +1722,6 @@
               (select-condition-panel top-panel (not (panel-selected? top-panel)))
               (condition-panel-restrict)
               ))
-        ;(action-restrict-check)
         )))
 
     ; return the panel
@@ -1907,8 +1931,6 @@
     (get-comboboxwithdata-selecteddata (condition-panel-target-choice-cb panel)))
 
 (define (condition-panel-operator panel)
-  (display "condition panel operator ")(newline)
-  (display (condition-panel-operator-cb panel))(newline)
   (get-combobox-selectedindex (condition-panel-operator-cb panel)))
 
 (define (condition-panel-valid? panel)
@@ -1927,7 +1949,8 @@
                (get-container-children condition-list-panel)))
   )
 
-;; a duplicate of how selectable rule panel
+;; a duplicate of how selectable rule panel is implemented
+;; this is used for both action and condition panels
 
 (define (panel-selected? pnl)
   (equal? (get-background-color pnl) selected-color))
@@ -1941,12 +1964,76 @@
       (set-background-color pnl unselected-color)
       ))
 
-;; similar to how rule panel is handled
+;; operand choice returns a panel for inputing number facts value
+;; 2 modes are provided now "Input" and "Fact" 
+(define (make-operand-choice opr opr-type)
+  (let ((operand-panel (make-panel))
+        (mode-choice (make-combobox "Input" "Fact"))
+        (number-entry (make-textfield "0" 4))
+        (number-choice (create-fact-choice 'number #f))
+        )
+    (set-container-layout operand-panel 'horizontal)
+    (add-component operand-panel mode-choice)
+    ;;(add-component operand-panel number-entry)
 
-;(define (get-condition-panel-fall-checkbox rule-panel)
-;  (list-ref (get-container-children rule-panel) 2))
-;(define (get-condition-panel-name-label rule-panel)
-;  (list-ref (get-container-children rule-panel) 0))
+    ;; set the value in the UI if provided
+    (if (and opr-type opr)
+        (begin
+          (set-combobox-selection-object mode-choice (create-combobox-string-item opr-type))
+          (case opr-type
+            (("Input")
+             (set-text number-entry opr)
+             (add-component operand-panel number-entry))
+            (("Fact")
+             (set-comboboxwithdata-selection-bydata number-choice (string->number opr))
+             (add-component operand-panel number-choice)
+             ))
+          )
+        (begin
+          (set-text number-entry "0")
+          (add-component operand-panel number-entry)
+          (set-comboboxwithdata-selection-bydata number-choice -1)
+          ;;(add-component operand-panel number-choice)
+          )
+        )
+
+    (add-actionlistener mode-choice
+                        (make-actionlistener
+                         (lambda (e)
+                           (remove-component operand-panel number-entry)
+                           (remove-component operand-panel number-choice)
+
+                           ;; add appropriate component
+                           (case (to-string (get-combobox-selecteditem mode-choice))
+                             (("Input") (add-component operand-panel number-entry))
+                             (("Fact") (add-component operand-panel number-choice))
+                             )
+
+                           (validate-rule)
+
+                           ;; update thie panel and parent panels
+                           (component-revalidate operand-panel)
+                           (component-update operand-panel)
+                           (pack-component operand-panel)
+                           (pack-component (get-parent operand-panel)) ;;math panel
+                           ;(pack-component (get-parent (get-parent operand-panel))) ;; action panel
+                           )))
+    (add-actionlistener
+     number-choice
+     (make-actionlistener
+      validate-rule
+      ))
+
+    (add-documentlistener
+     number-entry
+     (make-documentlistener
+      validate-rule
+      validate-rule
+      validate-rule
+      ))
+
+    (pack-component operand-panel)
+    operand-panel))
 
 ;;  =============
 ;;;; fact panel
@@ -1981,78 +2068,6 @@
     ;; create math UI
     (define (make-math-panel #!optional op opr1 opr1-type opr2 opr2-type)
       (define math-panel (make-panel))
-      
-      (display "op ")(display op)(newline)
-      ;; operand choice returns a panel for inputing number facts value
-      ;; 2 modes are provided now "Input" and "Fact" 
-      (define (make-operand-choice opr opr-type)
-        (let ((operand-panel (make-panel))
-              (mode-choice (make-combobox "Input" "Fact"))
-              (number-entry (make-textfield "0" 4))
-              (number-choice (create-fact-choice 'number #f))
-              )
-          (set-container-layout operand-panel 'horizontal)
-          (add-component operand-panel mode-choice)
-          ;;(add-component operand-panel number-entry)
-          
-          ;; set the value in the UI if provided
-          (if (and opr-type opr)
-              (begin
-                (set-combobox-selection-object mode-choice (create-combobox-string-item opr-type))
-                (case opr-type
-                  (("Input")
-                   (set-text number-entry opr)
-                   (add-component operand-panel number-entry))
-                  (("Fact")
-                   (set-comboboxwithdata-selection-bydata number-choice (string->number opr))
-                   (add-component operand-panel number-choice)
-                   ))
-                )
-              (begin
-                (set-text number-entry "0")
-                (add-component operand-panel number-entry)
-                (set-comboboxwithdata-selection-bydata number-choice -1)
-                ;;(add-component operand-panel number-choice)
-                )
-              )
-          
-          (add-actionlistener mode-choice
-                              (make-actionlistener
-                               (lambda (e)
-                                 (remove-component operand-panel number-entry)
-                                 (remove-component operand-panel number-choice)
-                                 
-                                 ;; add appropriate component
-                                 (case (to-string (get-combobox-selecteditem mode-choice))
-                                   (("Input") (add-component operand-panel number-entry))
-                                   (("Fact") (add-component operand-panel number-choice))
-                                   )
-                                 
-                                 (validate-rule)
-                                 
-                                 ;; update thie panel and parent panels
-                                 (component-revalidate operand-panel)
-                                 (component-update operand-panel)
-                                 (pack-component operand-panel)
-                                 (pack-component math-panel)
-                                 (pack-component top-panel)
-                                 )))
-          (add-actionlistener
-           number-choice
-           (make-actionlistener
-            validate-rule
-            ))
-          
-          (add-documentlistener
-           number-entry
-           (make-documentlistener
-            validate-rule
-            validate-rule
-            validate-rule
-            ))
-          
-          (pack-component operand-panel)
-          operand-panel))
       
       (define operator-choice (make-combobox "+" "-" "x"))
       (if op

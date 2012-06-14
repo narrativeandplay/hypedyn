@@ -242,6 +242,31 @@ function ruleRelevant(eventType, rule) {
 	}
  }
  
+ function compareNumFact( factID, comparator, operand_type, operand ) {
+	//disp("comparator "+comparator);
+	//disp("operand_type "+operand_type);
+	//disp("type of operand "+operand.constructor);
+	//disp("operand "+operand);
+	var right_operand = false;
+	switch ( operand_type ) {
+		case "Input":
+			right_operand = operand;
+			break;
+		case "Fact":
+			right_operand = getFact( operand ).value.toString();
+			break;
+	}
+	
+	if (comparator === "=")
+		comparator = "==";
+		
+	var left_operand = getFact( factID ).value.toString();
+	 disp(" evaluating "+left_operand + comparator + right_operand);
+	 var result = eval( left_operand + comparator + right_operand )
+	 disp("compareNumFact result "+result);
+	return result;
+ }
+ 
  function nodeIsPrevious(nodeID) {
     //disp("*** nodeIsPrevious! ***");
     //disp("nodeID: "+nodeID+", prev_read_node:"+prev_read_nodes[prev_read_nodes.length - 1]);
@@ -249,7 +274,7 @@ function ruleRelevant(eventType, rule) {
 	return prev_read_nodes[prev_read_nodes.length - 1] == nodeID;
  }
  
- function createCondition(func, func_target_ID, ruleID, not, id) {
+ function createCondition(func, func_args_arr, ruleID, not, id) {
 	//disp("*** not: "+not);
     
     not = (not == undefined) ? false : not;
@@ -259,14 +284,10 @@ function ruleRelevant(eventType, rule) {
 	newCond.eval = function () {
 		//disp(func.toString());
 		if (not) {
-			//disp("in not ");
-			//disp((! func.apply(this, [func_target_ID]) ));
-			return (! func.apply(this, [func_target_ID]) );
+			return (! func.apply(this, func_args_arr) );
 		}
 		else {
-			//disp("in if ");
-			//disp( func.apply(this, [func_target_ID]));
-			return func.apply(this, [func_target_ID]);
+			return func.apply(this, func_args_arr);
 		}
 	}
 	

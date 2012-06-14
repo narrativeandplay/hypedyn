@@ -546,14 +546,14 @@
                  ) actions)
           
           ;; transfer the condition from the original old rule to the new rules
-        ;(create-typed-condition name type targetID operator ruleID . args)
+        ;(create-typed-condition2 name type targetID operator ruleID #!key fixedID comparator-args)
         (define old-conditions (ask rule-obj 'conditions))
         (map (lambda (condition)
                (define this-cond (get 'conditions condition))
                (let ((type (ask this-cond 'type))
                      (targetID (ask this-cond 'targetID))
                      (operator (ask this-cond 'operator)))
-                 (create-typed-condition "Enable link" type targetID operator new-ruleID))
+                 (create-typed-condition2 "Enable link" type targetID operator new-ruleID))
                ) old-conditions)
           )
           ;; no rule for node so no need to transfer anything to new rule
@@ -657,7 +657,7 @@
                      (let ((type (ask this-cond 'type))
                            (targetID (ask this-cond 'targetID))
                            (operator (ask this-cond 'operator)))
-                       (create-typed-condition "if-rule" type targetID operator if-rule-ID ))
+                       (create-typed-condition2 "if-rule" type targetID operator if-rule-ID ))
                      ) old-conditions)
               ))
         )))
@@ -1037,10 +1037,9 @@
          (func (case (ask condition 'type)
                  ((0) "nodeVisited");; node TODO: previous not done in js
                  ((1) "linkFollowed") ;; link
-                 ((2) "checkBoolFact")
-                 )
-               
-               ) ;; boolean fact 
+                 ((2) "checkBoolFact") ;; boolean fact 
+                 ((3) "compareNumFact")
+                 ))
          (func-target-id (ask condition 'targetID))
          (negate (case (ask condition 'operator)
                    ((0) "true")
@@ -1048,11 +1047,27 @@
                    ((2) 
                     (set! func "nodeIsPrevious")
                     "false")
-                   )))
+                   (else "false")
+                   ))
+         (func-args 
+          (if (not (= (ask condition 'type) 3))
+              (string-append "[" (to-string func-target-id) "]")
+              ;; (list comparator operand-type operand-choice)
+              (let* ((args-lst (ask condition 'numfact-args))
+                     (comparator (car args-lst))
+                     (operand-type (cadr args-lst))
+                     (operand-choice (caddr args-lst)))
+                (string-append "[" (to-string func-target-id) ", "
+                               "'" comparator "'" ", "
+                               "'" operand-type "'" ", "
+                               operand-choice
+                               "]"))
+              )))
     ;; return string
-    (string-append "\t\t\tcreateCondition("
+    (string-append "\t\t\t"
+                   "createCondition("
                    func ", "
-                   (to-string func-target-id) ", "
+                   func-args ", "
                    (to-string ruleID) ", "
                    negate ", "
                    (to-string conditionID) ");\n")
