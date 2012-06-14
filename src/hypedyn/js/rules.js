@@ -157,8 +157,13 @@ function ruleRelevant(eventType, rule) {
 	return fireable.length > 0;
 }
  
+ // determine the rules which are candidates for firing
+ // obj: the object containing the rules (currently node or link)
+ // eventType: ["clicked-links" "entered-node"]
+ // checkCond: true means check the condition
  function firingCandidate( obj, eventType, checkCond ) {
  
+    // goes through the list of rules and filters out those not satisfied
 	function filter_out_unsatisfied( rules, index, arr ) {
 		if ( index < rules.length ) {
 			if (checkCondition(rules[index]))
@@ -169,24 +174,35 @@ function ruleRelevant(eventType, rule) {
 		}
 	}
 	
-	function helper ( rules, index, arr ) {
+    // filters for event type and fall-through
+    function helper ( rules, index, arr ) {
 		if ( index < rules.length ) {
-			// check kawa code for logic
-			if (! (checkCond && (! rules[index].fall_through) )) { 
-				if (ruleRelevant(eventType, rules[index])) {
+            // check if rule is relevant to eventType
+            if (ruleRelevant(eventType, rules[index])) {
 					arr[arr.length] = rules[index];
-				}
+            }
+            
+            // not checking conditions, or fallthrough is true, so continue
+			if (! (checkCond && (! rules[index].fall_through) )) { 
 				return helper ( rules, index+1, arr );
-			} else return arr;
+			} else {
+                // otherwise stop now
+                return arr;
+            }
 		} else {
+            // finished
 			return arr;
 		}
 	}
 	
+    // actual firingCandidate code starts here
 	if (checkCond) {
+        // if need to check conditions then filter out unsatisfied first
 		var satisfied_rules = filter_out_unsatisfied( obj.rules, 0, [] );
+        // then filter for event type and fall-through
 		return helper ( satisfied_rules, 0, [] );
 	} else {
+        // otherwise just filter for event type and fall-through
 		return helper ( obj.rules, 0, [] );
 	}
  }
