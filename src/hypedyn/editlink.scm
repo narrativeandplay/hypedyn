@@ -275,9 +275,8 @@
 ;  (set! editlink-dialog-operater-label (make-label-with-title "IF"))
 ;  (add-component editlink-panel-follow editlink-dialog-operater-label)
   
-  ;; "if" / "unless" selection
-  (set! editlink-dialog-negate-operator (make-combobox "If" "Unless"))
-  (add-component editlink-panel-follow editlink-dialog-negate-operator)
+  ;; "If" label
+  (add-component editlink-panel-follow (make-label-with-title "If"))
   
   ; "all"/"any" selection
   (set! editlink-dialog-andor-operator (make-combobox "All" "Any"))
@@ -346,23 +345,7 @@
          (new-rule-and-or-pos (get-combobox-selectedindex editlink-dialog-andor-operator))
          (new-rule-and-or (get-rule-exp new-rule-and-or-pos))
          
-         (negate-pos (get-combobox-selectedindex editlink-dialog-negate-operator))
-         (negate? (case negate-pos
-                    ((0) #f)
-                    ((1) #t)))
-         ; create the rule
-;         (new-ruleID (create-typed-rule2 new-rulename edit-mode new-rule-and-or negate?
-;                                       (cond ((eq? edit-mode 'link) edited-linkID)
-;                                             ((eq? edit-mode 'node) edited-nodeID)
-;                                             ((eq? edit-mode 'doc) -1))))
-         
-         ; get the actions, if any
-         ;(then-action-string (get-text editlink-dialog-then-actiontext))
-         ;(else-action-string (get-text editlink-dialog-else-actiontext))
          )
-
-    (display "and-or ")(display new-rule-and-or)(newline)
-    (display "negate? ")(display negate?)(newline)
     
     ;; remove the line associated with this rule before we edit it
     (if (eq? edit-mode 'link)
@@ -379,9 +362,7 @@
     
     ;; set the and-or and negate? properties
     (if the-rule
-        (begin
-          (ask the-rule 'set-and-or! new-rule-and-or)
-          (ask the-rule 'set-negate! negate?)))
+        (ask the-rule 'set-and-or! new-rule-and-or))
     
     ;; set the new name of the rule
     (if the-rule
@@ -389,21 +370,12 @@
     
     ;; Conditions
     ; run through conditions and add to rule
-    (map (lambda (panel) 
-;           (let* ((children (get-container-children panel))
-;                  (select-type (list-ref children 0))  ;; link node fact combobox
-;                  (select-target (list-ref children 1)) ;; list of existent objects of select-type
-;                  (select-operator (list-ref children 2)) ;; options specific to select-type (ie if type is link then it is followed/not followed)
-;                  (the-type (if (not (is-basic-mode?)) (get-combobox-selectedindex select-type) 0))
-;                  (targetID (get-comboboxwithdata-selecteddata select-target))
-;                  (operator (get-combobox-selectedindex select-operator)))
-             ;(create-typed-condition new-rulename the-type targetID operator edited-ruleID)
-             (create-typed-condition new-rulename
-                                     (condition-panel-target-type panel)
-                                     (condition-panel-target-id panel)
-                                     (condition-panel-operator panel)
-                                     edited-ruleID)
-             )
+    (map (lambda (panel)
+           (create-typed-condition new-rulename
+                                   (condition-panel-target-type panel)
+                                   (condition-panel-target-id panel)
+                                   (condition-panel-operator panel)
+                                   edited-ruleID))
          (condition-panel-list))
     
     ;; then-action-string, else-action-string
@@ -687,7 +659,6 @@
 (define action-type-choice #f)
 
 (define condition-list-panel #f)
-(define editlink-dialog-negate-operator #f) ;; If/Unless combobox
 (define editlink-dialog-andor-operator #f) ;; Any/All combobox
 (define editlink-dialog-label #f) ;; "of the following conditions are true:" message label
 
@@ -1209,13 +1180,7 @@
         (set-combobox-selection editlink-dialog-andor-operator
                                 (get-rule-pos expr)) ; add setting of operator
 
-        ;; added in version 2.2 (pre 2.2 rules would be converted to support this on load)
-        (define negate? (ask rule-obj 'negate?)) ;; we can't be sure whether this is old rule or new rule obj
-        ;; set negate operator "if/unless"
-        (set-combobox-selection editlink-dialog-negate-operator
-                                (if negate? 1 0))
-
-                                        ; build conditions
+        ;; build conditions
         (map (lambda (mycond)
                (let* ((cond-obj (get 'conditions mycond))
                       (the-type (ask cond-obj 'type))
@@ -1224,7 +1189,7 @@
                  (add-component condition-list-panel (create-condition-panel the-type targetID operator -1)))) ;; should allow edited note to be a choice in condition?
              conditions)
 
-                                        ; build actions (show them in the ui)
+        ;; build actions (show them in the ui)
         (map (lambda (actionID)
                (define action (get 'actions actionID))
                (define action-sexpr (ask action 'expr))
@@ -1590,11 +1555,13 @@
          (the-type-choice (if (is-basic-mode?)
                               (make-combobox "Node")
                               (if (show-facts?)
-                                  (make-combobox "Node" "Link" "Fact")
+                                  (make-combobox "Node" "Link" "Fact(#t/#f)" "Fact(num)")
                                   (make-combobox "Node" "Link"))))
          (the-node-list (create-node-choice targetID #f in-edited-nodeID))
          (the-link-list (create-link-choice targetID))
-         (the-fact-list (create-fact-choice 'boolean targetID))
+         (bool-fact-list (create-fact-choice 'boolean targetID))
+         (num-fact-list (create-fact-choice 'number targetID))
+         
          (the-node-operator-choice (if (not (is-basic-mode?))
                                        (make-combobox "Not Visited" "Visited" "Previous Node")
                                        (make-combobox "Not Visited" "Visited")))
@@ -1610,6 +1577,11 @@
     
     ;; Add checkbox
     ;(add-component top-panel the-checkbox)
+    
+    ;; number fact comparator
+;    (define (make-comparator-panel)
+;      (let ((comparator-panel 
+;      )
 
     ;; Add type choice
     (if (not (is-basic-mode?))
@@ -1618,10 +1590,37 @@
           (set-combobox-selection the-type-choice the-type)
           (add-actionlistener the-type-choice
                               (make-actionlistener (lambda (source)
-                                                     (selected-type-in-condition source top-panel
-                                                                                 the-node-list the-node-operator-choice
-                                                                                 the-link-list the-link-operator-choice
-                                                                                 the-fact-list the-fact-operator-choice)
+;                                                     (selected-type-in-condition source top-panel
+;                                                                                 the-node-list the-node-operator-choice
+;                                                                                 the-link-list the-link-operator-choice
+;                                                                                 the-fact-list the-fact-operator-choice)
+                                                     
+                                                     ;; remove the current target and operator lists
+                                                     (clear-container top-panel)
+                                                     (add-component top-panel the-type-choice)
+
+                                                     ;; add new target and operator lists
+                                                     (let* ((new-type (get-combobox-selectedindex the-type-choice))
+                                                            (new-target (cond
+                                                                         ((= 0 new-type) the-node-list)
+                                                                         ((= 1 new-type) the-link-list)
+                                                                         ((= 2 new-type) bool-fact-list)
+                                                                         ((= 3 new-type) num-fact-list)
+                                                                         ))
+                                                            (new-operator (cond
+                                                                           ((= 0 new-type) the-node-operator-choice)
+                                                                           ((= 1 new-type) the-link-operator-choice)
+                                                                           ((= 2 new-type) the-fact-operator-choice)
+                                                                           ((= 3 new-type) (make-combobox "Math Comparator"))
+                                                                           )))
+                                                       (add-component top-panel new-target)
+                                                       (add-component top-panel new-operator)
+
+                                                       (set-combobox-selection new-target 0)
+                                                       (set-combobox-selection new-operator 0))
+
+                                                     (pack-frame editlink-dialog)
+                                                     
                                                      (component-update top-panel)
                                                      ))))
         (add-component top-panel (make-label-with-title "Node")))
@@ -1640,7 +1639,7 @@
       validate-rule))
     
     (add-actionlistener 
-     the-fact-list
+     bool-fact-list
      (make-actionlistener
       validate-rule))
 
@@ -1648,7 +1647,7 @@
     (cond 
      ((= 0 the-type) (add-component top-panel the-node-list))
      ((= 1 the-type) (add-component top-panel the-link-list))
-     ((= 2 the-type) (add-component top-panel the-fact-list)))
+     ((= 2 the-type) (add-component top-panel bool-fact-list)))
 
     ;; add condition
     (let ((the-choice (cond 
@@ -1665,7 +1664,8 @@
     ;; prevent the comboboxes from expanding to fill the panel 
     (pack-component the-node-list)
     (pack-component the-link-list)
-    (pack-component the-fact-list)
+    (pack-component bool-fact-list)
+    (pack-component num-fact-list)
     
     (pack-component the-type-choice)
     
@@ -1722,34 +1722,6 @@
 ;; TODO : outdated (used to do the above, now it should check 
 ;;        for new conditions where we don't want them to hit the ok button)
 (define (update-ok-button-state) #f)
-
-; selection of condition type changed, so change the node/link/fact list and operator list
-(define (selected-type-in-condition c top-panel
-                                    the-node-list the-node-operator-choice
-                                    the-link-list the-link-operator-choice
-                                    the-fact-list the-fact-operator-choice)
-  
-  ; remove the current target and operator lists
-  (clear-container top-panel)
-  (add-component top-panel c)
-         
-  ;; add new target and operator lists
-  (let* ((new-type (get-combobox-selectedindex c))
-         (new-target (cond
-                      ((= 0 new-type) the-node-list)
-                      ((= 1 new-type) the-link-list)
-                      ((= 2 new-type) the-fact-list)))
-         (new-operator (cond 
-                        ((= 0 new-type) the-node-operator-choice)
-                        ((= 1 new-type) the-link-operator-choice)
-                        ((= 2 new-type) the-fact-operator-choice))))
-    (add-component top-panel new-target)
-    (add-component top-panel new-operator)
-    
-    (set-combobox-selection new-target 0)
-    (set-combobox-selection new-operator 0))
-  
-  (pack-frame editlink-dialog))
 
 ; cancelled, so hide newnode-dialog
 (define (edit-rule-cancel)
