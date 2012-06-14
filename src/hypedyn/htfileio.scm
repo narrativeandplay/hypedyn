@@ -564,7 +564,7 @@
   ))
 
 ;; convertion of pre 2.2 links to 2.2 format
-;; need to create 2 rules one for(if) and against(else) the condition in rule
+;; need to create 2 rules: one (if) with the conditions in the old rule and a "stop", the other (else) with no conditions
 ;; note old rules are still around in the datatable, just not invoked
 (define (convert-pre-2.2-links linkID link-obj)
   
@@ -600,8 +600,8 @@
               'and
               (ask selected-rule 'and-or)))
         
-        (define if-rule-ID (create-typed-rule2 "THEN" 'link and-or #f linkID))
-        (define else-rule-ID (create-typed-rule2 "ELSE" 'link and-or #t linkID))
+        (define if-rule-ID (create-typed-rule3 "IF" 'link and-or #f linkID fall-through?: #f))
+        (define else-rule-ID (create-typed-rule2 "ELSE" 'link and-or #f linkID))
         (define if-rule (get 'rules if-rule-ID))
         (define else-rule (get 'rules else-rule-ID))
                                         ;)
@@ -648,8 +648,7 @@
                                  link-dest2)
                            else-rule-ID))
 
-        ;; transfer the condition from the original old rule to the new rules
-        ;(create-typed-condition name type targetID operator ruleID . args)
+        ;; transfer the condition from the original old rule to the new (if) rule
         (if selected-rule
             (begin
               (define old-conditions (ask selected-rule 'conditions))
@@ -658,8 +657,7 @@
                      (let ((type (ask this-cond 'type))
                            (targetID (ask this-cond 'targetID))
                            (operator (ask this-cond 'operator)))
-                       (create-typed-condition "If-rule" type targetID operator if-rule-ID )
-                       (create-typed-condition "else-rule" type targetID operator else-rule-ID ))
+                       (create-typed-condition "if-rule" type targetID operator if-rule-ID ))
                      ) old-conditions)
               ))
         )))
