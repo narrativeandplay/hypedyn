@@ -1628,6 +1628,7 @@
   (set-runstate #f))
 
 ; start reading when start button in main-ui is pressed
+(define file-suffix 0) ; save each temporary story file in a different subfolder in the temp folder
 (define (nodereader-start)
   (nodeeditor-save) ;; save the edited node's content
   (if (java-reader?)
@@ -1637,10 +1638,13 @@
             (set-runstate #f))
           (add-to-window-menu nrf "Reader"))
       (begin
-        (copy-js-framework-to-folder (make-file (get-temp-dir)))
-        (invoke (java.awt.Desktop:getDesktop) 'browse
-                (<java.net.URI> (string-append "http://localhost:" (number->string (get-local-port)) "/index.html")))
-        (set-runstate #f))))
+        (set! file-suffix (+ file-suffix 1))
+        (let ((the-tmp-filename (string-append (get-temp-dir) "/temp" (number->string file-suffix))))
+          (copy-js-framework-to-folder (make-file the-tmp-filename))
+          (invoke (java.awt.Desktop:getDesktop) 'browse
+                  (<java.net.URI> (string-append "http://localhost:" (number->string (get-local-port))
+                                                 "/temp" (number->string file-suffix) "/index.html")))
+          (set-runstate #f)))))
 
 ; stop reading when stop button in main-ui is pressed
 (define (nodereader-stop)

@@ -17,7 +17,7 @@
 ;; with this program; if not, write to the Free Software Foundation, Inc.,
 ;; 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-(module-export load-native-library get-system-property set-system-property runtime-exec
+(module-export load-native-library get-system-property set-system-property get-current-time runtime-exec
                get-os-name is-mac-os? is-windows? is-linux-os?)
 
 ;;;;;;;;;;;;;;;;;;;;;;
@@ -37,6 +37,10 @@
 ; set a system property
 (define (set-system-property in-property :: <java.lang.String> in-value :: <java.lang.String>)
   (<java.lang.System>:setProperty in-property in-value))
+
+; get time in milliseconds
+(define (get-current-time)
+  (<java.lang.System>:currentTimeMillis))
 
 ; exec a shell command
 (define (runtime-exec in-string :: <java.lang.String>)
