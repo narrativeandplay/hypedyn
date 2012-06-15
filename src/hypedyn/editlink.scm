@@ -2069,7 +2069,13 @@
     (define (make-math-panel #!optional op opr1 opr1-type opr2 opr2-type)
       (define math-panel (make-panel))
       
+      (display "make math panel ")
+      (display (list op opr1 opr1-type opr2 opr2-type))
+      (newline)
+      
       (define operator-choice (make-combobox "+" "-" "x"))
+      (if (equal? "*" op)
+          (set! op "x"))
       (if op
           (set-combobox-selection-object operator-choice (create-combobox-string-item op)))
       
@@ -2243,7 +2249,7 @@
                (case num-fact-mode
                  (("Input") (set-text the-number-entry (to-string the-value)))
                  (("Fact") (set-comboboxwithdata-selection-bydata number-fact-target-cb the-value))
-                 (("Math") #f)
+                 (("Math") (display "the-value in create fact panel ")(display the-value)(newline) #f)
                  )
                )
               ))
