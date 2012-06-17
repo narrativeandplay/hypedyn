@@ -133,14 +133,16 @@ function ruleRelevant(eventType, rule) {
  // eventType can be one of these ["clicked-links" "entered-node"]
  // goes through all the rules in this obj
  function eventTrigger(eventType, obj) {
-	var rules_to_fire = firingCandidate( obj, eventType, true);
+	var rules_to_fire = firingCandidate( obj, eventType, true );
 	//disp("rules to fire "+rules_to_fire.length); 
 	for (var i in rules_to_fire) {
 		var rule = rules_to_fire[i];
 		//var fired = false;
 		for (var j in rule.actions) {
 			var action = rule.actions[j];
+			disp("FIRING "+eventType);
 			action.doaction(eventType); //|| fired;
+			disp("FIRED");
 		}
 		// stop evaluating if it is not suppose to fall_through
 		if ((!rule.fall_through) ) {//&& fired) {

@@ -835,9 +835,9 @@
 ;; args-lst null means we're adding a new empty action panel,
 ;; if args-lst not null load the information provided (present existing action) 
 (define (add-specific-action action-type . args-lst)
-  (display "[add-specific-action] ")(newline)
-  (display "  action type ")(display action-type)(newline)
-  (display "  args-lst ")(display args-lst)(newline)
+;  (display "[add-specific-action] ")(newline)
+;  (display "  action type ")(display action-type)(newline)
+;  (display "  args-lst ")(display args-lst)(newline)
   
   (define panel-to-return (create-action-panel action-type))
   (set-container-layout panel-to-return 'horizontal)
@@ -944,11 +944,11 @@
               (if (not (ctrl-key-down? (get-mouseevent-rawevent e)))
                   (map (lambda (pnl)
                          (if (not (equal? pnl panel-to-return))
-                             (select-condition-panel pnl #f)))
+                             (select-action-panel pnl #f)))
                        (action-panel-list))
                   )
 
-              (select-condition-panel panel-to-return (not (panel-selected? panel-to-return)))
+              (select-action-panel panel-to-return (not (panel-selected? panel-to-return)))
               (action-panel-restrict)
               ))
         )))
@@ -973,6 +973,13 @@
         (define index (list-index (lambda (o) (equal? o (car (get-selected-action-panel)))) (action-panel-list)))
         (add-component-at action-list-panel new-action-panel (+ index 1))
         ))
+  
+  ;; unselect all conditions
+  (map (lambda (pnl)
+         (select-action-panel pnl #f)
+         ) (get-selected-action-panel))
+  ;; select new condition panel
+  (select-action-panel new-action-panel #t)
   
   ;; check whether rule is valid and enable ok button
   (validate-rule)
@@ -1775,6 +1782,13 @@
         (add-component-at condition-list-panel new-cond-panel (+ index 1))
         ))
   
+  ;; unselect all conditions
+  (map (lambda (pnl)
+         (select-condition-panel pnl #f)
+         ) (get-selected-condition-panel))
+  ;; select new condition panel
+  (select-condition-panel new-cond-panel #t)
+  
   ;; check whether rule is valid and enable ok button
   (validate-rule)
   
@@ -1963,6 +1977,7 @@
       (set-background-color pnl selected-color)
       (set-background-color pnl unselected-color)
       ))
+(define select-action-panel select-condition-panel)
 
 ;; operand choice returns a panel for inputing number facts value
 ;; 2 modes are provided now "Input" and "Fact" 

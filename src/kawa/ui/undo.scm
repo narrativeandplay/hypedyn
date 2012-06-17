@@ -154,17 +154,12 @@
      ;(format #t "compoundundomanager postEdit: ~a~%~!" e)
      (if (and (undoable-edit? e)
               (not undoing-redoing-lock))
-         (begin
-           (display "[postedit] adding undoable '")
-           (display (invoke e 'getPresentationName))
-           (display "'")(newline)
-           (invoke undo-edit-support 'postEdit e)
-           )
-         (begin
-           (display "[postedit ignored] '")(display (invoke e 'getPresentationName))(display "'")(newline)
-           (display "  Either not undoable-edit? ")(display (not (undoable-edit? e)))(newline)
-           (display "  Or undoing-redoing-lock ")(display undoing-redoing-lock)(newline)
-           )
+         (invoke undo-edit-support 'postEdit e)
+;         (begin
+;           (display "[postedit ignored] '")(display (invoke e 'getPresentationName))(display "'")(newline)
+;           (display "  Either not undoable-edit? ")(display (not (undoable-edit? e)))(newline)
+;           (display "  Or undoing-redoing-lock ")(display undoing-redoing-lock)(newline)
+;           )
          )
      ))
      

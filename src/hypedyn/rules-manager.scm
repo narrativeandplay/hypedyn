@@ -149,6 +149,8 @@
       (begin
         (display "ERROR make-rule-panel given invalid ruleID")(newline)))
     
+  
+  ;; for selection of panels
   (add-mouselistener 
    top-panel
    (make-mouselistener
@@ -173,7 +175,6 @@
                   (display "click count 2, editing rule ")(newline)
                   ((edit-rule-button-callback ruleID) #f)
                   ))
-                
               ))
             )))
     
@@ -228,8 +229,6 @@
             (add-component-at rmgr-rules-list-panel new-panel index)
             (add-component rmgr-rules-list-panel new-panel))
 
-        ;(add-component rmgr-rules-list-panel new-panel)
-        
         (component-revalidate center-panel) ;; revalidate the scrollpane
         )
       (begin
@@ -398,6 +397,14 @@
           (rmgr-add-rule-panel new-rule-ID)
           (rmgr-set-rule-lst (append (rmgr-rule-lst) (list new-rule-ID)))
           ))
+    
+    ;; deselect all rule panel first
+    (map (lambda (ruleID)
+           (select-rule-panel ruleID #f))
+         (rmgr-rule-lst))
+    
+    ;; then select the newly added panel
+    (select-rule-panel new-rule-ID #t)
     
     (define new-rule (get 'rules new-rule-ID))
     (ask new-rule 'set-parentID! edited-obj-ID)
