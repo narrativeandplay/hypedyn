@@ -132,83 +132,72 @@ function ruleRelevant(eventType, rule) {
  
  // eventType can be one of these ["clicked-links" "entered-node"]
  // goes through all the rules in this obj
- function eventTrigger(eventType, obj) {
-	var rules_to_fire = firingCandidate( obj, eventType, true );
-	//disp("rules to fire "+rules_to_fire.length); 
-	for (var i in rules_to_fire) {
-		var rule = rules_to_fire[i];
-		//var fired = false;
-		for (var j in rule.actions) {
-			var action = rule.actions[j];
-			disp("FIRING "+eventType);
-			action.doaction(eventType); //|| fired;
-			disp("FIRED");
-		}
-		// stop evaluating if it is not suppose to fall_through
-		if ((!rule.fall_through) ) {//&& fired) {
-			break;
+ function eventTrigger( eventType, obj ) {
+ 
+	var firing_candidates = filter_out_relevant( obj.rules, eventType );
+	disp(" firing cand here "+firing_candidates);
+	for ( var i=0; i<firing_candidates.length; i++ ) {
+		var rule = firing_candidates[i];
+		if ( checkCondition( rule ) ) {
+			for (var j in rule.actions) {
+				var action = rule.actions[j];
+				action.doaction(eventType);
+			}
+			if ( ! rule.fall_through )
+				break;
 		}
 	}
- }
+}
 
  // if ready is true, we check whether the condition for 
  // that action is satisfied
  function link_clickable (link, ready) {
-	var fireable = firingCandidate( link, "clickedLink", ready);
+	var fireable = firingCandidate( link.rules, "clickedLink", ready);
 	//console.log("FIREABLE len "+fireable.length);
-	return fireable.length > 0;
+	return (fireable.length != 0);
 }
  
+// goes through the list of rules and filters out those not satisfied
+function filter_out_unsatisfied( rules ) {
+	var to_return = [];
+	for ( var i=0; i<rules.length; i++ ) {
+		if ( checkCondition( rules[i] ) ) {
+			to_return.push( rules[i] );
+			if (! rules[i].fall_through)
+				break;
+		}
+	}
+	return to_return;
+}
+
+function filter_out_relevant( rules, eventType ) {
+	
+	var to_return = []
+	for ( var i=0; i< rules.length; i++ ) {
+		if ( ruleRelevant( eventType, rules[i] ) ) {
+			to_return.push( rules[i] );
+		}
+	}
+	return to_return
+}
+	
  // determine the rules which are candidates for firing
  // obj: the object containing the rules (currently node or link)
  // eventType: ["clicked-links" "entered-node"]
- // checkCond: true means check the condition
- function firingCandidate( obj, eventType, checkCond ) {
- 
-    // goes through the list of rules and filters out those not satisfied
-	function filter_out_unsatisfied( rules, index, arr ) {
-		if ( index < rules.length ) {
-			if (checkCondition(rules[index]))
-				arr[arr.length] = rules[index];
-			return filter_out_unsatisfied( rules, index+1, arr );
-		} else {
-			return arr;
-		}
-	}
+ // checkCond: false just returns rules relevant to eventType, true means check the condition as well
+ function firingCandidate( rules, eventType, checkCond ) {
 	
-    // filters for event type and fall-through
-    function helper ( rules, index, arr ) {
-		if ( index < rules.length ) {
-            // check if rule is relevant to eventType
-            if (ruleRelevant(eventType, rules[index])) {
-					arr[arr.length] = rules[index];
-            }
-            
-            // not checking conditions, or fallthrough is true, so continue
-			if (! (checkCond && (! rules[index].fall_through) )) { 
-				return helper ( rules, index+1, arr );
-			} else {
-                // otherwise stop now
-                return arr;
-            }
-		} else {
-            // finished
-			return arr;
-		}
-	}
+	var relevant_rules = filter_out_relevant( rules, eventType );
 	
-    // actual firingCandidate code starts here
 	if (checkCond) {
-        // if need to check conditions then filter out unsatisfied first
-		var satisfied_rules = filter_out_unsatisfied( obj.rules, 0, [] );
-        // then filter for event type and fall-through
-		return helper ( satisfied_rules, 0, [] );
+        // if need to check conditions then filter out unsatisfied
+		var satisfied_rules = filter_out_unsatisfied( relevant_rules );
+		return satisfied_rules;
 	} else {
-        // otherwise just filter for event type and fall-through
-		return helper ( obj.rules, 0, [] );
+        // otherwise just filter for event type
+		return relevant_rules;
 	}
  }
- 
 
 /*
  *	Conditions

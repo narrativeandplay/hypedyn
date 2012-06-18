@@ -119,23 +119,14 @@
 
 ;; string contains already implemented in srfi 13 (it is not working in srfi 13)
 (define (string-contains mystring :: <java.lang.String> substring :: <java.lang.String>)
-  (display "string-contains ")(display mystring)(newline)
-  (display "substring ")(display substring)(newline)
-  (display "mystring class ")(display (invoke mystring 'get-class))(newline)
-  (display "substring class ")(display (invoke substring 'get-class))(newline)
   (let ((retval (string-indexof mystring substring)))
-    (display "string contains ")(display retval)(newline)
-    (if (> retval 0)
+    (if (>= retval 0)
         #t
         #f)))
 
 (define (string-indexof mystring :: <String> 
                         substring :: <String>
                         #!optional from-index)
-  (display "string index of ")(display mystring)(newline)
-  (display "substring ")(display substring)(newline)
-  (display "from-index ")(display from-index)(newline)
-  ;(display "hard code test ")(display (invoke (as <java.lang.String> "bbbb\rbb\nbb\nbb\nbb") 'indexOf (as <java.lang.String> "\r")))(newline)
   
   (if (and from-index (int? from-index))
       (invoke (as <java.lang.String> mystring) 'indexOf (as <java.lang.String> substring) from-index)
