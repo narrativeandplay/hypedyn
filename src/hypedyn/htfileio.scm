@@ -1063,6 +1063,7 @@
                                operand-choice
                                "]"))
               )))
+    
     ;; return string
     (string-append "\t\t\t"
                    "createCondition("

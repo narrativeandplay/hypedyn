@@ -526,6 +526,11 @@
                 (define parent-rule (make-condition name type targetID operator ruleID fixedID))
                 (define this-obj (new-object parent-rule))
                 
+                (define local-numfact-args
+                  (if (pair? numfact-args)
+                      (cons 'list numfact-args)
+                      #f))
+                
                 (obj-put this-obj 'numfact-args (lambda (self) numfact-args))
                 (obj-put this-obj 'to-save-sexpr
                          (lambda (self)
@@ -536,7 +541,7 @@
                                  operator                               ; operator (int)
                                  ruleID                                 ; parent ruleID (int)
                                  fixedID: (ask self 'ID)                ; conditionID (int)
-                                 numfact-args: (cons 'list numfact-args)       ; list of arguments
+                                 numfact-args: local-numfact-args     ; list of arguments
                                  )))
                 )
 
