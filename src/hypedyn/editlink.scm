@@ -36,6 +36,7 @@
 (require "../kawa/strings.scm") ;; to-string
 (require "../kawa/color.scm") ;; make-colour-rgb
 (require "../kawa/geometry.scm") ;; ;; debug (get-dimension-width)
+(require "../kawa/graphics-kawa.scm") ;; make-rectangle
 
 (require "../common/objects.scm") ;; ask
 (require "../common/datatable.scm") ;; get, table-map
@@ -66,6 +67,12 @@
                
                edited-linkID
                )
+
+(define-constant cond-panel-width 650)
+(define-constant cond-panel-height 50)
+
+(define-constant action-panel-width 650)
+(define-constant action-panel-height 50)
                
 
 ; remember which link we're editing
@@ -932,7 +939,7 @@
         )
   
   (set-border panel-to-return bevel-in-border)
-  (set-component-non-resizable-size panel-to-return 650 50) ;;action-scrollpane-vp-width was 480 for width
+  (set-component-non-resizable-size panel-to-return cond-panel-width cond-panel-height) ;;action-scrollpane-vp-width was 480 for width
   
   (add-mouselistener
      panel-to-return
@@ -980,6 +987,16 @@
          ) (get-selected-action-panel))
   ;; select new condition panel
   (select-action-panel new-action-panel #t)
+  
+  ;; need to do this to give new-panel a position
+  (validate-container editlink-dialog)
+
+  ;; scroll to newly added panel
+  ;; top left point of new-panel relative to scrollpane
+  (define new-panel-tl-point (get-component-location new-action-panel))
+  (define tl-x (invoke new-panel-tl-point 'get-x))
+  (define tl-y (invoke new-panel-tl-point 'get-y))
+  (scroll-rect-to-visible action-list-panel (make-rectangle tl-x tl-y action-panel-width action-panel-height))
   
   ;; check whether rule is valid and enable ok button
   (validate-rule)
@@ -1694,7 +1711,7 @@
               )))
     
     ;; specify a fixed size
-    (set-component-non-resizable-size top-panel 480 50) ;;condition-scrollpane-vp-width
+    (set-component-non-resizable-size top-panel action-panel-width action-panel-height) ;;condition-scrollpane-vp-width
     (set-border top-panel bevel-in-border)
     
     ;; prevent the comboboxes from expanding to fill the panel 
@@ -1789,6 +1806,16 @@
   ;; select new condition panel
   (select-condition-panel new-cond-panel #t)
   
+  ;; need to do this to give new-panel a position
+  (validate-container editlink-dialog)
+
+  ;; scroll to newly added panel
+  ;; top left point of new-panel relative to scrollpane
+  (define new-panel-tl-point (get-component-location new-cond-panel))
+  (define tl-x (invoke new-panel-tl-point 'get-x))
+  (define tl-y (invoke new-panel-tl-point 'get-y))
+  (scroll-rect-to-visible condition-list-panel (make-rectangle tl-x tl-y cond-panel-width cond-panel-height))
+    
   ;; check whether rule is valid and enable ok button
   (validate-rule)
   
