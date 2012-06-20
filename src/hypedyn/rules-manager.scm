@@ -417,6 +417,9 @@
     ;; then select the newly added panel
     (select-rule-panel new-rule-ID #t)
     
+    ;; enable delete button since we there is now a selected panel
+  (set-component-enabled delete-rule-button #t)
+    
     ;; need to do this to give new-panel a position
     (validate-container rules-manager-main-dialog)
 

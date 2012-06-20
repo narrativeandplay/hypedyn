@@ -177,7 +177,13 @@
   ;; remember the rule we're editing
   (set! edited-ruleID in-ruleID)
   
-  ; get the rule from the node
+  ;; add if panel to editlink-dialog
+  (clear-container editlink-panel-top)
+  (add-component editlink-panel-top (create-rules-rename-panel in-ruleID))
+  (add-component editlink-panel-top (create-if-condition-panel))
+  (add-component editlink-panel-top (create-actions-main-panel))
+  
+    ; get the rule from the node
   (let* ((edited-node (get 'nodes edited-nodeID))
          ;;(selected-rule (ask edited-node 'rule))
          (node-name (ask edited-node 'name))
@@ -186,16 +192,12 @@
 
     ;; show node name
     (set-dialog-title editlink-dialog (string-append "Edit rule for node: " node-name))
+
+    ;; reset combobox to contain all action-type-list
+    (if (ask edited-node 'anywhere?)
+        (reset-action-type-choice 'anywhere-node)
+        (reset-action-type-choice 'node))
     )
-
-  ;; add if panel to editlink-dialog
-  (clear-container editlink-panel-top)
-  (add-component editlink-panel-top (create-rules-rename-panel in-ruleID))
-  (add-component editlink-panel-top (create-if-condition-panel))
-  (add-component editlink-panel-top (create-actions-main-panel))
-
-  ;; reset combobox to contain all action-type-list
-  (reset-action-type-choice 'node)
 
   (populate-rule-editor in-ruleID)
 
@@ -714,10 +716,14 @@
         
         ((equal? obj-type 'node)
          (set! action-type-list action-type-list-node))
+        
+        ((equal? obj-type 'anywhere-node)
+         (set! action-type-list action-type-list-anywhere-node))
          )
   
   ;; reset the available actions type in the combobox
   (display "RESETTING ACTION TYPE CHOICE ")(newline)
+  
   (map (lambda (action-type)
          (add-combobox-string action-type-choice action-type))
        action-type-list)
@@ -824,6 +830,7 @@
     (("follow link to") (follow-link-to-panel-valid? panel))
     (("update text using") (update-text-using-panel-valid? panel))
     (("show in popup") (show-in-popup-panel-valid? panel))
+    (("enable links to this node from anywhere") #t)
     (else (display "[action panel valid?] new type ")(display (get-action-panel-type panel))(newline) #f))
   )
 
@@ -838,7 +845,7 @@
                (action-panel-list)))
   )
 
-;; add an action to the action list of type action-type ["update text using", "follow link to", "update fact"]
+;; add an action to the action list of type action-type ["update text using", "follow link to", "update fact", "show in popup"]
 ;; args-lst null means we're adding a new empty action panel,
 ;; if args-lst not null load the information provided (present existing action) 
 (define (add-specific-action action-type . args-lst)
@@ -849,6 +856,21 @@
   (define panel-to-return (create-action-panel action-type))
   (set-container-layout panel-to-return 'horizontal)
   (set-component-align-x panel-to-return 'left)
+  
+  ;; update action-type-choice combobox
+  ;; ensure actions that should only have one instance is not available as a choice in the combobox
+  (if (member (to-string action-type) unique-choices)
+      (begin
+        (remove-combobox-string action-type-choice action-type)
+
+        ;; these two actions "show in popup" and "follow link to" cannot exists in the same rule
+        ;; so restrict adding the other action when one is added
+        (if (equal? action-type "show in popup")
+            (remove-combobox-string action-type-choice "follow link to"))
+        (if (equal? action-type "follow link to")
+            (remove-combobox-string action-type-choice "show in popup"))
+        ))
+  
   
   ;; alter the configuration of the ui objects if args-lst given
   (cond ((equal? action-type "update text using")
@@ -875,8 +897,7 @@
 
                       (define for-selection (create-combobox-string-item fact-name))
                       (set-combobox-selection-object fact-number-choice-combobox for-selection)
-                      )
-                     )
+                      ))
                )
              ;; if this is a new action, just reset fact type selection to alternative text
              (begin
@@ -988,6 +1009,9 @@
   ;; select new condition panel
   (select-action-panel new-action-panel #t)
   
+  ;; enable delete button since we there is now a selected panel
+  (set-component-enabled delete-action-button #t)
+  
   ;; need to do this to give new-panel a position
   (validate-container editlink-dialog)
 
@@ -1016,11 +1040,11 @@
          (if (panel-selected? action-panel);(get-checkbox-value action-checkbox)
              (begin
                (define action-type (get-text action-label))
+               
                ;; add the choice back if we're deleting a unique action (only a copy of the action should exist)
                (if (member (get-text action-label) unique-choices)
                    (begin
                      (add-combobox-string action-type-choice action-type)
-                     
                      ;; these two actions "show in popup" and "follow link to" cannot exists in the same rule
                      ;; add back the action when the action excluding it had been removed
                      (if (equal? action-type "show in popup")
@@ -1114,7 +1138,7 @@
   ;;(add-component actions-main-panel action-list-panel 'border-center)
   
   ;; action type list contains the remaining available types left (after previous adding of actions)
-  (set! action-type-choice (make-combobox))
+  (set! action-type-choice (make-sorted-combobox))
   
   (define action-type-choice-container (make-panel))
   (add-component action-type-choice-container action-type-choice)
@@ -1156,7 +1180,9 @@
 ;; kept to ensure some actions are only added once
 (define action-type-list-link (list "update text using" "follow link to" "update fact" "show in popup"))
 (define action-type-list-node (list "update fact"))
-(define-constant unique-choices (list "update text using" "follow link to" "show in popup")) ;; choices that shouldnt be duplicated
+(define action-type-list-anywhere-node (list "update fact" "enable links to this node from anywhere"))
+
+(define-constant unique-choices (list "update text using" "follow link to" "show in popup" "enable links to this node from anywhere")) ;; choices that shouldnt be duplicated
 
 
 ;; an instance of the action type selector panel
@@ -1168,29 +1194,9 @@
         ;; add top-panel
         (set-container-layout top-panel 'flow 'left)
 
-        ;; Add checkbox
-        ;(add-component top-panel the-checkbox)
-
         ;; add the action label display
         (define action-label (make-label-with-title (to-string action-type)))
         (add-component top-panel action-label)
-
-        (define action-type-str (to-string action-type))
-                                        ;"update text using" "follow link to" "update fact"))
-
-        ;; update action-type-choice combobox
-        ;; ensure actions that should only have one instance is not available as a choice in the combobox
-        (if (member (to-string action-type) unique-choices)
-            (begin
-              (remove-combobox-string action-type-choice action-type)
-              
-              ;; these two actions "show in popup" and "follow link to" cannot exists in the same rule
-              ;; so restrict adding the other action when one is added
-              (if (equal? action-type "show in popup")
-                  (remove-combobox-string action-type-choice "follow link to"))
-              (if (equal? action-type "follow link to")
-                  (remove-combobox-string action-type-choice "show in popup"))
-              ))
 
         top-panel)
       (make-panel)))
@@ -1568,7 +1574,7 @@
 ; selectedOperator: the operator for this condition (visited, not visited, or previous)
 (define (create-condition-panel the-type targetID selectedOperator in-edited-nodeID #!key numfact-args)
   
-      ;; number fact comparator
+  ;; number fact comparator
   (define (make-comparator-panel)
     (let ((comparator-panel (make-panel))
           (comparator-cb (make-combobox "=" "<" ">" "<=" ">=")))
@@ -1805,6 +1811,9 @@
          ) (get-selected-condition-panel))
   ;; select new condition panel
   (select-condition-panel new-cond-panel #t)
+  
+  ;; enable delete button since we there is now a selected panel
+  (set-component-enabled delete-condition-button #t)
   
   ;; need to do this to give new-panel a position
   (validate-container editlink-dialog)

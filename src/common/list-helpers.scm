@@ -45,6 +45,7 @@
                my-make-list
                remove-index-from-list
                list-count-equal
+               insert-sorted
                )
 
 (module-static 'init-run)
@@ -253,40 +254,18 @@
   (if (>= (- index 1) 0) 
       (list-swap lst (- index 1) index)
       lst))
-  
-;; returns index for element of first match, #f otherwise
-;;(define (list-index lst ele . equal-op)
-;;  (define result #f)
-;;  (if (null? equal-op)
-;;      (begin
-;;        (set! result (memq ele lst))
-;;        (if result
-;;            (- (length lst) (length result))
-;;            #f)
-;;        )
-;;      (begin
-;;        (do ((i 0 (+ i 1))
-;;             (e (car lst) (car local-lst))
-;;             (local-lst lst  (cdr local-lst))
-;;             )
-;;            ((or ((car equal-op) ele e)
-;;                 (equal? i (length lst)))
-;;             (begin
-;;               (define to-return (- (length lst) (length local-lst)))
-;;               (if (equal? to-return (length lst))
-;;                   #f ;; not found
-;;                   to-return ;; found
-;;                   )
-;;               )
-;;             )
-;;            #|(begin
-;;              (display "equal op test ")(display ((car equal-op) ele e))(newline)
-;;              (display "i ")(display i)(newline)
-;;              (display "e ")(display e)(display " ele ")(display ele)(newline)
-;;              (display "local-lst ")(display local-lst)(newline)
-;;              ()
-;;              )|#
-;;            )
-;;        )
-;;      )
-;;  )
+
+;; WARNING - not tested
+;; insert sorted ensures a list is always sorted 
+;; [comparator] is a function that takes 2 args and return true if first element should 
+;; be placed in front of the second (in front is to the left of the list) and false otherwise
+(define (insert-sorted lst obj #!key comparator)
+  (define (helper index)
+    (if (< index (length lst))
+        (if (comparator obj (list-ref lst index))
+            (list-insert lst obj index)
+            (helper (+ index)))
+        ;; reached the end
+        (list-insert lst obj index)
+    ))
+  (helper 0))

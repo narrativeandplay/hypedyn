@@ -19,7 +19,7 @@
 
 ;(require "../arrays.scm") ;; array-to-list
 
-(module-export make-combobox make-choices make-comboboxwithdata make-sortedcomboboxwithdata
+(module-export make-combobox make-choices make-comboboxwithdata make-sortedcomboboxwithdata make-sorted-combobox
                get-combobox-selecteditem get-combobox-selectedindex get-combobox-item-at get-comboboxwithdata-selecteddata get-comboboxwithdata-data-at
                set-combobox-clear set-comboboxwithdata-clear set-combobox-selection set-combobox-selection-object set-comboboxwithdata-selection-bydata
                add-combobox-item add-combobox-string 
@@ -94,6 +94,8 @@
      (invoke (as <javax.swing.JComboBox> (this)) 'removeAllItems)
      (invoke user-data-list 'clear))))
 
+;; uses the string to sort the entries so that we're ensured a certain order
+;; disadvantage i can see is we cannot specify that order
 (define-simple-class <sortedcomboboxwithdata> (<comboboxwithdata>)
   ; add an item in order
   ((addItem txt :: <object> data) :: <void>
@@ -119,6 +121,39 @@
                            (invoke (as <javax.swing.JComboBox> (this)) 'getModel))
                        'getSize)))
      (add-item-helper txt data 0 size))))
+
+;; analogous to <sortedcomboboxwithdata>
+;; TODO: possibly borth sortedcombobox and sortedcomboboxwithdata 
+;; can share code since they are almost identical
+(define-simple-class <sortedcombobox> (<javax.swing.JComboBox>)
+  ; add an item in order
+  ((addItem txt :: <object>) :: <void>
+   ; helper to recursively search for position to add at
+   (define (add-item-helper txt :: <object> i size)
+     ; are we at end?
+     (if (>= i size)
+         ; at end, so just add to end
+         (invoke-special <javax.swing.JComboBox> (this) 'addItem txt)
+         ; otherwise, if txt <= list(i), insert here
+         (if (<= (invoke (invoke (as <java.lang.Object> txt) 'toString)
+                         'compareToIgnoreCase
+                         (invoke (as <java.lang.Object>
+                                     (invoke (as <javax.swing.JComboBox> (this)) 'getItemAt i)) 'toString))
+                 0)
+             ; smaller, so insert here
+             (invoke (this) 'insertItemAt txt i)
+             ; otherwise, continue recursively
+             (add-item-helper txt (+ i 1) size))))
+
+   ; get the size of the combobox, and call helper function
+   (let ((size (invoke (as <javax.swing.ComboBoxModel>
+                           (invoke (as <javax.swing.JComboBox> (this)) 'getModel))
+                       'getSize)))
+     (add-item-helper txt 0 size))))
+
+;; make sorted combobox 
+(define (make-sorted-combobox)
+  (<sortedcombobox>))
 
 ; make a combo box with data
 (define (make-comboboxwithdata)

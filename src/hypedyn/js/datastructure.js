@@ -131,7 +131,7 @@ function createChoiceLink(nodeID, start, end, id, type) {
 	return id;
 }
 
-// TODO: useful general function (port to kawa and move out of this file)
+// TODO: useful general function (move out of this file)
 function insertSorted( arr, obj, comparator ) {
 	// NOTE: termination condition is i<=arr.length, it reaches beyond the last element
 	//       and insert in the empty slot at the end if needed
