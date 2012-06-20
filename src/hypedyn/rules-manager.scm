@@ -232,11 +232,6 @@
             (add-component-at rmgr-rules-list-panel new-panel index)
             (add-component rmgr-rules-list-panel new-panel))
         
-;        (display "length of rules list ")
-;        (display (length (get-container-children rmgr-rules-list-panel)))
-;        (newline)
-        (display "rule panel size ")(display (get-component-size new-panel))(newline)
-        
         (component-revalidate center-panel) ;; revalidate the scrollpane
         new-panel)
       (begin
@@ -355,7 +350,18 @@
                  (begin
                    (set-background-color rule-panel selected-color)
                    (set-background-color rule-name-label selected-color)
-                   (set-background-color fall-checkbox selected-color))
+                   (set-background-color fall-checkbox selected-color)
+                   
+                   ;; need to do this to give new-panel a position
+                   (validate-container rules-manager-main-dialog)
+
+                   ;; scroll to newly added panel
+                   ;; top left point of new-panel relative to scrollpane
+                   (define new-panel-tl-point (get-component-location rule-panel))
+                   (define tl-x (invoke new-panel-tl-point 'get-x))
+                   (define tl-y (invoke new-panel-tl-point 'get-y))
+                   (scroll-rect-to-visible rmgr-rules-list-panel (make-rectangle tl-x tl-y rule-panel-width rule-panel-height))
+                   )
                  (begin
                    (set-background-color rule-panel unselected-color)
                    (set-background-color rule-name-label unselected-color)
@@ -418,17 +424,7 @@
     (select-rule-panel new-rule-ID #t)
     
     ;; enable delete button since we there is now a selected panel
-  (set-component-enabled delete-rule-button #t)
-    
-    ;; need to do this to give new-panel a position
-    (validate-container rules-manager-main-dialog)
-
-    ;; scroll to newly added panel
-    ;; top left point of new-panel relative to scrollpane
-    (define new-panel-tl-point (get-component-location new-panel))
-    (define tl-x (invoke new-panel-tl-point 'get-x))
-    (define tl-y (invoke new-panel-tl-point 'get-y))
-    (scroll-rect-to-visible rmgr-rules-list-panel (make-rectangle tl-x tl-y rule-panel-width rule-panel-height))
+    (set-component-enabled delete-rule-button #t)
     
     (define new-rule (get 'rules new-rule-ID))
     (ask new-rule 'set-parentID! edited-obj-ID)

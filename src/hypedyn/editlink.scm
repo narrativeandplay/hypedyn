@@ -1017,10 +1017,10 @@
 
   ;; scroll to newly added panel
   ;; top left point of new-panel relative to scrollpane
-  (define new-panel-tl-point (get-component-location new-action-panel))
-  (define tl-x (invoke new-panel-tl-point 'get-x))
-  (define tl-y (invoke new-panel-tl-point 'get-y))
-  (scroll-rect-to-visible action-list-panel (make-rectangle tl-x tl-y action-panel-width action-panel-height))
+;  (define new-panel-tl-point (get-component-location new-action-panel))
+;  (define tl-x (invoke new-panel-tl-point 'get-x))
+;  (define tl-y (invoke new-panel-tl-point 'get-y))
+;  (scroll-rect-to-visible action-list-panel (make-rectangle tl-x tl-y action-panel-width action-panel-height))
   
   ;; check whether rule is valid and enable ok button
   (validate-rule)
@@ -1815,16 +1815,6 @@
   ;; enable delete button since we there is now a selected panel
   (set-component-enabled delete-condition-button #t)
   
-  ;; need to do this to give new-panel a position
-  (validate-container editlink-dialog)
-
-  ;; scroll to newly added panel
-  ;; top left point of new-panel relative to scrollpane
-  (define new-panel-tl-point (get-component-location new-cond-panel))
-  (define tl-x (invoke new-panel-tl-point 'get-x))
-  (define tl-y (invoke new-panel-tl-point 'get-y))
-  (scroll-rect-to-visible condition-list-panel (make-rectangle tl-x tl-y cond-panel-width cond-panel-height))
-    
   ;; check whether rule is valid and enable ok button
   (validate-rule)
   
@@ -2008,12 +1998,47 @@
 (define selected-color (make-colour-rgb 135 206 250))  ;; sky blue
 (define unselected-color (make-colour-rgb 238 238 238))
 
+
+;; TODO make select-condition-panel select-action-panel into a shared code 
 (define (select-condition-panel pnl selected?)
   (if selected?
-      (set-background-color pnl selected-color)
+      (begin
+        (display "selecting condition panel ")(newline)
+        
+        ;; need to do this to give new-panel a position
+        (validate-container editlink-dialog)
+        
+        ;; scroll to newly added panel
+        ;; top left point of new-panel relative to scrollpane
+        (set-background-color pnl selected-color)
+        (define new-panel-tl-point (get-component-location pnl))
+        (define tl-x (invoke new-panel-tl-point 'get-x))
+        (define tl-y (invoke new-panel-tl-point 'get-y))
+        (scroll-rect-to-visible condition-list-panel (make-rectangle tl-x tl-y cond-panel-width cond-panel-height))
+        )
+      (set-background-color pnl unselected-color))
+  )
+
+(define (select-action-panel pnl selected?)
+  (if selected?
+      (begin
+        (display "selecting action panel ")(newline)
+        
+         ;; need to do this to give new-panel a position
+        (validate-container editlink-dialog)
+        
+        ;; scroll to newly added panel
+        ;; top left point of new-panel relative to scrollpane
+        (set-background-color pnl selected-color)
+        (define new-panel-tl-point (get-component-location pnl))
+        (define tl-x (invoke new-panel-tl-point 'get-x))
+        (define tl-y (invoke new-panel-tl-point 'get-y))
+        (scroll-rect-to-visible action-list-panel 
+                                (make-rectangle tl-x tl-y action-panel-width action-panel-height))
+        )
       (set-background-color pnl unselected-color)
-      ))
-(define select-action-panel select-condition-panel)
+      )
+  )
 
 ;; operand choice returns a panel for inputing number facts value
 ;; 2 modes are provided now "Input" and "Fact" 
