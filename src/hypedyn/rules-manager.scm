@@ -34,6 +34,7 @@
 (require "../kawa/strings.scm") ;; to-string
 (require "../kawa/geometry.scm") ;; make-dimension
 (require "../kawa/color.scm") ;; make-colour-rgb
+(require "../kawa/graphics-kawa.scm") ;; make-rectangle
 
 (require "../common/datatable.scm") ;; get
 (require "../common/objects.scm") ;; ask
@@ -62,7 +63,8 @@
 (define up-button #f)
 (define down-button #f)
 
-
+(define-constant rule-panel-width 400)
+(define-constant rule-panel-height 50)
 ;;;; helper functions
 ;; NOTE: rmgr-get-currently-edited depends on edited-linkID/edited-nodeID and edit-mode being correctly set
 ;;       so make sure rmgr-edit is called to update it
@@ -129,7 +131,7 @@
   
   ;; width is 20 less than width of scrollpane
   ;;(strangely 20 doesnt work even though it worked for condition and action so 40 then)
-  (set-component-non-resizable-size top-panel 400 50)  
+  (set-component-non-resizable-size top-panel rule-panel-width rule-panel-height)  
   
   ;; assume ruleID valid
   (define rule-obj (get 'rules ruleID))
@@ -224,15 +226,22 @@
            rules-manager-main-dialog)
       (begin
         (define new-panel (make-rule-panel ruleID))
+        
         (set-component-align-x new-panel 'left)
         (if index
             (add-component-at rmgr-rules-list-panel new-panel index)
             (add-component rmgr-rules-list-panel new-panel))
-
+        
+;        (display "length of rules list ")
+;        (display (length (get-container-children rmgr-rules-list-panel)))
+;        (newline)
+        (display "rule panel size ")(display (get-component-size new-panel))(newline)
+        
         (component-revalidate center-panel) ;; revalidate the scrollpane
-        )
+        new-panel)
       (begin
-        (display "ERROR: in rmgr-add-rule-panel")(newline))))
+        (display "ERROR: in rmgr-add-rule-panel")(newline)
+        #f)))
 
 ;; go through all the rule panels in rmgr-rules-list-panel
 ;; remove the panels with checkbox checked
@@ -387,14 +396,16 @@
   ;; assumes create-typed-rule2 already called
   (define (do-add-rule #!optional index)
     ;; if index given means we're inserting a rule in between (not at the end)
+    
+    (define new-panel #f)
     (if index
         (begin 
-          (rmgr-add-rule-panel new-rule-ID index)
+          (set! new-panel (rmgr-add-rule-panel new-rule-ID index))
           (define new-rule-lst (list-insert (rmgr-rule-lst) new-rule-ID index))
           (rmgr-set-rule-lst new-rule-lst)
           )
         (begin
-          (rmgr-add-rule-panel new-rule-ID)
+          (set! new-panel (rmgr-add-rule-panel new-rule-ID))
           (rmgr-set-rule-lst (append (rmgr-rule-lst) (list new-rule-ID)))
           ))
     
@@ -405,6 +416,16 @@
     
     ;; then select the newly added panel
     (select-rule-panel new-rule-ID #t)
+    
+    ;; need to do this to give new-panel a position
+    (validate-container rules-manager-main-dialog)
+
+    ;; scroll to newly added panel
+    ;; top left point of new-panel relative to scrollpane
+    (define new-panel-tl-point (get-component-location new-panel))
+    (define tl-x (invoke new-panel-tl-point 'get-x))
+    (define tl-y (invoke new-panel-tl-point 'get-y))
+    (scroll-rect-to-visible rmgr-rules-list-panel (make-rectangle tl-x tl-y rule-panel-width rule-panel-height))
     
     (define new-rule (get 'rules new-rule-ID))
     (ask new-rule 'set-parentID! edited-obj-ID)
@@ -420,10 +441,6 @@
   
   (action-restrict-check)
   
-  (display "new-rule-ID ")(display new-rule-ID)(newline)
-
-  ;(define new-rule-sexpr (cache-rule new-rule-ID))
-
   ;; post undo
   (compoundundomanager-postedit
    undo-manager
@@ -838,14 +855,9 @@
   
   ;; list of rules
   (set! rmgr-rules-list-panel (make-panel))
-  ;(set-component-size rmgr-rules-list-panel 400 200)
-  ;(set-component-minimum-size rmgr-rules-list-panel 400 200)
-  ;;(set-component-maximum-size rmgr-rules-list-panel 400 200)
   
   (set-container-layout rmgr-rules-list-panel 'vertical)
-  ;(add-component center-panel rmgr-rules-list-panel)
   
-  ;;(define center-panel (make-panel))
   (set! center-panel (make-scrollpane-with-policy rmgr-rules-list-panel 'needed 'needed))
   (set-component-preferred-size center-panel 400 200)
   ;(define center-panel (make-scrollpane rmgr-rules-list-panel))

@@ -30,6 +30,7 @@
                get-background-color
                
                get-location-on-screen
+               get-component-location
                get-parent
                set-align-x set-align-y
                black-border bevel-in-border bevel-out-border
@@ -266,6 +267,10 @@
 (define (get-location-on-screen comp :: <java.awt.Component>)
   (let (( loc (invoke comp 'getLocationOnScreen)))
     (vector (invoke (as <java.awt.Point> loc) 'getX) (invoke (as <java.awt.Point> loc) 'getY))))
+
+;; get the location of the upper left corner of the comp relative its parent
+(define (get-component-location comp :: <java.awt.Component>)
+  (invoke comp 'get-location (<java.awt.Point> 0 0)))
 
 ; set width
 (define (set-height component :: <java.awt.Component>
