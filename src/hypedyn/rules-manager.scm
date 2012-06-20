@@ -826,6 +826,8 @@
 (define (rmgr-init)
   (set! rules-manager-main-dialog (make-dialog (get-nodeeditor-frame) "Rule Editor" #f)) ;; debug used to be #t
   
+  (set-dialog-resizable rules-manager-main-dialog #f)
+  
   (define rules-manager-main-panel (make-panel))
   (set-container-layout rules-manager-main-panel 'border)
   (add-component rules-manager-main-dialog rules-manager-main-panel)

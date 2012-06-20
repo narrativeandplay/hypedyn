@@ -87,6 +87,18 @@ function ruleRelevant(eventType, rule) {
 			break;
 		}
 	}
+	
+
+	
+	// if no action in the rule consider it relevant as well
+	// so that we can check fall through condition
+	if (rule.actions.length == 0)
+		result = true;
+		
+	if (rule.id == 10) {
+		disp("checking rule 10");
+		disp(" result "+result);
+	}
 	return result;
 }
 
@@ -135,9 +147,13 @@ function ruleRelevant(eventType, rule) {
  function eventTrigger( eventType, obj ) {
  
 	var firing_candidates = filter_out_relevant( obj.rules, eventType );
-	disp(" firing cand here "+firing_candidates);
+	//disp(" firing cand here "+firing_candidates);
+	disp(" fir cand count "+ firing_candidates.length);
+	
 	for ( var i=0; i<firing_candidates.length; i++ ) {
 		var rule = firing_candidates[i];
+		disp(" event trig debug ");
+		disp("rule id "+rule.id);
 		if ( checkCondition( rule ) ) {
 			for (var j in rule.actions) {
 				var action = rule.actions[j];
@@ -153,6 +169,7 @@ function ruleRelevant(eventType, rule) {
  // that action is satisfied
  function link_clickable (link, ready) {
 	var fireable = firingCandidate( link.rules, "clickedLink", ready);
+	fireable = filter_out_empty_rules( fireable );
 	//console.log("FIREABLE len "+fireable.length);
 	return (fireable.length != 0);
 }
@@ -180,6 +197,17 @@ function filter_out_relevant( rules, eventType ) {
 	}
 	return to_return
 }
+
+// rules without actions
+function filter_out_empty_rules( rules ) {
+	var to_return = []
+	for ( var i=0; i< rules.length; i++ ) {
+		if ( rules[i].actions.length > 0 ) {
+			to_return.push( rules[i] );
+		}
+	}
+	return to_return;
+}
 	
  // determine the rules which are candidates for firing
  // obj: the object containing the rules (currently node or link)
@@ -189,11 +217,11 @@ function filter_out_relevant( rules, eventType ) {
 	
 	var relevant_rules = filter_out_relevant( rules, eventType );
 	
-	if (checkCond) {
+	if (checkCond) { // ready for firing
         // if need to check conditions then filter out unsatisfied
 		var satisfied_rules = filter_out_unsatisfied( relevant_rules );
 		return satisfied_rules;
-	} else {
+	} else { // dormant
         // otherwise just filter for event type
 		return relevant_rules;
 	}

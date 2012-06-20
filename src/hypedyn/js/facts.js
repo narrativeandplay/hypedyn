@@ -42,8 +42,8 @@ function createFact(name, type, id) {
 
 // assume value is of the correct type
 function setFact( id, value) {
-	disp("set fact "+id);
-	disp(" value "+value);
+	//disp("set fact "+id);
+	//disp(" value "+value);
 	var fact = factlist[id];
 	fact.value = value;
     
@@ -60,7 +60,7 @@ function getFact( id ) {
 
 // args is an array
 function setNumberFact( id, mode, args ) {
-	disp("set num fact "+id + " " + mode + " " + args);
+	//disp("set num fact "+id + " " + mode + " " + args);
 	switch ( mode ) {
 		case "Input": 
 			setFact( id, args[0] );

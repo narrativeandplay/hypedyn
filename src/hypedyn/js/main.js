@@ -175,7 +175,6 @@ function findReplaceText(linkID) {
 			}
 		}
 	}
-	disp("result from here "+result);
 	return result;
 }
 
