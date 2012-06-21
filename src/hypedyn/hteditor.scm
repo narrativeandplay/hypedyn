@@ -1287,6 +1287,8 @@
   (populate-lists)
   (refresh-graphs)
   
+  (rmgr-update)
+  
   ; refresh node editor display
   (refresh-link-list))
 

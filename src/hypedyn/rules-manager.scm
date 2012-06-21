@@ -71,7 +71,11 @@
 
 ;; get rule-lst from currently edited object
 (define (rmgr-rule-lst)
-  (ask (rmgr-get-currently-edited) 'rule-lst))
+  (let ((edited-obj (rmgr-get-currently-edited)))
+    (if edited-obj
+        (ask edited-obj 'rule-lst)
+        '()))
+  )
 
 ;; update rule position in object's rule-lst
 (define (rmgr-set-rule-lst new-lst)
@@ -113,6 +117,14 @@
     ((node) edited-nodeID)
     ((doc) -1)))
 
+(define (get-rule-name ruleID)
+  (let* ((rule-obj (get 'rules ruleID))
+         (rule-name (ask rule-obj 'name)))
+    (if (show-IDs?)
+        (to-string (string-append rule-name "(" (to-string ruleID) ")"))
+        rule-name))
+  )
+
 ;;;; make-rule-panel
 ;; one instance of the rule panel (one entry on the rule list)
 ;; only called by rmgr-add-rule-panel which makes sure we are passed a valid ruleID (gotten from actual rule-lst)
@@ -131,13 +143,15 @@
   
   (if (= rule-panel-width 0)
       (begin
-        (define vert-scrollbar (scroll-get-scrollbar center-panel 'vert))
-        (define scrollbar-width (get-preferred-width vert-scrollbar))
-        (set! rule-panel-width (- (scroll-viewport-width center-panel) scrollbar-width))))
+        ;(define vert-scrollbar (scroll-get-scrollbar center-panel 'vert))
+        ;(define scrollbar-width (get-preferred-width vert-scrollbar))
+        ;(set! rule-panel-width (- (scroll-viewport-width center-panel) scrollbar-width))
+        (set! rule-panel-width (scroll-viewport-width center-panel))
+        ))
   
   (display "setting rule-panel-width ")(display rule-panel-width)(newline)
   
-  (set-component-non-resizable-size top-panel rule-panel-width rule-panel-height)  
+  (set-component-non-resizable-size top-panel rule-panel-width rule-panel-height)
   
   ;; assume ruleID valid
   (define rule-obj (get 'rules ruleID))
@@ -146,8 +160,7 @@
             (rule-fall-through? (ask rule-obj 'fall-through?)))
         
         ;; TODO: this should refresh when show id just got selected
-        (if (show-IDs?)
-            (set! rule-name (to-string (string-append rule-name "(" (to-string (ask rule-obj 'ID)) ")"))))
+        (set! rule-name (get-rule-name ruleID))
         
         (set! rule-name-label (make-label-with-title rule-name))
   
@@ -212,11 +225,12 @@
   
   (if rule
       (begin
-        (set-text name-label (ask rule 'name))
-        
+        (set-text name-label (get-rule-name ruleID))
+        (display "updating rule panel with name ")(display (ask rule 'name))(newline)
         (display "SETTTING fall check box FALLTHROUGH? ")(display (ask rule 'fall-through?))(newline)
         ;; check means DONT fall through
         (set-checkbox-value fall-checkbox (not (ask rule 'fall-through?)))
+        (component-update pnl)
         )
       (begin (display "[update-rule-panel] invalid ruleID")(newline)))
   )
@@ -875,7 +889,7 @@
   
   (set-container-layout rmgr-rules-list-panel 'vertical)
   
-  (set! center-panel (make-scrollpane-with-policy rmgr-rules-list-panel 'needed 'needed))
+  (set! center-panel (make-scrollpane-with-policy rmgr-rules-list-panel 'always 'needed))
   (set-component-preferred-size center-panel 400 200)
   
   (add-component rules-manager-main-panel center-panel 'border-center)
