@@ -21,6 +21,7 @@
                scroll-rect-to-visible
                scroll-set-vertical-unit-increment scroll-set-horizontal-unit-increment
                scroll-viewport-width scroll-viewport-height  
+               scroll-get-scrollbar
                )
 
 ;;
@@ -91,3 +92,9 @@
 (define (scroll-viewport-height scrollpane)
   (let ((vp-dim (invoke (invoke scrollpane 'getViewport) 'get-view-size)))
     (invoke vp-dim 'get-height)))
+
+;; get scrollbar
+(define (scroll-get-scrollbar sp vert-hori-sym)
+  (case vert-hori-sym
+    ((vert) (invoke sp 'get-vertical-scroll-bar))
+    ((hori) (invoke sp 'get-horizontal-scroll-bar))))

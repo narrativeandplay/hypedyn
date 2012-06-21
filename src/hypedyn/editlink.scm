@@ -68,11 +68,17 @@
                edited-linkID
                )
 
-(define-constant cond-panel-width 650)
+(define-constant cond-panel-width 500) ;; not used
 (define-constant cond-panel-height 50)
 
-(define-constant action-panel-width 650)
+(define-constant action-panel-width 500) ;; not used
 (define-constant action-panel-height 50)
+
+(define-constant action-scrollpane-width 500)
+(define-constant action-scrollpane-height 140)
+
+(define-constant condition-scrollpane-width 500)
+(define-constant condition-scrollpane-height 140)
                
 
 ; remember which link we're editing
@@ -122,7 +128,7 @@
     (set-dialog-title 
      editlink-dialog
      (string-append
-      "Edit link: "
+      "Edit rule for link: "
       link-name
       (if (show-IDs?)
           (string-append " (" (number->string edited-linkID) ")")
@@ -156,7 +162,7 @@
 
 ; edit a node rule - removes the link-specific portions of the editor
 (define (doeditnoderule in-edited-nodeID in-ruleID)
-  
+  (display "edit node rule ")(newline)
   (nodeeditor-save) ;; save text content before create sexpr in before-editnode
   (before-edit-rule in-ruleID)
   
@@ -201,9 +207,11 @@
 
   (populate-rule-editor in-ruleID)
 
+  (display "before pack frame ")(newline)
   ; pack the UI and show
   (pack-frame editlink-dialog)
   (center-frame-in-parent editlink-dialog editlink-dialog-parent)
+  
   (set-component-visible editlink-dialog #t) ;; we're using the same dialog as editlink
   )
 
@@ -262,6 +270,9 @@
 (define condition-scrollpane-vp-width #f)
 (define action-scrollpane-vp-width #f)
 
+(define max-action-panel-width 0)
+(define max-cond-panel-width 0)
+
 
 ;; if condition panel (init editlink-panel-if)
 (define (create-if-condition-panel)
@@ -303,9 +314,17 @@
   
   ;; container scrollpane for condition panel
   (define condition-scrollpane (make-scrollpane-with-policy condition-list-panel 'needed 'needed))
-  (set-component-preferred-size condition-scrollpane 500 140)
+  (set-component-preferred-size condition-scrollpane 
+                                condition-scrollpane-width condition-scrollpane-height)
   
-  (set! condition-scrollpane-vp-width (scroll-viewport-width condition-scrollpane))
+  (define vert-scrollbar (scroll-get-scrollbar condition-scrollpane 'vert))
+  (define scrollbar-width (get-preferred-width vert-scrollbar))
+  (set! condition-scrollpane-vp-width (- condition-scrollpane-width scrollbar-width))
+  (display "condition scroll-vp-width ")(display condition-scrollpane-vp-width)(newline)
+  
+  ;; reset the max width of condition
+  (set! max-cond-panel-width condition-scrollpane-vp-width)
+  
   (add-component editlink-panel-if condition-scrollpane)
   
   ;; Add a horizontal panel to the dialog, with centering for buttons
@@ -964,7 +983,17 @@
         )
   
   (set-border panel-to-return bevel-in-border)
-  (set-component-non-resizable-size panel-to-return cond-panel-width cond-panel-height) ;;action-scrollpane-vp-width was 480 for width
+  ;;(set-component-non-resizable-size panel-to-return cond-panel-width cond-panel-height) ;;action-scrollpane-vp-width was 480 for width
+  ;;(pack-component panel-to-return)
+  
+  (define preferred-width (get-preferred-width panel-to-return))
+  
+  (set! max-action-panel-width 
+        (max max-action-panel-width 
+             (max preferred-width action-scrollpane-vp-width)))
+  (display "max-action-panel-width ")(display max-action-panel-width)(newline)
+  
+  (set-component-non-resizable-size panel-to-return max-action-panel-width action-panel-height)
   
   (add-mouselistener
      panel-to-return
@@ -1144,10 +1173,17 @@
   
     ;; scrollpane for condition panel
   (set! action-scrollpane (make-scrollpane-with-policy action-list-panel 'needed 'needed))
-  (set-component-preferred-size action-scrollpane 500 140)
-  (set! action-scrollpane-vp-width (scroll-viewport-width action-scrollpane))
+  (set-component-preferred-size action-scrollpane 
+                                action-scrollpane-width action-scrollpane-height)
   (add-component actions-main-panel action-scrollpane 'border-center)
-  ;;(add-component actions-main-panel action-list-panel 'border-center)
+  
+  (define vert-scrollbar (scroll-get-scrollbar action-scrollpane 'vert))
+  (define scrollbar-width (get-preferred-width vert-scrollbar))
+  (set! action-scrollpane-vp-width (- action-scrollpane-width scrollbar-width))
+  (display "action scroll-vp-width ")(display action-scrollpane-vp-width)(newline)
+  
+  ;; reset the max width of condition
+  (set! max-action-panel-width action-scrollpane-vp-width)
   
   ;; action type list contains the remaining available types left (after previous adding of actions)
   (set! action-type-choice (make-sorted-combobox))
@@ -1584,12 +1620,15 @@
 ; selectedOperator: the operator for this condition (visited, not visited, or previous)
 (define (create-condition-panel the-type targetID selectedOperator in-edited-nodeID #!key numfact-args)
   
+  ;; [condition panel [comparator-panel [ operand-choice ]  [ operand-choice ] ]]
+  ;; [action panel [ fact-panel [math-panel [operand-choice]]
+  
   ;; number fact comparator
   (define (make-comparator-panel)
     (let ((comparator-panel (make-panel))
           (comparator-cb (make-combobox "=" "<" ">" "<=" ">=")))
       (add-component comparator-panel comparator-cb)
-      (add-component comparator-panel (make-operand-choice #f #f))
+      (add-component comparator-panel (make-operand-choice #f #f 'cond))
       (pack-component comparator-panel)
       comparator-panel))
   
@@ -1727,7 +1766,13 @@
               )))
     
     ;; specify a fixed size
-    (set-component-non-resizable-size top-panel action-panel-width action-panel-height) ;;condition-scrollpane-vp-width
+    (set! max-cond-panel-width
+          (max condition-scrollpane-vp-width condition-scrollpane-vp-width))
+    
+    (set-component-non-resizable-size top-panel
+                                      max-cond-panel-width
+                                      cond-panel-height)
+    
     (set-border top-panel bevel-in-border)
     
     ;; prevent the comboboxes from expanding to fill the panel 
@@ -2052,7 +2097,9 @@
 
 ;; operand choice returns a panel for inputing number facts value
 ;; 2 modes are provided now "Input" and "Fact" 
-(define (make-operand-choice opr opr-type)
+;; levels-to-parent is an int that gives the number of levels to go up before you hit the panel 
+;;   we need to resize when  
+(define (make-operand-choice opr opr-type action-or-cond)
   (let ((operand-panel (make-panel))
         (mode-choice (make-combobox "Input" "Fact"))
         (number-entry (make-textfield "0" 4))
@@ -2103,6 +2150,38 @@
                            (pack-component operand-panel)
                            (pack-component (get-parent operand-panel)) ;;math panel
                            ;(pack-component (get-parent (get-parent operand-panel))) ;; action panel
+                           
+                           ;; resize the panel on top
+                           (define levels-to-parent
+                             (case action-or-cond
+                               ((action) 3)
+                               ((cond) 2)))
+                           
+                           (define (resize-parent comp levels)
+                             (if (> levels 0)
+                                 (begin
+                                   (pack-component comp)
+                                   (resize-parent (get-parent comp) (- levels 1)))
+                                 (begin
+                                   
+                                   (define parent-panel-width #f) 
+                                   (case action-or-cond
+                                     ((action)
+                                      (set! max-action-panel-width
+                                            (max max-action-panel-width
+                                                 (max (get-preferred-width comp) action-scrollpane-vp-width)))
+                                      (set! parent-panel-width max-action-panel-width))
+                                     ((cond)
+                                      (set! max-cond-panel-width 
+                                            (max max-cond-panel-width
+                                                 (max (get-preferred-width comp) condition-scrollpane-vp-width)))
+                                      (set! parent-panel-width max-cond-panel-width)
+                                      ))
+                                   (set-component-non-resizable-size comp
+                                                                     parent-panel-width
+                                                                     action-panel-height))))
+                           
+                           (resize-parent operand-panel levels-to-parent)
                            )))
     (add-actionlistener
      number-choice
@@ -2155,10 +2234,6 @@
     (define (make-math-panel #!optional op opr1 opr1-type opr2 opr2-type)
       (define math-panel (make-panel))
       
-      (display "make math panel ")
-      (display (list op opr1 opr1-type opr2 opr2-type))
-      (newline)
-      
       (define operator-choice (make-combobox "+" "-" "x"))
       (if (equal? "*" op)
           (set! op "x"))
@@ -2167,9 +2242,9 @@
       
       (set-container-layout math-panel 'horizontal)
       (add-components math-panel 
-                      (make-operand-choice opr1 opr1-type)
+                      (make-operand-choice opr1 opr1-type 'action)
                       operator-choice
-                      (make-operand-choice opr2 opr2-type))
+                      (make-operand-choice opr2 opr2-type 'action))
 ;      (component-revalidate math-panel)
 ;      (component-update math-panel)
       (pack-component math-panel)
@@ -2240,7 +2315,6 @@
                                                   (add-component top-panel num-fact-mode-choice)
                                                   (add-component top-panel the-number-entry)))
                                                
-                                               
                                                (pack-component top-panel)
                                                (pack-frame editlink-dialog)
                                              
@@ -2295,7 +2369,6 @@
         ;(remove-component top-panel the-number-entry)
         ;(remove-component top-panel number-fact-target-cb)
         
-        
         ;;(display "top-panel ")(display top-panel)(newline)
         ;;(display "number-fact-target-cb ")(display number-fact-target-cb)(newline)
         
@@ -2308,8 +2381,19 @@
                (add-component top-panel (make-math-panel))
                ))
           )
+        
         (component-revalidate top-panel)
         (pack-component top-panel)
+        
+        (define parent-action-panel (get-parent top-panel))
+        
+        (set! max-action-panel-width
+              (max max-action-panel-width
+                   (max (get-preferred-width parent-action-panel) action-scrollpane-vp-width)))
+        
+        (set-component-non-resizable-size parent-action-panel
+                                          max-action-panel-width
+                                          action-panel-height)
         )))
     
     ;; set current value of fact

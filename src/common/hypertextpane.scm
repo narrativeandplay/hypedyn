@@ -353,7 +353,6 @@
     ; adjust links after deleting
     ; returns #t if need to manually clean up after link deletion
     (define (adjust-links-delete start len)
-      (display "[adjust-links-delete] ")(newline)
       (let ((edited-node (get nodelist-name the-nodeID))
             (deleted-link-bound '()))
         ; run through each link and adjust
@@ -362,8 +361,6 @@
                      (append deleted-link-bound (list (adjust-one-link-delete start len l))))
                )
              (ask edited-node getlinks-method))
-        
-        (display "  deleted link-bound ")(display deleted-link-bound)(newline)
         
         ;; undo-manager for read-only (reader-pane) is not set
         (if undo-manager
@@ -1106,7 +1103,6 @@
                track-undoable-edits)
           (begin
             ; start the compound edit
-            (display "start compound undoable event ")(display in-undo-label)(newline)
             (compoundundomanager-beginupdate undo-manager)
             
             ; make sure that the correct node is being edited for redo
@@ -1139,8 +1135,6 @@
     (define (end-compound-undoable-event in-undo-label)
       ; make sure that the correct node is being edited for undo
       (let ((undo-nodeID the-nodeID))
-        (display "end compound-undoable-event ")(newline)
-        (display "posting last event for ")(display in-undo-label)(newline)
         (compoundundomanager-postedit 
          undo-manager
          (make-undoable-edit in-undo-label
@@ -1155,7 +1149,6 @@
                                (format #t "compound-undoable-edit end of redo~%~!")
                                (set-track-undoable-edits! #t)
                                ))))
-      (display "end compound success ")(newline)
       (compoundundomanager-endupdate undo-manager undo-action redo-action)
       )
     

@@ -24,6 +24,7 @@
                set-opaque set-border set-background-color 
                set-component-enabled set-location component-enabled?
                get-component-size get-component-preferred-size
+               get-preferred-width get-preferred-height
                get-component-visible 
                get-width get-height 
                get-bounds request-focus request-focus-in-window transfer-focus remove-self-from-parent
@@ -31,7 +32,7 @@
                
                get-location-on-screen
                get-component-location
-               get-parent
+               get-parent get-parent-recurse
                set-align-x set-align-y
                black-border bevel-in-border bevel-out-border
                get-component-root-pane
@@ -155,6 +156,44 @@
    (invoke preferred-dim 'get-width) 
    (invoke preferred-dim 'get-height))
   )
+
+(define (get-preferred-width comp :: <java.awt.Component> )
+  
+  (define old-preferred (get-component-preferred-size comp))
+  (define old-min (get-component-minimum-size comp))
+  (define old-max (get-component-maximum-size comp))
+  
+  (invoke comp 'set-preferred-size #!null)
+  (invoke comp 'set-minimum-size #!null)
+  (invoke comp 'set-maximum-size #!null)
+  
+  (define preferred-dim (get-component-preferred-size comp))
+  
+  (invoke comp 'set-preferred-size old-preferred)
+  (invoke comp 'set-minimum-size old-min)
+  (invoke comp 'set-maximum-size old-max)
+  
+  (invoke preferred-dim 'get-width)
+  )
+
+(define (get-preferred-height comp :: <java.awt.Component> )
+  
+  (define old-preferred (get-component-preferred-size comp))
+  (define old-min (get-component-minimum-size comp))
+  (define old-max (get-component-maximum-size comp))
+  
+  (invoke comp 'set-preferred-size #!null)
+  (invoke comp 'set-minimum-size #!null)
+  (invoke comp 'set-maximum-size #!null)
+  
+  (define preferred-dim (get-component-preferred-size comp))
+  
+  (invoke comp 'set-preferred-size old-preferred)
+  (invoke comp 'set-minimum-size old-min)
+  (invoke comp 'set-maximum-size old-max)
+  
+  (invoke preferred-dim 'get-height)
+  )
                                       
 
 ; set component's opaque flag
@@ -245,6 +284,13 @@
 ; get parent container of component
 (define (get-parent component :: <javax.swing.JComponent>)
   (invoke component 'getParent))
+
+;; not used at the moment
+(define (get-parent-recurse comp :: <javax.swing.JComponent>
+                            levels :: <int>)
+  (if (> levels 0)
+      (get-parent-recurse (get-parent comp) (- levels 1))
+      comp))
 
 ; set X position
 (define (set-posX component :: <java.awt.Component>
