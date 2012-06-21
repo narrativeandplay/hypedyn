@@ -63,8 +63,8 @@
 (define up-button #f)
 (define down-button #f)
 
-(define-constant rule-panel-width 400)
-(define-constant rule-panel-height 50)
+(define rule-panel-width 0)
+(define-constant rule-panel-height 40)
 ;;;; helper functions
 ;; NOTE: rmgr-get-currently-edited depends on edited-linkID/edited-nodeID and edit-mode being correctly set
 ;;       so make sure rmgr-edit is called to update it
@@ -129,8 +129,14 @@
 
   (set-container-layout top-panel 'horizontal)
   
-  ;; width is 20 less than width of scrollpane
-  ;;(strangely 20 doesnt work even though it worked for condition and action so 40 then)
+  (if (= rule-panel-width 0)
+      (begin
+        (define vert-scrollbar (scroll-get-scrollbar center-panel 'vert))
+        (define scrollbar-width (get-preferred-width vert-scrollbar))
+        (set! rule-panel-width (- (scroll-viewport-width center-panel) scrollbar-width))))
+  
+  (display "setting rule-panel-width ")(display rule-panel-width)(newline)
+  
   (set-component-non-resizable-size top-panel rule-panel-width rule-panel-height)  
   
   ;; assume ruleID valid
@@ -408,8 +414,7 @@
         (begin 
           (set! new-panel (rmgr-add-rule-panel new-rule-ID index))
           (define new-rule-lst (list-insert (rmgr-rule-lst) new-rule-ID index))
-          (rmgr-set-rule-lst new-rule-lst)
-          )
+          (rmgr-set-rule-lst new-rule-lst))
         (begin
           (set! new-panel (rmgr-add-rule-panel new-rule-ID))
           (rmgr-set-rule-lst (append (rmgr-rule-lst) (list new-rule-ID)))
@@ -464,7 +469,6 @@
       (create-typed-rule2 "new rule" edit-mode 'and #f #f new-rule-ID)
       (do-add-rule index)
       (action-restrict-check)
-      ;(rmgr-add-rule-panel new-rule-ID)
       ))))
 
 (define (delete-selected-rule-button-callback e)
@@ -768,22 +772,30 @@
   
   (clear-container rmgr-rules-list-panel)
   
+  (define target-obj #f)
   (cond ((equal? target-type 'link)
          (set! edited-linkID obj-ID)
-         (define in-link (get 'links obj-ID))
-         (define rule-lst (ask in-link 'rule-lst))
+         (set! target-obj (get 'links obj-ID))
+         (define rule-lst (ask target-obj 'rule-lst))
          (map (lambda (ruleID)
                 (rmgr-add-rule-panel ruleID)
                 ) rule-lst)
          )
         ((equal? target-type 'node)
          (set! edited-nodeID obj-ID)
-         (define in-node (get 'nodes obj-ID))
-         (define rule-lst (ask in-node 'rule-lst))
+         (set! target-obj (get 'nodes obj-ID))
+         (define rule-lst (ask target-obj 'rule-lst))
          (map (lambda (ruleID)
                 (rmgr-add-rule-panel ruleID)
                 ) rule-lst)
          ))
+  
+  (set-dialog-title rules-manager-main-dialog
+                   (string-append 
+                    (case target-type
+                      ((link) "Edit link: ")
+                      ((node) "Edit node rules: ")) 
+                    (ask target-obj 'name)))
   
   ;; update the display so deleted rule panel's graphics 
   ;; which are not drawn over do not linger on
@@ -865,9 +877,11 @@
   
   (set! center-panel (make-scrollpane-with-policy rmgr-rules-list-panel 'needed 'needed))
   (set-component-preferred-size center-panel 400 200)
-  ;(define center-panel (make-scrollpane rmgr-rules-list-panel))
-  ;(set-container-layout center-panel 'vertical)
+  
   (add-component rules-manager-main-panel center-panel 'border-center)
+  
+  (component-update rules-manager-main-panel)
+  (component-revalidate rules-manager-main-panel)
   
   (define rules-dialog-button-panel (make-panel))
   (set-container-layout rules-dialog-button-panel 'flow 'right)

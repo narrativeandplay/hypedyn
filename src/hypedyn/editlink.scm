@@ -207,7 +207,6 @@
 
   (populate-rule-editor in-ruleID)
 
-  (display "before pack frame ")(newline)
   ; pack the UI and show
   (pack-frame editlink-dialog)
   (center-frame-in-parent editlink-dialog editlink-dialog-parent)

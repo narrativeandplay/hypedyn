@@ -410,7 +410,7 @@
     (add-actionlistener tb-button-editnode (make-actionlistener (lambda (source) (doeditnode))))
     (add-component toolbar-panel tb-button-renamenode)
     (add-actionlistener tb-button-renamenode (make-actionlistener (lambda (source) (dorenamenode))))
-            (add-component toolbar-panel tb-button-delnode)
+    (add-component toolbar-panel tb-button-delnode)
     (add-actionlistener tb-button-delnode (make-actionlistener (lambda (source) (dodelnode))))
 
     ; separator
@@ -884,7 +884,6 @@
   
   ; remember if this was the start node
   (define was-start-node (= (get-start-node) cached-nodeID))
-  
   (define actionID-lst
     (filter (lambda (actionID) ;;find action in this rule
               (define action (get 'actions actionID))
@@ -894,8 +893,6 @@
               )
         ;; get list of action
         (map (lambda (o) (car o)) (get-list 'actions))))
-  
-  (display "[ACTION lst] ")(display actionID-lst)(newline)
   
   ;; wrap delete link and delete node in one operation
   ;; delete-node invokes delete-link which has its own compoundundomanager-postedit
