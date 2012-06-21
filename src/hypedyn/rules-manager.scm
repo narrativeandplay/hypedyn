@@ -785,6 +785,10 @@
                 ) rule-lst)
          ))
   
+  ;; update the display so deleted rule panel's graphics 
+  ;; which are not drawn over do not linger on
+  (component-update rmgr-rules-list-panel)
+  
   (pack-frame rules-manager-main-dialog))
 
 ;; edit the rules of this object, target-type ('link 'node)

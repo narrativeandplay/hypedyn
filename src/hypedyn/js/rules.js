@@ -195,7 +195,7 @@ function filter_out_relevant( rules, eventType ) {
 			to_return.push( rules[i] );
 		}
 	}
-	return to_return
+	return to_return;
 }
 
 // rules without actions

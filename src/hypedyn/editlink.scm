@@ -727,6 +727,10 @@
   (map (lambda (action-type)
          (add-combobox-string action-type-choice action-type))
        action-type-list)
+  
+  ;; select "follow link to" option if its a link (assuming follow link is the first option) 
+  (if (equal? obj-type 'link)
+      (set-combobox-selection-object action-type-choice (create-combobox-string-item "follow link to")))
   )
 
 ;; returns a list of the action panels in action-list-panel
@@ -1048,9 +1052,17 @@
                      ;; these two actions "show in popup" and "follow link to" cannot exists in the same rule
                      ;; add back the action when the action excluding it had been removed
                      (if (equal? action-type "show in popup")
-                         (add-combobox-string action-type-choice "follow link to"))
+                         (begin
+                           (add-combobox-string action-type-choice "follow link to")
+                           ;; select follow link when available
+                           (set-combobox-selection-object action-type-choice (create-combobox-string-item "follow link to"))
+                         ))
                      (if (equal? action-type "follow link to")
-                         (add-combobox-string action-type-choice "show in popup"))
+                         (begin
+                           (add-combobox-string action-type-choice "show in popup")
+                           ;; select follow link when available
+                           (set-combobox-selection-object action-type-choice (create-combobox-string-item "follow link to"))
+                           ))
                      ))
                
                ;; remove that panel from action-list-panel
@@ -1205,9 +1217,7 @@
 ; this is called from the doeditlink/doeditnoderule/doeditdocrule procedures above
 ; to finish building the GUI representation of the link/rule
 (define (populate-rule-editor edited-ruleID)
-  (display "edited rule ")(display edited-ruleID)(newline)
   (define rule-obj (get 'rules edited-ruleID))
-  (display "rule-obj ")(display edited-ruleID)(newline)
   (if rule-obj
       (begin
         (define conditions (ask rule-obj 'conditions))
