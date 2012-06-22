@@ -2406,13 +2406,15 @@
         
         (define parent-action-panel (get-parent top-panel))
         
-        (set! max-action-panel-width
-              (max max-action-panel-width
-                   (max (get-preferred-width parent-action-panel) action-scrollpane-vp-width)))
-        
-        (set-component-non-resizable-size parent-action-panel
-                                          max-action-panel-width
-                                          action-panel-height)
+        (if (not (equal? parent-action-panel #!null))
+            (begin
+              (set! max-action-panel-width
+                    (max max-action-panel-width
+                         (max (get-preferred-width parent-action-panel) action-scrollpane-vp-width)))
+
+              (set-component-non-resizable-size parent-action-panel
+                                                max-action-panel-width
+                                                action-panel-height)))
         )))
     
     ;; set current value of fact

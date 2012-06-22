@@ -104,10 +104,10 @@
   (invoke (as <java.awt.Component> component) 'setSize width height))
 
 ; set component preferred size - note: are we using all JComponents?
-(define (set-component-preferred-size component :: <javax.swing.JComponent>
+(define (set-component-preferred-size component :: <java.awt.Component>
                                       width :: <int>
                                       height :: <int>)
-  (invoke (as <javax.swing.JComponent> component) 'setPreferredSize
+  (invoke (as <java.awt.Component> component) 'setPreferredSize
           (<java.awt.Dimension> width height)))
 
 ; doesn't this duplicate the above function? only used in 

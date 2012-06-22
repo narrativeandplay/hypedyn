@@ -28,7 +28,9 @@
                set-frame-title pack-frame get-frame-location
                get-active-frame dispose-frame
                set-frame-on-exit-operation set-frame-dont-exit set-focusable
-               set-frame-iconified set-frame-maximized toggle-frame-maximized set-frame-normal-state)
+               set-frame-iconified set-frame-maximized toggle-frame-maximized set-frame-normal-state
+               
+               iconify deiconify)
                
 ;;
 ;; window
@@ -50,6 +52,26 @@
 ; bring window to the front
 (define (bring-to-front in-frame :: <javax.swing.JFrame>)
   (invoke in-frame 'toFront))
+
+(define (iconify frame :: <javax.swing.JFrame>)
+  (define old-state (invoke frame 'get-extended-state))
+  (set! old-state (bitwise-and old-state <javax.swing.JFrame>:ICONIFIED))
+  (invoke frame 'set-extended-state old-state)
+  )
+
+(define (deiconify frame :: <javax.swing.JFrame>)
+  (define old-state (invoke frame 'get-extended-state))
+  (set! old-state (bitwise-and old-state (bitwise-not <javax.swing.JFrame>:ICONIFIED)))
+  (invoke frame 'set-extended-state old-state)
+  )
+
+; int state = frame.getExtendedState();
+
+;    // Clear the iconified bit
+;    state &= ~Frame.ICONIFIED;
+
+;    // Deiconify the frame
+;    frame.setExtendedState(state);
 
 ; set bounds
 (define (set-bounds in-frame :: <javax.swing.JFrame> in-size :: <java.awt.Dimension>)

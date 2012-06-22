@@ -178,6 +178,7 @@
         ; already editing, so just bring to front and get focus
         (set-component-visible nodeeditor-frame #t)
         (bring-to-front nodeeditor-frame)
+        (deiconify nodeeditor-frame)
         (request-focus (ask node-editor 'getcomponent)))))
 
 ; set nodeeditor frame title
