@@ -146,6 +146,7 @@
         ;(define vert-scrollbar (scroll-get-scrollbar center-panel 'vert))
         ;(define scrollbar-width (get-preferred-width vert-scrollbar))
         ;(set! rule-panel-width (- (scroll-viewport-width center-panel) scrollbar-width))
+        (display (scroll-viewport-width center-panel))(newline)
         (set! rule-panel-width (scroll-viewport-width center-panel))
         ))
   
@@ -207,6 +208,7 @@
   
   ;; buttons listeners
   (add-component top-panel rule-name-label)
+  ;; pushes the right elements to the right and left to the left (does the left and right justify)
   (add-component top-panel (create-horizontal-glue))
   (add-component top-panel fall-checkbox)
   
@@ -354,7 +356,6 @@
                    (last (rmgr-rule-lst))))) ;; not last/btm rule 
       (set-component-enabled down-button #t)
       (set-component-enabled down-button #f))
-    
   )
 
 ;; assume rule manager is correctly loaded (rule-panel-lst correspond to rmgr-rule-lst)
@@ -821,8 +822,8 @@
 (define (rmgr-edit target-type obj-ID)
   (display "rmgr-edit ")(newline)
   (set! edit-mode target-type)
-  (populate-rules-manager target-type obj-ID)
   
+  (populate-rules-manager target-type obj-ID)
   ;; make sure nodeeditor is open when rule manager is editing
   ;; NOTE: depends on populate-rules-manager to set edited-linkID and edited-nodeID properly
   (case edit-mode
@@ -837,7 +838,6 @@
      ) 
     ((node)
      (nodeeditor-edit obj-ID)))
-  
   (set-component-visible rules-manager-main-dialog #t))
 
 (define (rmgr-close)
@@ -897,8 +897,11 @@
   (component-update rules-manager-main-panel)
   (component-revalidate rules-manager-main-panel)
   
+  (component-update (scroll-get-viewport center-panel))
+  (component-revalidate (scroll-get-viewport center-panel))
+  
   (define rules-dialog-button-panel (make-panel))
-  (set-container-layout rules-dialog-button-panel 'flow 'right)
+  (set-container-layout rules-dialog-button-panel 'horizontal)
   (add-component rules-manager-main-panel rules-dialog-button-panel 'border-south)
   
     ;; rule list buttons
@@ -919,6 +922,8 @@
   
   ;; dialog button
   (define rules-dialog-close (make-button "Close"))
+  ;; pushes the right elements to the right and left to the left (does the left and right justify)
+  (add-component rules-dialog-button-panel (create-horizontal-glue)) 
   (add-component rules-dialog-button-panel rules-dialog-close)
   
   (add-actionlistener up-button 
@@ -940,4 +945,6 @@
                       (make-actionlistener
                        (lambda (e)
                          (rmgr-close))))
+  
+  (pack-frame rules-manager-main-dialog)
   )

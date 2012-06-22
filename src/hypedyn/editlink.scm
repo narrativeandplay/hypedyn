@@ -287,7 +287,7 @@
 
   ; panel for "all"/"any" selection
   (set! editlink-panel-follow (make-panel))
-  (set-container-layout editlink-panel-follow 'flow 'left)
+  (set-container-layout editlink-panel-follow 'horizontal)
   (add-component editlink-panel-if editlink-panel-follow)
 
   ;; obsolete ("IF" becomes a combobox that has UNLESS as the opposite of IF) 
@@ -300,11 +300,19 @@
   ; "all"/"any" selection
   (set! editlink-dialog-andor-operator (make-combobox "All" "Any"))
   (add-component editlink-panel-follow editlink-dialog-andor-operator)
+  (pack-component editlink-dialog-andor-operator)
   
   ; label for "of the following conditions are true:"
   (set! editlink-dialog-label (make-label))
   (set-text editlink-dialog-label "of the following conditions are true:")
   (add-component editlink-panel-follow editlink-dialog-label)
+  
+  ;; up down button
+  (define cond-up-button (make-button "Up"))
+  (define cond-down-button (make-button "Down"))
+  (add-component editlink-panel-follow (create-horizontal-glue))
+  ;;(add-component editlink-panel-follow cond-up-button)
+  ;;(add-component editlink-panel-follow cond-down-button)
 
   ;;condition panel
   (set! condition-list-panel (make-panel))
@@ -1158,11 +1166,23 @@
   (set! delete-action-button (make-button "Delete Selected"))
   (set-component-enabled delete-action-button #f)
   
+  ;; up down button
+  (define action-up-button (make-button "Up"))
+  (define action-down-button (make-button "Down"))
+  
   ;; label
   (define action-label (make-label-with-title "THEN perform the following actions:"))
   (define action-label-panel (make-panel))
-  (set-container-layout action-label-panel 'vertical)
+  (set-container-layout action-label-panel 'horizontal)
   (add-component action-label-panel action-label)
+  (add-component action-label-panel (create-horizontal-glue))
+  ;;(add-component action-label-panel action-up-button)
+  ;;(add-component action-label-panel action-down-button)
+  
+  ;;(set-align-x action-label 'left)
+  ;;(set-align-x action-up-button 'right)
+  ;;(set-align-x action-down-button 'right)
+  
   (add-component actions-main-panel action-label-panel 'border-north)
   
   ;; list of actions

@@ -21,7 +21,7 @@
                scroll-rect-to-visible
                scroll-set-vertical-unit-increment scroll-set-horizontal-unit-increment
                scroll-viewport-width scroll-viewport-height  
-               scroll-get-scrollbar
+               scroll-get-scrollbar scroll-get-viewport
                )
 
 ;;
@@ -114,3 +114,6 @@
   (case vert-hori-sym
     ((vert) (invoke sp 'get-vertical-scroll-bar))
     ((hori) (invoke sp 'get-horizontal-scroll-bar))))
+
+(define (scroll-get-viewport sp)
+  (invoke sp 'getViewport))
