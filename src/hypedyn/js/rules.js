@@ -288,6 +288,7 @@ function filter_out_empty_rules( rules ) {
  
  function nodeIsPrevious(nodeID) {
     //disp("*** nodeIsPrevious! ***");
+    //disp("prev_read_nodes len: " + prev_read_nodes.length)
     //disp("nodeID: "+nodeID+", prev_read_node:"+prev_read_nodes[prev_read_nodes.length - 1]);
     //disp("");
 	return prev_read_nodes[prev_read_nodes.length - 1] == nodeID;

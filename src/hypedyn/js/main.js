@@ -374,6 +374,7 @@ function backPrevNode() {
 }
 
 function restartStory() {
+    currNodeID = undefined;
 	prev_read_nodes = [];
 	nodelist = [];
 	linklist = [];
@@ -430,7 +431,8 @@ function gotoNode(nodeID) {
 		clicked_link_flag = false;
 		
         // update history list
-		prev_read_nodes.push( currNodeID );
+        if (currNodeID != undefined)
+            prev_read_nodes.push( currNodeID );
 
         // update back button state
 		back_button_check();
