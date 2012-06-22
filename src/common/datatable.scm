@@ -74,8 +74,7 @@
                (let ((hash (hash-table-get local-table lst-sym-ID 'not-found)))
                  (if (not (equal? hash 'not-found))
                      (hash-table->alist hash) ;; returns a alist format of the hash
-                     '() ;; returns empty list even if the list had not been used before
-                     ))))
+                     #f))))
     
     (obj-put this-obj 'del
              (lambda (self lst-sym-ID value-ID)

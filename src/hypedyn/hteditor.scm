@@ -885,14 +885,17 @@
   ; remember if this was the start node
   (define was-start-node (= (get-start-node) cached-nodeID))
   (define actionID-lst
-    (filter (lambda (actionID) ;;find action in this rule
-              (define action (get 'actions actionID))
-              (define sexpr (ask action 'expr))
-              (and (equal? (car sexpr) 'follow-link)
-                   (equal? (list-ref sexpr 4) selected-nodeID))
-              )
-        ;; get list of action
-        (map (lambda (o) (car o)) (get-list 'actions))))
+    (let ((action-lst (get-list 'actions)))
+      (if action-lst
+          (filter (lambda (actionID) ;;find action in this rule
+                    (define action (get 'actions actionID))
+                    (define sexpr (ask action 'expr))
+                    (and (equal? (car sexpr) 'follow-link)
+                         (equal? (list-ref sexpr 4) selected-nodeID))
+                    )
+                  ;; get list of action
+                  (map (lambda (o) (car o)) action-lst))
+          '())))
   
   ;; wrap delete link and delete node in one operation
   ;; delete-node invokes delete-link which has its own compoundundomanager-postedit
