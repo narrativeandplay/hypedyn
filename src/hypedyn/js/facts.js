@@ -93,12 +93,19 @@ function setNumberFact( id, mode, args ) {
 					operand2_val = getFact( operand2 ).value;
 					break;
 			}
-			
-			setFact( id, eval( operand1_val.toString() + operator + operand2_val.toString() ) );
+			if ( operator != "/")
+				setFact( id, eval( operand1_val.toString() + operator + operand2_val.toString() ) );
+			else
+				// we want a c style / on integer where we only give the quotient instead of a decimal
+				setFact( id, eval( "quotient( " + operand1_val.toString() + ", " + operand2_val.toString() + ")" ) );
 	}
 }
 
-
+function quotient( numer, denom ) {
+	var remainder = numer % denom;
+    var quotient = ( numer - remainder ) / denom;
+	return quotient;
+}
 
 // return the html code 
 function factsDebug() {

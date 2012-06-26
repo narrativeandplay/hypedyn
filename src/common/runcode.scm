@@ -46,7 +46,6 @@
 ; helper fn to recursively execute s-expressions read
 ; from the given input-string
 (define (runcode-exp explist result-callback status-callback)
-  
   (define input 
     (custom-try-catch 
      (lambda () (read explist))

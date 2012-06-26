@@ -967,30 +967,15 @@
                               (operand1      (list-ref (list-ref expr 3) 1))
                               (operand1-type (list-ref (list-ref expr 3) 2))
                               (operand2      (list-ref (list-ref expr 3) 3))
-                              (operand2-type (list-ref (list-ref expr 3) 4))
-;                              (opr1-expr     (case operand1-type
-;                                               (("number") operand1)
-;                                               (("fact") (string-append
-;                                                          "factlist["
-;                                                          (to-string operand1)
-;                                                          "].value"
-;                                                          ))))
-;                              (opr2-expr     (case operand2-type
-;                                               (("number") operand2)
-;                                               (("fact") (string-append
-;                                                          "factlist["
-;                                                          (to-string operand2)
-;                                                          "].value"
-;                                                          ))))
-                             )
+                              (operand2-type (list-ref (list-ref expr 3) 4)))
+
                          (string-append "[" (quote-nest op) ", "
                                         operand1 ", "
                                         (quote-nest operand1-type) ", "
                                         operand2 ", "
                                         (quote-nest operand2-type) "]"
-                                        )
-                         ))
-                      ))
+                                        ))
+                         )))
                   (string-append "[" (to-string target-factID) ", "
                                  (quote-nest num-fact-mode) ", "
                                  fact-value

@@ -2308,7 +2308,7 @@
     (define (make-math-panel #!optional op opr1 opr1-type opr2 opr2-type)
       (define math-panel (make-panel))
       
-      (define operator-choice (make-combobox "+" "-" "x"))
+      (define operator-choice (make-combobox "+" "-" "x" "/" "%"))
       (if (equal? "*" op)
           (set! op "x"))
       (if op

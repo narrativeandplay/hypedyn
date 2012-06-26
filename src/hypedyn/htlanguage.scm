@@ -84,7 +84,6 @@
   ; used by actions
   (primitive-procedure-add! 'restart dorestart)                                      ; (restart): restart reading, same as restart button
   (primitive-procedure-add! 'read-file doreaderopen-filename)                        ; (read-file "filename.dyn"): open the given file and jump to its start node
-  (primitive-procedure-add! 'goto-node goto-node)                                    ; (goto-node nodeID #t/#f): jump to a node, flag determines if added to history
   (primitive-procedure-add! 'back doback)                                            ; (back): go to previous node, same as back button
   (primitive-procedure-add! 'forget-history forget-history)                          ; (forget-history): clears all history
   (primitive-procedure-add! 'set-visited! set-visited!)                              ; (set-visited! nodeID int): sets visited count for a node
@@ -105,8 +104,6 @@
   (primitive-procedure-add! 'loop-audio loop-audio)                                  ; (loop-audio int): loops audio int times
   (primitive-procedure-add! 'loop-audio-forever loop-audio-forever)                  ; (loop-audio-forever): loops audio until stopped
   (primitive-procedure-add! 'stop-audio stop-audio)                                  ; (stop-audio): stops audio immediately
-  (primitive-procedure-add! 'set-disable-back-button! set-disable-back-button!)      ; (set-disable-back-button! #t/#f): enable/disable back button
-  (primitive-procedure-add! 'set-disable-restart-button! set-disable-restart-button!) ; (set-disable-restart-button! #t/#f): enable/disable restart button
   (primitive-procedure-add! 'set-custom-cursors! set-custom-cursors!)                ; (set-custom-cursors! #t/#f): turn custom cursors on/off
   (primitive-procedure-add! 'set-hover-links! set-hover-links!)                      ; (set-hover-links! #t/#f): turn hover links on/off
   (primitive-procedure-add! 'set-hover-click! set-hover-click!)                      ; (set-hover-clicks! #t/#f): turn hover clicks on/off
@@ -127,13 +124,13 @@
   ;; rule actions
   (primitive-procedure-add! 'follow-link follow-link2)
   (primitive-procedure-add! 'replace-link-text replace-link-text)
-  (primitive-procedure-add! 'goto-node goto-node)
+  (primitive-procedure-add! 'goto-node goto-node)                                    ; (goto-node nodeID #t/#f): jump to a node, flag determines if added to history
   (primitive-procedure-add! 'add-anywhere-link add-anywhere-link)
   (primitive-procedure-add! 'show-in-popup show-in-popup)
   
   ;; config options
-  (primitive-procedure-add! 'set-disable-restart-button! set-disable-restart-button!)
-  (primitive-procedure-add! 'set-disable-back-button! set-disable-back-button!)
+  (primitive-procedure-add! 'set-disable-restart-button! set-disable-restart-button!); (set-disable-restart-button! #t/#f): enable/disable restart button
+  (primitive-procedure-add! 'set-disable-back-button! set-disable-back-button!)      ; (set-disable-back-button! #t/#f): enable/disable back button
   (primitive-procedure-add! 'set-disable-pagebreak! set-disable-pagebreak!)
   (primitive-procedure-add! 'set-disable-page-resize! set-disable-page-resize!)
   (primitive-procedure-add! 'set-fixed-page-width! set-fixed-page-width!)
