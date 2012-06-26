@@ -922,8 +922,9 @@
   
   ;; dialog button
   (define rules-dialog-close (make-button "Close"))
+  
   ;; pushes the right elements to the right and left to the left (does the left and right justify)
-  (add-component rules-dialog-button-panel (create-horizontal-glue)) 
+  (add-component rules-dialog-button-panel (create-horizontal-glue))
   (add-component rules-dialog-button-panel rules-dialog-close)
   
   (add-actionlistener up-button 

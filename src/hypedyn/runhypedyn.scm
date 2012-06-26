@@ -18,15 +18,15 @@
 ;; 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 ;; starting the main app with only one language
-(begin
-  (require "../common/main-ui.scm")
-  (require "../common/preferences.scm")
-  (require "../common/fileio.scm")
-  (require "../common/vector-processing.scm")
-  (require "../kawa/file.scm")
-  (require "config-options.scm")
-  (require "hypedyn.scm")
-  (require "htfileio.scm"))
+
+(require "../common/main-ui.scm")
+(require "../common/preferences.scm")
+(require "../common/fileio.scm")
+(require "../common/vector-processing.scm")
+(require "../kawa/file.scm")
+(require "config-options.scm")
+(require "hypedyn.scm")
+(require "htfileio.scm")
 
 ; command-line options
 (format #t "args: ~a~%~!" command-line-arguments)

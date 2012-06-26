@@ -557,7 +557,7 @@
   )
 
 ;; TODO: need testing to replace the above
-(define (weighted-sum2 . weight-value-pairs)
+(define (weighted-sum2 #!rest weight-value-pairs)
   (define total-sum 0)
   (define total-weight 0)
   (define (helper wv-lst)

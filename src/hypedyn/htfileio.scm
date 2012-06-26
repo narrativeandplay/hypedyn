@@ -1012,6 +1012,7 @@
           (display "UNKNOWN ACTION ENCOUNTERED (in JS ACTION EXPORT) ")(display expr)(newline)
         "")) ;; ignore if func and args not recognised
   ))
+
 ;;(make-condition name type targetID operator ruleID . args)
 ;; createCondition(func, func_target_ID, ruleID, not, id)
 
@@ -1113,17 +1114,24 @@
               (list "\tsetStartNode(" (to-string (get-start-node)) ");\n")
               '())
           
+          
+          ;; KAWA 112 fixes (2 here)
           ;; generate createNode code that would in turn generate all the children
           ;; object associated with it
-          (map js-node-code
-               ;; get a list of the node ID
-               (map (lambda (e) (car e)) node-lst))
+;          (map js-node-code
+;               ;; get a list of the node ID
+;               (map (lambda (e) (car e)) node-lst))
+          (let ((real-node-lst (map (lambda (e) (car e)) node-lst)))
+            (map js-node-code real-node-lst))
           
           ;(list "\n") ;; leave a space before fact code
           
           ;; generate createFact code
-          (map js-fact-code
-               (map (lambda (e) (car e)) fact-lst))
+;          (map js-fact-code
+;               (map (lambda (e) (car e)) fact-lst))
+          (let ((real-fact-lst (map (lambda (e) (car e)) fact-lst)))
+            (map js-fact-code real-fact-lst))
+               
           
           ;; config from properties menu
           

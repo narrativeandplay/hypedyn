@@ -94,6 +94,11 @@
 ; are we editing a link (default) or just a rule?
 (define edit-mode 'link)
 
+(define (edited-rule)
+  (if (not (null? edited-ruleID))
+      (get 'rules edited-ruleID)
+      #f))
+
 ;;;; doedit
 
 ; edit a link - called from hteditor.scm
@@ -272,7 +277,6 @@
 (define max-action-panel-width 0)
 (define max-cond-panel-width 0)
 
-
 ;; if condition panel (init editlink-panel-if)
 (define (create-if-condition-panel)
 
@@ -311,8 +315,8 @@
   (define cond-up-button (make-button "Up"))
   (define cond-down-button (make-button "Down"))
   (add-component editlink-panel-follow (create-horizontal-glue))
-  ;;(add-component editlink-panel-follow cond-up-button)
-  ;;(add-component editlink-panel-follow cond-down-button)
+  (add-component editlink-panel-follow cond-up-button)
+  (add-component editlink-panel-follow cond-down-button)
 
   ;;condition panel
   (set! condition-list-panel (make-panel))
@@ -354,7 +358,50 @@
   (set-component-enabled delete-condition-button #f)
   (add-component editlink-panel-main-buttons delete-condition-button)
   
+  ;; Action listeners
+  
+  (add-actionlistener cond-down-button 
+                      (make-actionlistener (shift-callback 'cond 'down)))
+  
+  (add-actionlistener cond-up-button 
+                      (make-actionlistener (shift-callback 'cond 'up)))
+  
   editlink-panel-if) ;; end of IF conditions
+
+;; get the position of the children panel which are selected
+(define (get-selected-pos-lst container-panel)
+  (define (helper lst pos) 
+    (if (null? lst)
+        '()
+        (begin
+          (define curr-panel (car lst))
+          (append 
+           ;; condition append
+           (if (panel-selected? curr-panel)
+               (list pos)
+               '())
+           (helper (cdr lst) (+ pos 1)))
+          )))
+  ;; traverse through the list of rule panels
+  (helper (get-container-children container-panel) 0))
+
+;; used by condition's and action's up down buttons for callbacks
+;; type ['cond 'action]
+;; dir ['up 'down]
+(define (shift-callback type dir)
+  (lambda (e)
+    (let ((container-panel (case type
+                             ((cond) condition-list-panel)
+                             ((action) action-list-panel))))
+      (define selected-lst (get-selected-pos-lst container-panel))
+      (if (= (length selected-lst) 1)
+          (let ((pos (car selected-lst)))
+            (case dir
+              ((up) (shift-panel container-panel pos (- pos 1)))
+              ((down) (shift-panel container-panel pos (+ pos 1))))
+            (component-revalidate container-panel)
+            )))
+  ))
 
 ; user clicked "ok" button on the edit rule UI
 ;; NOTE: we now recycle the rule object
@@ -974,9 +1021,7 @@
              (else (add-component panel-to-return (create-fact-panel #f #f #f)))
          ))
         ((equal? action-type "enable links to this node from anywhere")
-         ;; disable the checkbox of this action (so it can't be deleted)
-         (set-component-enabled (car (get-container-children panel-to-return)) #f)
-         )
+         #f)
         ((equal? action-type "show in popup")
          (if (= (length args-lst) 1)
              (set! node-choice-combobox2 (create-node-choice (car args-lst) #t -1))
@@ -1176,8 +1221,8 @@
   (set-container-layout action-label-panel 'horizontal)
   (add-component action-label-panel action-label)
   (add-component action-label-panel (create-horizontal-glue))
-  ;;(add-component action-label-panel action-up-button)
-  ;;(add-component action-label-panel action-down-button)
+  (add-component action-label-panel action-up-button)
+  (add-component action-label-panel action-down-button)
   
   ;;(set-align-x action-label 'left)
   ;;(set-align-x action-up-button 'right)
@@ -1226,6 +1271,12 @@
   
   (add-actionlistener delete-action-button 
                       (make-actionlistener delete-action-callback))
+  
+  (add-actionlistener action-down-button 
+                      (make-actionlistener (shift-callback 'action 'down)))
+  
+  (add-actionlistener action-up-button 
+                      (make-actionlistener (shift-callback 'action 'up)))
   actions-main-panel)
 
 ;;;; rule rename textfield
@@ -1268,6 +1319,19 @@
         top-panel)
       (make-panel)))
 
+(define (populate-condition-panel condID-lst)
+  (map (lambda (mycond)
+         (let* ((cond-obj (get 'conditions mycond))
+                (the-type (ask cond-obj 'type))
+                (targetID (ask cond-obj 'targetID))
+                (operator (ask cond-obj 'operator))
+                (numfact-args (ask cond-obj 'numfact-args)))
+
+           ;; should allow edited note to be a choice in condition?
+           (add-component condition-list-panel (create-condition-panel the-type targetID operator -1 numfact-args: numfact-args))))
+       condID-lst)
+  )
+
 ; reconstruct a rule
 ; this is called from the doeditlink/doeditnoderule/doeditdocrule procedures above
 ; to finish building the GUI representation of the link/rule
@@ -1289,16 +1353,7 @@
                                 (get-rule-pos expr)) ; add setting of operator
 
         ;; build conditions
-        (map (lambda (mycond)
-               (let* ((cond-obj (get 'conditions mycond))
-                      (the-type (ask cond-obj 'type))
-                      (targetID (ask cond-obj 'targetID))
-                      (operator (ask cond-obj 'operator))
-                      (numfact-args (ask cond-obj 'numfact-args)))
-                 
-                 ;; should allow edited note to be a choice in condition?
-                 (add-component condition-list-panel (create-condition-panel the-type targetID operator -1 numfact-args: numfact-args))))
-             conditions)
+        (populate-condition-panel conditions)
 
         ;; build actions (show them in the ui)
         (map (lambda (actionID)
