@@ -1730,7 +1730,7 @@
          (num-fact-list (create-fact-choice 'number targetID))
          
          (the-node-operator-choice (if (not (is-basic-mode?))
-                                       (make-combobox "Not Visited" "Visited" "Previous Node")
+                                       (make-combobox "Not Visited" "Visited" "Previous Node" "Not Previous Node")
                                        (make-combobox "Not Visited" "Visited")))
          (the-link-operator-choice (make-combobox "Not Followed" "Followed"))
          (the-fact-operator-choice (make-combobox "False" "True"))

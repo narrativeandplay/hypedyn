@@ -32,13 +32,13 @@
 ;; strangely the following does not work 
 ;; (define vert-sb-always javax.swing.ScrollPaneConstants:VERTICAL_SCROLLBAR_ALWAYS)
 
-(define (vert-sb-always) javax.swing.ScrollPaneConstants:VERTICAL_SCROLLBAR_ALWAYS)  
-(define (vert-sb-needed) javax.swing.ScrollPaneConstants:VERTICAL_SCROLLBAR_AS_NEEDED)  
-(define (vert-sb-never) javax.swing.ScrollPaneConstants:VERTICAL_SCROLLBAR_NEVER) 
+(define-constant vert-sb-always javax.swing.ScrollPaneConstants:VERTICAL_SCROLLBAR_ALWAYS)  
+(define-constant vert-sb-needed javax.swing.ScrollPaneConstants:VERTICAL_SCROLLBAR_AS_NEEDED)  
+(define-constant vert-sb-never javax.swing.ScrollPaneConstants:VERTICAL_SCROLLBAR_NEVER)
 
-(define (hori-sb-always) javax.swing.ScrollPaneConstants:HORIZONTAL_SCROLLBAR_ALWAYS)
-(define (hori-sb-needed) javax.swing.ScrollPaneConstants:HORIZONTAL_SCROLLBAR_AS_NEEDED)  
-(define (hori-sb-never) javax.swing.ScrollPaneConstants:HORIZONTAL_SCROLLBAR_NEVER) 
+(define-constant hori-sb-always javax.swing.ScrollPaneConstants:HORIZONTAL_SCROLLBAR_ALWAYS)
+(define-constant hori-sb-needed javax.swing.ScrollPaneConstants:HORIZONTAL_SCROLLBAR_AS_NEEDED)  
+(define-constant hori-sb-never javax.swing.ScrollPaneConstants:HORIZONTAL_SCROLLBAR_NEVER) 
 
 ;make a scrollpane
 (define (make-scrollpane in-component :: <javax.swing.JComponent>)
@@ -50,19 +50,19 @@
                                      hp-sym :: <symbol> )
   (define vpolicy
     (case vp-sym
-      ((always) (vert-sb-always))
-      ((needed) (vert-sb-needed))
-      ((never) (vert-sb-never))
+      ((always) vert-sb-always)
+      ((needed) vert-sb-needed)
+      ((never) vert-sb-never)
       (else (display "Error unknown srollpane policy ")(display vp-sym)
-            (vert-sb-needed))))
+            vert-sb-needed)))
   
    (define hpolicy
     (case hp-sym
-      ((always) (hori-sb-always))
-      ((needed) (hori-sb-needed))
-      ((never) (hori-sb-never))
+      ((always) hori-sb-always)
+      ((needed) hori-sb-needed)
+      ((never) jori-sb-never)
       (else (display "Error unknown scrollpane policy ")(display hp-sym)
-            (hori-sb-needed))))
+            hori-sb-needed)))
   
    (<javax.swing.JScrollPane> in-component vpolicy hpolicy)
   )

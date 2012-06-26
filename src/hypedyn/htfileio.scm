@@ -1048,6 +1048,9 @@
                    ((2) 
                     (set! func "nodeIsPrevious")
                     "false")
+                   ((3) 
+                    (set! func "nodeIsPrevious")
+                    "true")
                    (else "false")
                    ))
          (func-args 
