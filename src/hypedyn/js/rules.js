@@ -243,7 +243,7 @@ function filter_out_empty_rules( rules ) {
 		//}
 		return node.visited;
 	} else {
-		alert("node undefined");
+		alert("node undefined: " + nodeID);
 	}
  }
  
