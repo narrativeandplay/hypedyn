@@ -426,7 +426,7 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 				var curr_page_code = "";
 
                 // process the newlines - is there a reason why this isn't done in escape_special?
-                process_newline(curr_page_tg_arr);
+                //process_newline(curr_page_tg_arr); moved out before page_break_tg - alex
 
 				//disp(" curr_page_tg_arr len "+curr_page_tg_arr.length);
 				for ( var j in curr_page_tg_arr ) {
@@ -491,6 +491,10 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 
 	var anywhere_tg_arr = generate_anywhere_tg ( activated_anywhere_nodes );
 	tg_arr = tg_arr.concat( anywhere_tg_arr );
+    
+    // process newlines
+    process_newline(tg_arr);
+    
 	// dont try to break page when page flipping mode off
 	// pages_tg_arr is an array of tg_arr
 	var pages_tg_arr = (!plain_only && page_flipping_mode) ? page_break_tg( tg_arr ) : [ tg_arr ];
