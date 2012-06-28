@@ -866,13 +866,6 @@
                  (not (= (get-comboboxwithdata-selecteddata (list-ref fp-children 4)) -1)))
             )
            (("Math")
-            (define (operand-panel-valid? panel)
-              (let ((comp-lst (get-container-children panel)))
-                (case (to-string (get-combobox-selecteditem (car comp-lst)))
-                  (("Input") (string-is-numeric? (get-text (cadr comp-lst))))
-                  (("Fact") (not (= (get-comboboxwithdata-selecteddata (cadr comp-lst)) -1)))
-                )))
-            
             (let* ((math-panel (list-ref fp-children 4))
                    (math-panel-lst (get-container-children math-panel))
                    (operand1-panel (list-ref math-panel-lst 0))
@@ -1475,8 +1468,10 @@
          (add-actionlistener
           (fact-choice)
           (make-actionlistener
-           validate-rule
-           ))
+           (lambda (e)
+             (display "fact-choice ")(newline)
+             (validate-rule)
+           )))
          
          ;; add to a container panel and add to the update-text-action-panel
          (add-component update-text-action-panel (fact-choice))
@@ -1519,6 +1514,7 @@
   (add-actionlistener action-type-combobox 
                       (make-actionlistener 
                        (lambda (e)
+                         (display "action type combobox")(newline)
                          (validate-rule)
                          (action-update-text-combobox-callback))))
   )
@@ -1691,8 +1687,8 @@
 ; create a condition panel
 ; the-type: the type of condition (0=node, 1=link, 2=fact)
 ; targetID: the currently selected node/link, if any (pass in -1 if none selected)
-; selectedOperator: the operator for this condition (visited, not visited, or previous)
-(define (create-condition-panel the-type targetID selectedOperator in-edited-nodeID #!key numfact-args)
+; selected-operator: the operator for this condition (visited, not visited, or previous)
+(define (create-condition-panel the-type targetID selected-operator in-edited-nodeID #!key numfact-args)
   
   ;; [condition panel [comparator-panel [ operand-choice ]  [ operand-choice ] ]]
   ;; [action panel [ fact-panel [math-panel [operand-choice]]
@@ -1769,6 +1765,7 @@
                                                                            )))
                                                              (add-component top-panel new-target)
                                                              (add-component top-panel new-operator)
+                                                       
                                                        ;; not the same for type 3 (num fact conditions)
                                                        (if (or (= 0 new-type)
                                                                (= 1 new-type)
@@ -1777,9 +1774,11 @@
                                                              (set-combobox-selection new-target 0)
                                                              (set-combobox-selection new-operator 0))
                                                            )
-                                                       
                                                        )
 
+                                                     
+                                                     (validate-rule)
+                                                     
                                                      (pack-frame editlink-dialog)
                                                      
                                                      (component-update top-panel)
@@ -1792,17 +1791,30 @@
     (add-actionlistener 
      the-node-list
      (make-actionlistener
-      validate-rule))
+      (lambda (e)
+        ;(display "node list ")(newline)
+        (validate-rule))))
     
     (add-actionlistener 
      the-link-list
      (make-actionlistener
-      validate-rule))
+      (lambda (e)
+        ;(display "link list ")(newline)
+        (validate-rule))))
     
     (add-actionlistener 
      bool-fact-list
      (make-actionlistener
-      validate-rule))
+      (lambda (e)
+        ;(display "bool fact list ")(newline)
+        (validate-rule))))
+    
+    (add-actionlistener 
+     num-fact-list
+     (make-actionlistener
+      (lambda (e)
+        ;(display "num fact list ")(newline)
+        (validate-rule))))
 
     ;; Add target choice - may have problems if loading a file that doesn't match chosen version
     (cond 
@@ -1819,8 +1831,9 @@
                        ((= 2 the-type) the-fact-operator-choice)
                        ((= 3 the-type) comparator-panel))))
       (add-component top-panel the-choice)
+      
       (if (not (= 3 the-type))
-          (set-combobox-selection the-choice selectedOperator)
+          (set-combobox-selection the-choice selected-operator)
           (if (pair? numfact-args)
               (begin
                 (set-combobox-selection-object
@@ -1945,6 +1958,7 @@
   (set-component-enabled delete-condition-button #t)
   
   ;; check whether rule is valid and enable ok button
+  (display "edit rule cancel ")(newline)
   (validate-rule)
   
   ;(add-component condition-list-panel (create-condition-panel 0 -1 0 -1))
@@ -1969,6 +1983,7 @@
     
     ;; no more selected conditions, disable button
     (condition-panel-restrict)
+    (display "delete condition ")(newline)
     (validate-rule)
     (pack-frame editlink-dialog)))
 
@@ -2080,8 +2095,6 @@
 ;; getting the components in the condition panel
 (define (condition-panel-component panel index)
   (let ((children (get-container-children panel)))
-    ;;(display "condition panel component length ")(display (length children))(newline)
-    ;;(display "children ")(display children)(newline)
     (if (< index (length children))
         (list-ref children index))))
 (define (condition-panel-target-type-cb panel)
@@ -2104,10 +2117,31 @@
 
 (define (condition-panel-valid? panel)
   ;; target id cannot be -1 
-  (not (= (condition-panel-target-id panel) -1)))
+  ;;(make-combobox "Node" "Link" "Fact(#t/#f)" "Fact(num)")
+  (let ((cond-type (condition-panel-target-type panel)))
+    (cond ((<= cond-type 2)
+           (not (= (condition-panel-target-id panel) -1)))
+          ((= cond-type 3)
+           (and (not (= (condition-panel-target-id panel) -1))
+                (comparator-panel-valid? (condition-panel-operator-cb panel)))
+           ))
+    ))
+
+(define (operand-panel-valid? panel)
+  (let ((comp-lst (get-container-children panel)))
+    (case (to-string (get-combobox-selecteditem (car comp-lst)))
+      (("Input") (string-is-numeric? (get-text (cadr comp-lst))))
+      (("Fact") (not (= (get-comboboxwithdata-selecteddata (cadr comp-lst)) -1)))
+      )))
+
+(define (comparator-panel-valid? panel)
+  (define child-lst (get-container-children panel))
+  (let ((operand-choice (cadr child-lst)))
+    (operand-panel-valid? operand-choice)))
+
+
 
 (define (all-conditions-valid?)
-  
   (define (my-and lst)
     (if (null? lst) 
         #t
@@ -2132,8 +2166,6 @@
 (define (select-condition-panel pnl selected?)
   (if selected?
       (begin
-        (display "selecting condition panel ")(newline)
-        
         ;; need to do this to give new-panel a position
         (validate-container editlink-dialog)
         
@@ -2151,8 +2183,6 @@
 (define (select-action-panel pnl selected?)
   (if selected?
       (begin
-        (display "selecting action panel ")(newline)
-        
          ;; need to do this to give new-panel a position
         (validate-container editlink-dialog)
         
@@ -2210,12 +2240,14 @@
                            (remove-component operand-panel number-entry)
                            (remove-component operand-panel number-choice)
 
+                           
                            ;; add appropriate component
                            (case (to-string (get-combobox-selecteditem mode-choice))
                              (("Input") (add-component operand-panel number-entry))
                              (("Fact") (add-component operand-panel number-choice))
                              )
 
+                           ;;(display "operand choice action")(newline)
                            (validate-rule)
 
                            ;; update thie panel and parent panels
@@ -2260,7 +2292,10 @@
     (add-actionlistener
      number-choice
      (make-actionlistener
-      validate-rule
+      (lambda (e)
+        ;;(display "number choice ")(newline)
+        (validate-rule)
+        )
       ))
 
     (add-documentlistener
@@ -2392,29 +2427,36 @@
                                                (pack-component top-panel)
                                                (pack-frame editlink-dialog)
                                              
+                                               ;;(display "fact type choice changed in fact panel ")(newline)
                                                (validate-rule)
                                                )))
 
     (add-actionlistener
      the-fact-list-boolean
      (make-actionlistener
-      validate-rule))
+      (lambda (e)
+        ;;(display "bool fact mode change ")(newline)
+        (validate-rule))))
     
     (add-actionlistener
      the-fact-list-string
      (make-actionlistener
-      validate-rule))
+      (lambda (e)
+        ;;(display "string fact mode change ")(newline)
+        (validate-rule))))
     
     (add-actionlistener
      the-fact-list-number
      (make-actionlistener
-      validate-rule))
+      (lambda (e)
+        ;;(display "num fact mode chosen ")(newline)
+        (validate-rule))))
     
     (add-actionlistener
      number-fact-target-cb
      (make-actionlistener
       (lambda (e)
-        (display "num fact mode change")(newline)
+        ;;(display "num fact mode change")(newline)
         (validate-rule))))
     
     ;; check content of number entry to be numeric
@@ -2495,7 +2537,7 @@
                (case num-fact-mode
                  (("Input") (set-text the-number-entry (to-string the-value)))
                  (("Fact") (set-comboboxwithdata-selection-bydata number-fact-target-cb the-value))
-                 (("Math") (display "the-value in create fact panel ")(display the-value)(newline) #f)
+                 (("Math") #f)
                  )
                )
               ))
