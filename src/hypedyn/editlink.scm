@@ -31,6 +31,7 @@
 (require "../kawa/ui/combobox.scm")
 (require "../kawa/ui/tabpanel.scm")
 (require "../kawa/ui/undo.scm") ;; debug compoundundomanager-updatelevel 
+(require "../kawa/ui/menu.scm") ;; make-separator
 
 (require "../kawa/system.scm") ; is-windows?
 (require "../kawa/strings.scm") ;; to-string
@@ -142,6 +143,15 @@
     ;; add appropriate panels to editlink-dialog
     (clear-container editlink-panel-top)
     (add-component editlink-panel-top (create-rules-rename-panel in-ruleID))
+    
+    ;;(Box.createHorizontalStrut(5));
+    ;; separator is invisible by default due to it having no width or height in the direction 
+    ;; it is separating
+
+    (define separator (make-separator))
+    (set-component-preferred-size separator 200 10)
+    (add-component editlink-panel-top separator)
+    
     (add-component editlink-panel-top (create-if-condition-panel))
     (add-component editlink-panel-top (create-actions-main-panel))
     
@@ -299,7 +309,7 @@
 ;  (add-component editlink-panel-follow editlink-dialog-operater-label)
   
   ;; "If" label
-  (add-component editlink-panel-follow (make-label-with-title "If"))
+  (add-component editlink-panel-follow (make-label-with-title " If "))
   
   ; "all"/"any" selection
   (set! editlink-dialog-andor-operator (make-combobox "All" "Any"))
@@ -308,7 +318,7 @@
   
   ; label for "of the following conditions are true:"
   (set! editlink-dialog-label (make-label))
-  (set-text editlink-dialog-label "of the following conditions are true:")
+  (set-text editlink-dialog-label " of the following conditions are true:")
   (add-component editlink-panel-follow editlink-dialog-label)
   
   ;; up down button
@@ -1209,7 +1219,7 @@
   (define action-down-button (make-button "Down"))
   
   ;; label
-  (define action-label (make-label-with-title "THEN perform the following actions:"))
+  (define action-label (make-label-with-title " THEN perform the following actions:"))
   (define action-label-panel (make-panel))
   (set-container-layout action-label-panel 'horizontal)
   (add-component action-label-panel action-label)
