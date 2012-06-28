@@ -120,6 +120,11 @@
 (define (get-rule-name ruleID)
   (let* ((rule-obj (get 'rules ruleID))
          (rule-name (ask rule-obj 'name)))
+    
+    (define limit 40)
+    (if (> (string-length rule-name) limit)
+        (set! rule-name (string-append (substring rule-name 0 (- limit 3)) "..."))
+        )
     (if (show-IDs?)
         (to-string (string-append rule-name "(" (to-string ruleID) ")"))
         rule-name))
@@ -149,8 +154,6 @@
         (display (scroll-viewport-width center-panel))(newline)
         (set! rule-panel-width (scroll-viewport-width center-panel))
         ))
-  
-  (display "setting rule-panel-width ")(display rule-panel-width)(newline)
   
   (set-component-non-resizable-size top-panel rule-panel-width rule-panel-height)
   

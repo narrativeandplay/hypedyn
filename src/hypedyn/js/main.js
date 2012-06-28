@@ -309,9 +309,8 @@ function insert_peek_back() {
 // it is invalid when we're at the first node
 function back_button_check() {
 	back_button = $("back_button");
-	
 	if (back_button) {
-		if (prev_read_nodes.length <= 1) // we're at the first node (wont be 0 normally..)
+		if (prev_read_nodes.length < 1) // we're at the first node (wont be 0 normally..)
 			back_button.setAttribute("disabled", "disabled");
 		else
 			back_button.removeAttribute("disabled"); //enable it 

@@ -147,13 +147,9 @@ function ruleRelevant(eventType, rule) {
  function eventTrigger( eventType, obj ) {
  
 	var firing_candidates = filter_out_relevant( obj.rules, eventType );
-	//disp(" firing cand here "+firing_candidates);
-	disp(" fir cand count "+ firing_candidates.length);
 	
 	for ( var i=0; i<firing_candidates.length; i++ ) {
 		var rule = firing_candidates[i];
-		disp(" event trig debug ");
-		disp("rule id "+rule.id);
 		if ( checkCondition( rule ) ) {
 			for (var j in rule.actions) {
 				var action = rule.actions[j];
