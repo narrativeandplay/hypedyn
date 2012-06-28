@@ -63,10 +63,17 @@
                add-follow-link-rule-display remove-follow-link-rule-display
                add-link-display remove-link-display
                
-               edit-mode ;; used by rules-manager so far
+               ;; used by rules-manager so far
+               edit-mode 
+               remove-follow-link-rule-display 
+               remove-show-popup-rule-display
+               add-follow-link-rule-display
+               add-show-popup-rule-display
+               
                delete-action ;; just for ht-editor.scm's dodelnode
                
                edited-linkID
+               edited-ruleID
                )
 
 (define-constant cond-panel-width 500) ;; not used
@@ -580,6 +587,14 @@
                                        (list 'quote 'default)
                                        dest-nodeID)
                                  edited-ruleID))
+                 ;; Show in popup
+                 ((equal? action-type "show in popup")
+                  (define target-nodeID (get-comboboxwithdata-selecteddata node-choice-combobox2))
+                  (display "edited linkID on confirm ")(display edited-linkID)(newline)
+                  (create-action "Show in Popup" 'clicked-link
+                               (list 'show-in-popup target-nodeID)
+                               edited-ruleID)
+                  )
                  ;; Update Fact action
                  ((equal? action-type "update fact")
 
@@ -709,13 +724,7 @@
                   (create-action "Enable Link" 'anywhere-check
                                (list 'add-anywhere-link edited-nodeID)
                                edited-ruleID))
-                 ((equal? action-type "show in popup")
-                  (define target-nodeID (get-comboboxwithdata-selecteddata node-choice-combobox2))
-                  (display "edited linkID on confirm ")(display edited-linkID)(newline)
-                  (create-action "Show in Popup" 'clicked-link
-                               (list 'show-in-popup target-nodeID)
-                               edited-ruleID)
-                  )
+                 
                  ) ;; end of action-type cond
            ) (action-panel-list))
 
@@ -1173,12 +1182,14 @@
   
   ;; in case it is a follow link action, we need to update the link display
   (remove-follow-link-rule-display ruleID)
+  (remove-show-popup-rule-display ruleID)
   
   (ask rule 'delaction actionID)
   (del 'actions actionID)
   
   ;; in case it is NOT a follow link action, we need to add the link back
   (add-follow-link-rule-display ruleID)
+  (add-show-popup-rule-display ruleID)
   
   (compoundundomanager-postedit 
    undo-manager
@@ -1186,18 +1197,23 @@
     "Delete Action"
     (lambda () ;;undo
       (remove-follow-link-rule-display ruleID)
+      (remove-show-popup-rule-display ruleID)
       (eval-sexpr action-sexpr)
       (add-follow-link-rule-display ruleID)
+      (add-show-popup-rule-display ruleID)
       )
     (lambda () ;; redo
       (define action (get 'actions actionID))
       (define ruleID (ask action 'ruleID))
       (define rule (get 'rules ruleID))
       (define action-sexpr (ask action 'to-save-sexpr))
+      
       (remove-follow-link-rule-display ruleID)
+      (remove-show-popup-rule-display ruleID)
       (ask rule 'delaction actionID)
       (del 'actions actionID)
       (add-follow-link-rule-display ruleID)
+      (add-show-popup-rule-display ruleID)
       )))
   )
 

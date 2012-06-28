@@ -501,11 +501,18 @@
 
         (define deleted-sexpr-lst
           (map cache-rule deleted-ID-lst))
+        (display "delete selected ")(display deleted-ID-lst)(newline)
+        
 
         (map (lambda (ruleID)
-               ;; update rule-lst
+               ;; remove the line associated with this rule before we edit it
+               (display "edit mode ? ")(display edit-mode)(newline)
+               (display "eq? link? ")(display (eq? edit-mode 'link))(newline)
+               (if (eq? edit-mode 'link)
+                   (remove-follow-link-rule-display ruleID))  ;; remove the line display from the ruleID (if any)
+               (if (eq? edit-mode 'link)
+                   (remove-show-popup-rule-display ruleID))  ;; remove the line display from ruleID
                (rmgr-set-rule-lst (remove (lambda (thisruleID) (= ruleID thisruleID)) (rmgr-rule-lst)))
-               ;; delete from 'rules 
                (del 'rules ruleID)
                ) deleted-ID-lst)
         
@@ -518,7 +525,6 @@
          (make-undoable-edit
           "Delete Rule"
           (lambda () ;; undo
-
             (rmgr-edit curr-edit-mode edited-obj-ID)
 
             ;; restore the rules
@@ -531,21 +537,31 @@
 
             ;; reorder the panels according to the rule-lst
             (populate-rules-manager curr-edit-mode edited-obj-ID)
+            
+            ;; restore the lines in the graph associated to the rule's action
+            (map (lambda (ruleID)
+               (if (eq? edit-mode 'link)
+                   (add-follow-link-rule-display ruleID))
+               (if (eq? edit-mode 'link)
+                   (add-show-popup-rule-display ruleID))
+                   ) deleted-ID-lst)
             )
           (lambda () ;; redo
             (rmgr-edit curr-edit-mode edited-obj-ID)
 
             ;; remove panel first (important to do before remove rule-lst)
             (map (lambda (ruleID)
+                   ;; remove the line associated with this rule before we edit it
+                   (if (eq? edit-mode 'link)
+                       (remove-follow-link-rule-display ruleID))  ;; remove the line display from the ruleID (if any)
+                   (if (eq? edit-mode 'link)
+                       (remove-show-popup-rule-display ruleID))  ;; remove the line display from ruleID
+                   
                    (rmgr-remove-rule-panel ruleID)
                    (rmgr-set-rule-lst (remove (lambda (thisruleID) (= ruleID thisruleID)) (rmgr-rule-lst)))
-                   ) deleted-ID-lst)
-            (component-update rmgr-rules-list-panel)
-            ;; remove from rule-lst and 'rules 
-            (map (lambda (ruleID)
-                   ;; delete from 'rules 
                    (del 'rules ruleID)
                    ) deleted-ID-lst)
+            (component-update rmgr-rules-list-panel)
             ))))))
 
 ;; used by the external rule button (as opposed to the rule button on the panel)
@@ -556,8 +572,7 @@
       (begin
         ;; get the lambda object and run it on the spot
         ((edit-rule-button-callback (car selected-ruleID-lst)) #f)
-        ))
-  )
+        )))
 
 (define (shift-up-callback2 e)
   (define selected-ruleID-lst (selected-rule-lst))
@@ -823,6 +838,11 @@
   (display "rmgr-edit ")(newline)
   (set! edit-mode target-type)
   
+  (set-component-enabled delete-rule-button #f)
+  (set-component-enabled rule-edit-button #f)
+  (set-component-enabled up-button #f)
+  (set-component-enabled down-button #f)
+  
   (populate-rules-manager target-type obj-ID)
   ;; make sure nodeeditor is open when rule manager is editing
   ;; NOTE: depends on populate-rules-manager to set edited-linkID and edited-nodeID properly
@@ -911,11 +931,6 @@
   (add-component rules-dialog-button-panel add-rule-button)
   (add-component rules-dialog-button-panel delete-rule-button)
   (add-component rules-dialog-button-panel rule-edit-button)
-  
-  (set-component-enabled delete-rule-button #f)
-  (set-component-enabled rule-edit-button #f)
-  (set-component-enabled up-button #f)
-  (set-component-enabled down-button #f)
   
   ;; dialog button
   (define rules-dialog-close (make-button "Close"))

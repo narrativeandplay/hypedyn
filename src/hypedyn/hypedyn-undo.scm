@@ -200,8 +200,11 @@
       (case type
         ((link) ;; link need to update node graph display (follow link action)
          (remove-follow-link-rule-display ruleID)
+         (remove-show-popup-rule-display ruleID)
          (eval-sexpr unedited-sexpr-copy)
-         (add-follow-link-rule-display ruleID))
+         (add-follow-link-rule-display ruleID)
+         (add-show-popup-rule-display ruleID)
+         )
         ((node)
          (eval-sexpr unedited-sexpr-copy)))
       
@@ -217,8 +220,11 @@
       (case type
         ((link)
          (remove-follow-link-rule-display ruleID)
+         (remove-show-popup-rule-display ruleID)
          (eval-sexpr edited-sexpr-copy)
-         (add-follow-link-rule-display ruleID))
+         (add-follow-link-rule-display ruleID)
+         (add-show-popup-rule-display ruleID)
+         )
         ((node)
          (eval-sexpr edited-sexpr-copy)))
      
