@@ -1793,12 +1793,14 @@
                                                              (add-component top-panel new-operator)
                                                        
                                                        ;; not the same for type 3 (num fact conditions)
-                                                       (if (or (= 0 new-type)
-                                                               (= 1 new-type)
-                                                               (= 2 new-type))
-                                                           (begin
-                                                             (set-combobox-selection new-target 0)
-                                                             (set-combobox-selection new-operator 0))
+                                                       (cond ((or (= 0 new-type)
+                                                                  (= 1 new-type)
+                                                                  (= 2 new-type))
+                                                              (set-combobox-selection new-target 0)
+                                                              (set-combobox-selection new-operator 0))
+                                                             ((= 3 new-type)
+                                                              ;; set color of parent condition panel
+                                                              (set-background-color comparator-panel (get-background-color top-panel)))
                                                            )
                                                        )
 
