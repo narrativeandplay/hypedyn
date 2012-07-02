@@ -21,11 +21,11 @@
   </jre>
   <versionInfo>
     <fileVersion>2.2.0.2</fileVersion>
-    <txtFileVersion>2.2a3 rev 112 18 May 2012</txtFileVersion>
-    <fileDescription>HypeDyn version 2.2a3</fileDescription>
+    <txtFileVersion>2.2a5 rev 179 18 May 2012</txtFileVersion>
+    <fileDescription>HypeDyn version 2.2a5</fileDescription>
     <copyright>2008-2012 National University of Singapore</copyright>
     <productVersion>2.2.0.2</productVersion>
-    <txtProductVersion>2.2a3 rev 112 18 May 2012</txtProductVersion>
+    <txtProductVersion>2.2a5 rev 179 18 May 2012</txtProductVersion>
     <productName>HypeDyn</productName>
     <companyName>National University of Singapore</companyName>
     <internalName>HypeDyn</internalName>
