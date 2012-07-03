@@ -502,8 +502,6 @@
     
     ; adjust links after inserting
     (define (adjust-links-insert start len #!optional break-link)
-      (display "adjust-links-insert ")(display (list start len break-link))(newline)
-      (display "start len undo? extend-len ")(newline)
       (let ((edited-node (get nodelist-name the-nodeID)))
         ; run through each link and adjust
         (map (lambda (l)

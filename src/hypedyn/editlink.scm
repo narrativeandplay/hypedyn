@@ -172,7 +172,11 @@
 ;            (and link-usealtlink (eq? link-dest2 -1)))))
     
     ;; reset combobox to contain all action-type-list
-    (reset-action-type-choice 'link)
+    (let ((edited-node (get 'nodes in-edited-nodeID)))
+      (if (ask edited-node 'anywhere?)
+          (reset-action-type-choice 'anywhere-node-link)
+          (reset-action-type-choice 'link)))
+    
     (populate-rule-editor in-ruleID)
     )
     
@@ -811,6 +815,9 @@
         
         ((equal? obj-type 'anywhere-node)
          (set! action-type-list action-type-list-anywhere-node))
+        
+        ((equal? obj-type 'anywhere-node-link)
+         (set! action-type-list action-type-list-anywhere-node-link))
          )
   
   ;; reset the available actions type in the combobox
@@ -963,7 +970,6 @@
   
   ;; alter the configuration of the ui objects if args-lst given
   (cond ((equal? action-type "update text using")
-         
          (if (= (length args-lst) 2)
              (let ((using-type (car args-lst))
                    (alt-text (cadr args-lst)))
@@ -991,6 +997,7 @@
              ;; if this is a new action, just reset fact type selection to alternative text
              (begin
                (set-combobox-selection-object action-type-combobox (create-combobox-string-item "alternative text"))
+               (set-text alt-text-textfield "")
                ))
          (pack-component update-text-action-panel)
          (add-component panel-to-return update-text-action-panel)
@@ -1318,6 +1325,7 @@
 (define action-type-list-link (list "update text using" "follow link to" "update fact" "show in popup"))
 (define action-type-list-node (list "update fact"))
 (define action-type-list-anywhere-node (list "update fact" "enable links to this node from anywhere"))
+(define action-type-list-anywhere-node-link (list "update text using" "update fact"))
 
 (define-constant unique-choices (list "update text using" "follow link to" "show in popup" "enable links to this node from anywhere")) ;; choices that shouldnt be duplicated
 
