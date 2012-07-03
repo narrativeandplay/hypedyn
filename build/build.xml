@@ -10,7 +10,7 @@
   <!-- Give the user a chance to override the defaults. -->
   <property file="build.properties"/>
   
-  <property name="version.release" value="2.4.1"/>
+  <property name="version.release" value="2.2.0.5"/>
   <property name="version.local" value=""/>
   <property name="version" value="${version.release}${version.local}"/>
   
@@ -75,7 +75,7 @@
   
   <!-- top most parent task -->
   <!-- <target name="all" depends="init, build, dist" /> --> 
-  <target name="all" depends="init, editor, reader, applet, assemble-export-lib" />
+  <target name="all" depends="init, editor" />
   
   <target name="editor" depends="build-editor, dist-editor" />
   <target name="reader" depends="build-reader, dist-reader" />
@@ -91,7 +91,6 @@
   <target name="dist-editor" depends="dist-common, dist-editor-windows, dist-editor-linux, dist-editor-macosx" />
   <target name="dist-reader" depends="dist-reader-windows, dist-reader-linux, dist-reader-macosx" />
   <target name="dist-applet" depends="dist-applet-common" />
-  <!-- <target name="dist-applet" depends="dist-applet-windows, dist-applet-linux, dist-applet-macosx, dist-common-windows" /> -->
    
   <!-- INIT -->
   <target name="init">
@@ -101,11 +100,11 @@
   
   	<!-- set the properties that are os dependent -->
   	
-    <condition property="dist.editor.package" value="${dist.dir}/HypeDyn.win" >
+    <condition property="dist.editor.package" value="${dist.dir}" > <!-- /HypeDyn.win" > -->
  		<istrue value="${windows}"/> 
     </condition>
  	
- 	<condition property="dist.editor.package" value="${dist.dir}/HypeDyn.linux">
+ 	<condition property="dist.editor.package" value="${dist.dir}" > <!-- /HypeDyn.linux"> -->
  		<istrue value="${linux}"/> 
  	</condition>
      	
@@ -264,27 +263,26 @@
 	<copy todir="${export.dir}/HypeDynReader.app">
 	  		<fileset dir="${mac.package.dir}/HypeDynReader-standalone_package.app"/>
 	</copy>
-	<!-- rename mac standalone -->
-  	<!-- <move file="${export.dir}/HypeDynReader-standalone_package.app" tofile="${export.dir}/HypeDynReader_package.app" /> -->
 
 	<!-- copy kawa.jar and hypedyn-reader.jar -->
 	<copy file="${dist.editor.package.javadir}/kawa.jar" todir="${export.dir}"/>
 	<copy file="${dist.reader.package.javadir}/hypedyn-reader.jar" todir="${export.dir}"/>
 </target>
 	
-	<target name="dist-common" >
-		<!-- copy the help file -->
-		<copy file="${doc.dir}/hypedyn-help.txt" todir="${dist.editor.package.javadir}"/>
+<target name="dist-common" >
+	<!-- copy the help file -->
+	<copy file="${doc.dir}/hypedyn-help.txt" todir="${dist.editor.package.javadir}"/>
 
-		<!-- copy the examples and tutorials -->
-		<copy todir="${dist.editor.package.javadir}/examples">
-		  	<fileset dir="${shared.dir}/examples"/>
-		</copy>
-		<copy todir="${dist.editor.package.javadir}/tutorials">
-		  	<fileset file="${doc.dir}/*.pdf"/>
-		</copy>
-		
-	</target>
+	<!-- copy the examples and tutorials -->
+	<copy todir="${dist.dir}/examples/">
+	  	<fileset dir="${shared.dir}/examples"/>
+	</copy>
+	<!-- should the .pdf files be rebuilt from the .tex files? -->
+	<copy todir="${dist.dir}/tutorials/">
+	  	<fileset file="${doc.dir}/*.pdf"/>
+	</copy>
+	
+</target>
  
   <!-- Distribute Editor Linux -->
 	
@@ -345,6 +343,9 @@
 	<copy todir="${dist.editor.package}/css">
 	  	<fileset dir="${src.dir}/css"/>
 	</copy>
+  	
+  	<!-- copy the readme file -->
+  	<copy file="${build.dir}/windows/README.txt" todir="${dist.editor.package}" />
   </target>
   		
   <!-- Distribute Editor Mac -->
@@ -371,6 +372,8 @@
 	  	<fileset dir="${src.dir}/css"/>
 	</copy>
 
+  	<!-- copy the readme file -->
+  	<copy file="${build.dir}/macosx/README.txt" todir="${dist.dir}" />
   </target>
   	
 	<!-- Distribute Reader Linux -->
