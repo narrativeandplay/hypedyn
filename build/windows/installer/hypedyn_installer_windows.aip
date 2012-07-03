@@ -6,90 +6,73 @@
     <ROW Property="ARPPRODUCTICON" Value="hypedyn.exe" Type="8"/>
     <ROW Property="ARPURLINFOABOUT" Value="http://www.partechgroup.org/hypedyn"/>
     <ROW Property="Manufacturer" Value="NUS" ValueLocId="*"/>
-    <ROW Property="ProductCode" Value="1033:{4FDA699F-F320-4DA3-8429-DF3C7E5B6F5B} " Type="16"/>
+    <ROW Property="ProductCode" Value="1033:{725589AD-F6FC-437F-A787-BE69FEE9C74F} " Type="16"/>
     <ROW Property="ProductLanguage" Value="1033"/>
     <ROW Property="ProductName" Value="HypeDyn" ValueLocId="*"/>
-    <ROW Property="ProductVersion" Value="2.2.0.2"/>
+    <ROW Property="ProductVersion" Value="2.2.0.5"/>
     <ROW Property="SecureCustomProperties" Value="OLDPRODUCTS;AI_NEWERPRODUCTFOUND"/>
     <ROW Property="UpgradeCode" Value="{4A49B042-B355-40B9-8DA5-F9E45E2ED511}"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiDirsComponent">
     <ROW Directory="APPDIR" Directory_Parent="TARGETDIR" DefaultDir="APPDIR:." IsPseudoRoot="1"/>
-    <ROW Directory="Contents_Dir" Directory_Parent="HypeDynReader.app_Dir" DefaultDir="Contents"/>
     <ROW Directory="DesktopFolder" Directory_Parent="TARGETDIR" DefaultDir="Deskto~1|DesktopFolder" IsPseudoRoot="1"/>
-    <ROW Directory="HypeDynReader.app_Dir" Directory_Parent="export_DIR" DefaultDir="HypeDy~1.app|HypeDynReader.app"/>
     <ROW Directory="HypeDyn_DIR" Directory_Parent="ProgramMenuFolder" DefaultDir="HypeDyn"/>
-    <ROW Directory="MacOS_Dir" Directory_Parent="Contents_Dir" DefaultDir="MacOS"/>
     <ROW Directory="ProgramMenuFolder" Directory_Parent="TARGETDIR" DefaultDir="Progra~1|ProgramMenuFolder" IsPseudoRoot="1"/>
-    <ROW Directory="Resources_Dir" Directory_Parent="Contents_Dir" DefaultDir="Resour~1|Resources"/>
     <ROW Directory="SHORTCUTDIR" Directory_Parent="TARGETDIR" DefaultDir="SHORTC~1|SHORTCUTDIR" IsPseudoRoot="1"/>
     <ROW Directory="TARGETDIR" DefaultDir="SourceDir"/>
+    <ROW Directory="css_Dir" Directory_Parent="APPDIR" DefaultDir="css"/>
     <ROW Directory="examples_DIR" Directory_Parent="APPDIR" DefaultDir="examples"/>
-    <ROW Directory="export_DIR" Directory_Parent="APPDIR" DefaultDir="export"/>
     <ROW Directory="js_Dir" Directory_Parent="APPDIR" DefaultDir="js"/>
     <ROW Directory="lib_DIR" Directory_Parent="APPDIR" DefaultDir="Java"/>
     <ROW Directory="tutorials_DIR" Directory_Parent="APPDIR" DefaultDir="tutori~1|tutorials"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiCompsComponent">
-    <ROW Component="HypeDyn" ComponentId="{779F6BA5-4498-478E-B6EC-BB66948261B1}" Directory_="HypeDyn_DIR" Attributes="0"/>
-    <ROW Component="Info.plist" ComponentId="{70B07262-B557-4D5F-80F0-35BFE4AEBCDD}" Directory_="Contents_Dir" Attributes="0" KeyPath="Info.plist" Type="0"/>
-    <ROW Component="JavaApplicationStub" ComponentId="{CA39E8DD-AF26-40E6-9D1E-F781499AD97F}" Directory_="MacOS_Dir" Attributes="0" KeyPath="JavaApplicationStub" Type="0"/>
+    <ROW Component="HypeDyn" ComponentId="{6C8A94C4-CD5A-4D6B-AE82-45468A96713A}" Directory_="HypeDyn_DIR" Attributes="0"/>
+    <ROW Component="README.txt" ComponentId="{72A9936E-BBBC-4279-AAEC-CB8B4D1F5A10}" Directory_="APPDIR" Attributes="0" KeyPath="README.txt" Type="0"/>
     <ROW Component="SHORTCUTDIR" ComponentId="{7C14D11E-7F0B-401E-9890-6AFEE198C659}" Directory_="SHORTCUTDIR" Attributes="0"/>
-    <ROW Component="choicebutton.js" ComponentId="{E1E48CAD-7A32-4F6D-9D09-69F731F3DFE2}" Directory_="js_Dir" Attributes="0" KeyPath="choicebutton.js" Type="0"/>
-    <ROW Component="dyn.icns" ComponentId="{ADC0EDF6-46D6-46D2-9CB1-3D96E9B88C22}" Directory_="Resources_Dir" Attributes="0" KeyPath="dyn.icns" Type="0"/>
+    <ROW Component="choicebutton.js" ComponentId="{4E977154-3190-4A09-869D-369937B174BC}" Directory_="js_Dir" Attributes="0" KeyPath="choicebutton.js" Type="0"/>
     <ROW Component="hypedyn.exe" ComponentId="{EA8E8F65-628E-45CE-A889-FF8169A62565}" Directory_="APPDIR" Attributes="0" KeyPath="hypedyn.exe"/>
     <ROW Component="hypedyn.jar" ComponentId="{C1C4CFD5-09FC-42B4-B14F-C44ADEE5DB97}" Directory_="lib_DIR" Attributes="0" KeyPath="hypedyn.jar" Type="0"/>
-    <ROW Component="hypedyn.jar_1" ComponentId="{3E75FAAB-1FCD-4C54-A7ED-CEE304E567B8}" Directory_="export_DIR" Attributes="0" KeyPath="hypedyn.jar_1" Type="0"/>
-    <ROW Component="hypedyn_reader.exe" ComponentId="{A6FB4096-7E2F-41E5-8151-BF35476F62E0}" Directory_="export_DIR" Attributes="0" KeyPath="hypedyn_reader.exe"/>
     <ROW Component="hypedyn_tutorial_1.pdf" ComponentId="{23381E5A-D90D-479F-A217-D33CE5B8C8E8}" Directory_="tutorials_DIR" Attributes="0" KeyPath="hypedyn_tutorial_1.pdf" Type="0"/>
     <ROW Component="hypedyn_tutorial_2.pdf" ComponentId="{A926DE32-5C61-4B7C-B748-39E4D1358AD7}" Directory_="tutorials_DIR" Attributes="0" KeyPath="hypedyn_tutorial_2.pdf"/>
     <ROW Component="hypedyn_tutorial_3.pdf" ComponentId="{7E04E3DA-30AD-4E87-99C9-4953880F7AB4}" Directory_="tutorials_DIR" Attributes="0" KeyPath="hypedyn_tutorial_3.pdf"/>
     <ROW Component="rashomon_alt_anywhere.dyn" ComponentId="{923C0FF9-CD25-4241-9778-F1E3A6F343BE}" Directory_="examples_DIR" Attributes="0" KeyPath="LRRH.dyn" Type="0"/>
+    <ROW Component="styling.css" ComponentId="{6F300813-0B81-4E83-A27C-7F927FB32279}" Directory_="css_Dir" Attributes="0" KeyPath="styling.css" Type="0"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiFeatsComponent">
-    <ROW Feature="MainFeature" Title="MainFeature" Description="Description" Display="1" Level="1" Directory_="APPDIR" Attributes="0" Components="HypeDyn Info.plist JavaApplicationStub SHORTCUTDIR choicebutton.js dyn.icns hypedyn.exe hypedyn.jar hypedyn.jar_1 hypedyn_reader.exe hypedyn_tutorial_1.pdf hypedyn_tutorial_2.pdf hypedyn_tutorial_3.pdf rashomon_alt_anywhere.dyn"/>
+    <ROW Feature="MainFeature" Title="MainFeature" Description="Description" Display="1" Level="1" Directory_="APPDIR" Attributes="0" Components="HypeDyn README.txt SHORTCUTDIR choicebutton.js hypedyn.exe hypedyn.jar hypedyn_tutorial_1.pdf hypedyn_tutorial_2.pdf hypedyn_tutorial_3.pdf rashomon_alt_anywhere.dyn styling.css"/>
     <ATTRIBUTE name="CurrentFeature" value="MainFeature"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiFilesComponent">
-    <ROW File="AppleJavaExtensions.jar" Component_="hypedyn.jar" FileName="AppleJ~1.jar|AppleJavaExtensions.jar" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\Java\AppleJavaExtensions.jar" SelfReg="false" NextFile="hypedyn.jar_1"/>
-    <ROW File="AppleJavaExtensions.jar_1" Component_="hypedyn.jar_1" FileName="AppleJ~1.jar|AppleJavaExtensions.jar" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\export\AppleJavaExtensions.jar" SelfReg="false" NextFile="hypedyn_reader.exe"/>
-    <ROW File="Info.plist" Component_="Info.plist" FileName="Info~1.pli|Info.plist" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\export\HypeDynReader.app\Contents\Info.plist" SelfReg="false" NextFile="JavaApplicationStub"/>
-    <ROW File="JavaApplicationStub" Component_="JavaApplicationStub" FileName="JavaAp~1|JavaApplicationStub" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\export\HypeDynReader.app\Contents\MacOS\JavaApplicationStub" SelfReg="false" NextFile="PkgInfo"/>
-    <ROW File="LRRH.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH.dyn" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\Java\examples\LRRH.dyn" SelfReg="false" NextFile="LRRH2.dyn"/>
-    <ROW File="LRRH2.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH2.dyn" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\Java\examples\LRRH2.dyn" SelfReg="false" NextFile="LRRH3.dyn"/>
-    <ROW File="LRRH3.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH3.dyn" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\Java\examples\LRRH3.dyn" SelfReg="false" NextFile="hypedyn_tutorial_1.pdf"/>
-    <ROW File="LRRH4.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH4.dyn" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\Java\examples\LRRH4.dyn" SelfReg="false" NextFile="kawa_applet.jar"/>
-    <ROW File="PkgInfo" Component_="Info.plist" FileName="PkgInfo" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\export\HypeDynReader.app\Contents\PkgInfo" SelfReg="false" NextFile="dyn.icns"/>
-    <ROW File="choicebutton.js" Component_="choicebutton.js" FileName="choice~1.js|choice-button.js" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\js\choice-button.js" SelfReg="false" NextFile="datastructure.js"/>
-    <ROW File="datastructure.js" Component_="choicebutton.js" FileName="datast~1.js|datastructure.js" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\js\datastructure.js" SelfReg="false" NextFile="dimension.css"/>
-    <ROW File="dimension.css" Component_="choicebutton.js" FileName="dimens~1.css|dimension.css" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\js\dimension.css" SelfReg="false" NextFile="facts.js"/>
-    <ROW File="dyn.icns" Component_="dyn.icns" FileName="dyn~1.icn|dyn.icns" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\export\HypeDynReader.app\Contents\Resources\dyn.icns" SelfReg="false" NextFile="hypedyn.icns"/>
-    <ROW File="facts.js" Component_="choicebutton.js" FileName="facts.js" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\js\facts.js" SelfReg="false" NextFile="flipanimation.js"/>
-    <ROW File="flipanimation.js" Component_="choicebutton.js" FileName="flip-a~1.js|flip-animation.js" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\js\flip-animation.js" SelfReg="false" NextFile="hdmouse.js"/>
-    <ROW File="hdmouse.js" Component_="choicebutton.js" FileName="hdmouse.js" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\js\hdmouse.js" SelfReg="false" NextFile="index.html"/>
-    <ROW File="htapplet.html" Component_="hypedyn.jar_1" FileName="htappl~1.htm|htapplet.html" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\export\htapplet.html" SelfReg="false" NextFile="htapplet.jar"/>
-    <ROW File="htapplet.jar" Component_="hypedyn.jar_1" FileName="htapplet.jar" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\export\htapplet.jar" SelfReg="false" NextFile="hypedyn_tutorial_3.pdf"/>
-    <ROW File="hypedyn.exe" Component_="hypedyn.exe" FileName="hypedyn.exe" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\hypedyn.exe" SelfReg="false" NextFile="LRRH.dyn"/>
-    <ROW File="hypedyn.icns" Component_="dyn.icns" FileName="hypedy~1.icn|hypedyn.icns" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\export\HypeDynReader.app\Contents\Resources\hypedyn.icns" SelfReg="false" NextFile="choicebutton.js"/>
-    <ROW File="hypedyn.jar" Component_="hypedyn.jar" FileName="hypedyn.jar" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\Java\hypedyn.jar" SelfReg="false" NextFile="kawa.jar"/>
-    <ROW File="hypedyn.jar_1" Component_="hypedyn.jar_1" FileName="hypedyn.jar" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\Java\hypedyn.jar" SelfReg="false" NextFile="kawa.jar_1"/>
-    <ROW File="hypedyn_reader" Component_="hypedyn.jar_1" FileName="hypedy~1|hypedyn-reader" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\export\hypedyn-reader" SelfReg="false" NextFile="htapplet.html"/>
-    <ROW File="hypedyn_reader.exe" Component_="hypedyn_reader.exe" FileName="hypedy~1.exe|hypedyn-reader.exe" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\export\hypedyn-reader.exe" SelfReg="false" NextFile="hypedyn_reader.jar"/>
-    <ROW File="hypedyn_reader.jar" Component_="hypedyn.jar_1" FileName="hypedy~1.jar|hypedyn-reader.jar" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\export\hypedyn-reader.jar" SelfReg="false" NextFile="hypedyn_reader"/>
-    <ROW File="hypedyn_tutorial_1.pdf" Component_="hypedyn_tutorial_1.pdf" FileName="hypedy~1.pdf|hypedyn-tutorial-1.pdf" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\Java\tutorials\hypedyn-tutorial-1.pdf" SelfReg="false" NextFile="hypedyn_tutorial_2.pdf"/>
-    <ROW File="hypedyn_tutorial_2.pdf" Component_="hypedyn_tutorial_2.pdf" FileName="hypedy~2.pdf|hypedyn-tutorial-2.pdf" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\Java\tutorials\hypedyn-tutorial-2.pdf" SelfReg="false" NextFile="hypedyn.jar"/>
-    <ROW File="hypedyn_tutorial_3.pdf" Component_="hypedyn_tutorial_3.pdf" FileName="hypedy~3.pdf|hypedyn-tutorial-3.pdf" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\Java\tutorials\hypedyn-tutorial-3.pdf" SelfReg="false" NextFile="LRRH4.dyn"/>
-    <ROW File="index.html" Component_="choicebutton.js" FileName="index~1.htm|index.html" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\js\index.html" SelfReg="false" NextFile="iscroll.js"/>
-    <ROW File="iscroll.js" Component_="choicebutton.js" FileName="iscroll.js" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\js\iscroll.js" SelfReg="false" NextFile="main.js"/>
-    <ROW File="kawa.jar" Component_="hypedyn.jar" FileName="kawa.jar" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\Java\kawa.jar" SelfReg="false" NextFile="AppleJavaExtensions.jar"/>
-    <ROW File="kawa.jar_1" Component_="hypedyn.jar_1" FileName="kawa.jar" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\Java\kawa.jar" SelfReg="false" NextFile="AppleJavaExtensions.jar_1"/>
-    <ROW File="kawa_applet.jar" Component_="hypedyn.jar_1" FileName="kawa-a~1.jar|kawa-applet.jar" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\export\kawa-applet.jar" SelfReg="false" NextFile="Info.plist"/>
-    <ROW File="main.js" Component_="choicebutton.js" FileName="main.js" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\js\main.js" SelfReg="false" NextFile="pageformatting.js"/>
-    <ROW File="page_back_320_480.png" Component_="choicebutton.js" FileName="page_b~1.png|page_back_320_480.png" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\js\page_back_320_480.png" SelfReg="false" NextFile="page_back_btm_320_480.png"/>
-    <ROW File="page_back_btm_320_480.png" Component_="choicebutton.js" FileName="page_b~2.png|page_back_btm_320_480.png" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\js\page_back_btm_320_480.png" SelfReg="false" NextFile="rules.js"/>
-    <ROW File="pageformatting.js" Component_="choicebutton.js" FileName="page-f~1.js|page-formatting.js" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\js\page-formatting.js" SelfReg="false" NextFile="page_back_320_480.png"/>
-    <ROW File="rules.js" Component_="choicebutton.js" FileName="rules.js" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\js\rules.js" SelfReg="false" NextFile="styling.css"/>
-    <ROW File="styling.css" Component_="choicebutton.js" FileName="styling.css" Attributes="0" SourcePath="..\..\..\bin\HypeDyn.win\js\styling.css" SelfReg="false"/>
+    <ROW File="AppleJavaExtensions.jar" Component_="hypedyn.jar" FileName="AppleJ~1.jar|AppleJavaExtensions.jar" Attributes="0" SourcePath="..\..\..\bin\Java\AppleJavaExtensions.jar" SelfReg="false" NextFile="hypedyn_tutorial_3.pdf"/>
+    <ROW File="LRRH.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH.dyn" Attributes="0" SourcePath="..\..\..\bin\examples\LRRH.dyn" SelfReg="false" NextFile="LRRH2.dyn"/>
+    <ROW File="LRRH2.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH2.dyn" Attributes="0" SourcePath="..\..\..\bin\examples\LRRH2.dyn" SelfReg="false" NextFile="LRRH3.dyn"/>
+    <ROW File="LRRH3.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH3.dyn" Attributes="0" SourcePath="..\..\..\bin\examples\LRRH3.dyn" SelfReg="false" NextFile="hypedyn_tutorial_1.pdf"/>
+    <ROW File="LRRH4.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH4.dyn" Attributes="0" SourcePath="..\..\..\bin\examples\LRRH4.dyn" SelfReg="false" NextFile="choicebutton.js"/>
+    <ROW File="README.txt" Component_="README.txt" FileName="README.txt" Attributes="0" SourcePath="..\..\..\bin\README.txt" SelfReg="false"/>
+    <ROW File="choicebutton.js" Component_="choicebutton.js" FileName="choice~1.js|choice-button.js" Attributes="0" SourcePath="..\..\..\bin\js\choice-button.js" SelfReg="false" NextFile="config.js"/>
+    <ROW File="config.js" Component_="choicebutton.js" FileName="config.js" Attributes="0" SourcePath="..\..\..\bin\js\config.js" SelfReg="false" NextFile="datastructure.js"/>
+    <ROW File="datastructure.js" Component_="choicebutton.js" FileName="datast~1.js|datastructure.js" Attributes="0" SourcePath="..\..\..\bin\js\datastructure.js" SelfReg="false" NextFile="facts.js"/>
+    <ROW File="facts.js" Component_="choicebutton.js" FileName="facts.js" Attributes="0" SourcePath="..\..\..\bin\js\facts.js" SelfReg="false" NextFile="flipanimation.js"/>
+    <ROW File="flipanimation.js" Component_="choicebutton.js" FileName="flip-a~1.js|flip-animation.js" Attributes="0" SourcePath="..\..\..\bin\js\flip-animation.js" SelfReg="false" NextFile="hdmouse.js"/>
+    <ROW File="hdmouse.js" Component_="choicebutton.js" FileName="hdmouse.js" Attributes="0" SourcePath="..\..\..\bin\js\hdmouse.js" SelfReg="false" NextFile="index.html"/>
+    <ROW File="hypedyn.exe" Component_="hypedyn.exe" FileName="hypedyn.exe" Attributes="0" SourcePath="..\..\..\bin\hypedyn.exe" SelfReg="false" NextFile="LRRH.dyn"/>
+    <ROW File="hypedyn.jar" Component_="hypedyn.jar" FileName="hypedyn.jar" Attributes="0" SourcePath="..\..\..\bin\Java\hypedyn.jar" SelfReg="false" NextFile="kawa.jar"/>
+    <ROW File="hypedyn_tutorial_1.pdf" Component_="hypedyn_tutorial_1.pdf" FileName="hypedy~1.pdf|hypedyn-tutorial-1.pdf" Attributes="0" SourcePath="..\..\..\bin\tutorials\hypedyn-tutorial-1.pdf" SelfReg="false" NextFile="hypedyn_tutorial_2.pdf"/>
+    <ROW File="hypedyn_tutorial_2.pdf" Component_="hypedyn_tutorial_2.pdf" FileName="hypedy~2.pdf|hypedyn-tutorial-2.pdf" Attributes="0" SourcePath="..\..\..\bin\tutorials\hypedyn-tutorial-2.pdf" SelfReg="false" NextFile="hypedyn.jar"/>
+    <ROW File="hypedyn_tutorial_3.pdf" Component_="hypedyn_tutorial_3.pdf" FileName="hypedy~3.pdf|hypedyn-tutorial-3.pdf" Attributes="0" SourcePath="..\..\..\bin\tutorials\hypedyn-tutorial-3.pdf" SelfReg="false" NextFile="LRRH4.dyn"/>
+    <ROW File="index.html" Component_="choicebutton.js" FileName="index~1.htm|index.html" Attributes="0" SourcePath="..\..\..\bin\js\index.html" SelfReg="false" NextFile="iscroll.js"/>
+    <ROW File="iscroll.js" Component_="choicebutton.js" FileName="iscroll.js" Attributes="0" SourcePath="..\..\..\bin\js\iscroll.js" SelfReg="false" NextFile="layout.js"/>
+    <ROW File="kawa.jar" Component_="hypedyn.jar" FileName="kawa.jar" Attributes="0" SourcePath="..\..\..\bin\Java\kawa.jar" SelfReg="false" NextFile="AppleJavaExtensions.jar"/>
+    <ROW File="layout.js" Component_="choicebutton.js" FileName="layout.js" Attributes="0" SourcePath="..\..\..\bin\js\layout.js" SelfReg="false" NextFile="main.js"/>
+    <ROW File="main.js" Component_="choicebutton.js" FileName="main.js" Attributes="0" SourcePath="..\..\..\bin\js\main.js" SelfReg="false" NextFile="misc.js"/>
+    <ROW File="misc.js" Component_="choicebutton.js" FileName="misc.js" Attributes="0" SourcePath="..\..\..\bin\js\misc.js" SelfReg="false" NextFile="pageformatting.js"/>
+    <ROW File="page_back_320_480.png" Component_="choicebutton.js" FileName="page_b~1.png|page_back_320_480.png" Attributes="0" SourcePath="..\..\..\bin\js\page_back_320_480.png" SelfReg="false" NextFile="page_back_btm_320_480.png"/>
+    <ROW File="page_back_btm_320_480.png" Component_="choicebutton.js" FileName="page_b~2.png|page_back_btm_320_480.png" Attributes="0" SourcePath="..\..\..\bin\js\page_back_btm_320_480.png" SelfReg="false" NextFile="rules.js"/>
+    <ROW File="pageformatting.js" Component_="choicebutton.js" FileName="page-f~1.js|page-formatting.js" Attributes="0" SourcePath="..\..\..\bin\js\page-formatting.js" SelfReg="false" NextFile="page_back_320_480.png"/>
+    <ROW File="rules.js" Component_="choicebutton.js" FileName="rules.js" Attributes="0" SourcePath="..\..\..\bin\js\rules.js" SelfReg="false" NextFile="styling.css"/>
+    <ROW File="styling.css" Component_="styling.css" FileName="styling.css" Attributes="0" SourcePath="..\..\..\bin\css\styling.css" SelfReg="false" NextFile="styling2.css"/>
+    <ROW File="styling2.css" Component_="styling.css" FileName="styling2.css" Attributes="0" SourcePath="..\..\..\bin\css\styling2.css" SelfReg="false" NextFile="README.txt"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.BuildComponent">
     <ROW BuildKey="DefaultBuild" BuildName="DefaultBuild" BuildOrder="1" BuildType="0" PackageFolder="." Languages="en" InstallationType="4"/>
@@ -166,6 +149,7 @@
     <ROW Shortcut="HypeDyn" Directory_="SHORTCUTDIR" Name="HypeDyn" Component_="hypedyn.exe" Target="[#hypedyn.exe]" Hotkey="0" IconIndex="0" ShowCmd="1" WkDir="APPDIR"/>
     <ROW Shortcut="HypeDyn_1" Directory_="DesktopFolder" Name="HypeDyn" Component_="hypedyn.exe" Target="[#hypedyn.exe]" Hotkey="0" Icon_="hypedyn.exe" IconIndex="0" ShowCmd="1" WkDir="APPDIR"/>
     <ROW Shortcut="HypeDyn_2" Directory_="HypeDyn_DIR" Name="HypeDyn" Component_="hypedyn.exe" Target="[#hypedyn.exe]" Hotkey="0" Icon_="hypedyn.exe" IconIndex="0" ShowCmd="1" WkDir="APPDIR"/>
+    <ROW Shortcut="README.txt" Directory_="HypeDyn_DIR" Name="README.txt" Component_="README.txt" Target="[#README.txt]" Hotkey="0" IconIndex="0" ShowCmd="1" WkDir="APPDIR"/>
     <ROW Shortcut="hypedyn_tutorial_1.pdf" Directory_="HypeDyn_DIR" Name="hypedy~1.pdf|hypedyn-tutorial-1.pdf" Component_="hypedyn_tutorial_1.pdf" Target="[#hypedyn_tutorial_1.pdf]" Hotkey="0" IconIndex="0" ShowCmd="1" WkDir="tutorials_DIR"/>
     <ROW Shortcut="hypedyn_tutorial_2.pdf" Directory_="HypeDyn_DIR" Name="hypedy~2.pdf|hypedyn-tutorial-2.pdf" Component_="hypedyn_tutorial_2.pdf" Target="[#hypedyn_tutorial_2.pdf]" Hotkey="0" IconIndex="0" ShowCmd="1" WkDir="tutorials_DIR"/>
     <ROW Shortcut="hypedyn_tutorial_3.pdf" Directory_="HypeDyn_DIR" Name="hypedy~3.pdf|hypedyn-tutorial-3.pdf" Component_="hypedyn_tutorial_3.pdf" Target="[#hypedyn_tutorial_3.pdf]" Hotkey="0" IconIndex="0" ShowCmd="1" WkDir="tutorials_DIR"/>
