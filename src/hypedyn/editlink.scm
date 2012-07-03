@@ -1076,11 +1076,11 @@
               (if (not (ctrl-key-down? (get-mouseevent-rawevent e)))
                   (map (lambda (pnl)
                          (if (not (equal? pnl panel-to-return))
-                             (select-action-panel pnl #f)))
+                             (select-panel pnl #f 'action)))
                        (action-panel-list))
                   )
 
-              (select-action-panel panel-to-return (not (panel-selected? panel-to-return)))
+              (select-panel panel-to-return (not (panel-selected? panel-to-return)) 'action)
               (action-panel-restrict)
               ))
         )))
@@ -1108,10 +1108,10 @@
   
   ;; unselect all conditions
   (map (lambda (pnl)
-         (select-action-panel pnl #f)
+         (select-panel pnl #f 'action)
          ) (get-selected-action-panel))
   ;; select new condition panel
-  (select-action-panel new-action-panel #t)
+  (select-panel new-action-panel #t 'action)
   
   ;; enable delete button since we there is now a selected panel
   (set-component-enabled delete-action-button #t)
@@ -1922,12 +1922,12 @@
               (if (not (ctrl-key-down? (get-mouseevent-rawevent e)))
                   (map (lambda (pnl)
                          (if (not (equal? pnl top-panel))
-                             (select-condition-panel pnl #f)))
+                             (select-panel pnl #f 'cond)))
                        (get-container-children condition-list-panel))
                   )
 
               ;(select-rule-panel ruleID (not (panel-selected? top-panel)))
-              (select-condition-panel top-panel (not (panel-selected? top-panel)))
+              (select-panel top-panel (not (panel-selected? top-panel)) 'cond)
               (condition-panel-restrict)
               ))
         )))
@@ -1985,10 +1985,10 @@
   
   ;; unselect all conditions
   (map (lambda (pnl)
-         (select-condition-panel pnl #f)
+         (select-panel pnl #f 'cond)
          ) (get-selected-condition-panel))
   ;; select new condition panel
-  (select-condition-panel new-cond-panel #t)
+  (select-panel new-cond-panel #t 'cond)
   
   ;; enable delete button since we there is now a selected panel
   (set-component-enabled delete-condition-button #t)
@@ -2197,43 +2197,44 @@
 (define selected-color (make-colour-rgb 135 206 250))  ;; sky blue
 (define unselected-color (make-colour-rgb 238 238 238))
 
-
-;; TODO make select-condition-panel select-action-panel into a shared code 
-(define (select-condition-panel pnl selected?)
+;; used by both action panel and condition panel
+(define (select-panel pnl selected? type)
   (if selected?
       (begin
+        (set-background-color pnl selected-color)
+        ;; color the child if it is a panel
+        (map (lambda (child-comp)
+               (if (javax.swing.JPanel? child-comp)
+                   (set-background-color child-comp selected-color))
+               ) (get-container-children pnl))
+
         ;; need to do this to give new-panel a position
         (validate-container editlink-dialog)
-        
-        ;; scroll to newly added panel
-        ;; top left point of new-panel relative to scrollpane
-        (set-background-color pnl selected-color)
-        (define new-panel-tl-point (get-component-location pnl))
-        (define tl-x (invoke new-panel-tl-point 'get-x))
-        (define tl-y (invoke new-panel-tl-point 'get-y))
-        (scroll-rect-to-visible condition-list-panel (make-rectangle tl-x tl-y cond-panel-width cond-panel-height))
-        )
-      (set-background-color pnl unselected-color))
-  )
 
-(define (select-action-panel pnl selected?)
-  (if selected?
-      (begin
-         ;; need to do this to give new-panel a position
-        (validate-container editlink-dialog)
-        
         ;; scroll to newly added panel
         ;; top left point of new-panel relative to scrollpane
-        (set-background-color pnl selected-color)
         (define new-panel-tl-point (get-component-location pnl))
         (define tl-x (invoke new-panel-tl-point 'get-x))
         (define tl-y (invoke new-panel-tl-point 'get-y))
-        (scroll-rect-to-visible action-list-panel 
-                                (make-rectangle tl-x tl-y action-panel-width action-panel-height))
-        )
-      (set-background-color pnl unselected-color)
-      )
-  )
+        
+        ;; depending on the type, scroll to the panel on the correct list-panel
+        (case type
+          ((cond)
+           (scroll-rect-to-visible
+            condition-list-panel
+            (make-rectangle tl-x tl-y cond-panel-width cond-panel-height)))
+          ((action)
+           (scroll-rect-to-visible
+            action-list-panel
+            (make-rectangle tl-x tl-y action-panel-width action-panel-height))
+           )))
+      (begin
+        (set-background-color pnl unselected-color)
+        (map (lambda (child-comp)
+               (if (javax.swing.JPanel? child-comp)
+                   (set-background-color child-comp unselected-color))
+               ) (get-container-children pnl))
+        )))
 
 ;; operand choice returns a panel for inputing number facts value
 ;; 2 modes are provided now "Input" and "Fact" 
