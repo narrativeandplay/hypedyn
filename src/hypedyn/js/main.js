@@ -142,16 +142,6 @@ function findReplaceText(linkID) {
 		if (text_to_replace[i][0] == linkID) {
 			// need to differentiate between 
 			// text from fact or just text
-//			if (typeof text_to_replace[i][1] == "string") {
-//				//disp("string");
-//				result = text_to_replace[i][1];
-//			} else if (typeof text_to_replace[i][1] == "number") {
-//				//disp("number");
-//				result = factlist[text_to_replace[i][1]].value;
-//			} else {
-//				alert("typeof result "+ typeof text_to_replace[i][1]);
-//				result = "[Text Replace Error]";
-//			}
 			switch (text_to_replace[i][1]) {
 				case "alternative text":
 					result = text_to_replace[i][2]; 
@@ -388,7 +378,7 @@ function restartStory() {
 function refreshNode(node) {
     // trigger enteredNode for links to replace text
     for (var i in node.links) {
-			eventTrigger("enteredNode", node.links[i]); 
+		eventTrigger("enteredNode", node.links[i]); 
     }
 
     // check anywhere nodes

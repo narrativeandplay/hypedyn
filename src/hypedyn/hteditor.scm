@@ -884,6 +884,8 @@
   
   ; remember if this was the start node
   (define was-start-node (= (get-start-node) cached-nodeID))
+  
+  ;; get the list of follow-link actions going to this node
   (define actionID-lst
     (let ((action-lst (get-list 'actions)))
       (if action-lst
@@ -901,7 +903,8 @@
   ;; delete-node invokes delete-link which has its own compoundundomanager-postedit
   (compoundundomanager-beginupdate undo-manager)
   
-  (map delete-action actionID-lst) 
+  ;; delete follow link actions to this node
+  (map delete-action actionID-lst)
   
   (delete-node selected-nodeID)
   
@@ -951,20 +954,14 @@
                 (set! selected-nodeID '())
                 (enable-node-functions #f)))
 
+          (display "delete all link in this node ")(newline)
           ; delete all links in this node
           (map (lambda (l)
+                 (display "link ID deleted ")(display l)(newline)
                  (let ((thislink (get 'links l)))
                    (delete-link l #t node-graph
                                 update-node-style)))
                (ask thenode 'links))
-
-          ; also need to delete all links that have this node as destination!
-          (map (lambda (n)
-                 (let ((thisnode (cdr n))
-                       (thisnodeID (car n)))
-                   (if (not (= nodeID thisnodeID))
-                       (del-links-to thisnode nodeID))))
-               (get-list 'nodes))
 
           ; delete node from data-table
           (deletenode nodeID)
@@ -978,18 +975,6 @@
           ; also delete from graph - node name in graph is now nodeName not nodeID
           (let ((the-graph (if (ask thenode 'anywhere?) anywhere-graph node-graph)))
             (ask the-graph 'del-node nodeID)))))) 
-
-; delete all links from this node to given node
-(define (del-links-to thenode destNodeID)
-  (map (lambda (l)
-         (let ((thislink (get 'links l)))
-           (if thislink
-               (let ((thisDestID (ask thislink 'destination)))
-                 (if (= destNodeID thisDestID) 
-                     (delete-link l #t 
-                                  node-graph
-                                  update-node-style))))))
-       (ask thenode 'links)))
 
 ;;
 ;; node list

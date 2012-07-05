@@ -105,66 +105,64 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 		else return link.start;
 	}
 	
+	function generate_tag_groups( content ) {
+		return generate_tag_groups_helper( content, 0, 0, [] );
+	}
+	
 	// split between linktext and plaintext
 	// also do the alt text substitution here
 	// [Tag Group] are how we would divide the content into different tags 
 	// in html code anyway. It contains the text content, link and linkid if it is associated
 	// with a link, type whether it is "plain" or "link".
-	function generate_tag_groups( content, offset ) {
-	
-		function gtg_helper ( offset, retval ) {
+	function generate_tag_groups_helper( content, offset, tag_index, retval ) {
 		
-			var link_index = next_link_index_from( offset );
-			
-			if ( link_index == undefined ) {// no more links beyond here
-				var new_tag_group = [];
-				new_tag_group.content = content.substring( offset, content.length );
-				//disp('plaintext '+new_tag_group.content);
-				//alert("plaintext");
-				new_tag_group.content = escape_special( new_tag_group.content );
-				new_tag_group.type = "plain";
-				retval.push( new_tag_group );
-				return retval;
-			}
-			else 
-			if ( link_index == offset ) { // its a link
-				var new_tag_group = [];
-				var link = next_link_from( offset );
-				
-				// replacing link text with alt text if it exists
-				var altcontent = findReplaceText(link.id);
-				//disp("TEXT REPLACE ");
-				//disp("alt "+altcontent);
-				//disp("linktext "+ content.substring(link.start, link.end) );
-				var linktext = (altcontent == undefined) ? content.substring(link.start, link.end) : altcontent;
-				//disp('linktext '+linktext);
-				//alert("linktext");
-				linktext = escape_special( linktext );
-				var offset_inc = link.end - link.start;
-				
-				new_tag_group.content = linktext; 
-				new_tag_group.type = "link";
-				new_tag_group.linkid = link.id;
-				new_tag_group.link = link;
-				retval.push( new_tag_group );
-				return gtg_helper ( offset + offset_inc, retval );
-			} else if ( link_index > offset ) { // plain text
-				var new_tag_group = [];
-				new_tag_group.content = content.substring( offset, link_index );
-				new_tag_group.type = "plain";
-				//disp('plaintext '+new_tag_group.content);
-				//alert("plaintext");
-				new_tag_group.content = escape_special( new_tag_group.content );
-				retval.push( new_tag_group );
-				var offset_inc = link_index - offset;
-				return gtg_helper ( offset + offset_inc, retval );
-			} else {
-				//disp("offset "+offset);
-				//disp("link index "+link_index);
-				alert(" error state in gtg helper ");
-			}
+		var link_index = next_link_index_from( offset );
+		
+		if ( link_index == undefined ) {// no more links beyond here
+			var new_tag_group = [];
+			new_tag_group.content = content.substring( offset, content.length );
+			//disp('plaintext '+new_tag_group.content);
+			//alert("plaintext");
+			new_tag_group.content = escape_special( new_tag_group.content );
+			new_tag_group.type = "plain";
+			retval.push( new_tag_group );
+			return retval;
 		}
-		return gtg_helper ( 0, [] );
+		else 
+		if ( link_index == offset ) { // its a link
+			var new_tag_group = [];
+			var link = next_link_from( offset );
+			
+			// replacing link text with alt text if it exists
+			var altcontent = findReplaceText(link.id);
+			
+			var linktext = (altcontent == undefined) ? content.substring(link.start, link.end) : altcontent;
+
+			linktext = escape_special( linktext );
+			var offset_inc = link.end - link.start;
+			
+			new_tag_group.content = linktext; 
+			new_tag_group.type = "link";
+			new_tag_group.linkid = link.id;
+			new_tag_group.link = link;
+			retval.push( new_tag_group );
+			
+			return generate_tag_groups_helper ( content, offset + offset_inc, tag_index+1, retval );
+		} else if ( link_index > offset ) { // plain text
+			var new_tag_group = [];
+			new_tag_group.content = content.substring( offset, link_index );
+			new_tag_group.type = "plain";
+			//disp('plaintext '+new_tag_group.content);
+			//alert("plaintext");
+			new_tag_group.content = escape_special( new_tag_group.content );
+			retval.push( new_tag_group );
+			var offset_inc = link_index - offset;
+			return generate_tag_groups_helper ( content, offset + offset_inc, tag_index+1, retval );
+		} else {
+			//disp("offset "+offset);
+			//disp("link index "+link_index);
+			alert(" error state in generate_tag_groups ");
+		}
 	}
 	
 	// generate the actual html start and end tag
@@ -297,15 +295,6 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 			} else {
 				alert("ELSE index_that_overflow error state");
 			}
-			/*else {
-				alert("ELSE index "+index+" "+"tgarr len "+tg_arr.length);
-				$("test_bed").innerHTML = "";
-				test_bed_html_cache = "";
-				disp("breaking page!");
-				// remaining code goes to next page
-				//return page_end_tag + page_start_tag + htmlcode + helper2(new_offset);
-				return index;
-			}*/
 		}
 		
 		// breaks a tg's content into 2 at the nth space delimiter 
@@ -321,12 +310,6 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 			
 			var front_tg = [];
 			var back_tg = [];
-			//print_tg (tg );
-			//alert("printed tg in break tg ");
-			
-			//disp("front content"+front_content);
-			//disp("back content "+back_content);
-			//alert("displayed front back content ");
 			
 			front_tg.content = front_content;
 			front_tg.start_tag = tg.start_tag;
@@ -337,11 +320,6 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 			back_tg.start_tag = tg.start_tag;
 			back_tg.end_tag = tg.end_tag;
 			back_tg.type = tg.type
-			
-			//print_tg ( front_tg );
-			//alert("front tg ");
-			//print_tg (back_tg );
-			//alert("back tg ");
 			
 			return [ front_tg, back_tg ];
 		}
@@ -355,25 +333,11 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 				var broken_tg = break_tg( tg_to_break, delim_index );
 				var tg_to_break_front = broken_tg[0];
 				var tg_to_break_back = broken_tg[1];
-				//print_tg_arr( front_tg_arr );
-				//alert("printed front_tg_arr ");
-				//print_tg_arr (  front_tg_arr.concat( [ tg_to_break_front ] ) );
-				//alert("print after concat");
-				/*
-				print_tg( tg_to_break );
-				alert("printed tg to break ");
-				print_tg( tg_to_break_front );
-				alert("printed tg to break frotn ");
-				*/
+
 				var overflow_test = index_that_overflow ( front_tg_arr.concat( [ tg_to_break_front ] ) , 0 );
-				//disp("overflow_test "+overflow_test);
 				if ( overflow_test >= 0 || tg_to_break_back.content.length == 0) {
-					//disp("overflow ");
-					//alert("[end adjust break]");
 					return delim_index;
 				} else {
-					//alert("[end adjust break]");
-					//disp("din overflow "+delim_index)
 					return helper ( delim_index + 1 );
 				}
 			}
@@ -391,16 +355,10 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 			var back_tg_arr = subarray( tg_arr, break_index+1, tg_arr.length );//clone_arr(tg_arr).splice(break_index+1, tg_arr.length);
 			
 			var delim_index = adjust_break_point( tg_to_break, front_tg_arr ); // start with 1 (first word);
-			
-			//alert("adjust_break_point returned "+delim_index);
+
 			var broken_tg = break_tg( tg_to_break, delim_index - 1 ); // since delim_index is the first one to overflow dont include
 			var tg_to_break_front = broken_tg[0];
 			var tg_to_break_back = broken_tg[1];
-			
-			//print_tg (tg_to_break_front);
-			//alert("front");
-			//print_tg (tg_to_break_back);
-			//alert("back");
 			
 			// every element in the return array is an array of tag groups that fill up a page
 			return arr_append ( [ front_tg_arr.concat( [ tg_to_break_front ]) ], page_break_tg( [tg_to_break_back].concat( back_tg_arr ) ) ) ;
@@ -437,14 +395,7 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 				retval += actual_page_start_tag + curr_page_code + page_end_tag;
 			}
 		}
-		//retval +="<br><br>"; // empty line before anywhere nodes come in
-		//for ( var j in anywhere_tg_arr ) {
-		//	curr = anywhere_tg_arr[j];
-		//	retval += curr.start_tag + curr.content + curr.end_tag;
-		//}
-		//return page_start_tag + retval + page_end_tag;
-		//disp(" assemble html code ")
-		//disp( retval );
+
 		return retval;
 	}
 	
@@ -472,10 +423,7 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 				curr.content = content.substring( 0, newline_index );
 				curr.end_tag += "<br>";
 				new_tg.content = content.substring ( newline_index+1, content.length );
-				
-				//disp("content "+content);
-				//disp("curr content "+curr.content);
-				//disp("new_tg content "+new_tg.content);
+
 				var new_index = i;
 				tg_arr.splice( parseInt(i)+1, 0, new_tg );
 				process_newline( tg_arr );
@@ -484,8 +432,7 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 		return tg_arr;
 	}
 		
-	var tg_arr = generate_tag_groups( node_content, 0 );
-	//print_tg_arr( tg );
+	var tg_arr = generate_tag_groups( node_content );
 
 	tg_arr = assign_html_tag( tg_arr );
 
@@ -511,14 +458,10 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 }
 
 function print_tg( tg_arr ) {
-	//disp("[print tg]");
-	//disp( tg_arr.type );
-	//disp( tg_arr.content);
+
 }
 
 function print_tg_arr( arr ) {
-	//disp("print arr ");
-	//disp("arr len "+arr.length);
 	for( var i in arr ) {
 		print_tg( arr[i] );
 	}
@@ -530,3 +473,12 @@ function subarray( arr, start_index, end_index ) {
 	retval = retval.splice( start_index, (end_index - start_index));
 	return retval;
 }
+
+//  text replacement indexing
+// when using getElementsByName, we can get an ordered array of the pagecontent
+// the idea is to use index the replacement on this ordered array of content
+// so when we refresh procedural changes to the page, we can just update the replacements
+
+// these are populated when we generate it the first time
+var replaced_index = [];
+var content_used_to_replace = [];

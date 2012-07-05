@@ -447,7 +447,6 @@
          ; get boolean operator
          (new-rule-and-or-pos (get-combobox-selectedindex editlink-dialog-andor-operator))
          (new-rule-and-or (get-rule-exp new-rule-and-or-pos))
-         
          )
     
     ;; remove the line associated with this rule before we edit it
