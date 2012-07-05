@@ -162,24 +162,17 @@
     (add-component editlink-panel-top (create-if-condition-panel))
     (add-component editlink-panel-top (create-actions-main-panel))
     
-    ;; TODO: convert this condition to be meaningful in the new framework
-    ;;       so we should not allow follow-link action to have none?
-    ; set "ok" button state - cannot allow a "use" checkbox to be checked and a link to be "none"
-;    (set-button editlink-panel-buttons-ok
-;          (not
-;           (or
-;            (and link-uselink (eq? link-dest1 -1))
-;            (and link-usealtlink (eq? link-dest2 -1)))))
-    
     ;; reset combobox to contain all action-type-list
     (let ((edited-node (get 'nodes in-edited-nodeID)))
       (if (ask edited-node 'anywhere?)
           (reset-action-type-choice 'anywhere-node-link)
           (reset-action-type-choice 'link)))
     
-    (populate-rule-editor in-ruleID)
-    )
-    
+    (populate-rule-editor in-ruleID))
+
+  ; set "ok" button state
+  (validate-rule)
+
   ; pack the UI and show
   (pack-frame editlink-dialog)
   (center-frame-in-parent editlink-dialog editlink-dialog-parent)
@@ -233,6 +226,9 @@
 
   (populate-rule-editor in-ruleID)
 
+  ; set "ok" button state
+  (validate-rule)
+
   ; pack the UI and show
   (pack-frame editlink-dialog)
   (center-frame-in-parent editlink-dialog editlink-dialog-parent)
@@ -267,6 +263,9 @@
 
     ; reconstruct rule if necessary
     (populate-rule-editor selected-rule))
+
+  ; set "ok" button state
+  (validate-rule)
 
   ; pack the UI and show
   (pack-frame editlink-dialog)
@@ -1636,7 +1635,9 @@
     
     ; select the chosen node
     (if nodeID
-        (set-comboboxwithdata-selection-bydata node-list nodeID)
+        ; note: set-comboboxwithdata-selection-bydata returns 'ok if failed, so check this
+        (let ((returnval (set-comboboxwithdata-selection-bydata node-list nodeID)))
+          (if (eq? 'ok returnval) (set-combobox-selection node-list 0)))
         (set-combobox-selection node-list 0))
 
     ; return the list
@@ -1668,8 +1669,12 @@
     (insert-comboboxwithdata-string-at link-list "<None>" -1 0)
     
     ; select the chosen link
-    (set-comboboxwithdata-selection-bydata link-list linkID)
-
+    (if linkID
+        ; note: set-comboboxwithdata-selection-bydata returns 'ok if failed, so check this
+        (let ((returnval (set-comboboxwithdata-selection-bydata link-list linkID)))
+          (if (eq? 'ok returnval) (set-combobox-selection link-list 0)))
+        (set-combobox-selection link-list 0))
+    
     ; return the list
     link-list))
 
@@ -1708,7 +1713,10 @@
     
     ;; select the chosen fact (if factID isn't one of the entry, selection isn't changed)
     (if factID
-        (set-comboboxwithdata-selection-bydata fact-list factID))
+        ; note: set-comboboxwithdata-selection-bydata returns 'ok if failed, so check this
+        (let ((returnval (set-comboboxwithdata-selection-bydata fact-list factID)))
+          (if (eq? 'ok returnval) (set-combobox-selection fact-list 0)))
+        (set-combobox-selection fact-list 0))
     
     ; return the list
     fact-list))
