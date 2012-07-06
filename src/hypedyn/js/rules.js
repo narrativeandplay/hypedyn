@@ -141,10 +141,15 @@ function ruleRelevant(eventType, rule) {
  //   links: triggered by clicking links
  //   nodes: triggered by entering nodes
  // follow link triggered only when clicking link (only available on links as well)
+
+ // flag to track whether the node needs to be refreshed
+ var needToRefresh;
  
  // eventType can be one of these ["clicked-links" "entered-node"]
  // goes through all the rules in this obj
  function eventTrigger( eventType, obj ) {
+    // clear the refresh flag
+    needToRefresh=false;
  
 	var firing_candidates = filter_out_relevant( obj.rules, eventType );
 	
@@ -159,6 +164,13 @@ function ruleRelevant(eventType, rule) {
 				break;
 		}
 	}
+
+    // if any facts have changed, refresh the node    
+    if(needToRefresh) {
+        node=nodelist[currNodeID];
+        if(node != undefined)
+            refreshNode(node);
+    }
 }
 
  // if ready is true, we check whether the condition for 

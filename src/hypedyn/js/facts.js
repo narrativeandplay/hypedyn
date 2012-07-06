@@ -45,12 +45,13 @@ function setFact( id, value) {
 	//disp("set fact "+id);
 	//disp(" value "+value);
 	var fact = factlist[id];
-	fact.value = value;
+    if(fact != undefined)
+        fact.value = value;
+    else
+        alert("setFact: fact " + id + " undefined");
     
-    // refresh the node - this is very inefficient, move it out
-    node=nodelist[currNodeID];
-    if(node != undefined)
-        refreshNode(node);
+    // set the flag to refresh the node
+    needToRefresh=true;
 	//factsDebug();
 }
 
