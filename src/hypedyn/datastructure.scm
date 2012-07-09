@@ -735,6 +735,7 @@
     
     (let ((new-nodeID (ask new-node 'ID)))
       
+      (display "nodeID in creaet-node ")(display new-nodeID)(newline)
       ; add to table
       (put 'nodes new-nodeID new-node)
 
@@ -764,7 +765,6 @@
                      use-alt-destination use-alt-text alt-destination alt-text
                      update-display . args)
   ;(format #t "Creating link: ~a~%~!" name)
-
   (let* ((actual-fromnodeID (if (importing?)
                                 (+ fromnodeID import-offset-ID)
                                 fromnodeID))
@@ -788,8 +788,12 @@
          (to-node (get 'nodes actual-tonodeID))
          (new-linkID (ask new-link 'ID)))
     
+    (display "actual tonodeID ")(display actual-tonodeID)(newline)
+    (display "actual fromnodeID ")(display actual-fromnodeID)(newline)
+    
     (if from-node
         (ask from-node 'addlink new-linkID))
+    
     (put 'links new-linkID new-link)
 
     ; return the new link's ID
@@ -971,8 +975,16 @@
          (the-rule (get 'rules actual-ruleID))
          (new-action-ID (ask new-action 'ID))
          )
+    
     ; add to action list
     (put 'actions new-action-ID new-action)
+    
+    ;; import offset for the dest node ID of follow-link action
+    ;; (follow-link2 linkID parent-ruleID link-type dest-nodeID)
+    (if (importing?)
+        (if (equal? (car expr) 'follow-link)
+            (ask new-action 'set-expr!
+                 (list-replace expr 4 (+ (list-ref expr 4) import-offset-ID)))))
 
     ; add action to rule
     ; note: for nodes, before=then=step and after=else=init for now
