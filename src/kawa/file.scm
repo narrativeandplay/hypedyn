@@ -253,9 +253,9 @@
         (if (equal? prop-name javax.swing.JFileChooser:SELECTED_FILE_CHANGED_PROPERTY)
             (if (not (equal? #!null selected-file))
                 ;; get the name of the file/folder selected
-                (let ((file-path-str (to-string selected-file))
-                      (folder-lst (array-to-list2 (invoke file-path-str 'split "\\\\" )))
-                      (fchoose-ui (invoke fchooser 'getUI)))
+                (let* ((file-path-str (to-string selected-file))
+                       (folder-lst (array-to-list2 (invoke file-path-str 'split "\\\\" )))
+                       (fchoose-ui (invoke fchooser 'getUI)))
                   ;; set-file-name only available on BasicFileChooserUI
                   (if (javax.swing.plaf.basic.BasicFileChooserUI? fchoose-ui)
                       (invoke fchoose-ui 'set-file-name
