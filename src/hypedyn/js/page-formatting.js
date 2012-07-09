@@ -431,12 +431,15 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 		}
 		return tg_arr;
 	}
-		
+	
+	// break the content into segmented by links and non links
 	var tg_arr = generate_tag_groups( node_content );
 
+	// decide which tags to use for links depending on whether it is clickable, dormant etc
+	// plain text is assigned tag for plaintext
 	tg_arr = assign_html_tag( tg_arr );
 
-	var anywhere_tg_arr = generate_anywhere_tg ( activated_anywhere_nodes );
+	var anywhere_tg_arr = generate_anywhere_tg( activated_anywhere_nodes );
 	tg_arr = tg_arr.concat( anywhere_tg_arr );
     
     // process newlines
@@ -473,12 +476,3 @@ function subarray( arr, start_index, end_index ) {
 	retval = retval.splice( start_index, (end_index - start_index));
 	return retval;
 }
-
-//  text replacement indexing
-// when using getElementsByName, we can get an ordered array of the pagecontent
-// the idea is to use index the replacement on this ordered array of content
-// so when we refresh procedural changes to the page, we can just update the replacements
-
-// these are populated when we generate it the first time
-var replaced_index = [];
-var content_used_to_replace = [];

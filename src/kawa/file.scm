@@ -26,6 +26,8 @@
 (require "../kawa/system.scm") ; for get-system-property
 (require "../kawa/strings.scm") ; for string-ends-with?, string-contains
 ;(require 'srfi-13) ;; string-contains
+(require "arrays.scm") ;; array-to-list
+(require "ui/events.scm") ;; debug for jfilechooser
 
 (module-export make-file create-new-file make-directory set-file-data append-file-data get-file-to-save get-file-to-open
                get-file-separator get-user-directory get-file-data
@@ -72,7 +74,9 @@
 (define (get-file-to-save dir :: <java.io.File> select-dir filterlist #!optional default-name default-extension)
   (if (is-mac-os?)
       (show-file-dialog dir "Save..." <java.awt.FileDialog>:SAVE select-dir filterlist default-name default-extension)
-      (show-jfilechooser dir 'showSaveDialog select-dir filterlist default-name default-extension)))
+      (show-jfilechooser dir 'showSaveDialog select-dir filterlist default-name default-extension)
+      )
+  )
 
 ; open file dialog to load a file
 ; select-dir: #t if user is selecting a directory, #f if user is selecting a file
@@ -187,8 +191,6 @@
                            default-name
                            default-extension)
   
-  (display "show jfilechooser ")(display dir)(newline)
-  
   (let* ((fchooser :: <javax.swing.JFileChooser>
                    (if (is-null? dir)
                        (<javax.swing.JFileChooser>)
@@ -198,20 +200,18 @@
                        ))
          (local-frame (<javax.swing.JFrame>)))
     
-    ;; this should be called before setFileSelectionMode
-    ;; or it will not work
-    (if (or (string? default-name)
-            (java.lang.String? default-name))
-        (invoke fchooser 'setSelectedFile (make-file default-name)))
-    
     ; select directory?
     (if select-dir
         (begin
           (invoke fchooser 'setFileSelectionMode <javax.swing.JFileChooser>:DIRECTORIES_ONLY)
           ;; dont use file filter when selecting directory (show all files and folders)
           (invoke fchooser 'setAcceptAllFileFilterUsed #f)
-          )
-        )
+          ))
+    
+    ;; set-text to the text field used by the jfilechooser
+    (if (or (string? default-name)
+            (java.lang.String? default-name))
+        (invoke (invoke fchooser 'getUI) 'set-file-name default-name))
         
     ; file filter
     (if (not (null? filterlist))
@@ -242,13 +242,30 @@
                          (invoke the-string 'to-string)))
                   )))
     
-    (display "entering show dialog")(newline)
+    ;; solves the problem that selecting folder shows the whole absolute path
+    ;; we listen for selected file property changed and  
+    ;; change the textfield of the file/folder name to only the file/folder name
+    (add-propertychangelistener
+     fchooser
+     (make-propertychangelistener
+      (lambda (prop-name component)
+        (if (equal? prop-name javax.swing.JFileChooser:SELECTED_FILE_CHANGED_PROPERTY)
+            (begin
+              (define file-path-str (to-string (invoke component 'get-selected-file)))
+              (define folder-lst (array-to-list2 (invoke file-path-str 'split "\\\\" )))
+              ;; get the name of the file/folder selected
+              (let ((fchoose-ui (invoke fchooser 'getUI)))
+                ;; set-file-name only available on BasicFileChooserUI
+                (if (javax.swing.plaf.basic.BasicFileChooserUI? fchoose-ui)
+                    (invoke fchoose-ui 'set-file-name
+                            (list-ref folder-lst (- (length folder-lst) 1)))))
+              ))
+        )))
+    
     ; show the dialog
     (let ((returnVal (invoke fchooser mode local-frame)))
-      (display "here returnVal ")(display returnVal)(newline)
       (if (= returnVal <javax.swing.JFileChooser>:APPROVE_OPTION)
           (begin
-            (display "clicked on ok in file chooser ");
             ; select directory?
             ;; setting this disallows the default-name to be set to the textfield
             ;; so we set it after clicking on ok

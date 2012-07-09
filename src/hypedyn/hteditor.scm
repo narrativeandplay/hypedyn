@@ -954,10 +954,8 @@
                 (set! selected-nodeID '())
                 (enable-node-functions #f)))
 
-          (display "delete all link in this node ")(newline)
           ; delete all links in this node
           (map (lambda (l)
-                 (display "link ID deleted ")(display l)(newline)
                  (let ((thislink (get 'links l)))
                    (delete-link l #t node-graph
                                 update-node-style)))
