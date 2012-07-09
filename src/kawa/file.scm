@@ -249,17 +249,18 @@
      fchooser
      (make-propertychangelistener
       (lambda (prop-name component)
+        (define selected-file (invoke component 'get-selected-file))
         (if (equal? prop-name javax.swing.JFileChooser:SELECTED_FILE_CHANGED_PROPERTY)
-            (begin
-              (define file-path-str (to-string (invoke component 'get-selected-file)))
-              (define folder-lst (array-to-list2 (invoke file-path-str 'split "\\\\" )))
-              ;; get the name of the file/folder selected
-              (let ((fchoose-ui (invoke fchooser 'getUI)))
-                ;; set-file-name only available on BasicFileChooserUI
-                (if (javax.swing.plaf.basic.BasicFileChooserUI? fchoose-ui)
-                    (invoke fchoose-ui 'set-file-name
-                            (list-ref folder-lst (- (length folder-lst) 1)))))
-              ))
+            (if (not (equal? #!null selected-file))
+                ;; get the name of the file/folder selected
+                (let ((file-path-str (to-string selected-file))
+                      (folder-lst (array-to-list2 (invoke file-path-str 'split "\\\\" )))
+                      (fchoose-ui (invoke fchooser 'getUI)))
+                  ;; set-file-name only available on BasicFileChooserUI
+                  (if (javax.swing.plaf.basic.BasicFileChooserUI? fchoose-ui)
+                      (invoke fchoose-ui 'set-file-name
+                              (list-ref folder-lst (- (length folder-lst) 1)))))
+                ))
         )))
     
     ; show the dialog
