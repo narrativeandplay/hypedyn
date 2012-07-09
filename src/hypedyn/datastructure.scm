@@ -962,7 +962,8 @@
 
 ; create an action
 (define (create-action name type expr ruleID . args)
-  
+  (display "create-action expr type ")(display (invoke expr 'get-class))(newline)
+  (display "  expr ")(display expr)(newline)
   ;(display "[create-action] expr ")(display expr)(newline)
   (let* ((actual-ruleID (if (importing?)
                             (+ ruleID import-offset-ID)

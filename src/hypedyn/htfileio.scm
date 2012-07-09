@@ -39,7 +39,7 @@
   (require "../kawa/ui/cursor.scm")
   (require "../common/main-ui.scm")
   (require "export.scm")
-  (require "editlink.scm") ;; obj-convertion-2.2
+  ;(require "editlink.scm") ;; obj-convertion-2.2
   (require 'list-lib) ;; list-ref
   )
 
@@ -232,7 +232,6 @@
   (let ((export-file (path (string-append
                             in-export-folder
                             "/story.dyn"))))
-    (display "ARGH export-file ")(display export-file)(newline)
     (ht-save-to-file export-file #t)))
 
 ; export to standalone
@@ -493,6 +492,7 @@
 ;;;; pre 2.2 save file conversion
 ;;  ==============================
 (define (obj-convertion-2.2)
+  (display "started v2.2 conversion ")(newline)
   (if (<= loaded-file-version 2.1)
       (begin
         (table-map 'links convert-pre-2.2-links)
@@ -523,6 +523,7 @@
     (if rule-obj
         (begin
           (define actions (ask rule-obj 'actions))
+          (display "actions count in CONVERSION ")(display (length actions))(newline)
           (map (lambda (actionID)
                  (define action (get 'actions actionID))
                  (define action-string (ask action 'expr))
@@ -540,11 +541,19 @@
                                       action-sexpr
                                       new-ruleID)
                        
+                       ;; remove the old actions 
+                       ;; that has expr in the string form
+                       (del 'actions actionID)
+                       
                        ;;(create-condition name nodeID operator ruleID . args)
                        ;; add the conditions to the rules
                        ))
                  ) actions)
           
+          (display "actions count2 in CONVERSION ")(display (length (ask rule-obj 'actions)))(newline)
+          (display "actions ")(display (ask rule-obj 'actions))(newline)
+          (display "new-ruleID ")(display new-ruleID)(newline)
+          (display "new actions ")(display (ask (get 'rules new-ruleID) 'actions))(newline)
           ;; transfer the condition from the original old rule to the new rules
         ;(create-typed-condition2 name type targetID operator ruleID #!key fixedID comparator-args)
         (define old-conditions (ask rule-obj 'conditions))
