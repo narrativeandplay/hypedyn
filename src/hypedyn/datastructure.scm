@@ -40,6 +40,8 @@
                create-link create-action create-fact
                create-rule create-typed-rule create-typed-rule2 create-typed-rule3
                create-condition create-typed-condition  create-typed-condition2
+               ;;dup-offset-ID dup-offset-x dup-offset-anywhere-x 
+               get-duplicate-offsets
                )
 
 ;; debug var 
@@ -51,11 +53,23 @@
 (define-private import-offset-ID 0)
 (define-private import-offset-x 0)
 (define-private import-offset-anywhere-x 0)
+
 (define (set-import-offsets! max-x max-y
                              max-anywhere-x max-anywhere-y)
   (set! import-offset-ID (generate-uniqueID))
   (set! import-offset-x max-x)
   (set! import-offset-anywhere-x max-anywhere-x))
+
+;; duplicate obj (not sure whether import-offset-ID should be public, should we just use import offset and make it public?)
+
+;(define dup-offset-ID 0)
+;(define dup-offset-x 0)
+;(define dup-offset-anywhere-x 0)
+
+(define (get-duplicate-offsets max-x max-y
+                               max-anywhere-x max-anywhere-y)
+  (values (generate-uniqueID) max-x max-anywhere-x))
+
 
 ; our version of set-dirty! which updates window display
 ;(define (ht-set-dirty!)
@@ -764,10 +778,12 @@
 (define (create-link name fromnodeID tonodeID start-index end-index use-destination
                      use-alt-destination use-alt-text alt-destination alt-text
                      update-display . args)
+  
   ;(format #t "Creating link: ~a~%~!" name)
   (let* ((actual-fromnodeID (if (importing?)
                                 (+ fromnodeID import-offset-ID)
                                 fromnodeID))
+         ;; Note: tonodeID is not used now
          (actual-tonodeID (if (importing?)
                               (+ tonodeID import-offset-ID)
                               tonodeID))
@@ -787,9 +803,6 @@
          (from-node (get 'nodes actual-fromnodeID))
          (to-node (get 'nodes actual-tonodeID))
          (new-linkID (ask new-link 'ID)))
-    
-    (display "actual tonodeID ")(display actual-tonodeID)(newline)
-    (display "actual fromnodeID ")(display actual-fromnodeID)(newline)
     
     (if from-node
         (ask from-node 'addlink new-linkID))
@@ -962,8 +975,6 @@
 
 ; create an action
 (define (create-action name type expr ruleID . args)
-  (display "create-action expr type ")(display (invoke expr 'get-class))(newline)
-  (display "  expr ")(display expr)(newline)
   ;(display "[create-action] expr ")(display expr)(newline)
   (let* ((actual-ruleID (if (importing?)
                             (+ ruleID import-offset-ID)
@@ -980,9 +991,21 @@
     ; add to action list
     (put 'actions new-action-ID new-action)
     
+    ;; debugging import 
+    (if (not (pair? expr))
+        (begin
+          (display "ERROR NOT PAIR!! ")(display ruleID)(newline)
+          (display "expr in create action ")(display expr)(newline)
+          (display "expr class ")(display (invoke expr 'get-class))(newline)
+          ))
+    
+    ;; TODO ideally, we do not need to check for (pair? expr)
+    ;; but we overlooked doing conversion to newer object format when doing importing 
+    
     ;; import offset for the dest node ID of follow-link action
     ;; (follow-link2 linkID parent-ruleID link-type dest-nodeID)
-    (if (importing?)
+    (if (and (importing?)
+             (pair? expr))
         (if (equal? (car expr) 'follow-link)
             (ask new-action 'set-expr!
                  (list-replace expr 4 (+ (list-ref expr 4) import-offset-ID)))))

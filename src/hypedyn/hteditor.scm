@@ -76,7 +76,7 @@
                update-display-nodes
                )
 
-; some global variables
+;;;; some global variables
 
 ; hteditor ui
 (define hteditor-ui-panel #f)
@@ -143,7 +143,7 @@
 (define toolbar-nodecount-textarea #f)
 
 ;;
-;; build the UI
+;;;; build the UI
 ;;
 ; shutdown procedure, called in close-hteditor-ui
 (define (close-hteditor-subwindows)
@@ -170,6 +170,7 @@
         ; edit menu
         (m-edit (make-menu "Edit"))
         (me-docrule (make-menu-item "Document rule"))
+        (dup-node (make-menu-item "Duplicate Node"))
 
         ; view menu
         (m-view (make-menu "View"))
@@ -281,8 +282,17 @@
           (add-actionlistener me-docrule (make-actionlistener
                                           (lambda (source)
                                             (doeditdocrule))))))
-
-    ; undo
+    
+    ;;
+    (add-menuitem-at m-edit dup-node 0)
+    (add-actionlistener dup-node 
+                        (make-actionlistener
+                         (lambda (e)
+                           (display "calling dup proc ")(newline)
+                           (do-dup-node)
+                           )))
+    
+    ;; undo
     (init-undo-system)
     (if (is-undo-enabled?)
         (begin
@@ -591,7 +601,7 @@
     (create-about-window (get-main-ui-frame))))
 
 ;;
-;; recent files menu
+;;;; recent files menu
 ;;
 
 ; open recent file
@@ -705,6 +715,121 @@
 
 (define (newnode-undo nodeID)
   (delete-node nodeID))
+
+;;;; Duplicate objects
+
+(define (duplicate-action actionID parentID dup-offset-ID)
+  (let* ((action-obj (get 'actions actionID))
+         (name (ask action-obj 'name))
+         (type (ask action-obj 'type))
+         (expr (ask action-obj 'expr))
+         (new-actionID (+ actionID dup-offset-ID)))
+         
+    (create-action name type expr parentID new-actionID)
+    ))
+
+(define (duplicate-condition condID parentID dup-offset-ID)
+  (let* ((cond-obj (get 'conditions condID))
+         (name (ask cond-obj 'name))
+         (type (ask cond-obj 'type))
+         (targetID (ask cond-obj 'targetID))
+         (operator (ask cond-obj 'operator))
+         (numfact-args (ask cond-obj 'numfact-args))
+         (new-condID (+ condID dup-offset-ID)))
+    (create-typed-condition2 name type targetID operator parentID 
+                             fixedID: new-condID
+                             numfact-args: numfact-args)
+    ))
+
+(define (duplicate-rule ruleID parentID dup-offset-ID)
+  
+  (let* ((rule-obj (get 'rules ruleID))
+         (name (ask rule-obj 'name))
+         (type (ask rule-obj 'type))
+         (and-or (ask rule-obj 'and-or))
+         (negate? (ask rule-obj 'negate?))
+         (fall-through? (ask rule-obj 'fall-through?))
+         (new-ruleID (+ ruleID dup-offset-ID)))
+
+    (create-typed-rule3 name type and-or negate? parentID 
+                        fixedID: new-ruleID 
+                        fall-through?: fall-through?)
+    
+    ;; duplicate the conditions 
+    (map (lambda (condID)
+           (duplicate-condition condID new-ruleID dup-offset-ID)
+           ) (ask rule-obj 'conditions))
+    
+    ;; duplicate the actions 
+    (map (lambda (actionID)
+           (duplicate-action actionID new-ruleID dup-offset-ID)
+           ) (ask rule-obj 'actions))
+    
+    ;; update graph view 
+    (add-follow-link-rule-display new-ruleID)
+    (add-show-popup-rule-display new-ruleID)
+    ))
+
+(define (duplicate-link linkID parentID dup-offset-ID)
+
+  (let* ((link-obj (get 'links linkID))
+         (name (ask link-obj 'name))
+         (start-index (ask link-obj 'start-index))
+         (end-index (ask link-obj 'end-index))
+         (new-linkID (+ linkID dup-offset-ID))
+         (rule-lst (ask link-obj 'rule-lst))
+         )
+    (create-link name parentID -1
+                 start-index end-index
+                 #f -1 #f -1
+                 "" #f new-linkID)
+
+    ;; duplicate the rules on this link
+    (map (lambda (ruleID)
+           (duplicate-rule ruleID new-linkID dup-offset-ID)
+           ) rule-lst)
+    ))
+
+(define (duplicate-node nodeID)
+  (let-values (((max-x max-y max-anywhere-x max-anywhere-y)
+                (get-max-node-positions)))
+    ;; set import offsets (uniqueID and positions)
+    (let-values (((dup-offset-ID dup-offset-x dup-offset-anywhere-x)
+                  (get-duplicate-offsets max-x max-y
+                                         max-anywhere-x max-anywhere-y)))
+      
+      (let* ((node-obj (get 'nodes nodeID))
+             (name (ask node-obj 'name))
+             (content (ask node-obj 'content))
+             (x (ask node-obj 'get-x))
+             (y (ask node-obj 'get-y))
+             (anywhere (ask node-obj 'anywhere?))
+             (links (ask node-obj 'links))
+             (new-nodeID (+ nodeID dup-offset-ID))
+             (rule-lst (ask node-obj 'rule-lst))
+             )
+
+        (create-node name content
+                     (if anywhere
+                         (+ x dup-offset-anywhere-x)
+                         (+ x dup-offset-x))
+                     y anywhere update-display-nodes new-nodeID)
+
+        ;; duplicate links in this node
+        (map (lambda (linkID)
+               (duplicate-link linkID new-nodeID dup-offset-ID)
+               ) links)
+
+        ;; duplicate rules on this node
+        (map (lambda (ruleID)
+               (duplicate-rule ruleID new-nodeID dup-offset-ID)) rule-lst)
+        ))
+    ))
+
+;; called by menu item Duplicate Node
+(define (do-dup-node)
+  (if (not (= selected-nodeID -1))
+      (duplicate-node selected-nodeID)))
             
 ; create a new node
 (define (donewnode anywhere)

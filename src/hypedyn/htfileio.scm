@@ -51,7 +51,7 @@
                dosave-wrapper confirm-save ht-save-to-file
                ht-build-sexpr-from-object-with-rule ht-build-sexpr-from-rule
                clear-loaded-file-version ;; used by clear-data in hteditor.scm
-               loaded-file-version obj-convertion-2.2
+               loaded-file-version obj-conversion-2.2
                )
 
 ; set fileformat version and type
@@ -158,6 +158,9 @@
                         )
                       )
                   
+                  
+                  (display "diff-version? ")(display diff-version?)(newline)
+                  
                   ;; user decides to open the file anyway 
                   ;; or it is of the same version 
                   (if (or (and diff-version?
@@ -169,7 +172,7 @@
                         (if (load-from-file newfilename)
                             (begin
                               (add-recent-file newfilename)  ;; add to recent menu
-                              (obj-convertion-2.2)           ;; if loading pre 2.2 objects convert to post 2.2 format
+                              (obj-conversion-2.2)           ;; if loading pre 2.2 objects convert to post 2.2 format
                               (populate-display)             ;; populate the display (important to convert first)
                               ))
                         )))
@@ -217,6 +220,13 @@
               ; import from file
               (if (import-from-file newfilename)
                   (begin
+                    
+                    ;; TODO needs work and testing
+                    ;; I would assume we need to do a object conversion in import as well
+                    ;; the below two lines is to be put in and tested
+                    ;; (add-recent-file newfilename)  ;; add to recent menu
+                    ;; (obj-conversion-2.2)           ;; if loading pre 2.2 objects convert to post 2.2 format
+                    
                     ; populate the display
                     (populate-display)))))))))
 
@@ -491,8 +501,13 @@
 ;;  ==============================
 ;;;; pre 2.2 save file conversion
 ;;  ==============================
-(define (obj-convertion-2.2)
-  (display "started v2.2 conversion ")(newline)
+(define (obj-conversion-2.2)
+  (newline)
+  (display "STARTed v2.2 conversion ")
+  ;(sleep 1000000)
+  (newline)
+  (newline)
+  
   (if (<= loaded-file-version 2.1)
       (begin
         (table-map 'links convert-pre-2.2-links)
@@ -543,6 +558,7 @@
                        
                        ;; remove the old actions 
                        ;; that has expr in the string form
+                       (display "deleting old action ")(display actionID)(newline)
                        (del 'actions actionID)
                        
                        ;;(create-condition name nodeID operator ruleID . args)

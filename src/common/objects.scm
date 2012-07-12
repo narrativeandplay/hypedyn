@@ -218,7 +218,8 @@
 
 (define (generate-uniqueID . args)
   ; check if there's an arg, and if its a number
-  (if (and (not (eq? '() args)) (number? (car args)))
+  (if (and (not (eq? '() args)) 
+           (number? (car args)))
       (let ((arg (car args)))
         ; using an existing ID, so use it and update nextID
         (set! nextID (max arg nextID))

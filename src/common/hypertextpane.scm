@@ -738,19 +738,19 @@
 
     ; handle key press
     (define (key-press-handler e)
-      ; if ctrl-space pressed, and nothing selected, check if its at end of a link,
-      ; and if it is, insert a blank space with no link
+      ;; if ctrl-space pressed, and nothing selected, check if its at end of a link,
+      ;; and if it is, insert a blank space with no link
       (if (and (ctrl-key-modifier? e)
                (or (space-key-event? e)
                    (forward-slash-key-event? e)))
           (let ((sel-start (get-text-selstart the-editor))
                 (sel-end (get-text-selend the-editor)))
-            ; is nothing selected?
+            ;; is nothing selected?
             (if (= sel-start sel-end)
-                  ; are we at end of a link?
-                  (if (end-of-link? sel-start)
-                      ; insert a blank character at the selection point
-                      (insert-blank-space sel-start))))))
+                ;; are we at end of a link?
+                (if (end-of-link? sel-start)
+                    ;; insert a blank character at the selection point
+                    (insert-blank-space sel-start))))))
     
     ; handle key typed
     (define (key-type-handler e)
