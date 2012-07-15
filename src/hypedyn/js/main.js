@@ -146,7 +146,7 @@ function findReplaceText(linkID) {
 				case "alternative text":
 					result = text_to_replace[i][2]; 
 					break;
-				case "string fact":
+				case "text fact":
 					result = factlist[text_to_replace[i][2]].value; 
 					break;
 				case "number fact":

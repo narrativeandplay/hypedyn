@@ -1,110 +1,116 @@
-(begin (make-hypertext (quote htfe) 2.2) (set-card-shark! (quote #f)) (begin
-(create-node "start"
+(begin (make-hypertext (quote htfe) 2.2) (set-card-shark! (quote #f))
+(set-disable-back-button! true) (begin (create-node "start"
 "One day, Little Red Riding Hood is walking through the forest, on the way to deliver a basket of food and flowers to her grandmother."
-331.0 47.0 false false 1) (begin (create-typed-rule3 "Set fact" (quote node)
-(quote and) #f 1 fixedID: 488 fall-through?: #t))) (begin (create-node
-"Explore the forest"
+80.0 90.0 false false 1)) (begin (create-node "Explore the forest"
 "Tempted by a grove of flowers, Red strays off the path into the forest. There are a number of different types of flowers growing in the grassy clearing."
-517.0 51.0 true false 3) (begin (create-typed-rule3 "Set fact" (quote node)
-(quote and) #f 3 fixedID: 482 fall-through?: #t) (create-typed-condition2
-"Enable link" 0 9 0 482 fixedID: 485 numfact-args: #f) (create-typed-condition2
-"Enable link" 0 4 0 482 fixedID: 486 numfact-args: #f) (create-typed-condition2
-"Enable link" 0 3 0 482 fixedID: 487 numfact-args: #f) (create-action
-"Enable Link" (quote anywhere-check) (list (quote add-anywhere-link) 3) 482
-483) (create-action "Explore the forest" (quote entered-node) (list (quote
-assert) 378) 482 484))) (begin (create-node "Go directly to Grandma's house"
-"Red walks along the path, sticking carefully to the center to avoid the dark, menacing trees. Eventually, she reaches Grandma's house. \n\nWhen Red enters Grandma's house, she is surprised to see the young man sitting on the sofa.  \n\nGrandma smiles when she sees Red."
-226.05 53.0 true false 4) (begin (create-typed-rule3 "Set fact" (quote node)
-(quote and) #f 4 fixedID: 477 fall-through?: #t) (create-typed-condition2
-"Enable link" 0 9 0 477 fixedID: 480 numfact-args: #f) (create-typed-condition2
-"Enable link" 0 4 0 477 fixedID: 481 numfact-args: #f) (create-action
-"Enable Link" (quote anywhere-check) (list (quote add-anywhere-link) 4) 477
-478) (create-action "Go directly to Grandma's house" (quote entered-node) (list
-(quote retract) 378) 477 479))) (begin (create-node "Go deeper into the forest"
+640.0 45.0 true false 2) (begin (create-typed-rule3 "Add Anywhere Link" (quote
+node) (quote and) #f 2 fixedID: 3 fall-through?: #t) (create-typed-condition2
+"Add Anywhere Link" 0 2 0 3 fixedID: 88 numfact-args: #f)
+(create-typed-condition2 "Add Anywhere Link" 0 20 0 3 fixedID: 89 numfact-args:
+#f) (create-typed-condition2 "Add Anywhere Link" 0 11 0 3 fixedID: 90
+numfact-args: #f) (create-action "Enable Link" (quote anywhere-check) (list
+(quote add-anywhere-link) 2) 3 91) (create-action "Explore the forest" (quote
+entered-node) (list (quote assert) 76) 3 92))) (begin (create-node
+"Go deeper into the forest"
 "A handsome young man is leaning against the trunk of a tree. He gestures to Red to come over."
-673.0 128.0 true false 5) (begin (create-typed-rule3 "Set fact" (quote node)
-(quote and) #f 5 fixedID: 470 fall-through?: #t) (create-typed-condition2
-"Enable link" 0 9 0 470 fixedID: 473 numfact-args: #f) (create-typed-condition2
-"Enable link" 0 4 0 470 fixedID: 474 numfact-args: #f) (create-typed-condition2
-"Enable link" 0 5 0 470 fixedID: 475 numfact-args: #f) (create-typed-condition2
-"Enable link" 0 3 1 470 fixedID: 476 numfact-args: #f) (create-action
-"Enable Link" (quote anywhere-check) (list (quote add-anywhere-link) 5) 470
-471) (create-action "Go deeper into the forest" (quote entered-node) (list
-(quote retract) 378) 470 472))) (begin (create-node "Talk to young man"
-"Red goes over and talks to the wolf. He asks her where she's going, and she says she's off to deliver a basket of food and flowers to her sick grandma."
-677.0 202.0 true false 6) (begin (create-typed-rule3 "Set fact" (quote node)
-(quote and) #f 6 fixedID: 464 fall-through?: #t) (create-typed-condition2
-"Enable link" 0 4 0 464 fixedID: 466 numfact-args: #f) (create-typed-condition2
-"Enable link" 0 9 0 464 fixedID: 467 numfact-args: #f) (create-typed-condition2
-"Enable link" 0 6 0 464 fixedID: 468 numfact-args: #f) (create-typed-condition2
-"Enable link" 0 5 1 464 fixedID: 469 numfact-args: #f) (create-action
-"Enable Link" (quote anywhere-check) (list (quote add-anywhere-link) 6) 464
-465))) (begin (create-node "Approach the young man"
-"Unfortunately, the young man was a wolf. Neither Red nor Grandma were ever seen again."
-315.0 134.0 true false 7) (begin (create-typed-rule3 "Set fact" (quote node)
-(quote and) #f 7 fixedID: 458 fall-through?: #t) (create-typed-condition2
-"Enable link" 0 4 1 458 fixedID: 460 numfact-args: #f) (create-typed-condition2
-"Enable link" 0 6 1 458 fixedID: 461 numfact-args: #f) (create-typed-condition2
-"Enable link" 0 9 0 458 fixedID: 462 numfact-args: #f) (create-typed-condition2
-"Enable link" 0 7 0 458 fixedID: 463 numfact-args: #f) (create-action
-"Enable Link" (quote anywhere-check) (list (quote add-anywhere-link) 7) 458
-459))) (begin (create-node "Pass the basket to Grandma"
-"Red passes the basket of food and flowers to Grandma." 113.0 135.0 true false
-8) (begin (create-typed-rule3 "Set fact" (quote node) (quote and) #f 8 fixedID:
-452 fall-through?: #t) (create-typed-condition2 "Enable link" 0 8 0 452
-fixedID: 454 numfact-args: #f) (create-typed-condition2 "Enable link" 0 9 0 452
-fixedID: 455 numfact-args: #f) (create-typed-condition2 "Enable link" 0 6 0 452
-fixedID: 456 numfact-args: #f) (create-typed-condition2 "Enable link" 0 4 1 452
-fixedID: 457 numfact-args: #f) (create-action "Enable Link" (quote
-anywhere-check) (list (quote add-anywhere-link) 8) 452 453))) (begin
-(create-node "Head home" "Red heads back home." 386.0 53.0 true false 9) (begin
-(create-typed-rule3 "Set fact" (quote node) (quote and) #f 9 fixedID: 448
-fall-through?: #t) (create-typed-condition2 "Enable link" 0 7 0 448 fixedID:
-451 numfact-args: #f) (create-action "Enable Link" (quote anywhere-check) (list
-(quote add-anywhere-link) 9) 448 449) (create-action "Head home" (quote
-entered-node) (list (quote retract) 378) 448 450))) (begin (create-node
-"Pick the geraniums"
+640.0 135.0 true false 5) (begin (create-typed-rule3 "Add Anywhere Link" (quote
+node) (quote and) #f 5 fixedID: 6 fall-through?: #t) (create-typed-condition2
+"Add Anywhere Link" 0 2 1 6 fixedID: 93 numfact-args: #f)
+(create-typed-condition2 "Add Anywhere Link" 0 5 0 6 fixedID: 94 numfact-args:
+#f) (create-typed-condition2 "Add Anywhere Link" 0 20 0 6 fixedID: 95
+numfact-args: #f) (create-typed-condition2 "Add Anywhere Link" 0 11 0 6
+fixedID: 96 numfact-args: #f) (create-action "Enable Link" (quote
+anywhere-check) (list (quote add-anywhere-link) 5) 6 97) (create-action
+"Go deeper into the forest" (quote entered-node) (list (quote retract) 76) 6
+98))) (begin (create-node "Pick the geraniums"
 "Red decides to pick some of the geraniums in the grove and exchange them for the flowers in the basket for Grandma."
-502.0 203.0 true false 376) (begin (create-typed-rule3 "Set fact" (quote node)
-(quote and) #f 376 fixedID: 442 fall-through?: #t) (create-typed-condition2
-"Enable link" 2 374 0 442 fixedID: 446 numfact-args: #f)
-(create-typed-condition2 "Enable link" 2 378 1 442 fixedID: 447 numfact-args:
-#f) (create-action "Enable Link" (quote anywhere-check) (list (quote
-add-anywhere-link) 376) 442 443) (create-action "Pick the geraniums" (quote
-entered-node) (list (quote set-value!) 375 "geraniums") 442 444) (create-action
-"Pick the geraniums" (quote entered-node) (list (quote assert) 374) 442 445)))
-(begin (create-node "Pick the violets"
+480.0 225.0 true false 69) (begin (create-typed-rule3 "Add Anywhere Link"
+(quote node) (quote and) #f 69 fixedID: 70 fall-through?: #t)
+(create-typed-condition2 "Add Anywhere Link" 2 75 0 70 fixedID: 83
+numfact-args: #f) (create-typed-condition2 "Add Anywhere Link" 2 76 1 70
+fixedID: 84 numfact-args: #f) (create-action "Enable Link" (quote
+anywhere-check) (list (quote add-anywhere-link) 69) 70 85) (create-action
+"pick the geraniums" (quote entered-node) (list (quote assert) 75) 70 86)
+(create-action "pick the geraniums" (quote entered-node) (list (quote
+set-value!) 77 "geraniums") 70 87))) (begin (create-node "Talk to young man"
+"Red goes over and talks to the wolf. He asks her where she's going, and she says she's off to deliver a basket of food and flowers to her sick grandma."
+640.0 225.0 true false 8) (begin (create-typed-rule3 "Add Anywhere Link" (quote
+node) (quote and) #f 8 fixedID: 9 fall-through?: #t) (create-typed-condition2
+"Add Anywhere Link" 0 5 1 9 fixedID: 28 numfact-args: #f)
+(create-typed-condition2 "Add Anywhere Link" 0 8 0 9 fixedID: 29 numfact-args:
+#f) (create-typed-condition2 "Add Anywhere Link" 0 20 0 9 fixedID: 30
+numfact-args: #f) (create-typed-condition2 "Add Anywhere Link" 0 11 0 9
+fixedID: 31 numfact-args: #f) (create-action "Enable Link" (quote
+anywhere-check) (list (quote add-anywhere-link) 8) 9 32))) (begin (create-node
+"Pick the violets"
 "Red decides to pick some of the violets in the grove and exchange them for the flowers in the basket for Grandma."
-495.0 130.0 true false 377) (begin (create-typed-rule3 "Set fact" (quote node)
-(quote and) #f 377 fixedID: 436 fall-through?: #t) (create-typed-condition2
-"Enable link" 2 374 0 436 fixedID: 440 numfact-args: #f)
-(create-typed-condition2 "Enable link" 2 378 1 436 fixedID: 441 numfact-args:
-#f) (create-action "Enable Link" (quote anywhere-check) (list (quote
-add-anywhere-link) 377) 436 437) (create-action "Pick the violets" (quote
-entered-node) (list (quote set-value!) 375 "violets") 436 438) (create-action
-"Pick the violets" (quote entered-node) (list (quote assert) 374) 436 439)))
-(begin (create-link "talked" 4 -1 135 229 false false true -1 "" false 343)
-(begin (create-typed-rule3 "IF" (quote link) (quote and) #f 343 fixedID: 432
-fall-through?: #f) (create-typed-condition2 "if-rule" 0 6 1 432 fixedID: 435
-numfact-args: #f)) (begin (create-typed-rule3 "ELSE" (quote link) (quote and)
-#f 343 fixedID: 433 fall-through?: #t) (create-action "talked" (quote
-displayed-node) (list (quote replace-link-text) "alternative text" "" 343) 433
-434))) (begin (create-link "didn't talk" 4 -1 230 265 false false true -1 ""
-false 346) (begin (create-typed-rule3 "IF" (quote link) (quote and) #f 346
-fixedID: 428 fall-through?: #f) (create-typed-condition2 "if-rule" 0 6 0 428
-fixedID: 431 numfact-args: #f)) (begin (create-typed-rule3 "ELSE" (quote link)
-(quote and) #f 346 fixedID: 429 fall-through?: #t) (create-action "didn't talk"
-(quote displayed-node) (list (quote replace-link-text) "alternative text" ""
-346) 429 430))) (begin (create-link "flowers" 8 -1 34 41 false false (quote
-fact) -1 375 false 421) (begin (create-typed-rule3 "IF" (quote link) (quote
-and) #f 421 fixedID: 424 fall-through?: #f) (create-typed-condition2 "if-rule"
-2 374 0 424 fixedID: 427 numfact-args: #f)) (begin (create-typed-rule3 "ELSE"
-(quote link) (quote and) #f 421 fixedID: 425 fall-through?: #t) (create-action
-"flowers" (quote displayed-node) (list (quote replace-link-text) "string fact"
-375 421) 425 426))) (set-start-node! 1) (create-fact "Picked flowers" (quote
-boolean) 374) (create-fact "The flowers" (quote string) 375) (create-fact
-"In the forest grove" (quote boolean) 378) (set-disable-restart-button! #f)
-(set-disable-back-button! #f) (set-disable-pagebreak! #f)
-(set-disable-page-resize! #f) (set-fixed-page-width! 800)
-(set-fixed-page-height! 600) (set-css-type! (quote default))
+480.0 315.0 true false 72) (begin (create-typed-rule3 "Add Anywhere Link"
+(quote node) (quote and) #f 72 fixedID: 73 fall-through?: #t)
+(create-typed-condition2 "Add Anywhere Link" 2 75 0 73 fixedID: 78
+numfact-args: #f) (create-typed-condition2 "Add Anywhere Link" 2 76 1 73
+fixedID: 79 numfact-args: #f) (create-action "Enable Link" (quote
+anywhere-check) (list (quote add-anywhere-link) 72) 73 80) (create-action
+"pick the violets" (quote entered-node) (list (quote assert) 75) 73 81)
+(create-action "pick the violets" (quote entered-node) (list (quote set-value!)
+77 "violets") 73 82))) (begin (create-node "Go directly to Grandma's house"
+"Red walks along the path, sticking carefully to the center to avoid the dark, menacing trees. Eventually, she reaches Grandma's house.\n\nWhen Red enters Grandma's house, she is surprised to see the young man sitting on the sofa. \nGrandma smiles when she sees Red."
+240.0 45.0 true false 11) (begin (create-typed-rule3 "Add Anywhere Link" (quote
+node) (quote and) #f 11 fixedID: 12 fall-through?: #t) (create-typed-condition2
+"Add Anywhere Link" 0 20 0 12 fixedID: 99 numfact-args: #f)
+(create-typed-condition2 "Add Anywhere Link" 0 11 0 12 fixedID: 100
+numfact-args: #f) (create-action "Enable Link" (quote anywhere-check) (list
+(quote add-anywhere-link) 11) 12 101) (create-action
+"Go directly to Grandma's house" (quote entered-node) (list (quote retract) 76)
+12 102))) (begin (create-node "Pass the basket to Grandma"
+"Red passes the basket of food and flowers to Grandma." 160.0 135.0 true false
+14) (begin (create-typed-rule3 "Add Anywhere Link" (quote node) (quote and) #f
+14 fixedID: 15 fall-through?: #t) (create-typed-condition2 "Add Anywhere Link"
+0 11 1 15 fixedID: 45 numfact-args: #f) (create-typed-condition2
+"Add Anywhere Link" 0 8 0 15 fixedID: 46 numfact-args: #f)
+(create-typed-condition2 "Add Anywhere Link" 0 20 0 15 fixedID: 47
+numfact-args: #f) (create-typed-condition2 "Add Anywhere Link" 0 14 0 15
+fixedID: 48 numfact-args: #f) (create-action "Enable Link" (quote
+anywhere-check) (list (quote add-anywhere-link) 14) 15 49))) (begin
+(create-node "Approach the young man"
+"Unfortunately, the young man was a wolf. Neither Red nor Grandma were ever seen again."
+400.0 135.0 true false 17) (begin (create-typed-rule3 "Add Anywhere Link"
+(quote node) (quote and) #f 17 fixedID: 18 fall-through?: #t)
+(create-typed-condition2 "Add Anywhere Link" 0 11 1 18 fixedID: 50
+numfact-args: #f) (create-typed-condition2 "Add Anywhere Link" 0 8 1 18
+fixedID: 51 numfact-args: #f) (create-typed-condition2 "Add Anywhere Link" 0 20
+0 18 fixedID: 52 numfact-args: #f) (create-typed-condition2 "Add Anywhere Link"
+0 17 0 18 fixedID: 53 numfact-args: #f) (create-action "Enable Link" (quote
+anywhere-check) (list (quote add-anywhere-link) 17) 18 54))) (begin
+(create-node "Head home" "Red heads back home." 240.0 225.0 true false 20)
+(begin (create-typed-rule3 "Add Anywhere Link" (quote node) (quote and) #f 20
+fixedID: 21 fall-through?: #t) (create-typed-condition2 "Add Anywhere Link" 0
+17 0 21 fixedID: 103 numfact-args: #f) (create-action "Enable Link" (quote
+anywhere-check) (list (quote add-anywhere-link) 20) 21 104) (create-action
+"Head home" (quote entered-node) (list (quote retract) 76) 21 105))) (begin
+(create-link "flowers" 14 -1 34 41 false false false -1 "" false 106) (begin
+(create-typed-rule3 "display the flowers" (quote link) (quote and) #f 106
+fixedID: 107 fall-through?: #t) (create-typed-condition2 "display the flowers"
+2 75 1 107 fixedID: 108 numfact-args: #f) (create-action "flowers" (quote
+displayed-node) (list (quote replace-link-text) "text fact" 77 106) 107 109)))
+(begin (create-link "flowers" 8 -1 114 118 false false false -1 "" false 110)
+(begin (create-typed-rule3 "display the flowers" (quote link) (quote and) #f
+110 fixedID: 111 fall-through?: #t) (create-typed-condition2
+"display the flowers" 2 75 1 111 fixedID: 112 numfact-args: #f) (create-action
+"flowers" (quote displayed-node) (list (quote replace-link-text) "text fact" 77
+110) 111 113))) (begin (create-link "talked" 11 -1 135 227 false false false -1
+"" false 57) (begin (create-typed-rule3 "talked" (quote link) (quote and) #f 57
+fixedID: 58 fall-through?: #t) (create-typed-condition2 "talked" 0 8 0 58
+fixedID: 67 numfact-args: #f) (create-action "talked" (quote displayed-node)
+(list (quote replace-link-text) "alternative text" "" 57) 58 68))) (begin
+(create-link "didn't talk" 11 -1 228 262 false false false -1 "" false 61)
+(begin (create-typed-rule3 "didn't talk" (quote link) (quote and) #f 61
+fixedID: 62 fall-through?: #t) (create-typed-condition2 "didn't talk" 0 8 1 62
+fixedID: 65 numfact-args: #f) (create-action "didn't talk" (quote
+displayed-node) (list (quote replace-link-text) "alternative text" "" 61) 62
+66))) (set-start-node! 1) (create-fact "Picked flowers" (quote boolean) 75)
+(create-fact "In the forest grove" (quote boolean) 76) (create-fact
+"The flowers" (quote string) 77) (set-disable-restart-button! #f)
+(set-disable-back-button! #t) (set-disable-pagebreak! #f)
+(set-disable-page-resize! #f) (set-fixed-page-width! "800")
+(set-fixed-page-height! "600") (set-css-type! (quote default))
 (set-custom-css-location! "") (set-custom-css-location2! ""))

@@ -555,9 +555,9 @@
                      (display "came into alt ")(newline)
                      (set! text-type "alternative text")
                      (set! text-value (get-text alt-text-textfield)))
-                    (("string fact")
+                    (("text fact")
                      (display "came into str fact ")(newline)
-                     (set! text-type "string fact")
+                     (set! text-type "text fact")
                      ;; TOFIX: get fact string during runtime instead of from the start
                      ;; (might not need to) just need to store factID
                      ;; problem is fact is not accessible to our interpreter since it is in a different environment
@@ -904,7 +904,7 @@
   (let ((selected-item (to-string (get-combobox-selecteditem action-type-combobox))))
     (case selected-item
       (("alternative text") #t) ;; no checking required
-      (("string fact") 
+      (("text fact") 
        (not (= (get-comboboxwithdata-selecteddata fact-string-choice-combobox) -1)))
       (("number fact") 
        (not (= (get-comboboxwithdata-selecteddata fact-number-choice-combobox) -1)))
@@ -977,7 +977,7 @@
                (cond ((equal? using-type "alternative text")
                       (set-text alt-text-textfield alt-text)
                       )
-                     ((equal? using-type "string fact")
+                     ((equal? using-type "text fact")
                       (define target-fact (get 'facts alt-text))
                       (define fact-name (ask target-fact 'name))
 
@@ -1398,7 +1398,7 @@
                  (display "text type ")(display text-type)(newline)
                  (display "text value ")(display text-value)(newline)
 
-                 ;; 'text maps to "alternative text", 'fact maps to "string fact" 
+                 ;; 'text maps to "alternative text", 'fact maps to "text fact" 
                  (define text-type-string #f)
                  (add-component action-list-panel (add-specific-action "update text using" text-type text-value))
                  )
@@ -1458,7 +1458,7 @@
          (add-component update-text-action-panel action-type-combobox)
          (add-component update-text-action-panel alt-text-textfield)
          )
-        ((or (equal? selected-item "string fact")
+        ((or (equal? selected-item "text fact")
              (equal? selected-item "number fact"))
          (clear-container update-text-action-panel)
          (add-component update-text-action-panel action-type-combobox)
@@ -1466,13 +1466,13 @@
          ;; string/number fact differentiation
          (define fact-choice
            (case selected-item
-             (("string fact") (location fact-string-choice-combobox))
+             (("text fact") (location fact-string-choice-combobox))
              (("number fact") (location fact-number-choice-combobox))
              (else "HUH")
              ))
          (define fact-type
            (case selected-item
-             (("string fact") 'string)
+             (("text fact") 'string)
              (("number fact") 'number)))
          
          ;; **** Explanation of how location and setter works 
@@ -1521,7 +1521,7 @@
 ;; the panel that comes behind the combobox selecting actions type
 (define (create-update-text-action-panel)
   (set! update-text-action-panel (make-panel))
-  (set! action-type-combobox (make-combobox "alternative text" "string fact" "number fact"))
+  (set! action-type-combobox (make-combobox "alternative text" "text fact" "number fact"))
   (set! alt-text-textfield (make-textfield "" 20))
   
   (set! fact-string-choice-combobox
@@ -1759,7 +1759,7 @@
          (the-type-choice (if (is-basic-mode?)
                               (make-combobox "Node")
                               (if (show-facts?)
-                                  (make-combobox "Node" "Link" "Fact(#t/#f)" "Fact(num)")
+                                  (make-combobox "Node" "Link" "True/False Fact" "Number Fact")
                                   (make-combobox "Node" "Link"))))
          (the-node-list (create-node-choice targetID #f in-edited-nodeID))
          (the-link-list (create-link-choice targetID))
@@ -2574,7 +2574,7 @@
               ;;  ;; is 'string ever used? -teongleong
               ((or (equal? fact-type 'string)
                    (equal? fact-type 'set-value!))
-               (display "string fact")(display the-value)(newline)
+               (display "text fact")(display the-value)(newline)
                (set-text the-string-entry the-value))
               ((equal? fact-type 'set-number-fact)
                (set-combobox-selection-object num-fact-mode-choice (create-combobox-string-item num-fact-mode))
