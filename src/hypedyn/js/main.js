@@ -314,6 +314,7 @@ function back_button_check() {
 }
 
 // note this function shares a huge chunk of similar code with gotoNode
+// refactored to call refreshNode - alex
 function backPrevNode() {
 	//disp("backprevnode");
 	//disp("before pop " + prev_read_nodes.length);
@@ -329,41 +330,11 @@ function backPrevNode() {
 		if (node) {
 			clicked_link_flag = false;
 			
-			eventTrigger("enteredNode", node);
-			for (var i in node.links) {
-				eventTrigger("enteredNode", node.links[i]); 
-			}
-			//disp("after trigger");
-			
 			//node.visited = true;
 			currNodeID = nodeID;
-			
-			update_anywhere_visibility();
-			//disp("update vis");
-			if (page_flipping_mode) {
-				if (peek_back_mode)
-					cache_peek_back();
-				flips = [];
-				page = 0;
-			}
-			//disp("page_flip things");
-			
-			//var htmlcode = htmlFormat( node.content, clone_arr(node.links).concat(activated_anywhere_nodes), false );
-			htmlcode = node_to_html( node, activated_anywhere_nodes, false );
-			$("pages").innerHTML = htmlcode;
-			
-			if (page_flipping_mode)
-				insert_peek_back();
-			else 
-				style_pages();
-			
-			//anywherelink_buttons(); // original anywhere nodes
-			add_anywhere_button(); // choice links
-			replace_button_placeholder();
-			
-			if (page_flipping_mode)
-				//drawPageIndicator(page, flips.length, (last_page_flip != undefined));
-				drawPageIndicator(page, flips.length, back_page_check());
+
+            // refresh the node
+            refreshNode(node);
 		}
 	}
 }
