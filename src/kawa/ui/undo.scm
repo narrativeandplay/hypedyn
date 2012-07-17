@@ -90,7 +90,11 @@
   
   (invoke in-undo-manager 'endUpdate)
   
-  (save-point-newedit in-undo-manager)
+  (display "end update ")(newline)
+  
+  ;; if we're not 
+  (if (not (compoundundomanager-locked? in-undo-manager))
+      (save-point-newedit in-undo-manager))
   
   (update-undo-action undo-action)
   (update-redo-action redo-action))
@@ -113,6 +117,7 @@
   
   (if (undoable-edit? in-edit)
       (begin
+        (display "post edit ")(newline)
         (save-point-newedit in-undo-manager)
         (invoke in-undo-manager 'postEdit in-edit)
         (update-undo-action (invoke in-undo-manager 'get-undo-action))
@@ -154,7 +159,10 @@
      ;(format #t "compoundundomanager postEdit: ~a~%~!" e)
      (if (and (undoable-edit? e)
               (not undoing-redoing-lock))
-         (invoke undo-edit-support 'postEdit e)
+         (begin
+           (display "[posting edit] ")(newline)
+           (invoke undo-edit-support 'postEdit e)
+           )
 ;         (begin
 ;           (display "[postedit ignored] '")(display (invoke e 'getPresentationName))(display "'")(newline)
 ;           (display "  Either not undoable-edit? ")(display (not (undoable-edit? e)))(newline)
@@ -268,6 +276,7 @@
    (try-catch
        (begin
          (invoke undo 'undo)
+         (display "undoing ")(newline)
          (save-point-undo))
      (ex <javax.swing.undo.CannotUndoException>
          (begin
@@ -281,6 +290,7 @@
   ; update the action
   ((update) access: 'protected :: <void>
    (begin
+     (display "update undo action ")(newline)
      (if (invoke undo 'canUndo)
          (begin
            (invoke (this) 'setEnabled #t)
@@ -342,6 +352,7 @@
          (begin
            ;(save-point-redo)
            (invoke undo 'redo)
+           (display "redoing ")(newline)
            (save-point-redo)
            )
        (ex <javax.swing.undo.CannotRedoException>
@@ -355,6 +366,7 @@
 
   ; update the action
   ((update) access: 'protected :: <void>
+   (display "update redo action ")(newline)
    (begin
      (if (invoke undo 'canRedo)
          (begin
@@ -478,12 +490,17 @@
 ;; assumption: assume that compound edits are not empty so every pair of compound edit beginupdate
 ;; and endupdate are counted as an edit 
 
+
+;; TODO save point offset should be an attribute of the undo manager
 (define save-point-offset 0)
 
 (define (save-point-newedit in-undo-manager) ;; new edits (compound or simple)
+  (display "save point new edit b4 ")(display save-point-offset)(newline)
   ;; if simple postedit or end of compound then increment
   (if (= (compoundundomanager-updatelevel in-undo-manager) 0)
       (set! save-point-offset (+ save-point-offset 1)))
+  
+  (display "save point new edit aft ")(display save-point-offset)(newline)
   
   ;(display "[sp-edit] ")(display save-point-offset)(newline)
   
@@ -502,11 +519,12 @@
   )
 
 (define (save-point-undo)
+  (display "[sp-undo] before ")(display save-point-offset)(newline)
   (set! save-point-offset (- save-point-offset 1))
   (if (= save-point-offset 0)
       (clear-dirty!)
       (set-dirty!))
-;  (display "[sp-undo] ")(display save-point-offset)(newline)
+  (display "[sp-undo] ")(display save-point-offset)(newline)
   )
 
 ;; called by clear-dirty! as save/load fileio needs

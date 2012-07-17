@@ -124,6 +124,7 @@
 (define m-node-editnode #f)
 (define m-node-renamenode #f)
 (define m-node-delnode #f)
+(define m-node-dup #f)
 (define m-fact-newfact #f)
 (define m-fact-newfact-boolean #f)
 (define m-fact-newfact-string #f)
@@ -170,7 +171,6 @@
         ; edit menu
         (m-edit (make-menu "Edit"))
         (me-docrule (make-menu-item "Document rule"))
-        (dup-node (make-menu-item "Duplicate Node"))
 
         ; view menu
         (m-view (make-menu "View"))
@@ -189,6 +189,7 @@
         (mn-editnode (make-menu-item "Edit node"))
         (mn-renamenode (make-menu-item "Rename node"))
         (mn-delnode (make-menu-item "Delete node"))
+        (dup-node (make-menu-item "Duplicate Node"))
         
         ; facts menu
         (m-fact (make-menu "Fact"))
@@ -283,15 +284,6 @@
                                           (lambda (source)
                                             (doeditdocrule))))))
     
-    ;;
-    (add-menuitem-at m-edit dup-node 0)
-    (add-actionlistener dup-node 
-                        (make-actionlistener
-                         (lambda (e)
-                           (display "calling dup proc ")(newline)
-                           (do-dup-node)
-                           )))
-    
     ;; undo
     (init-undo-system)
     (if (is-undo-enabled?)
@@ -356,17 +348,24 @@
                                                   (lambda (source)
                                                     (donewnode #t))))))
     (add-component m-node mn-editnode)
-    (add-actionlistener mn-editnode (make-actionlistener (lambda (source) (doeditnode))))
+    (add-actionlistener mn-editnode 
+                        (make-actionlistener (lambda (source) (doeditnode))))
     (set-menu-item-accelerator mn-editnode #\E)
     (set-menuitem-component mn-editnode #f)
     (add-component m-node mn-renamenode)
-    (add-actionlistener mn-renamenode (make-actionlistener (lambda (source) (dorenamenode))))
+    (add-actionlistener mn-renamenode 
+                        (make-actionlistener (lambda (source) (dorenamenode))))
     (set-menu-item-accelerator mn-renamenode #\R)
     (set-menuitem-component mn-renamenode #f)
     (add-component m-node mn-delnode)
-    (add-actionlistener mn-delnode (make-actionlistener (lambda (source) (dodelnode))))
+    (add-actionlistener mn-delnode 
+                        (make-actionlistener (lambda (source) (dodelnode))))
     (set-menu-item-accelerator mn-delnode #\D)
     (set-menuitem-component mn-delnode #f)
+    (add-component m-node dup-node)
+    (add-actionlistener dup-node 
+                        (make-actionlistener (lambda (e) (do-dup-node))))
+    (set-menuitem-component dup-node #f)
     
     ; fact menu
     (if (show-facts?)
@@ -594,6 +593,7 @@
     (set! toolbar-button-readnode tb-button-readnode)
     (set! toolbar-nodecount-label toolbar-label-nodecount-label)
     (set! toolbar-nodecount-textarea toolbar-label-nodecount)
+    (set! m-node-dup dup-node)
     
     (enable-zoom)
     
@@ -718,7 +718,7 @@
 
 ;;;; Duplicate objects
 
-(define (duplicate-action actionID parentID dup-offset-ID)
+(define (duplicate-action actionID parentID dup-offset-ID #!key post-undo?)
   (let* ((action-obj (get 'actions actionID))
          (name (ask action-obj 'name))
          (type (ask action-obj 'type))
@@ -728,7 +728,7 @@
     (create-action name type expr parentID new-actionID)
     ))
 
-(define (duplicate-condition condID parentID dup-offset-ID)
+(define (duplicate-condition condID parentID dup-offset-ID #!key post-undo?)
   (let* ((cond-obj (get 'conditions condID))
          (name (ask cond-obj 'name))
          (type (ask cond-obj 'type))
@@ -741,7 +741,7 @@
                              numfact-args: numfact-args)
     ))
 
-(define (duplicate-rule ruleID parentID dup-offset-ID)
+(define (duplicate-rule ruleID parentID dup-offset-ID #!key post-undo?)
   
   (let* ((rule-obj (get 'rules ruleID))
          (name (ask rule-obj 'name))
@@ -757,12 +757,12 @@
     
     ;; duplicate the conditions 
     (map (lambda (condID)
-           (duplicate-condition condID new-ruleID dup-offset-ID)
+           (duplicate-condition condID new-ruleID dup-offset-ID post-undo?: #f)
            ) (ask rule-obj 'conditions))
     
     ;; duplicate the actions 
     (map (lambda (actionID)
-           (duplicate-action actionID new-ruleID dup-offset-ID)
+           (duplicate-action actionID new-ruleID dup-offset-ID post-undo?: #f)
            ) (ask rule-obj 'actions))
     
     ;; update graph view 
@@ -770,7 +770,7 @@
     (add-show-popup-rule-display new-ruleID)
     ))
 
-(define (duplicate-link linkID parentID dup-offset-ID)
+(define (duplicate-link linkID parentID dup-offset-ID #!key post-undo?)
 
   (let* ((link-obj (get 'links linkID))
          (name (ask link-obj 'name))
@@ -786,11 +786,12 @@
 
     ;; duplicate the rules on this link
     (map (lambda (ruleID)
-           (duplicate-rule ruleID new-linkID dup-offset-ID)
+           (duplicate-rule ruleID new-linkID dup-offset-ID post-undo?: #f)
            ) rule-lst)
     ))
 
 (define (duplicate-node nodeID)
+  
   (let-values (((max-x max-y max-anywhere-x max-anywhere-y)
                 (get-max-node-positions)))
     ;; set import offsets (uniqueID and positions)
@@ -809,22 +810,47 @@
              (rule-lst (ask node-obj 'rule-lst))
              )
 
-        (create-node name content
-                     (if anywhere
-                         (+ x dup-offset-anywhere-x)
-                         (+ x dup-offset-x))
-                     y anywhere update-display-nodes new-nodeID)
+        (define (actual-duplicate)
+          (create-node name content
+                       (if anywhere
+                           (+ x dup-offset-anywhere-x)
+                           (+ x dup-offset-x))
+                       y anywhere update-display-nodes new-nodeID)
 
-        ;; duplicate links in this node
-        (map (lambda (linkID)
-               (duplicate-link linkID new-nodeID dup-offset-ID)
-               ) links)
+          ;; duplicate links in this node
+          (map (lambda (linkID)
+                 (duplicate-link linkID new-nodeID dup-offset-ID post-undo?: #f)
+                 ) links)
 
-        ;; duplicate rules on this node
-        (map (lambda (ruleID)
-               (duplicate-rule ruleID new-nodeID dup-offset-ID)) rule-lst)
+          ;; duplicate rules on this node
+          (map (lambda (ruleID)
+                 (duplicate-rule ruleID new-nodeID dup-offset-ID post-undo?: #f))
+               rule-lst)
+          )
+        
+        (actual-duplicate)
+        
+        (compoundundomanager-postedit 
+         undo-manager
+         (make-undoable-edit 
+          "Duplicate Node"
+          (lambda () ;; undo
+            ;; NOTE: the postedit called within dodelnode would not be triggered 
+            ;; since we do not allow postedit when undoing
+            (dodelnode new-nodeID #t)
+            (display "undoing duplicate ")(newline)
+            )
+          (lambda () ;; redo
+            (display "redoing duplicate ")(newline)
+            
+            ;; this would not post undo edit since we don't allow that 
+            (actual-duplicate)
+            )
+          ))
+                                     
         ))
-    ))
+    )
+  )
 
 ;; called by menu item Duplicate Node
 (define (do-dup-node)
@@ -951,6 +977,8 @@
 ; currently selected node
 (define selected-nodeID '())
 
+(define (get-selected-nodeID) selected-nodeID)
+
 ; select the node
 (define (selectnode nodeID)
   ; remember selected node
@@ -975,6 +1003,8 @@
   (set-menuitem-component m-node-editnode flag)
   (set-button toolbar-button-renamenode flag)
   (set-menuitem-component m-node-renamenode flag)
+  (set-menuitem-component m-node-dup flag)
+  
   ; enable delete button/menu only if the flag is true,
   ; and either we're not in sculptural mode, or
   ; this is an anywhere node (ie. can't delete non-anywhere
@@ -987,19 +1017,27 @@
   (set-button toolbar-button-readnode flag)
   )
 
+
+
 ; delete currently selected node
-;; TOFIX: [undo] deletion of start node when undone does not restore start node status (already in bug report)
-(define (dodelnode)
+;; node-to-del if specified would delete that node
+(define (dodelnode #!optional node-to-del-ID post-undo?)
+  
+  ;; if node-to-del-ID not specified, we delete the selected node
+  (if (not node-to-del-ID)
+      (set! node-to-del-ID (get-selected-nodeID)))
+  
   ; first save the node contents if its being edited
-  (if (= (get-edited-nodeID) selected-nodeID)
+  (if (= (get-edited-nodeID) node-to-del-ID)
       (nodeeditor-save))
   (display "node editor saved ")(newline)
     
-  (define cached-nodeID selected-nodeID)
+  (define cached-nodeID node-to-del-ID)
   (define node-to-del (get 'nodes cached-nodeID))
   (define nodename (ask node-to-del 'name))
   (define node-anywhere (ask node-to-del 'anywhere?))
   (define node-sexpr (ask node-to-del 'to-save-sexpr))
+  
   (display "node-sexpr ")(display node-sexpr)(newline)
   
   ; store the position
@@ -1018,7 +1056,7 @@
                     (define action (get 'actions actionID))
                     (define sexpr (ask action 'expr))
                     (and (equal? (car sexpr) 'follow-link)
-                         (equal? (list-ref sexpr 4) selected-nodeID))
+                         (equal? (list-ref sexpr 4) node-to-del-ID))
                     )
                   ;; get list of action
                   (map (lambda (o) (car o)) action-lst))
@@ -1026,28 +1064,36 @@
   
   ;; wrap delete link and delete node in one operation
   ;; delete-node invokes delete-link which has its own compoundundomanager-postedit
-  (compoundundomanager-beginupdate undo-manager)
+  (if (not post-undo?)
+      (compoundundomanager-beginupdate undo-manager))
   
   ;; delete follow link actions to this node
   (map delete-action actionID-lst)
   
-  (delete-node selected-nodeID)
+  ;; does not contain any undo postedit
+  (delete-node node-to-del-ID)
   
-  ;; add the undoable edit
-  (compoundundomanager-postedit
-   undo-manager
-   (make-undoable-edit
-    "Delete Node"
-    (lambda () ;; redo new node is undo for delnode - not quite, also need to restore the start node if necessary
-      (newnode-redo nodename node-anywhere cached-nodeID node-sexpr)
-      (if was-start-node (set-start-node! cached-nodeID))
-      (update-display-nodes cached-nodeID nodename
-                                    actual-x actual-y
-                                    node-anywhere))
-    (lambda () ;; undo new node is redo for delnode
-      (newnode-undo cached-nodeID))
-    ))
-  (compoundundomanager-endupdate undo-manager undo-action redo-action))
+  (if (not post-undo?)
+      ;; add the undoable edit
+      (compoundundomanager-postedit
+       undo-manager
+       (make-undoable-edit
+        "Delete Node"
+        (lambda () ;; redo new node is undo for delnode - not quite, also need to restore the start node if necessary
+          (display "undoing delete node")(newline)
+          (newnode-redo nodename node-anywhere cached-nodeID node-sexpr)
+          (if was-start-node (set-start-node! cached-nodeID))
+          (update-display-nodes cached-nodeID nodename
+                                actual-x actual-y
+                                node-anywhere))
+        (lambda () ;; undo new node is redo for delnode
+          (display "redoing delete node")(newline)
+          (newnode-undo cached-nodeID))
+        )))
+  
+  (if (not post-undo?)
+      (compoundundomanager-endupdate undo-manager undo-action redo-action))
+      )
 
 ; delete a node
 (define (delete-node nodeID)
@@ -1097,7 +1143,7 @@
 
           ; also delete from graph - node name in graph is now nodeName not nodeID
           (let ((the-graph (if (ask thenode 'anywhere?) anywhere-graph node-graph)))
-            (ask the-graph 'del-node nodeID)))))) 
+            (ask the-graph 'del-node nodeID))))))
 
 ;;
 ;; node list
