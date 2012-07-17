@@ -106,6 +106,12 @@ function clickedLink(linkID) {
 	if ( linklist[linkID] ) {
 		eventTrigger("clickedLink", linklist[linkID]);
 		linklist[linkID].followed += 1; // NOTE: this must be AFTER eventTrigger
+
+        // after all events have been triggered, and the followed count updated, refresh the node
+        node=nodelist[currNodeID];
+        if(node != undefined)
+            refreshNode(node);
+
 		//disp("clicked link true in clickedLink");
 		clicked_link_flag = true;
         clickHandled = true; // tell touchHandler that the click was handled

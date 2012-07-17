@@ -50,8 +50,6 @@ function setFact( id, value) {
     else
         alert("setFact: fact " + id + " undefined");
     
-    // set the flag to refresh the node
-    needToRefresh=true;
 	//factsDebug();
 }
 
