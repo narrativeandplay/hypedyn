@@ -837,6 +837,7 @@
           (lambda () ;; undo
             ;; NOTE: the postedit called within dodelnode would not be triggered 
             ;; since we do not allow postedit when undoing
+            (display "new nodeID ")(display new-nodeID)(newline)
             (dodelnode new-nodeID #t)
             (display "undoing duplicate ")(newline)
             )
@@ -1017,8 +1018,6 @@
   (set-button toolbar-button-readnode flag)
   )
 
-
-
 ; delete currently selected node
 ;; node-to-del if specified would delete that node
 (define (dodelnode #!optional node-to-del-ID post-undo?)
@@ -1048,6 +1047,8 @@
   ; remember if this was the start node
   (define was-start-node (= (get-start-node) cached-nodeID))
   
+  (display "list of action ")(display (map (lambda (o) (car o)) (get-list 'actions)))(newline)
+  
   ;; get the list of follow-link actions going to this node
   (define actionID-lst
     (let ((action-lst (get-list 'actions)))
@@ -1065,9 +1066,13 @@
   ;; wrap delete link and delete node in one operation
   ;; delete-node invokes delete-link which has its own compoundundomanager-postedit
   (if (not post-undo?)
-      (compoundundomanager-beginupdate undo-manager))
+      (begin
+        (display "compound start here ")(newline)
+        (compoundundomanager-beginupdate undo-manager))
+      )
   
   ;; delete follow link actions to this node
+  (display "actionID-lst ")(display actionID-lst)(newline)
   (map delete-action actionID-lst)
   
   ;; does not contain any undo postedit
@@ -1092,7 +1097,9 @@
         )))
   
   (if (not post-undo?)
-      (compoundundomanager-endupdate undo-manager undo-action redo-action))
+      (begin
+        (display "compound end here ")(newline)
+        (compoundundomanager-endupdate undo-manager undo-action redo-action)))
       )
 
 ; delete a node

@@ -151,7 +151,10 @@
 (define edited-rule-sexpr #f)
 
 (define (before-edit-rule ruleID)
-  (set! unedited-rule-sexpr (cache-rule ruleID)))
+  (set! unedited-rule-sexpr (cache-rule ruleID))
+  (display "before edit rule ")(newline)
+  (display unedited-rule-sexpr)(newline)
+  )
 (define (after-edit-rule ruleID)
   (set! edited-rule-sexpr (cache-rule ruleID)))
 
@@ -191,6 +194,24 @@
   (define unedited-sexpr-copy (list-copy unedited-rule-sexpr))
   (define edited-sexpr-copy (list-copy edited-rule-sexpr))
   
+  (define (empty-rule)
+    (define the-rule (get 'rules ruleID))
+    ;; empty the rule and delte the old actions and conditions
+    ;; since we're not recycling the conditions and actions, delete them from data table
+    (display "recycling ")(display (ask the-rule 'actions))(newline)
+    (map (lambda (actionID)
+           (del 'actions actionID)
+           ) (ask the-rule 'actions))
+    (map (lambda (condID)
+           (del 'conditions condID)
+           ) (ask the-rule 'conditions))
+    ;; empty current rule's contents before making the changes
+    (if the-rule
+        (ask the-rule 'empty-rule))
+    )
+  
+  (compoundundomanager-beginupdate undo-manager)
+  
   (compoundundomanager-postedit
    undo-manager
    (make-undoable-edit
@@ -201,6 +222,8 @@
         ((link) ;; link need to update node graph display (follow link action)
          (remove-follow-link-rule-display ruleID)
          (remove-show-popup-rule-display ruleID)
+         (display "UNDOING edit rule ")(display unedited-sexpr-copy)(newline)
+         (empty-rule)
          (eval-sexpr unedited-sexpr-copy)
          (add-follow-link-rule-display ruleID)
          (add-show-popup-rule-display ruleID)
@@ -221,7 +244,9 @@
         ((link)
          (remove-follow-link-rule-display ruleID)
          (remove-show-popup-rule-display ruleID)
+         (empty-rule)
          (eval-sexpr edited-sexpr-copy)
+         (display "REDOING edit rule ")(display edited-sexpr-copy)(newline)
          (add-follow-link-rule-display ruleID)
          (add-show-popup-rule-display ruleID)
          )
@@ -235,4 +260,6 @@
         (ask the-obj 'remove-last-rule))
       )
     ))
+  
+  (compoundundomanager-endupdate undo-manager undo-action redo-action)
   )

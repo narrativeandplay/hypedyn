@@ -115,9 +115,6 @@
 ;;       since it targets one rule inside the link
 (define (doeditlink selected-linkID in-edited-nodeID in-ruleID);in-default-link-text)
   
-  ;; cache a version of the unedited link for creation of undo
-  (before-edit-rule in-ruleID)
-  
   ; set titles
   ;; Note: not used at the moment
 ;  (set-tabpanel-label-at editlink-dialog-tabpanel 0 "Link")
@@ -183,7 +180,6 @@
 (define (doeditnoderule in-edited-nodeID in-ruleID)
   (display "edit node rule ")(newline)
   (nodeeditor-save) ;; save text content before create sexpr in before-editnode
-  (before-edit-rule in-ruleID)
   
   ; set titles
 ;  (set-tabpanel-label-at editlink-dialog-tabpanel 0 "Rule")
@@ -442,12 +438,10 @@
                                 ((eq? edit-mode 'node) (get 'nodes edited-nodeID))
                                 ((eq? edit-mode 'doc) #f)))
          (new-rulename (get-new-rule-name))
-         
-         ; get boolean operator
-         (new-rule-and-or-pos (get-combobox-selectedindex editlink-dialog-andor-operator))
-         (new-rule-and-or (get-rule-exp new-rule-and-or-pos))
-         )
-    
+         ;; get boolean operator
+         ( new-rule-and-or-pos (get-combobox-selectedindex editlink-dialog-andor-operator))
+         ( new-rule-and-or (get-rule-exp new-rule-and-or-pos)))
+
     ;; remove the line associated with this rule before we edit it
     (if (eq? edit-mode 'link)
         (remove-follow-link-rule-display edited-ruleID))  ;; remove the line display from the previous edited-ruleID
@@ -457,9 +451,32 @@
     
     (define the-rule (get 'rules edited-ruleID))
     
+    ;; empty the rule and delte the old actions and conditions
+    ;; since we're not recycling the conditions and actions, delete them from data table
+    (display "recycling ")(display (ask the-rule 'actions))(newline)
+    (map (lambda (actionID)
+           (del 'actions actionID)
+           ) (ask the-rule 'actions))
+    (map (lambda (condID)
+           (del 'conditions condID)
+           ) (ask the-rule 'conditions))
     ;; empty current rule's contents before making the changes
     (if the-rule
         (ask the-rule 'empty-rule))
+
+    (display "after emptying ")(display (ask the-rule 'actions))(newline)
+
+    (define action-lst (get-list 'actions))
+    (display "action lst ")(display action-lst)(newline)
+    
+    (if (pair? action-lst)
+        (begin
+          (display "action list ")(display (map (lambda (o) (car o)) (get-list 'actions)))(newline))
+        (begin
+          (display "action lst false ")(newline)
+          ))
+     ;; cache a version of the unedited link for creation of undo
+    (before-edit-rule edited-ruleID)
     
     ;; set the and-or and negate? properties
     (if the-rule
@@ -539,7 +556,7 @@
     ;; Actions
     ;;=========
     (define obj-name (ask rule-parent-obj 'name))
-
+    
     ;; map through the list of action panel and add the actions to the rule
     (map (lambda (action-panel)
            (define action-type (get-action-panel-type action-panel))

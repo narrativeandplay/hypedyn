@@ -82,7 +82,11 @@
 
 ; begin a compound edit
 (define (compoundundomanager-beginupdate in-undo-manager :: <compoundundomanager>)
-  (invoke in-undo-manager 'beginUpdate))
+  (display "begin update ")(newline)
+  (display "update levels open ")
+  (display (compoundundomanager-updatelevel in-undo-manager))(newline)
+  (invoke in-undo-manager 'beginUpdate)
+  )
 
 ; end a compound edit
 (define (compoundundomanager-endupdate in-undo-manager :: <compoundundomanager>
@@ -91,6 +95,8 @@
   (invoke in-undo-manager 'endUpdate)
   
   (display "end update ")(newline)
+  (display "update levels open ")
+  (display (compoundundomanager-updatelevel in-undo-manager))(newline) 
   
   ;; if we're not 
   (if (not (compoundundomanager-locked? in-undo-manager))
@@ -112,12 +118,11 @@
 (define (compoundundomanager-postedit in-undo-manager :: <compoundundomanager>
                                       in-edit :: <javax.swing.undo.UndoableEdit>)
   
-;  (display "update levels open ")
-;  (display (compoundundomanager-updatelevel in-undo-manager))(newline) 
+  (display "update levels open ")
+  (display (compoundundomanager-updatelevel in-undo-manager))(newline) 
   
   (if (undoable-edit? in-edit)
       (begin
-        (display "post edit ")(newline)
         (save-point-newedit in-undo-manager)
         (invoke in-undo-manager 'postEdit in-edit)
         (update-undo-action (invoke in-undo-manager 'get-undo-action))
@@ -290,7 +295,6 @@
   ; update the action
   ((update) access: 'protected :: <void>
    (begin
-     (display "update undo action ")(newline)
      (if (invoke undo 'canUndo)
          (begin
            (invoke (this) 'setEnabled #t)
@@ -366,7 +370,6 @@
 
   ; update the action
   ((update) access: 'protected :: <void>
-   (display "update redo action ")(newline)
    (begin
      (if (invoke undo 'canRedo)
          (begin
@@ -495,12 +498,9 @@
 (define save-point-offset 0)
 
 (define (save-point-newedit in-undo-manager) ;; new edits (compound or simple)
-  (display "save point new edit b4 ")(display save-point-offset)(newline)
   ;; if simple postedit or end of compound then increment
   (if (= (compoundundomanager-updatelevel in-undo-manager) 0)
       (set! save-point-offset (+ save-point-offset 1)))
-  
-  (display "save point new edit aft ")(display save-point-offset)(newline)
   
   ;(display "[sp-edit] ")(display save-point-offset)(newline)
   
@@ -519,12 +519,10 @@
   )
 
 (define (save-point-undo)
-  (display "[sp-undo] before ")(display save-point-offset)(newline)
   (set! save-point-offset (- save-point-offset 1))
   (if (= save-point-offset 0)
       (clear-dirty!)
       (set-dirty!))
-  (display "[sp-undo] ")(display save-point-offset)(newline)
   )
 
 ;; called by clear-dirty! as save/load fileio needs
