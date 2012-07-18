@@ -1,0 +1,258 @@
+Legend
+(a) can use unchanged
+(b) lacks undos
+(c) needs changes
+(d) doesnt exist
+number at the side of the actions ties to the old script's numbering
+
+sub systems of hypedyn
+
+I. Editing operations
+
+Ia main window
+
+  (b) make new node (3)
+  (b) make anywhere node (13)
+  (b) rename node (6)
+  (b) delete node (5) (21)
+  
+  (d) make new fact
+    - different type
+  (d) delete fact
+  
+  (d) duplicate node
+  
+Ib node editor
+  (b) set start node (12)
+  (b) make new link (8)
+  (b) delete link (22)
+  (b) edit node text 
+  
+Ic rule manager
+  (d) make new rule
+  (d) delete rule
+  (b) edit rule (11)
+  
+Id rule editor
+  (b) edit node (also switching) (7)
+
+II. story system logic
+
+III. IO interaction
+- when file not saved show warning in following situation
+  1. you try to exit 
+  2. try to open file
+  3. try to make new file
+  
+(a) run story (2) (12)
+(a) exit hypedyn (24)
+
+(a) resize window (23)
+(a) drag dividers (23)
+
+(a) open file (confirm/cancel) (17) (18)
+(a) save file (confirm/cancel) (14)
+(a) saveas file (confirm/cancel) (16)
+
+(d) new file 
+(d) import file
+(d) export to web
+(d) export as text
+
+IV. graph interaction
+
+(a) node overlap behavior
+(a) switch node selection
+(a) unselect node
+
+test previous bug
+undo redo restore start node
+
+NEW script
+
+  { Run Story }
+- click on run button (should we just not allow run button to be clicked when start not set?)
+  default browser pops up. start node not set
+  
+  { Start Hypedyn App }
+a run the executable hypedyn.exe
+  main window would popup
+  
+  { New Node }
+a click on the [New node] button
+  A "New Node" dialog is shown
+b type "my node" in the new node dialog and click ok
+  a new (purple) node named "my node" should appear on the top graph view
+  the text "my node" should appear on the list on the left (top one)
+c click on the [New node] button again
+  A "New Node" dialog pops up.
+d click [Cancel],
+  no new node appears, and dialog is dismissed
+e press ctrl + m, then click [cancel] in the resulting dialog
+  the same new node dialog pops up, and closes with no change to the graph
+view or list on the left.
+f click on the [Node] menu and select the [New Node] menu item, then click
+[cancel] in the resulting dialog
+  the same new node dialog pops up, and closes with no change to the graph
+view or list on the left.
+  
+  { Undo/Redo New Node }
+a after you do new node, click on the [Edit] on the top menu and click on [Undo Add Node]
+  the last created purple node and the list display should disappear
+b click [Edit] and click on [Redo Add Node]
+  purple node and list display should appear again
+c press ctrl + z 
+  same result as a ( the last created purple node and the list display should disappear )
+d press ctrl + y
+  same result as b ( purple node and list display should appear again )
+  
+  { New Anywhere Node }
+a click on [New Anywhere Node] button
+  A "New Anywhere Node" dialog is shown
+b click [Cancel], 
+  no changes to the bottom graph view
+c click on [New Anywhere Node] button again, 
+  same result as a 
+d type a new name in the new dialog and click ok
+  a new (purple) node should appear on the top graph view
+  name of node should appear on the list on the left (top one)
+  
+  { Undo/Redo New Anywhere Node }
+a after creating an anywhere node, click on the [Edit] on the top menu and click on [Undo Add Anywhere Node]
+  the last created (purple) anywhere node and the list display should disappear
+b click [Edit] and click on [Redo Add Anywhere Node]
+  purple node and list display should appear again
+c press ctrl + z 
+  same result as a ( the last created purple node and the list display should disappear )
+d press ctrl + y
+  same result as b ( purple node and list display should appear again )
+  
+  { Select/Unselect Node } 
+a Select the node named "new node" by clicking on the purple node on the graph view
+  [Edit Node] [Rename Node] [Delete Node] buttons should become enabled
+  The entry with "new node" on the (top) left list should be selected.
+  The purple node should be surrounded by a thick red line.
+b Unselect that node by clicking on anywhere in the grey area of the graph view
+  [Edit Node] [Rename Node] [Delete Node] buttons should be disabled
+  The entry with "new node" on the (top) left list should be unselected.
+c Click on the entry with "new node" on the list
+  same result as a
+d repeat b to unselect
+  same as b
+e Click on the entry with "new node" on the list again
+  same result as a
+f Holding down the control key, click on the entry with "new node" on the list
+  same as b
+  
+  { Rename Node } (should we do rename node on anywhere node as well? )
+  
+a Select the node named "new node" (by clicking on the purple node on the graph view)
+  (do we need to write observations already verified in previous cases ?)
+b Click on [Rename Node] button
+  A "Rename Node" dialog is shown
+  In dialog there is a textfield which should contain the node's current name
+c Click [Cancel] on the dialog.
+  Nothing is changed from before you clicked [Rename Node]
+  Notably, the node we have selected previously is still selected.
+  (check for {Select Node} a result) 
+  
+  { Delete Node }
+a Select the node named "new node" 
+b Click on [Delete Node] button
+  the purple node labeled "new node" and the "new node" entry in the list display should disappear
+  
+  { Undo/Redo Delete Node }
+a after deleting the node, click on the [Edit] on the top menu and click on [Undo Delete Node]
+  the node and the list display that just disappeared should reappear
+b click [Edit] and click on [Redo Delete Node]
+  purple node and list display should disappear again
+c press ctrl + z 
+  same result as a
+d press ctrl + y
+  same result as b
+e press ctrl + z again to bring back the node
+
+  { New Fact }
+a click on [Fact] in the menu bar
+b mouse over to the submenu [New >]
+c click on [true/false] 
+  A "New True/False Fact" dialog would appear
+d Type in a "boolean" in the text field of the dialog and click [OK]
+  A new fact should show up on the list on the bottom left side (we shall call it the fact list)
+  verify that the name "boolean" and the type of fact "[true/false]" is displayed correctly
+e repeat a to c
+f now click on [Cancel] instead of [OK]
+  no new fact should appear on the bottom left list (fact list)
+g repeat a to f except this time click on [Text] with "string" for the name
+h repeat a to f except this time click on [Number] with "integer" for the name
+  
+  { Undo/Redo New Fact }
+a after creating any fact, 
+  press [Edit]->[Undo New Fact]
+  the last fact entry created should disappear (check the bottom left fact list)
+b press [Edit]->[Redo New Fact] 
+  fact on fact (bottom left) list should appear
+c verify that ctrl + z and ctrl + y does undo and redo new fact respectively
+
+  { Select/Unselect Fact }
+a Click on entry "boolean" in the bottom left list (the fact list)
+  the fact entry should be highlighted/selected in light blue.
+  click on the [Fact] menu and you will see the [Rename] and [Delete] entry are enabled
+b Holding the control key, click on the entry "boolean" in the fact list again
+  the fact entry should be unselected and no longer highlighted.
+  click on the [Fact] menu and you will see the [Rename] and [Delete] entry are now disabled
+c Select the "boolean" fact entry again by clicking on it.
+  
+  { Delete Fact }
+a 
+
+
+OLD script
+1 start hypedyn
+2 run story
+3 new node confirm 
+  new node cancel
+4 switch between node selection in graph view
+  node overlap behavior
+  switch between node selection in list view
+  changing selection in list view using up down
+  unselect node
+5 delete node
+6 rename node confirm
+  rename node cancel
+7 edit node, close node saves text
+8 new link confirm
+  new link cancel
+9 select link through clicking on the text
+  delete link
+10 rename link confirm
+   rename link cancel
+11 edit link
+   add condition
+   go through condition type selection
+   ok button disabled when destination node is none
+   graph view update after follow link action after confirm
+   check whether information still same as when you clicked ok
+   cancel discards changes (change something)
+12 set start node and run
+13 new anywhere node confirm
+   new anywhere node cancel
+14 save cancel and confirm
+15 new confirm and cancel
+16 saveas 
+17 open
+18 open presaved file (maybe old ones)
+19 story testing
+20 edit link test
+   change destination confirm and cancel
+   rename link 
+21 delete node deletes all its links as well
+22 delete link 
+23 resize window and drag dividers
+24 exit confirm cancel
+  
+
+
+
+ 
+
