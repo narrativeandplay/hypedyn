@@ -47,6 +47,7 @@
 (require "../common/window-menu.scm")
 (require "../common/main-ui.scm")
 (require "../common/preferences.scm")
+(require "../common/list-helpers.scm") ;list-replace
 (require "export.scm")
 (require "config-options.scm")
 (require "datastructure.scm")
@@ -724,6 +725,12 @@
          (type (ask action-obj 'type))
          (expr (ask action-obj 'expr))
          (new-actionID (+ actionID dup-offset-ID)))
+    
+    ;; replace text action should point to new duplicated link
+    (if (equal? (car expr) 'replace-link-text)
+        (begin
+          (set! expr (list-replace expr 3 (+ (list-ref expr 3) dup-offset-ID)))
+          ))
          
     (create-action name type expr parentID new-actionID)
     ))

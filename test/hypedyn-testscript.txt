@@ -201,10 +201,13 @@ a Click on entry "boolean" in the bottom left list (the fact list)
 b Holding the control key, click on the entry "boolean" in the fact list again
   the fact entry should be unselected and no longer highlighted.
   click on the [Fact] menu and you will see the [Rename] and [Delete] entry are now disabled
-c Select the "boolean" fact entry again by clicking on it.
+
   
   { Delete Fact }
-a 
+a Select the "boolean" fact entry again by clicking on it.
+b Click on the [Fact] menu and click on [Delete]
+  the fact entry "boolean" has vanished.
+  
 
 
 OLD script
