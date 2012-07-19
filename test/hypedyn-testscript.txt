@@ -55,7 +55,7 @@ III. IO interaction
 (a) saveas file (confirm/cancel) (16)
 
 (d) new file 
-(d) import file
+(d) import file ( there is no undo for import file at the moment )
 (d) export to web
 (d) export as text
 
@@ -192,7 +192,10 @@ a after creating any fact,
   the last fact entry created should disappear (check the bottom left fact list)
 b press [Edit]->[Redo New Fact] 
   fact on fact (bottom left) list should appear
-c verify that ctrl + z and ctrl + y does undo and redo new fact respectively
+c press ctrl + z 
+  same result as a
+d press ctrl + y 
+  same result as b
 
   { Select/Unselect Fact }
 a Click on entry "boolean" in the bottom left list (the fact list)
@@ -202,12 +205,52 @@ b Holding the control key, click on the entry "boolean" in the fact list again
   the fact entry should be unselected and no longer highlighted.
   click on the [Fact] menu and you will see the [Rename] and [Delete] entry are now disabled
 
-  
   { Delete Fact }
 a Select the "boolean" fact entry again by clicking on it.
 b Click on the [Fact] menu and click on [Delete]
   the fact entry "boolean" has vanished.
+
+  { Undo/Redo Delete Fact }
+a Click on [Edit]->[Undo Delete Fact] (can I use such notations?)
+  the deleted fact entry reappears.
+b Clik on [Edit]->[Redo Delete Fact]
+  the fact vanished again.
+c press ctrl + z 
+  same result as a
+d press ctrl + y 
+  same result as b
+e press ctrl + z again 
+
+  { Duplicate Node } (it is more useful to test duplicate node after we have created a follow link)
   
+  Node Editor:
+  { Edit Node }  
+a Select the "new node" node by clicking on it
+b Click on [Node]->[Edit node]
+  a window would pop up. the title is set to "Editing: new node"
+  [New Link][Edit Link][Rename Link][Delete Link] button should be disabled
+  [Set start node][Edit node rule] should be enabled
+  
+  { Set Start Node }
+a Click on [Set start node] in the Node editor window
+  [Set start node] button should be disabled
+  tht title on the window is set to "Editing: new node (start node)"
+
+  { Undo/Redo Start Node }
+a Click on [Edit]->[Undo Set start node] in the main hypedyn window.
+b switch to the Node Editor window.
+  observe that the [Set start node] button is enabled again
+  tht title on the window is set to "Editing: new node"
+c press ctrl + z 
+  same result as a
+d press ctrl + y 
+  same result as b
+
+  { Create Link }
+  { Typing... }
+
+
+
 
 
 OLD script
