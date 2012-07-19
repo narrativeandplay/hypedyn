@@ -1002,13 +1002,19 @@
     ;; TODO ideally, we do not need to check for (pair? expr)
     ;; but we overlooked doing conversion to newer object format when doing importing 
     
-    ;; import offset for the dest node ID of follow-link action
-    ;; (follow-link2 linkID parent-ruleID link-type dest-nodeID)
     (if (and (importing?)
              (pair? expr))
-        (if (equal? (car expr) 'follow-link)
-            (ask new-action 'set-expr!
-                 (list-replace expr 4 (+ (list-ref expr 4) import-offset-ID)))))
+        (cond ((equal? (car expr) 'follow-link)
+               ;; import offset for the dest node ID of follow-link action
+               ;; (follow-link2 linkID parent-ruleID link-type dest-nodeID)
+               (ask new-action 'set-expr!
+                    (list-replace expr 4 (+ (list-ref expr 4) import-offset-ID))))
+              ((equal? (car expr) 'replace-link-text)
+               ;; import offset for target linkID's for replace-link-text action
+               ;;(replace-link-text text-type value linkID)
+               (ask new-action 'set-expr!
+                    (list-replace expr 3 (+ (list-ref expr 3) import-offset-ID))))
+              ))
 
     ; add action to rule
     ; note: for nodes, before=then=step and after=else=init for now
