@@ -13,6 +13,7 @@ Ia main window
 
   (b) make new node (3)
   (b) make anywhere node (13)
+  (d) select/unselect node
   (b) rename node (6)
   (b) delete node (5) (21)
   
@@ -155,6 +156,17 @@ c Click [Cancel] on the dialog.
   Nothing is changed from before you clicked [Rename Node]
   Notably, the node we have selected previously is still selected.
   (check for {Select Node} a result) 
+d 
+
+  { Undo Rename Node }
+a after renaming node, click on the [Edit] on the top menu and click on [Undo Add Anywhere Node]
+  the last created (purple) anywhere node and the list display should disappear
+b click [Edit] and click on [Redo Add Anywhere Node]
+  purple node and list display should appear again
+c press ctrl + z 
+  same result as a ( the last created purple node and the list display should disappear )
+d press ctrl + y
+  same result as b ( purple node and list display should appear again )
   
   { Delete Node }
 a Select the node named "new node" 
@@ -247,9 +259,49 @@ d press ctrl + y
   same result as b
 
   { Create Link }
+a Type "aaBBBcc" in the right text area of the node editor
+b Highlight "BBB
+  [New link] button is enabled.
+c Click on [New link] button
+  A "New Link" dialog appears
+d Type "new link" and press [OK]
+  on the left, you'll see a new entry "new link" had appear on the link list
+  on the right, you'll the previously highlighted text is now underlined and bold
+e Highlight "aa" in the right text area
+f Click on [New Link] button
+  same result as c
+g press [Cancel] this time
+  no new entry is created on the left
+  the text should still be selected ( does not work on windows because of a known focus bug )
+
+  { Select/Unselect Link }
+a Click on the "new link" entry on the link list on the left
+  link entry should be highlighted.
+  the link's text should be highlighted ( bugged on windows mode )
+  [Edit link] [Rename link] [Delete link] buttons should be enabled
+b hold ctrl and click on the "new link"
+  link entry is no longer highlighted
+  the link's text is no longer highlighted
+  [Edit link] [Rename link] [Delete link] buttons should be enabled
+c Click on the underlined link text in bold
+  same result as a
+d Click anywhere in the text area except on the link text
+  same result as b
+
+  { Delete Link }
+a Select the link by clicking on the link entry
+b Click on [Delete Link]
+  the link entry vanishes from the list
+  the link text is no longer bold and underlined
+
+Ib node editor
+  (b) set start node (12)
+  (b) make new link (8)
+  (b) delete link (22)
+  (b) edit node text 
+
+
   { Typing... }
-
-
 
 
 
