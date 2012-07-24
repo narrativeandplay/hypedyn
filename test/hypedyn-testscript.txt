@@ -67,7 +67,7 @@ IV. graph interaction
 (a) unselect node
 
 test previous bug
-undo redo restore start node
+undo redo delete node restore start node
 
 NEW script
 
@@ -109,45 +109,44 @@ d press ctrl + y
   
   { New Anywhere Node }
 a click on [New Anywhere Node] button
-  A "New Anywhere Node" dialog is shown
+  A "New anywhere node" dialog is shown
 b click [Cancel], 
   no changes to the bottom graph view
 c click on [New Anywhere Node] button again, 
   same result as a 
-d type a new name in the new dialog and click ok
-  a new (purple) node should appear on the top graph view
+d type "my anywhere node" in the new dialog and click ok
+  a new (purple) node should appear on the bottom graph view
   name of node should appear on the list on the left (top one)
   
   { Undo/Redo New Anywhere Node }
-a after creating an anywhere node, click on the [Edit] on the top menu and click on [Undo Add Anywhere Node]
+a after creating an anywhere node, click on the [Edit] on the top menu and click on [Undo Add Node]
   the last created (purple) anywhere node and the list display should disappear
-b click [Edit] and click on [Redo Add Anywhere Node]
+b click [Edit] and click on [Redo Add Node]
   purple node and list display should appear again
 c press ctrl + z 
   same result as a ( the last created purple node and the list display should disappear )
 d press ctrl + y
   same result as b ( purple node and list display should appear again )
   
-  { Select/Unselect Node } 
-a Select the node named "new node" by clicking on the purple node on the graph view
+  { Select/Unselect Node }
+a Select the node named "my node" by clicking on the purple node on the graph view
   [Edit Node] [Rename Node] [Delete Node] buttons should become enabled
-  The entry with "new node" on the (top) left list should be selected.
+  The entry with "my node" on the (top) left list should be selected.
   The purple node should be surrounded by a thick red line.
 b Unselect that node by clicking on anywhere in the grey area of the graph view
   [Edit Node] [Rename Node] [Delete Node] buttons should be disabled
-  The entry with "new node" on the (top) left list should be unselected.
-c Click on the entry with "new node" on the list
+  The entry with "my node" on the (top) left list should be unselected.
+c Click on the entry with "my node" on the list
   same result as a
 d repeat b to unselect
   same as b
-e Click on the entry with "new node" on the list again
+e Click on the entry with "my node" on the list again
   same result as a
-f Holding down the control key, click on the entry with "new node" on the list
+f Holding down the control key, click on the entry with "my node" on the list
   same as b
   
   { Rename Node } (should we do rename node on anywhere node as well? )
-  
-a Select the node named "new node" (by clicking on the purple node on the graph view)
+a Select the node named "my node" (by clicking on the purple node on the graph view)
   (do we need to write observations already verified in previous cases ?)
 b Click on [Rename Node] button
   A "Rename Node" dialog is shown
@@ -156,7 +155,6 @@ c Click [Cancel] on the dialog.
   Nothing is changed from before you clicked [Rename Node]
   Notably, the node we have selected previously is still selected.
   (check for {Select Node} a result) 
-d 
 
   { Undo Rename Node }
 a after renaming node, click on the [Edit] on the top menu and click on [Undo Add Anywhere Node]
@@ -169,9 +167,9 @@ d press ctrl + y
   same result as b ( purple node and list display should appear again )
   
   { Delete Node }
-a Select the node named "new node" 
+a Select the node named "my node" 
 b Click on [Delete Node] button
-  the purple node labeled "new node" and the "new node" entry in the list display should disappear
+  the purple node labeled "my node" and the "my node" entry in the list display should disappear
   
   { Undo/Redo Delete Node }
 a after deleting the node, click on the [Edit] on the top menu and click on [Undo Delete Node]
@@ -189,9 +187,9 @@ a click on [Fact] in the menu bar
 b mouse over to the submenu [New >]
 c click on [true/false] 
   A "New True/False Fact" dialog would appear
-d Type in a "boolean" in the text field of the dialog and click [OK]
+d Type in a "boolean" in the text field of the dialog and click [OK] (Enter key should work as well)
   A new fact should show up on the list on the bottom left side (we shall call it the fact list)
-  verify that the name "boolean" and the type of fact "[true/false]" is displayed correctly
+  verify that the name "boolean" and the type of fact "(true/false)" is displayed correctly
 e repeat a to c
 f now click on [Cancel] instead of [OK]
   no new fact should appear on the bottom left list (fact list)
@@ -199,10 +197,9 @@ g repeat a to f except this time click on [Text] with "string" for the name
 h repeat a to f except this time click on [Number] with "integer" for the name
   
   { Undo/Redo New Fact }
-a after creating any fact, 
-  press [Edit]->[Undo New Fact]
-  the last fact entry created should disappear (check the bottom left fact list)
-b press [Edit]->[Redo New Fact] 
+a after creating the the number fact, press [Edit]->[Undo Add Fact]
+  the last fact entry created "integer (number)" should disappear (check the bottom left fact list)
+b press [Edit]->[Redo Add Fact] 
   fact on fact (bottom left) list should appear
 c press ctrl + z 
   same result as a
@@ -212,15 +209,19 @@ d press ctrl + y
   { Select/Unselect Fact }
 a Click on entry "boolean" in the bottom left list (the fact list)
   the fact entry should be highlighted/selected in light blue.
-  click on the [Fact] menu and you will see the [Rename] and [Delete] entry are enabled
-b Holding the control key, click on the entry "boolean" in the fact list again
+b click on the [Fact] menu 
+  the [Rename] and [Delete] entries are enabled
+c Click on the title bar of the main hypedyn window to close the [Fact] menu
+d Holding the control key, click on the entry "boolean" in the fact list again
   the fact entry should be unselected and no longer highlighted.
-  click on the [Fact] menu and you will see the [Rename] and [Delete] entry are now disabled
+e Click on the [Fact] menu 
+  the [Rename] and [Delete] entries are now disabled
+f Click on the title bar again
 
   { Delete Fact }
 a Select the "boolean" fact entry again by clicking on it.
 b Click on the [Fact] menu and click on [Delete]
-  the fact entry "boolean" has vanished.
+  the fact entry "boolean" has vanished from the bottom left list
 
   { Undo/Redo Delete Fact }
 a Click on [Edit]->[Undo Delete Fact] (can I use such notations?)
@@ -231,40 +232,50 @@ c press ctrl + z
   same result as a
 d press ctrl + y 
   same result as b
-e press ctrl + z again 
+e press ctrl + z again to undo delete fact
 
   { Duplicate Node } (it is more useful to test duplicate node after we have created a follow link)
   
   Node Editor:
-  { Edit Node }  
-a Select the "new node" node by clicking on it
+  { Edit Node }
+a Select the "my node" node by clicking on it
 b Click on [Node]->[Edit node]
-  a window would pop up. the title is set to "Editing: new node"
+  a window would pop up. the title is set to "Editing: my node"
   [New Link][Edit Link][Rename Link][Delete Link] button should be disabled
   [Set start node][Edit node rule] should be enabled
+c Close the node editor window
+d Double click on "my node" node 
+  same result as b
   
   { Set Start Node }
 a Click on [Set start node] in the Node editor window
   [Set start node] button should be disabled
-  tht title on the window is set to "Editing: new node (start node)"
+  tht title on the window is set to "Editing: my node (start node)"
 
-  { Undo/Redo Start Node }
+  { Undo/Redo set start node }
 a Click on [Edit]->[Undo Set start node] in the main hypedyn window.
 b switch to the Node Editor window.
   observe that the [Set start node] button is enabled again
-  tht title on the window is set to "Editing: new node"
+  tht title on the window is set to "Editing: my node"
 c press ctrl + z 
   same result as a
 d press ctrl + y 
   same result as b
+  
+  { Delete node restore start node status }
+a Select "my node" node in the main hypedyn window and click on [Delete Node]
+b press ctrl + z to undo the delete
+c Double click "my node" node
+  node editor window appears. 
+  start node should still be set on "my node" ( the titlebar on the node editor reads "Editing: my node (start node)")
 
   { Create Link }
 a Type "aaBBBcc" in the right text area of the node editor
-b Highlight "BBB
+b Highlight "BBB"
   [New link] button is enabled.
 c Click on [New link] button
   A "New Link" dialog appears
-d Type "new link" and press [OK]
+d Type "new link" and press [OK] (pressing the [Enter] key should also do it)
   on the left, you'll see a new entry "new link" had appear on the link list
   on the right, you'll the previously highlighted text is now underlined and bold
 e Highlight "aa" in the right text area
@@ -293,18 +304,239 @@ a Select the link by clicking on the link entry
 b Click on [Delete Link]
   the link entry vanishes from the list
   the link text is no longer bold and underlined
-
-Ib node editor
-  (b) set start node (12)
-  (b) make new link (8)
-  (b) delete link (22)
-  (b) edit node text 
-
+  
+  { Undo/Redo Delete Link }
+a Click on [Edit]->[Undo Delete Link]
+  the deleted link entry reappears.
+  the link text is underlined and bold
+b Clik on [Edit]->[Redo Delete Link]
+  the link entry is vanishes again.
+  the link text is not underlined and not bold
+c press ctrl + z 
+  same result as a
+d press ctrl + y 
+  same result as b
+e press ctrl + z again to undo delete link
 
   { Typing... }
+  
+  { Text Deletion and Undo/Redo } (strictly in front of link)
+a delete the character in the square bracket a[a]BBBcc ( delete the second character in the text, the one right before the start of the link text )
+b unselect the link by clicking anywhere in the text area except the link text ( need to unselect because of bug on window version )
+c select the link by clicking on the link text
+  ensure that the text is highlighted correctly, ( from the start of the link to the end of the link "BBB")
+d press ctrl + z ( should we test edit menu as well? sounds like that doubles the text for all undoes )
+e unselect the link (same as b)
+f select the link (same as c)
+  ensure the text is highlighted correctly (same as result of c)
 
+    { Text Deletion and Undo/Redo } (strictly behind link)
+a highlight the text inside the square bracket aaBBB[c]c and press backspace
+b unselect the link by clicking anywhere in the text area except the link text ( need to unselect because of bug on window version )
+c select the link by clicking on the link text
+  ensure that the text is highlighted correctly, ( from the start of the link to the end of the link "BBB")
+d press ctrl + z ( should we test edit menu as well? sounds like that doubles the text for all undoes )
+e unselect the link (same as b)
+f select the link (same as c)
+  ensure the text is highlighted correctly (same as result of c)
+  
+    { Text Deletion and Undo/Redo } (start of link )
+a highlight the text inside the square bracket a[aB]BBcc and press backspace
+b unselect the link by clicking anywhere in the text area except the link text ( need to unselect because of bug on window version )
+c select the link by clicking on the link text
+  ensure that the text is highlighted correctly, ( from the start of the link to the end of the link "BBB")
+d press ctrl + z ( should we test edit menu as well? sounds like that doubles the text for all undoes )
+e unselect the link (same as b)
+f select the link (same as c)
+  ensure the text is highlighted correctly (same as result of c)
+  
+  { Text Deletion and Undo/Redo } (end of link )
+a highlight the text inside the square bracket aaBB[Bc]c and press backspace 
+b unselect the link by clicking anywhere in the text area except the link text ( need to unselect because of bug on window version )
+c select the link by clicking on the link text
+  ensure that the text is highlighted correctly, ( from the start of the link to the end of the link "BBB")
+d press ctrl + z ( should we test edit menu as well? sounds like that doubles the text for all undoes )
+e unselect the link (same as b)
+f select the link (same as c)
+  ensure the text is highlighted correctly (same as result of c)
+  
+  { Text Deletion and Undo/Redo } (whole link)
+a highlight the text inside the square bracket aa[BBB]cc and press backspace 
+b unselect the link by clicking anywhere in the text area except the link text ( need to unselect because of bug on window version )
+c select the link by clicking on the link text
+  ensure that the text is highlighted correctly, ( from the start of the link to the end of the link "BBB")
+d press ctrl + z ( should we test edit menu as well? sounds like that doubles the text for all undoes )
+e unselect the link (same as b)
+f select the link (same as c)
+  ensure the text is highlighted correctly (same as result of c)
 
+  { Text insertion and Undo/Redo } (before link)
+a Move the cursor to right before the link aa|BBBcc and type "d"
+  the link text is not lengthened, just shifted forward.
+b select the link by clicking on the link text
+  ensure that the text highlight spans the entire link text
+c press ctrl + z 
+  the "d" that you just typed is gone
+d unselect and select the link
+  ensure that the text highlight spans the entire link text.
+  
+  { Text insertion and Undo/Redo } (within link)
+a Move the cursor just after the first "B" on the link text aaB|BBcc and type "d"
+  the link text is lengthened to 4 characters
+b select the link by clicking on the link text
+  ensure that the text highlight spans the entire link text (now "BdBB" )
+c press ctrl + z 
+  the "d" that you just typed is gone
+d unselect and select the link
+  ensure that the text highlight spans the entire link text. (now a width of 3 characters)
+  
+  { Text insertion and Undo/Redo } (right after link)
+a Move the cursor just after the last "B" on the link text aaBBB|cc and type "d"
+  the link text is lengthened to 4 characters
+b select the link by clicking on the link text
+  ensure that the text highlight spans the entire link text (now "BBBd" )
+c press ctrl + z 
+  the "d" that you just typed is gone
+d unselect and select the link
+  ensure that the text highlight spans the entire link text. (now a width of 3 characters)
+  
+  { Text insertion and Undo/Redo } (after link)
+a Move the cursor just after the first "c" on the link text aaBBBc|c and type "d"
+  the link text stays the same
+b select the link by clicking on the link text
+  ensure that the text highlight spans the entire link text ( still the same as before you typed )
+c press ctrl + z 
+  the "d" that you just typed is gone
+d unselect and select the link
+  ensure that the text highlight spans the entire link text. ( nothing changed )
 
+  { Link break }
+a Move the cursor just after the first "B" on the link text aaBBB|cc, hold the control key and press "\" key
+  the link text is not lengthened, a space not belonging to the link text (not underlined and bold) is appended behind the link text
+b select the link by clicking on the link text
+  ensure that the text highlight spans the entire link text
+c press ctrl + z 
+  the space that you just appended is gone
+d unselect and select the link
+  ensure that the text highlight spans the entire link text. (now a width of 3 characters)
+  
+  { Rule Manager }
+
+  { Edit Node Rule }
+a In the node editor click on [Edit node rule]
+  the rule manager window appears. The title reads "Editing: my node"
+  [Add Rule] and [Close] button is enabled
+  [Delete Selected], [Edit Rule], [Up] and [Down] button is disabled
+b Click on [Add Rule]
+  the new entry appears in the middle
+  on the left, it is labeled "my rule"
+  on the right, you see an unchecked checkbox labeled "Stop if true" 
+  the entry is selected indicated by the blue color background on the entry
+  [Delete Selected] and [Edit Rule] is enabled
+
+  { Selected/Unselect Rule }
+a Click on anywhere in the entry other than the checkbox.
+  the blue color background now changes to grey.
+  [Delete Selected] and [Edit Rule] is disabled
+b Click again on the entry 
+  the entry color background changes to blue
+  [Delete Selected] and [Edit Rule] is enabled
+c Add a second rule by clicking on the [Add Rule] button again
+  the second entry which has just been added should be selected (ie has blue background )
+  the first entry is unselected.
+  the [Up] button is enabled and [Down] button disabled
+d Click on the first rule entry 
+  the first entry is selected
+  the second entry is unselected 
+  the [Down] button is enabled and [Up] button disabled
+e Hold the control key and click on the second entry
+  now both rule entries are selected
+  [Up] and [Down] button are disabled
+f Hold the control key and click on the second entry again
+  first entry is selected, second entry is unselected
+  the [Down] button is enabled and the [Up] button disabled
+
+  { Rename Rules }
+a With the first rule entry selected, click on [Edit Rule]
+  the rule editor dialog appears.
+  a text field labeled "Rule name: " has "new rule" as its value
+b Attempt to switch focus to rule manager window that we were looking at
+  notice that the dialog is still on top and prevents you from doing the switch.
+  the rule editor dialog is titled "Edit rule for node: new node"
+c In the rule name text field, change the name to "first entry" and press [OK]
+  rule editor dialog closes.
+  in the rule manager, the first rule entry's rule name is changed to "first entry"
+d Rename the rule name of the second rule entry to "second entry"
+  
+  { Ordering of Rules }
+a Select the first rule entry click on [Down] button
+  now the first entry had been shifted down to the second position, it stays selected
+b click on [Up] button
+  the rule is back to the first position again.
+
+  { Undo Ordering }
+a Click on [Edit]->[Undo Shift Rule Up]
+  the first entry is in the second position, no rules are selected
+b Clik on [Edit]->[Redo Shift Rule Up]
+  the first entry is in the first position, no rules are selected
+  the link text is not underlined and not bold
+c press ctrl + z 
+  same result as a
+d press ctrl + y 
+  same result as b
+  
+  { Delete Rule }
+a Select the first rule "first entry"
+b Click on [Delete Rule]
+  the first rule is removed from the rule manager display, only the "second entry" rule remains.
+  
+  { Undo/Redo Delete Rule }
+a Click on [Edit]->[Undo Delete Rule]
+  the first rule reappears.
+b Clik on [Edit]->[Redo Delete Rule]
+  the first rule disappears
+c press ctrl + z 
+  same result as a
+d press ctrl + y 
+  same result as b
+e press ctrl + z again to undo delete rule
+
+  {Rule Editor}
+  
+  { Cancel Edit Rule }
+a Select the first rule in rule manager window and click on [Edit Rule]
+  the rule editor dialog appears.
+b Type something random in the rule name text field and click on [Cancel]
+  rule editor window closes, the rule name "first entry" is unchanged.
+  
+  { Double Click Edit Rule }
+a Double click on the "first entry" rule
+  the rule editor dialog appears
+b close the dialog by pressing [Cancel]
+  nothing changed
+  
+  { Add Condition }
+a Double click on the "first entry" rule
+b Click on [Add Condition] button
+  the [OK] button is disabled
+  a new condition entry appeared on the top area
+c Click the second drop down menu that shows "none"
+  there are two entries representing the two nodes "my node" and "my anywhere node" 
+d Click on "my node"
+  the [OK] button is enabled
+e Click the first drop down menu
+  there are four entries namely "Node" "Link" "True/False Fact" "Number Fact"
+f Click on "Link"
+  the [OK] button is disabled
+g Click on the second drop down menu that shows "none" and select "new link"
+  
+  
+  
+Ic rule manager
+  (d) make new rule
+  (d) delete rule
+  (b) edit rule (11)
+  
 OLD script
 1 start hypedyn
 2 run story
