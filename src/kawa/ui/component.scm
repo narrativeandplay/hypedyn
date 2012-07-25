@@ -139,6 +139,7 @@
   (set-component-maximum-size component width height)
   (set-component-preferred-size component width height))
 
+;; NOTE: only works for container with box layout
 ;; this works for packing panels so far
 ;; currently used to prevent the default behavior of box layout 
 ;; expanding its components to fill the parent container

@@ -330,7 +330,7 @@ e unselect the link (same as b)
 f select the link (same as c)
   ensure the text is highlighted correctly (same as result of c)
 
-    { Text Deletion and Undo/Redo } (strictly behind link)
+  { Text Deletion and Undo/Redo } (strictly behind link)
 a highlight the text inside the square bracket aaBBB[c]c and press backspace
 b unselect the link by clicking anywhere in the text area except the link text ( need to unselect because of bug on window version )
 c select the link by clicking on the link text
@@ -493,7 +493,7 @@ b Click on [Delete Rule]
   { Undo/Redo Delete Rule }
 a Click on [Edit]->[Undo Delete Rule]
   the first rule reappears.
-b Clik on [Edit]->[Redo Delete Rule]
+b Click on [Edit]->[Redo Delete Rule]
   the first rule disappears
 c press ctrl + z 
   same result as a
@@ -519,7 +519,8 @@ b close the dialog by pressing [Cancel]
 a Double click on the "first entry" rule
 b Click on [Add Condition] button
   the [OK] button is disabled
-  a new condition entry appeared on the top area
+  a new condition entry appeared on the top area 
+  the new condition entry is selected and [Delete Selected] button in the middle is enabled
 c Click the second drop down menu that shows "none"
   there are two entries representing the two nodes "my node" and "my anywhere node" 
 d Click on "my node"
@@ -529,13 +530,144 @@ e Click the first drop down menu
 f Click on "Link"
   the [OK] button is disabled
 g Click on the second drop down menu that shows "none" and select "new link"
+  the [OK] button is enabled
+h Select "True/False Fact" in the first drop down menu
+  the [OK] button is disabled
+i Select "boolean" on the second drop down menu
+  the [OK] button is enabled
+j Select "Number Fact" on the first drop down menu
+  the [OK] button is disabled
+k Select "integer" on the second drop down menu
+  the [OK] button is enabled
+l Select "Fact" on the fourth drop down menu
+  the [OK] button is disabled
+m Select "integer" on the fifth drop down menu
+  the [OK] button is enabled
+  
+  { Add Action } (node rule)
+a Click on the drop down beside the [Add Action] button
+  it should only have one entry which is "update fact"
+b Select "update fact" and click on [Add Action]
+  the [OK] button is disabled
+  a new entry in the bottom area appeared and selected
+  the [Delete Selected] at the bottom is enabled
+c Change the second drop down on the action entry from "none" to "boolean"
+  the [OK] button is enabled
+d Click [OK] button to make the change to the rule
+
+  { Undo/Redo Edit Rule }
+a Either in the node editor or hypedyn main window, click on [Edit]->[Undo Edit Rule]
+  No visible change can be seen
+b Double click on the "first entry" rule 
+  the rule editor comes up and the condition and the action we added just now is not there anymore
+c Either in the node editor or hypedyn main window, click on [Edit]->[Redo Delete Rule]
+  No visible change can be seen
+d Double click on the "first entry" rule
+  the rule editor comes up and the condition and the actino we added shows up
+e press ctrl + z 
+  same result as b
+f press ctrl + y 
+  same result as d
+  
+  { IO operations }
+  
+  { Exit without saving }
+a Notice we haven't save all these while. "Untitled* - Hypedyn" is labeled on the title bar of the hypedyn's main window
+b Note especially the * in the title, it signifies we have not saved yet.
+c Attempt to quit by press [File]->[Exit] in the main window
+  a message dialog pops up saying "Current project is not saved. Do you want to save the current project?"
+d Click on [Cancel]
+  the dialog is dismissed
+
+  { Open file without saving }
+a Attempt to open a file by press [File]->[Open] in the main window
+  a message dialog pops up saying "Current project is not saved. Do you want to save the current project?"
+b Click on [Cancel]
+  the dialog is dismissed
+  
+  { Start new project without saving }
+a Attempt to start new project by press [File]->[New] in the main window
+  a message dialog pops up saying "Current project is not saved. Do you want to save the current project?"
+b Click on [Cancel]
+  the dialog is dismissed
+  
+  { First Save/Saveas }
+a Click on [File]->[Save]
+  a file selector window appears. 
+  the default filename given in the textfield is "Untitled.dyn"
+  notice that non .dyn files are all filtered out in the listed file
+b Click [Cancel]
+  file selector window is dismissed
+c Click on [File]->[Save as...]
+  same result as a
+d repeat b
+
+  { Export as text }
+a Click on [File]->[Export as text...]
+  file selector window appears. 
+  the default filename given in the textfield is "Untitled.txt"
+  notice that non .txt files are all filtered out in the listed file
+b Click [Cancel]
+  file selector is dismissed
+  
+  { Export for web }
+a Click on [File]->[Export as text...]
+  file selector window appears. 
+  the default filename given in the textfield is "Untitled-JS" 
+  notice that the full directory of the folder listed is listed and unfiltered
+b Click [Cancel]
+  file selector is dismissed
+  
+  { Open Recent }
+  do we open a few files and see if it appears on the list?
+  
+  { Import }
+a Click on [File]->[Import...]
+  file selector window appears. 
+  the default filename given in the textfield is empty
+  notice that non .txt files are all filtered out in the listed file
+
+  { IO after saving }
+a Click on [File]->[Save as...] and enter "beta-test" as the file name
+b Click on [Save] to confirm save.
+  notice the updated title bar on the main window "beta-test.dyn - HypeDyn" (with no *)
+c Click on [File]
+  notice [Save] option in the menu is disabled
+  
+  { Save as after saving }
+a Click on [File]->[Save as...] 
+  file selector window appears.
+  notice "beta-test.dyn" is now the default file name given
+b Click on [Cancel]
+
+;; open new exit should block anymore, should we verify that?
+
+
+
   
   
+  { Story Logic }
   
-Ic rule manager
-  (d) make new rule
-  (d) delete rule
-  (b) edit rule (11)
+  III. IO interaction
+- when file not saved show warning in following situation
+  1. you try to exit 
+  2. try to open file
+  3. try to make new file
+  
+(a) run story (2) (12)
+(a) exit hypedyn (24)
+
+(a) resize window (23)
+(a) drag dividers (23)
+
+(a) open file (confirm/cancel) (17) (18)
+(a) save file (confirm/cancel) (14)
+(a) saveas file (confirm/cancel) (16)
+
+(d) new file 
+(d) import file ( there is no undo for import file at the moment )
+(d) export to web
+(d) export as text
   
 OLD script
 1 start hypedyn

@@ -97,7 +97,41 @@ function setNumberFact( id, mode, args ) {
 			else
 				// we want a c style / on integer where we only give the quotient instead of a decimal
 				setFact( id, eval( "quotient( " + operand1_val.toString() + ", " + operand2_val.toString() + ")" ) );
+			break;
+		case "Random":
+			var operand1 = args[0];
+			var operand1_type = args[1];
+			var operand2 = args[2];
+			var operand2_type = args[3];
+			
+			// the real value
+			var operand1_val, operand2_val;
+			switch ( operand1_type ) {
+				case "Input":
+					operand1_val = operand1;
+					break;
+				case "Fact":
+					operand1_val = getFact( operand1 ).value;
+					break;
+			}
+			switch ( operand2_type ) {
+				case "Input":
+					operand2_val = operand2;
+					break;
+				case "Fact":
+					operand2_val = getFact( operand2 ).value;
+					break;
+			}
+			
+			// do the actual random set fact
+			setFact( id, eval( "randomRange(" + operand1_val.toString() + ", " + operand2_val.toString() + ")") );
+			break;
 	}
+}
+
+// lower and upper are integers
+function randomRange( lower, upper ) {
+  return lower + ( Math.random() * ( upper - lower ) );
 }
 
 function quotient( numer, denom ) {

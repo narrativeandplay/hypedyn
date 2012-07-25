@@ -504,7 +504,6 @@
 (define (obj-conversion-2.2)
   (newline)
   (display "STARTed v2.2 conversion ")
-  ;(sleep 1000000)
   (newline)
   (newline)
   
@@ -1003,7 +1002,22 @@
                                         operand2 ", "
                                         (quote-nest operand2-type) "]"
                                         ))
-                         )))
+                         )
+                      (("Random")
+                       ;; (list opr1 opr1-type opr2 opr2-type)
+                       (let* ((operand1      (list-ref (list-ref expr 3) 0))
+                              (operand1-type (list-ref (list-ref expr 3) 1))
+                              (operand2      (list-ref (list-ref expr 3) 2))
+                              (operand2-type (list-ref (list-ref expr 3) 3)))
+
+                         (string-append "[" 
+                                        operand1 ", "
+                                        (quote-nest operand1-type) ", "
+                                        operand2 ", "
+                                        (quote-nest operand2-type) "]"
+                                        ))
+                         )
+                      ))
                   (string-append "[" (to-string target-factID) ", "
                                  (quote-nest num-fact-mode) ", "
                                  fact-value

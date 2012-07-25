@@ -720,6 +720,32 @@
                                       operand1 operand1-type
                                       operand2 operand2-type))
                               new-fact-value-expr)
+                             (("Random")
+                              (define random-panel-lst (get-container-children comp3))
+                              (define operand1-panel (list-ref random-panel-lst 1))
+                              (define operand2-panel (list-ref random-panel-lst 3))
+                              
+                              ;; similar to the code on top
+                              (define operand1-panel-lst (get-container-children operand1-panel))
+                              (define operand2-panel-lst (get-container-children operand2-panel))
+                              
+                              (define operand1-type (to-string (get-combobox-selecteditem (list-ref operand1-panel-lst 0))))
+                              (define operand2-type (to-string (get-combobox-selecteditem (list-ref operand2-panel-lst 0))))
+                              
+                              (define operand1 
+                                (case operand1-type
+                                  (("Input") (get-text (list-ref operand1-panel-lst 1)))
+                                  (("Fact") (to-string (get-comboboxwithdata-selecteddata (list-ref operand1-panel-lst 1))))))
+                              
+                              (define operand2
+                                (case operand2-type
+                                  (("Input") (get-text (list-ref operand2-panel-lst 1)))
+                                  (("Fact") (to-string (get-comboboxwithdata-selecteddata (list-ref operand2-panel-lst 1))))))
+                              
+                              (define new-fact-value-expr
+                                (list operand1 operand1-type
+                                      operand2 operand2-type))
+                              new-fact-value-expr)
                              ))
                          
                          ;; operand1 operator operand2
@@ -913,7 +939,14 @@
                    (operand2-panel (list-ref math-panel-lst 2)))
               (and (operand-panel-valid? operand1-panel)
                    (operand-panel-valid? operand2-panel))))
-           )
+           (("Random")
+            (let* ((random-panel (list-ref fp-children 4))
+                   (random-panel-lst (get-container-children random-panel))
+                   (opr1-panel (list-ref random-panel-lst 1))
+                   (opr2-panel (list-ref random-panel-lst 3)))
+              (and (operand-panel-valid? opr1-panel)
+                   (operand-panel-valid? opr2-panel)))
+            ))
        ))) ;; end of case
     ))
 
@@ -1045,6 +1078,7 @@
                       (targetID (cadr args-lst))
                       (the-value (caddr args-lst)))
                   (add-component panel-to-return (create-fact-panel the-action targetID the-value))))
+               ;; number fact
                ((= (length args-lst) 4)
                 (let ((the-action (car args-lst))
                       (targetID (cadr args-lst))
@@ -2379,7 +2413,7 @@
 ; factID: the currently selected fact, if any (pass in -1 if none selected)
 ; the-value: value that will be set (for 'set-value! only)
 ;; fact type is only needed if a factID is selected
-
+;; num-fact-mode is a string it can be one of the following ("Input" "Fact" "Math" "Random")
 (define (create-fact-panel fact-type factID the-value #!key num-fact-mode)
   (let* ((top-panel (make-panel))
          ;(the-checkbox (make-checkbox ""))
@@ -2391,7 +2425,7 @@
          (the-fact-list-string (create-fact-choice 'string factID))
          (the-fact-list-number (create-fact-choice 'number factID))
          (number-fact-target-cb (create-fact-choice 'number #f))
-         (num-fact-mode-choice (make-combobox "Input" "Fact" "Math"))
+         (num-fact-mode-choice (make-combobox "Input" "Fact" "Math" "Random"))
          )
     
     ; add top-panel
@@ -2419,6 +2453,21 @@
 ;      (component-update math-panel)
       (pack-component math-panel)
       math-panel)
+    
+    (define (make-random-panel #!optional opr1 opr1-type opr2 opr2-type)
+      (define random-panel (make-panel))
+      (set-container-layout random-panel 'horizontal)
+      (define betw-label (make-label-with-title " between "))
+      (define and-label (make-label-with-title " and "))
+      (define opr-choice1 (make-operand-choice opr1 opr1-type 'action))
+      (define opr-choice2 (make-operand-choice opr2 opr2-type 'action))
+      (add-components random-panel 
+                      betw-label
+                      opr-choice1
+                      and-label
+                      opr-choice2)
+      (pack-component random-panel)
+      random-panel)
   
     ;; choose the fact type index
     (define (fact-type-index)
@@ -2454,43 +2503,35 @@
        (add-component top-panel the-number-entry)))
     
     ; add type callback
-    (add-actionlistener the-type-choice
-                        (make-actionlistener (lambda (source)
-;                                               (selected-type-in-action source top-panel
-;                                                                        the-fact-list-boolean the-boolean-choice
-;                                                                        the-fact-list-string the-string-entry
-;                                                                        the-fact-list-number the-number-entry num-fact-mode-choice)
-                                                ; remove the current target and operator lists
-                                               (let* ((children (get-container-children top-panel))
-                                                      (fact-type-choice (car children))
-                                                      )
-                                                 (clear-container top-panel)
-                                                 (add-component top-panel fact-type-choice))
+    (add-actionlistener 
+     the-type-choice
+     (make-actionlistener (lambda (source)
+                            ;; remove the current target and operator lists
+                            (let* ((children (get-container-children top-panel))
+                                   (fact-type-choice (car children))
+                                   )
+                              (clear-container top-panel)
+                              (add-component top-panel fact-type-choice))
 
-                                               ;; add the appropriate components and set value
-;                                               (set-fact-panel-components top-panel (to-string (get-combobox-selecteditem c));(get-combobox-selectedindex c)
-;                                                                          the-fact-list-string the-string-entry
-;                                                                          the-fact-list-boolean the-boolean-choice
-;                                                                          the-fact-list-number the-number-entry num-fact-mode-choice)
-                                               (case (to-string (get-combobox-selecteditem source))
-                                                 (("True/False")
-                                                  (add-component top-panel the-fact-list-boolean)
-                                                  (add-component top-panel the-boolean-choice))
-                                                 (("Text")
-                                                  (add-component top-panel the-fact-list-string)
-                                                  (add-component top-panel the-string-entry))
-                                                 (("Number")
-                                                  (add-component top-panel the-fact-list-number)
-                                                  (add-component top-panel (make-label-with-title " using "))
-                                                  (add-component top-panel num-fact-mode-choice)
-                                                  (add-component top-panel the-number-entry)))
-                                               
-                                               (pack-component top-panel)
-                                               (pack-frame editlink-dialog)
-                                             
-                                               ;;(display "fact type choice changed in fact panel ")(newline)
-                                               (validate-rule)
-                                               )))
+                            ;; add the appropriate components and set value
+                            (case (to-string (get-combobox-selecteditem source))
+                              (("True/False")
+                               (add-component top-panel the-fact-list-boolean)
+                               (add-component top-panel the-boolean-choice))
+                              (("Text")
+                               (add-component top-panel the-fact-list-string)
+                               (add-component top-panel the-string-entry))
+                              (("Number")
+                               (add-component top-panel the-fact-list-number)
+                               (add-component top-panel (make-label-with-title " using "))
+                               (add-component top-panel num-fact-mode-choice)
+                               (add-component top-panel the-number-entry)))
+
+                            (pack-component top-panel)
+                            (pack-frame editlink-dialog)
+
+                            (validate-rule)
+                            )))
 
     (add-actionlistener
      the-fact-list-boolean
@@ -2557,6 +2598,11 @@
                (add-component top-panel (apply make-math-panel the-value))
                (add-component top-panel (make-math-panel))
                ))
+          (("Random")
+           (if (pair? the-value)
+               (add-component top-panel (apply make-random-panel the-value))
+               (add-component top-panel (make-random-panel))
+               ))
           )
         
         (component-revalidate top-panel)
@@ -2598,7 +2644,7 @@
                (case num-fact-mode
                  (("Input") (set-text the-number-entry (to-string the-value)))
                  (("Fact") (set-comboboxwithdata-selection-bydata number-fact-target-cb the-value))
-                 (("Math") #f)
+                 (("Math" "Random") #f)
                  )
                )
               ))
