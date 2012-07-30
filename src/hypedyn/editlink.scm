@@ -933,19 +933,22 @@
                  (not (= (get-comboboxwithdata-selecteddata (list-ref fp-children 4)) -1)))
             )
            (("Math")
-            (let* ((math-panel (list-ref fp-children 4))
-                   (math-panel-lst (get-container-children math-panel))
-                   (operand1-panel (list-ref math-panel-lst 0))
-                   (operand2-panel (list-ref math-panel-lst 2)))
-              (and (operand-panel-valid? operand1-panel)
-                   (operand-panel-valid? operand2-panel))))
+            (if (>= (length fp-children) 5)
+                (let* ((math-panel (list-ref fp-children 4))
+                       (math-panel-lst (get-container-children math-panel))
+                       (operand1-panel (list-ref math-panel-lst 0))
+                       (operand2-panel (list-ref math-panel-lst 2)))
+                  (and (operand-panel-valid? operand1-panel)
+                       (operand-panel-valid? operand2-panel))))
+            )
            (("Random")
-            (let* ((random-panel (list-ref fp-children 4))
-                   (random-panel-lst (get-container-children random-panel))
-                   (opr1-panel (list-ref random-panel-lst 1))
-                   (opr2-panel (list-ref random-panel-lst 3)))
-              (and (operand-panel-valid? opr1-panel)
-                   (operand-panel-valid? opr2-panel)))
+            (if (>= (length fp-children) 5)
+                (let* ((random-panel (list-ref fp-children 4))
+                       (random-panel-lst (get-container-children random-panel))
+                       (opr1-panel (list-ref random-panel-lst 1))
+                       (opr2-panel (list-ref random-panel-lst 3)))
+                  (and (operand-panel-valid? opr1-panel)
+                       (operand-panel-valid? opr2-panel))))
             ))
        ))) ;; end of case
     ))
@@ -1107,11 +1110,13 @@
   ;;(pack-component panel-to-return)
   
   (define preferred-width (get-preferred-width panel-to-return))
+  (display "preferred width ")(display preferred-width)(newline)
   
   (set! max-action-panel-width 
         (max max-action-panel-width 
              (max preferred-width action-scrollpane-vp-width)))
-  (display "max-action-panel-width ")(display max-action-panel-width)(newline)
+  
+  ;;(display "max-action-panel-width ")(display max-action-panel-width)(newline)
   
   (set-component-non-resizable-size panel-to-return max-action-panel-width action-panel-height)
   
@@ -1412,6 +1417,7 @@
 ; this is called from the doeditlink/doeditnoderule/doeditdocrule procedures above
 ; to finish building the GUI representation of the link/rule
 (define (populate-rule-editor edited-ruleID)
+  (display "POPULATE RULE EDITOR ")(newline)
   (define rule-obj (get 'rules edited-ruleID))
   (if rule-obj
       (begin
@@ -1472,6 +1478,8 @@
                  (define targetID (list-ref action-sexpr 1)) ;; factID
                  (define num-fact-mode (list-ref action-sexpr 2))
                  (define the-value (list-ref action-sexpr 3))
+                 
+                 (display "ADDING update NUMBER fact ")(display the-value)(newline)
                  (add-component action-list-panel (add-specific-action "update fact" the-action targetID num-fact-mode the-value))
                  )
                 ((equal? 'add-anywhere-link (car action-sexpr))
@@ -2294,6 +2302,50 @@
                ) (get-container-children pnl))
         )))
 
+;; resize parent action or condition panels with this
+;; resizing is done by altering the maximum width or either action or cond panels
+;; then set the max to that particular action/cond panel
+(define (resize-parent comp levels action-or-cond)
+  ;(display "resize ")(display levels)(newline)
+  (if (> levels 0)
+      (begin
+        ;;(display "resize level ")(display levels)(newline)
+        ;;(display "panel size here ")(display (get-preferred-width comp))(newline)
+        
+        (pack-component comp)
+        
+        (component-update comp)
+        (component-revalidate comp)
+        
+        (let ((parent (get-parent comp)))
+          (if (not (equal? #!null parent))
+              (resize-parent parent (- levels 1) action-or-cond))))
+      (begin
+        (define parent-panel-width #f)
+        ;;(display "comp resize parent ")(newline)(display comp)(newline)
+        (case action-or-cond
+          ((action)
+           (set! max-action-panel-width
+                 (max max-action-panel-width
+                      (max (get-preferred-width comp) action-scrollpane-vp-width)))
+           (set! parent-panel-width max-action-panel-width))
+          ((cond)
+           (set! max-cond-panel-width
+                 (max max-cond-panel-width
+                      (max (get-preferred-width comp) condition-scrollpane-vp-width)))
+           (set! parent-panel-width max-cond-panel-width)
+           ))
+
+        ;;(display "parent size here ")(display (get-preferred-width comp))(newline)
+        ;;(display "resize parent max action width ")(display max-action-panel-width)(newline) 
+        ;; debug
+        (set-component-non-resizable-size comp
+                                          parent-panel-width
+                                          action-panel-height)
+        ;;(component-update comp)
+        ;;(component-revalidate comp)
+        )))
+
 ;; operand choice returns a panel for inputing number facts value
 ;; 2 modes are provided now "Input" and "Fact" 
 ;; levels-to-parent is an int that gives the number of levels to go up before you hit the panel 
@@ -2319,8 +2371,7 @@
             (("Fact")
              (set-comboboxwithdata-selection-bydata number-choice (string->number opr))
              (add-component operand-panel number-choice)
-             ))
-          )
+             )))
         (begin
           (set-text number-entry "0")
           (add-component operand-panel number-entry)
@@ -2328,79 +2379,46 @@
           ;;(add-component operand-panel number-choice)
           )
         )
+    
+    (add-actionlistener
+     mode-choice
+     (make-actionlistener
+      (lambda (e)
+        ;;(display "mode choice trigger ")(newline)
+        ;;(display "mode choice operand panel ")(newline)(display operand-panel)(newline)
+        (remove-component operand-panel number-entry)
+        (remove-component operand-panel number-choice)
 
-    (add-actionlistener mode-choice
-                        (make-actionlistener
-                         (lambda (e)
-                           (display "mode choice trigger ")(newline)
-                           ;;(display "mode choice operand panel ")(newline)(display operand-panel)(newline)
-                           (remove-component operand-panel number-entry)
-                           (remove-component operand-panel number-choice)
+        ;; add appropriate component
+        (case (to-string (get-combobox-selecteditem mode-choice))
+          (("Input") (add-component operand-panel number-entry))
+          (("Fact") (add-component operand-panel number-choice)))
 
-                           
-                           ;; add appropriate component
-                           (case (to-string (get-combobox-selecteditem mode-choice))
-                             (("Input") (add-component operand-panel number-entry))
-                             (("Fact") (add-component operand-panel number-choice))
-                             )
-                           
-                           ;;(display "mode choice operand panel2 ")(newline)(display operand-panel)(newline)
+        (validate-rule)
 
-                           ;;(display "operand choice action")(newline)
-                           (validate-rule)
+        ;; update thie panel and parent panels
+        ;(component-revalidate operand-panel)
+        ;(component-update operand-panel)
+        ;(pack-component operand-panel)
+        ;(pack-component (get-parent operand-panel)) ;;math panel
+        
+        ;;(pack-component (get-parent (get-parent operand-panel))) ;; action panel
 
-                           ;; update thie panel and parent panels
-                           (component-revalidate operand-panel)
-                           (component-update operand-panel)
-                           (pack-component operand-panel)
-                           (pack-component (get-parent operand-panel)) ;;math panel
-                           ;(pack-component (get-parent (get-parent operand-panel))) ;; action panel
-                           
-                           ;;(display "mode choice operand panel3 ")(newline)(display operand-panel)(newline)
-                           
-                           
-                           ;; used to need to pack its parent action panel to make it look right
-                           ;; doesnt seem to be the case anymore, we'll see
-                           
-                           ;; resize the panel on top
-;                           (define levels-to-parent
-;                             (case action-or-cond
-;                               ((action) 3)
-;                               ((cond) 2)))
-;                           
-;                           (define (resize-parent comp levels)
-;                             
-;                             (if (> levels 0)
-;                                 (begin
-;                                   (pack-component comp)
-;                                   (resize-parent (get-parent comp) (- levels 1)))
-;                                 (begin
-;                                   (define parent-panel-width #f) 
-;                                   (display "comp resize parent ")(newline)(display comp)(newline)
-;                                   (case action-or-cond
-;                                     ((action)
-;                                      (set! max-action-panel-width
-;                                            (max max-action-panel-width
-;                                                 (max (get-preferred-width comp) action-scrollpane-vp-width)))
-;                                      (set! parent-panel-width max-action-panel-width))
-;                                     ((cond)
-;                                      (set! max-cond-panel-width 
-;                                            (max max-cond-panel-width
-;                                                 (max (get-preferred-width comp) condition-scrollpane-vp-width)))
-;                                      (set! parent-panel-width max-cond-panel-width)
-;                                      ))
-;                                   (set-component-non-resizable-size comp
-;                                                                     parent-panel-width
-;                                                                     action-panel-height))))
-                           ;(resize-parent operand-panel levels-to-parent)
-                           )))
+        ;; resize the panel on top
+        (define levels-to-parent
+          (case action-or-cond
+            ((action) 3)
+            ((cond) 2)))
+
+        (resize-parent operand-panel levels-to-parent action-or-cond)
+        )))
+    
     (add-actionlistener
      number-choice
      (make-actionlistener
       (lambda (e)
         ;;(display "number choice ")(newline)
-        (validate-rule)
-        )
+        (validate-rule))
       ))
 
     (add-documentlistener
@@ -2415,9 +2433,9 @@
     operand-panel))
 
 ;; set the value in the operand choice panel
-(define (set-operand-choice opr-cb opr opr-type action-or-cond)
+(define (set-operand-choice opr-panel opr opr-type action-or-cond)
   
-  (define children-lst (get-container-children opr-cb))
+  (define children-lst (get-container-children opr-panel))
   (define opr-type-cb (car children-lst))
   
   ;; set the type ("Input" or "Fact")
@@ -2425,7 +2443,7 @@
   
   ;; get it again since setting opr-type-cb would change which component comes after it
   ;; a textfield for Input and another combobox for Fact
-  (set! children-lst (get-container-children opr-cb))
+  (set! children-lst (get-container-children opr-panel))
   
   (define opr-component (cadr children-lst))
   
@@ -2435,6 +2453,17 @@
     (("Fact")
      (set-comboboxwithdata-selection-bydata opr-component (string->number opr))
      ))
+  
+  ;; an actionlistener resize the parent panels size to the correct with
+  
+  (set-combobox-selection-object opr-type-cb (create-combobox-string-item opr-type))
+  
+  (component-revalidate opr-panel)
+  (component-update opr-panel)
+  (pack-component opr-panel)
+  ;;(pack-component (get-parent opr-panel))
+  
+  (display "operand hax ")(display(get-preferred-width opr-panel))(newline)
   )
 
 ;;  =============
@@ -2458,11 +2487,13 @@
                   (make-operand-choice opr1 opr1-type 'action)
                   operator-choice
                   (make-operand-choice opr2 opr2-type 'action))
+  ;; to trigger the panel resize
+  
   (pack-component math-panel)
-
   math-panel)
 
 (define (set-math-panel math-panel val-lst)
+  (display "set math panel ")(display val-lst)(newline)
   (let ((op (list-ref val-lst 0))
         (opr1      (list-ref val-lst 1))
         (opr1-type (list-ref val-lst 2))
@@ -2476,11 +2507,19 @@
 
       (set-combobox-selection-object op-cb (create-combobox-string-item op))
       (set-operand-choice opr1-cb opr1 opr1-type 'action)
-      (set-operand-choice opr2-cb opr2 opr2-type 'action))
-    )
-  )
+      (set-operand-choice opr2-cb opr2 opr2-type 'action)
+      
+      
+      ;(component-update math-panel)
+      ;(component-revalidate math-panel)
+      ;(pack-component math-panel)
+      ;(component-update math-panel)
+      ;(component-revalidate math-panel)
+      ;(resize-parent math-panel 2 'action)
+      )))
 
 (define (set-random-panel random-panel val-lst)
+  (display "set random panel ")(display val-lst)(newline)
   (let ((opr1      (list-ref val-lst 0))
         (opr1-type (list-ref val-lst 1))
         (opr2      (list-ref val-lst 2))
@@ -2490,9 +2529,15 @@
     (let ((opr1-cb (list-ref comp-lst 1))
           (opr2-cb (list-ref comp-lst 3)))
       (set-operand-choice opr1-cb opr1 opr1-type 'action)
-      (set-operand-choice opr2-cb opr2 opr2-type 'action))
-    )
-  )
+      (set-operand-choice opr2-cb opr2 opr2-type 'action)
+      
+      ;(component-update random-panel)
+      ;(component-revalidate random-panel)
+      ;(pack-component random-panel)
+      ;(component-update random-panel)
+      ;(component-revalidate random-panel)
+      ;(resize-parent random-panel 2 'action)
+      )))
 
 (define (make-random-panel #!optional opr1 opr1-type opr2 opr2-type)
   (define random-panel (make-panel))
@@ -2506,6 +2551,7 @@
                   opr-choice1
                   and-label
                   opr-choice2)
+  
   (pack-component random-panel)
   random-panel)
 
@@ -2552,11 +2598,6 @@
     ;(set-combobox-selection the-type-choice (fact-type-index))
     (set-combobox-selection-object the-type-choice (create-combobox-string-item (fact-type-index)))
     
-    ;; add the appropriate components
-;    (set-fact-panel-components top-panel (fact-type-index)
-;                               the-fact-list-string the-string-entry
-;                               the-fact-list-boolean the-boolean-choice
-;                               the-fact-list-number the-number-entry num-fact-mode-choice)
     (case (fact-type-index)
       (("True/False")
        (add-component top-panel the-fact-list-boolean)
@@ -2573,33 +2614,34 @@
     ; add type callback
     (add-actionlistener 
      the-type-choice
-     (make-actionlistener (lambda (source)
-                            ;; remove the current target and operator lists
-                            (let* ((children (get-container-children top-panel))
-                                   (fact-type-choice (car children))
-                                   )
-                              (clear-container top-panel)
-                              (add-component top-panel fact-type-choice))
+     (make-actionlistener 
+      (lambda (source)
+        ;; remove the current target and operator lists
+        (let* ((children (get-container-children top-panel))
+               (fact-type-choice (car children))
+               )
+          (clear-container top-panel)
+          (add-component top-panel fact-type-choice))
 
-                            ;; add the appropriate components and set value
-                            (case (to-string (get-combobox-selecteditem source))
-                              (("True/False")
-                               (add-component top-panel the-fact-list-boolean)
-                               (add-component top-panel the-boolean-choice))
-                              (("Text")
-                               (add-component top-panel the-fact-list-string)
-                               (add-component top-panel the-string-entry))
-                              (("Number")
-                               (add-component top-panel the-fact-list-number)
-                               (add-component top-panel (make-label-with-title " using "))
-                               (add-component top-panel num-fact-mode-choice)
-                               (add-component top-panel the-number-entry)))
+        ;; add the appropriate components and set value
+        (case (to-string (get-combobox-selecteditem source))
+          (("True/False")
+           (add-component top-panel the-fact-list-boolean)
+           (add-component top-panel the-boolean-choice))
+          (("Text")
+           (add-component top-panel the-fact-list-string)
+           (add-component top-panel the-string-entry))
+          (("Number")
+           (add-component top-panel the-fact-list-number)
+           (add-component top-panel (make-label-with-title " using "))
+           (add-component top-panel num-fact-mode-choice)
+           (add-component top-panel the-number-entry)))
 
-                            (pack-component top-panel)
-                            (pack-frame editlink-dialog)
+        (pack-component top-panel)
+        (pack-frame editlink-dialog)
 
-                            (validate-rule)
-                            )))
+        (validate-rule)
+        )))
 
     (add-actionlistener
      the-fact-list-boolean
@@ -2629,14 +2671,6 @@
         ;;(display "num fact mode change")(newline)
         (validate-rule))))
     
-    ;; check content of number entry to be numeric
-;    (let ((callback 
-;           (lambda (e)
-;             ;; disable ok button is non numeric
-;             (set-component-enabled
-;              editlink-panel-buttons-ok
-;              (string-is-numeric? (get-text the-number-entry)))
-;             )))
     (add-documentlistener
      the-number-entry
      (make-documentlistener
@@ -2650,41 +2684,24 @@
      num-fact-mode-choice
      (make-actionlistener
       (lambda (e)
-        ;; remove fourth component
-        (remove-component top-panel (list-ref (get-container-children top-panel) 4))
-        ;(remove-component top-panel the-number-entry)
-        ;(remove-component top-panel number-fact-target-cb)
-        
-        ;;(display "top-panel ")(display top-panel)(newline)
-        ;;(display "number-fact-target-cb ")(display number-fact-target-cb)(newline)
+        ;; remove fifth component
+        (if (>= (length (get-container-children top-panel)) 5)
+            (remove-component top-panel (list-ref (get-container-children top-panel) 4)))
         
         (case (to-string (get-combobox-selecteditem num-fact-mode-choice))
           (("Input") (add-component top-panel the-number-entry))
           (("Fact") (add-component top-panel number-fact-target-cb))
           (("Math")
-                                        ;           (if (pair? the-value)
-                                        ;               (add-component top-panel (apply make-math-panel the-value))
-                                        ;               (add-component top-panel (make-math-panel))
-                                        ;               )
            ;; only create math-panel once (to values when switching between modes)
            (if (not math-panel)
-               (begin
-                 (set! math-panel (make-math-panel))
-                 )
-               )
+               (set! math-panel (make-math-panel)))
            (add-component top-panel math-panel)
            )
           (("Random")
-           (display "RANDOM the value ")(display the-value)(newline)
-                                        ;           (if (pair? the-value)
-                                        ;               (add-component top-panel (apply make-random-panel the-value))
-                                        ;               (add-component top-panel (make-random-panel))
-                                        ;               )
            (if (not random-panel)
                (set! random-panel (make-random-panel)))
            (add-component top-panel random-panel)
-           )
-          )
+           ))
         
         (component-revalidate top-panel)
         (pack-component top-panel)
@@ -2731,33 +2748,27 @@
                  (("Fact") (set-comboboxwithdata-selection-bydata number-fact-target-cb the-value))
                  (("Math")
                   (if math-panel 
-                      (set-math-panel math-panel the-value)))
+                      (begin
+                        (display "setting math panel values ")(newline)
+                        (set-math-panel math-panel the-value)
+                        ;; used to resize action panel 
+                        (set-combobox-selection-object 
+                         num-fact-mode-choice
+                         (get-combobox-selecteditem num-fact-mode-choice))
+                        )))
                  (("Random") 
                   (if random-panel 
-                      (set-random-panel random-panel the-value)))
+                      (begin
+                        (display "setting random panel values ")(newline)
+                        (set-random-panel random-panel the-value)
+                        ;; used to resize action panel
+                        (set-combobox-selection-object 
+                         num-fact-mode-choice
+                         (get-combobox-selecteditem num-fact-mode-choice))
+                      ))
                   ))
-              ))
+              )))
     
     (pack-component top-panel)
     ; return the panel
     top-panel))
-
-; set fact panel components
-(define (set-fact-panel-components top-panel the-type
-                                   the-fact-list-string the-string-entry
-                                   the-fact-list-boolean the-boolean-choice
-                                   the-fact-list-number the-number-entry num-fact-mode-choice)
-  (display "[set fact panel components]")(newline)
-  (case the-type
-    (("True/False") 
-     (add-component top-panel the-fact-list-boolean)
-     (add-component top-panel the-boolean-choice))
-    (("Text")
-     (add-component top-panel the-fact-list-string)
-     (add-component top-panel the-string-entry))
-    (("Number")
-     (add-component top-panel the-fact-list-number)
-     (add-component top-panel (make-label-with-title " using "))
-     (add-component top-panel num-fact-mode-choice)
-     (add-component top-panel the-number-entry)))
-  )

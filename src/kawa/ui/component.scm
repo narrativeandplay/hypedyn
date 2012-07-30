@@ -135,6 +135,7 @@
 (define (set-component-non-resizable-size component :: <java.awt.Component>
                                           width :: <int>
                                           height :: <int>)
+  ;(display "NON RESIZE ")(display (list width height))(newline)
   (set-component-minimum-size component width height)
   (set-component-maximum-size component width height)
   (set-component-preferred-size component width height))

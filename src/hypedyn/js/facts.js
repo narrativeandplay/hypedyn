@@ -130,8 +130,10 @@ function setNumberFact( id, mode, args ) {
 }
 
 // lower and upper are integers
+// measures had been taken in case upper < lower
 function randomRange( lower, upper ) {
-  return lower + ( Math.random() * ( upper - lower ) );
+  var possible_value_count = Math.abs( upper - lower ) + 1;
+  return Math.min(lower, upper) + Math.floor( Math.random() * possible_value_count );
 }
 
 function quotient( numer, denom ) {
