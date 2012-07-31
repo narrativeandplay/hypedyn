@@ -28,6 +28,7 @@
   (require "../kawa/ui/undo.scm")
   (require "../kawa/color.scm")
   (require "../kawa/graphics-kawa.scm") ; for open-image-file
+  
   (require "objects.scm")
   (require "datatable.scm") ;; get
   (require "links.scm")
@@ -57,6 +58,7 @@
                             gettext-method
                             getlinks-method
                             nodelist-name)
+  
   (let* ((named-obj (new-make-named-object "hpane"))
          (this-obj (new-object named-obj))
          ;; === UI elements ===
@@ -81,6 +83,11 @@
          (undo-action #f)
          (redo-action #f)
          (re-edit-node-callback #f)
+         
+         ;; these internal undo proc placeholder can be overridden
+         (htp-postedit compoundundomanager-postedit)
+         (htp-beginupdate compoundundomanager-beginupdate)
+         (htp-endupdate compoundundomanager-endupdate)
          
          ;; compound action tracking
          ;; ( (list))
@@ -282,7 +289,7 @@
                 (begin
                   (ask thislink 'set-start-index! new-val)
                   (if undo-manager
-                      (compoundundomanager-postedit
+                      (htp-postedit
                        undo-manager
                        (make-undoable-edit "Shift link start"
                                            (lambda () ;; undo
@@ -304,7 +311,7 @@
                 (begin
                   (ask thislink 'set-end-index! new-val)
                   (if undo-manager
-                      (compoundundomanager-postedit
+                      (htp-postedit
                        undo-manager
                        (make-undoable-edit "Shift link end"
                                            (lambda () ;; undo 
@@ -327,7 +334,7 @@
     ;; updates the clickback boundaries of the link
     (define (post-clickback-resize-undoable linkID)
       (display "[posting clickback] ")(newline)
-      (compoundundomanager-postedit
+      (htp-postedit
        undo-manager
        (make-undoable-edit "link clickback resize"
                            (lambda () ;; undo 
@@ -364,7 +371,7 @@
         
         ;; undo-manager for read-only (reader-pane) is not set
         (if undo-manager
-            (compoundundomanager-postedit
+            (htp-postedit
              undo-manager
              (make-undoable-edit "link text formating"
                                  (lambda () ;; undo
@@ -622,7 +629,7 @@
         (set! break-link #t)
         
         
-        (compoundundomanager-postedit
+        (htp-postedit
          undo-manager
          (make-undoable-edit "Before Break Link"
                              (lambda () #f
@@ -638,7 +645,7 @@
         (set-track-links! #t)
         (adjust-links-insert pos 1 #t)  ;; since we not tracking link, we do the shifting ourselves here
         
-        (compoundundomanager-postedit
+        (htp-postedit
          undo-manager
          (make-undoable-edit "After Break Link"
                              (lambda () 
@@ -873,7 +880,7 @@
       (define (post-insert-undoable-edit)
         
         (define (post-it event-offset event-string event-len)
-          (compoundundomanager-postedit
+          (htp-postedit
            undo-manager
            (make-undoable-edit "Typing" ;(insert)"
                                (lambda () ;; undo
@@ -921,7 +928,7 @@
       (define (post-remove-undoable-edit)
 
         (define (post-it event-offset event-string event-len)
-          (compoundundomanager-postedit
+          (htp-postedit
            undo-manager
            (make-undoable-edit "Typing" ;(remove)"
                                (lambda () ;; undo
@@ -966,7 +973,7 @@
 ;            (display "!!====================================================!!")(newline)
 ;            (display "!!!!!!!!!!  Change handler posting undoables !!!!!!!!!!!")(newline)
 ;            (display "!!====================================================!!")(newline)
-            (compoundundomanager-postedit undo-manager e)
+            (htp-postedit undo-manager e)
             
             ;(if end-compound? 
             ;; for now we don't close compound undoable 
@@ -986,23 +993,7 @@
       (if track-links 
           (begin
             ;actually do it
-            (adjust-links-delete start len)
-;            (define link-len-deleted (adjust-links-delete start len))
-;            (display "link len deleted ")(display link-len-deleted)(newline)
-            
-            ; post the link adjustment actions for undoing
-            ;; need this to keep link-len-deleted data 
-            ;; to determine whether we've deleted link text
-;            (compoundundomanager-postedit undo-manager
-;                                          (make-undoable-edit "after-delete"
-;                                                              (lambda () ;; undo
-;                                                                (display "undoing delete here ")(newline)
-;                                                                (display "link len deleted ")(display link-len-deleted)(newline)
-;                                                                (adjust-links-insert start len #t link-len-deleted)
-;                                                                )
-;                                                              (lambda () ;; redo
-;                                                                (adjust-links-delete start len))))
-            )
+            (adjust-links-delete start len))
           #f))
 
     ; after-insert
@@ -1013,17 +1004,6 @@
           (begin
             ; and actually do it
             (adjust-links-insert start len)
-            
-            ;; no need to post anymore since when undoing/redoing we do not bypass the handler events
-            ;; after insert would be called from handler
-            ;; after insert is the same for real inserts and undo/redo
-;            (define insert-undoable-edit
-;              (make-undoable-edit "after-insert"
-;                                  (lambda () ;; undo
-;                                    (adjust-links-delete start len))
-;                                  (lambda () ;; redo
-;                                    (adjust-links-insert start len #f 0))))
-;            (compoundundomanager-postedit undo-manager insert-undoable-edit)
             )))
 
     ; after-set-position
@@ -1101,11 +1081,11 @@
                track-undoable-edits)
           (begin
             ; start the compound edit
-            (compoundundomanager-beginupdate undo-manager)
+            (htp-beginupdate undo-manager)
             
             ; make sure that the correct node is being edited for redo
             (let ((undo-nodeID the-nodeID))
-              (compoundundomanager-postedit
+              (htp-postedit
                undo-manager
                (make-undoable-edit in-undo-label
                                    (lambda () ;; end of undo
@@ -1133,7 +1113,7 @@
     (define (end-compound-undoable-event in-undo-label)
       ; make sure that the correct node is being edited for undo
       (let ((undo-nodeID the-nodeID))
-        (compoundundomanager-postedit 
+        (htp-postedit 
          undo-manager
          (make-undoable-edit in-undo-label
                              (lambda () ;; start of undo
@@ -1147,7 +1127,7 @@
                                (format #t "compound-undoable-edit end of redo~%~!")
                                (set-track-undoable-edits! #t)
                                ))))
-      (compoundundomanager-endupdate undo-manager undo-action redo-action)
+      (htp-endupdate undo-manager undo-action redo-action)
       )
     
     
@@ -1252,6 +1232,18 @@
     (obj-put this-obj 'clear-background-image
              (lambda (self)
                (clear-editor-background-image)))
+    (obj-put this-obj 'set-postedit-proc!
+             (lambda (self proc)
+               (set! htp-postedit proc)
+               ))
+    (obj-put this-obj 'set-beginupdate-proc!
+             (lambda (self proc)
+               (set! htp-beginupdate proc)
+               ))
+    (obj-put this-obj 'set-endupdate-proc!
+             (lambda (self proc)
+               (set! htp-endupdate proc)
+               ))
     this-obj))
 
 ; read-only hypertextpane

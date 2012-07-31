@@ -47,7 +47,7 @@
 (require "config-options.scm")
 (require "datastructure.scm")
 (require "hteditor.scm")
-(require "hypedyn-undo.scm")
+(require "hypedyn-undo.scm") ;; hd-postedit, hd-begin-update, hd-end-update
 (require "nodeeditor.scm") ;; nodeeditor-save
 (require "htfileio.scm") ;; loaded-file-version
 (require "rules-manager.scm")
@@ -1252,7 +1252,7 @@
   (add-follow-link-rule-display ruleID)
   (add-show-popup-rule-display ruleID)
   
-  (compoundundomanager-postedit 
+  (hd-postedit 
    undo-manager
    (make-undoable-edit 
     "Delete Action"
@@ -2027,7 +2027,7 @@
   ;; in that case a beginupdate had been called so close the compound undoable edit
   ;; by calling endupdate to close it
   (if (> (compoundundomanager-updatelevel undo-manager) 0)
-      (compoundundomanager-endupdate undo-manager undo-action redo-action))
+      (hd-end-update undo-manager undo-action redo-action))
   (set-component-visible editlink-dialog #f)
   (reset-rule-editor)
   (display "[reset-rule-editor] inside editlink-dialog-cancel ")(newline)

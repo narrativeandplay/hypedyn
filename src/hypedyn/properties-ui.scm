@@ -11,11 +11,11 @@
 (require "../kawa/ui/tabpanel.scm")
 (require "../kawa/ui/radio.scm")
 (require "../kawa/ui/checkbox.scm")
-(require "../kawa/ui/undo.scm") ;compoundundomanager-postedit
+(require "../kawa/ui/undo.scm") ; make-undoable-edit
 (require "../common/main-ui.scm") ;;get-main-ui-frame
 (require "../common/fileio.scm") ;; get-last-saved-dir
 (require "../kawa/file.scm") ;; get-file-to-open
-(require "hypedyn-undo.scm") ;; compoundundomanager-postedit undo-manager
+(require "hypedyn-undo.scm") ;; hd-postedit undo-manager
 (require "config-options.scm")
 
 (module-export get-stylesheet-choice
@@ -358,7 +358,7 @@
                                  ))
                          
                          (apply set-properties new-properties)
-                         (compoundundomanager-postedit
+                         (hd-postedit
                           undo-manager
                           (make-undoable-edit "Edit Properties"
                                            (lambda () ;; undo

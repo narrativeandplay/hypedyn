@@ -27,7 +27,7 @@
 (require "../kawa/ui/events.scm") ;; add-actionlistener
 (require "../kawa/ui/checkbox.scm") ;; make-checkbox
 (require "../kawa/ui/frame.scm") ;; pack-frame 
-(require "../kawa/ui/undo.scm") ;; compoundundomanager-postedit
+(require "../kawa/ui/undo.scm") ;; make-undoable-edit
 (require "../kawa/ui/scrollpane.scm") ;; make-scrollpane
 (require "../kawa/ui/text.scm") ;; set-text
 
@@ -464,7 +464,7 @@
   (action-restrict-check)
   
   ;; post undo
-  (compoundundomanager-postedit
+  (hd-postedit
    undo-manager
    (make-undoable-edit
     "Add Rule"
@@ -523,7 +523,7 @@
         (component-update rmgr-rules-list-panel)
 
         ;; post undo
-        (compoundundomanager-postedit
+        (hd-postedit
          undo-manager
          (make-undoable-edit
           "Delete Rule"
@@ -647,7 +647,7 @@
     ;; cache these edited obj ID and edit-mode
     (define edited-obj-ID (rmgr-get-currently-edited-ID))
     (define curr-edit-mode edit-mode) ;; cache the value of edit-mode at this moment
-    (compoundundomanager-postedit
+    (hd-postedit
      undo-manager
      (make-undoable-edit
       "Shift Rule Up"
@@ -663,7 +663,7 @@
      ;; cache these edited obj ID and edit-mode
   (define edited-obj-ID (rmgr-get-currently-edited-ID))
   (define curr-edit-mode edit-mode) ;; cache the value of edit-mode at this moment
-    (compoundundomanager-postedit
+    (hd-postedit
      undo-manager
      (make-undoable-edit
       "Shift Rule Down"
@@ -713,7 +713,7 @@
     (if (equal? (get-button-label ft-button) "Fall")
         (begin
           (set-fall #f)
-          (compoundundomanager-postedit
+          (hd-postedit
            undo-manager
            (make-undoable-edit "Set Stop"
                                (lambda () ;; undo
@@ -722,7 +722,7 @@
                                  (set-fall #f)))))
         (begin
           (set-fall #t)
-          (compoundundomanager-postedit
+          (hd-postedit
            undo-manager
            (make-undoable-edit "Set Fall"
                                (lambda () ;; undo
@@ -757,7 +757,7 @@
     (if stop?
         (begin
           (set-fall #f)
-          (compoundundomanager-postedit
+          (hd-postedit
            undo-manager
            (make-undoable-edit "Set Stop"
                                (lambda () ;; undo
@@ -766,7 +766,7 @@
                                  (set-fall #f)))))
         (begin
           (set-fall #t)
-          (compoundundomanager-postedit
+          (hd-postedit
            undo-manager
            (make-undoable-edit "Set Fall"
                                (lambda () ;; undo

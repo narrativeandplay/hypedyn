@@ -32,6 +32,7 @@
                ;add-undoable-edit save-point-offset save-point-newedit save-point-undo save-point-redo 
                save-point-reset
                save-point-tracking-init
+               get-save-point-offset
                
                <compoundundomanager> ;; export our own simple class
                )
@@ -82,9 +83,6 @@
 
 ; begin a compound edit
 (define (compoundundomanager-beginupdate in-undo-manager :: <compoundundomanager>)
-  (display "begin update ")(newline)
-  (display "update levels open ")
-  (display (compoundundomanager-updatelevel in-undo-manager))(newline)
   (invoke in-undo-manager 'beginUpdate)
   )
 
@@ -93,10 +91,6 @@
                                        undo-action redo-action)
   
   (invoke in-undo-manager 'endUpdate)
-  
-  (display "end update ")(newline)
-  (display "update levels open ")
-  (display (compoundundomanager-updatelevel in-undo-manager))(newline) 
   
   ;; if we're not 
   (if (not (compoundundomanager-locked? in-undo-manager))
@@ -117,10 +111,6 @@
 ;; this is to prevent an action setting dirty flag after compound
 (define (compoundundomanager-postedit in-undo-manager :: <compoundundomanager>
                                       in-edit :: <javax.swing.undo.UndoableEdit>)
-  
-  (display "update levels open ")
-  (display (compoundundomanager-updatelevel in-undo-manager))(newline) 
-  
   (if (undoable-edit? in-edit)
       (begin
         (save-point-newedit in-undo-manager)
@@ -165,7 +155,6 @@
      (if (and (undoable-edit? e)
               (not undoing-redoing-lock))
          (begin
-           (display "[posting edit] ")(newline)
            (invoke undo-edit-support 'postEdit e)
            )
 ;         (begin
@@ -223,7 +212,6 @@
   ((get-redo-action) :: <redoAction>
    redo-action)
   )
-
 
 ;;
 ;; undo actions
@@ -386,17 +374,6 @@
                             in-redo-action :: <procedure>)
   (<genericundoableedit> in-presentation-name in-undo-action in-redo-action))
 
-; add an undoable edit (this is not needed anywhere since compoundundomanager-postedit provide similar function)
-;(define (add-undoable-edit undo-manager undo-action redo-action
-;                           in-name in-undo-procedure in-redo-procedure)
-;  (compoundundomanager-postedit undo-manager
-;                                (make-undoable-edit in-name
-;                                                    in-undo-procedure
-;                                                    in-redo-procedure))
-;  (update-undo-action undo-action)
-;  (update-redo-action redo-action))
-
-
 ; a generic undoable edit:
 ; consists of 
 ; 1) a human-readable name for the action, to be shown in the "undo" menu item
@@ -465,6 +442,8 @@
      ))
   )
 
+;;;; Save point tracking 
+
 (define local-set-dirty! #f)
 (define local-clear-dirty! #f)
 
@@ -496,6 +475,9 @@
 
 ;; TODO save point offset should be an attribute of the undo manager
 (define save-point-offset 0)
+
+(define (get-save-point-offset)
+  save-point-offset)
 
 (define (save-point-newedit in-undo-manager) ;; new edits (compound or simple)
   ;; if simple postedit or end of compound then increment

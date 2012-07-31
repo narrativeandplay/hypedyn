@@ -33,7 +33,7 @@
                get-file-separator get-user-directory get-file-data
                lines-in-file get-file-from-directory get-directory-listing recursively-delete-directory recursively-copy-directory
                get-file-name get-file-absolutepath check-file-exists check-file-content
-               copy-file-nio filename-extension-check)
+               copy-file-nio filename-extension-check delete-dir)
  
 
 ;make file (open existing file with name filename OR 
@@ -470,3 +470,16 @@
             (invoke source 'close))
         (if (not (is-null? dest))
             (invoke dest 'close))))))
+
+;; dir is a java file
+(define (delete-dir dir)
+  (if (file-exists? dir)
+      (if (file-directory? dir)
+          (recursively-delete-directory dir)
+          (try-catch
+              (delete-file dir)
+            (ex <java.lang.Throwable>
+                (begin
+                  (display (*:toString ex))(newline)
+                  )))))
+  )

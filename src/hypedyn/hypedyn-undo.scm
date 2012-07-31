@@ -22,7 +22,7 @@
 (require "../kawa/ui/undo.scm")
 (require "nodeeditor.scm") ;; nodeeditor-set-dirty! nodeeditor-clear-dirty!
 (require "hteditor.scm") ;; update-dirty-state, update-node-style
-(require "htfileio.scm") ;; ht-build-sexpr-from-object-with-rule, update-dirty-state
+(require "htfileio.scm") ;; ht-build-sexpr-from-object-with-rule, update-dirty-state, hd-autosave
 (require "editlink.scm") ;; update-nodegraph-display, remove-link-display, add-link-display
 (require "rules-manager.scm") ;; rmgr-close
 (require 'list-lib) ;; list-copy
@@ -38,6 +38,7 @@
                
                undo-manager init-undo-system
                undo-action redo-action
+               hd-postedit hd-begin-update hd-end-update
                )
 
 ; undo
@@ -210,9 +211,9 @@
         (ask the-rule 'empty-rule))
     )
   
-  (compoundundomanager-beginupdate undo-manager)
+  (hd-begin-update undo-manager)
   
-  (compoundundomanager-postedit
+  (hd-postedit
    undo-manager
    (make-undoable-edit
     "Edit Rule"
@@ -261,5 +262,40 @@
       )
     ))
   
-  (compoundundomanager-endupdate undo-manager undo-action redo-action)
+  (hd-end-update undo-manager undo-action redo-action)
+  )
+
+;;;; Hypedyn undo wrapper
+
+;; in addition to posting undoable actions, hypedyn needs to auto save every x actions
+
+(define autosave-thresh 10)
+
+;; hd stands for hypedyn
+(define (hd-postedit undo-mgr :: <compoundundomanager>
+                     in-edit :: <javax.swing.undo.UndoableEdit>)
+  ;; wrapped operation
+  (compoundundomanager-postedit undo-mgr in-edit)
+  (auto-save-check undo-mgr)
+  )
+
+(define (hd-begin-update undo-mgr :: <compoundundomanager>)
+  ;; wrapped operation
+  (compoundundomanager-beginupdate undo-mgr))
+
+(define (hd-end-update undo-mgr undo-action redo-action)
+  ;; wrapped operation
+  (compoundundomanager-endupdate undo-mgr undo-action redo-action)
+  (auto-save-check undo-mgr)
+  )
+
+;; check whether it is time to autosave, do if if it is
+(define (auto-save-check undo-mgr)
+  ;; make sure only the single encapsulating compound undoable edit posted is considered
+  ;;   we might have postedit and compound edits (with start-update, end-update) within packed 
+  ;;   as a single edit using a start-update/end-update pair on the outer most level
+  ;; every x number of compound postedit, auto save 
+  (if (and (= (compoundundomanager-updatelevel undo-mgr) 0)
+           (= (modulo (get-save-point-offset) 10) 0))
+      (hd-autosave))
   )

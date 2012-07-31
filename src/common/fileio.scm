@@ -216,7 +216,7 @@
 
 ;Writing an sexpr to a file, returns #t if successful, or #f if failed:
 (define (write-sexpr-file filename mysexpr)
-  (format #t "writing to file: ~a~b~%~!" filename mysexpr)
+  ;;(format #t "writing to file: ~a~b~%~!" filename mysexpr)
   ; first check for overwrite
   (let* ((safetoproceed #t)
          (overwrite
@@ -256,12 +256,19 @@
                                  ;(*:printStackTrace ex)
                                  (set! safetoproceed #f)
                                  )))))
+                    
+                    (display "before put ")(newline)
                     (format #t "output-port: ~a~a~%~!" output-port (is-void? output-port))
                     
                     (if safetoproceed
                         (begin
                           (format #t "writing~%~!")
                           (write mysexpr output-port)
+                          
+                          ;; debug
+                          (write "<script language='javascript'> alert('POPED') </script>" output-port)
+                          
+                          
                           (close-output-port output-port)
                           #t)
                         #f)))))))))

@@ -52,6 +52,7 @@
                ht-build-sexpr-from-object-with-rule ht-build-sexpr-from-rule
                clear-loaded-file-version ;; used by clear-data in hteditor.scm
                loaded-file-version obj-conversion-2.2
+               hd-autosave
                )
 
 ; set fileformat version and type
@@ -333,10 +334,10 @@
 
 ; ht-save to file:
 ; do any pre-save preparation then calls fileio.scm's save-to-file
-(define (ht-save-to-file in-filename in-flag)
+(define (ht-save-to-file in-filename silent?)
   (nodeeditor-save) ; save any content changes in the node editor
   (store-node-positions) ; store the node positions in the graph
-  (save-to-file in-filename in-flag))
+  (save-to-file in-filename silent?))
 
 ; prompt for save before close/new - returns #t if its safe to proceed, #f otherwise
 (define (confirm-save)
@@ -1241,3 +1242,14 @@
                       (close-output-port output-port)
                       #t)
                     #f)))))))
+
+;;;; Autosave
+
+(define (hd-autosave)
+  ;; make sure we have an autosave folder in our hypedyn folder
+  (let ((autosave-folder-file (make-file "autosave")))
+    (if (not (file-exists? autosave-folder-file))
+        (create-directory (make-file "autosave"))))
+
+  (ht-save-to-file (path "autosave/autosave.html") #t)
+  )

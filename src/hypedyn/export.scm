@@ -411,6 +411,7 @@
 
 
 ; helper fn to create folder, first deleting if it already exists
+; export-folder is a java file
 (define (export-create-folder export-folder)
   (display "****** export-create-folder: ")(display export-folder)(newline)
   ; create folder, first deleting if it already exists
@@ -419,14 +420,4 @@
 
 ; helper fn to remove export folder
 (define (export-remove-folder export-folder)
-  (if (file-exists? export-folder)
-      (if (file-directory? export-folder)
-          (recursively-delete-directory export-folder)
-          (try-catch
-              (delete-file export-folder)
-            (ex <java.lang.Throwable>
-                (begin
-                  (display (*:toString ex))(newline)
-                  ;(*:printStackTrace ex)
-                  ))))))
-  
+  (delete-dir export-folder))

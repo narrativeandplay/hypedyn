@@ -50,9 +50,9 @@
 (require "rules-manager.scm") ;; rmgr-close rmgr-edit
 (require "htfileio.scm")
 ;(load-relative "highlighter.scm")
-(require "hypedyn-undo.scm")
+(require "hypedyn-undo.scm") ;; hd-postedit
 (require "node-graphview.scm") ;; generate-link-name
-
+(require "hypedyn-undo.scm") ;; hd-postedit, hd-begin-update, hd-end-update
 (require "editlink.scm") ;; remove-link-display, get-edited-linkID
 
 ; export
@@ -439,30 +439,35 @@
   ; create editor (with links)
   ; pass in callback for when a link is selected and deleted, to enable the new
   ; link button, and the method for getting links from the associated pattern
-  (set! node-editor (make-hypertextpane 400 300
-                                        (lambda (linkID)
-                                          (if linkID
-                                              (ask link-list 'select-link linkID)
-                                              (begin
-                                                ; handle deselecting a link
-                                                (ask link-list 'deselect-link)
+  (set! node-editor
+        (make-hypertextpane 400 300
+                            (lambda (linkID)
+                              (if linkID
+                                  (ask link-list 'select-link linkID)
+                                  (begin
+                                        ; handle deselecting a link
+                                    (ask link-list 'deselect-link)
 
-                                                ; forget selected link
-                                                (set! selected-linkID '())
+                                        ; forget selected link
+                                    (set! selected-linkID '())
 
-                                                ; disable delete link buttons and menu items
-                                                (enable-link-buttons #f))))
-                                        (lambda (del-linkID)
-                                          (delete-link del-linkID
-                                                       #f
-                                                       node-graph
-                                                       update-node-style-callback))
-                                        enable-newlink-button
-                                        'content
-                                        'links
-                                        'nodes))
+                                        ; disable delete link buttons and menu items
+                                    (enable-link-buttons #f))))
+                            (lambda (del-linkID)
+                              (delete-link del-linkID
+                                           #f
+                                           node-graph
+                                           update-node-style-callback))
+                            enable-newlink-button
+                            'content
+                            'links
+                            'nodes))
   (ask node-editor 'init)
   (ask node-editor 'set-update-dirty-callback update-dirty-state)
+  (ask node-editor 'set-postedit-proc! hd-postedit)
+  (ask node-editor 'set-beginupdate-proc! hd-begin-update)
+  (ask node-editor 'set-endupdate-proc! hd-end-update)
+  
   (add-splitpane-component nodeeditor-frame-panel
                            (make-scrollpane
                             (ask node-editor 'getcomponent)) #f)
@@ -507,7 +512,7 @@
 (define (dosetstartnode in-startnodeID populate-nodes-list-callback)
   (let ((old-startnodeID (get-start-node)))
     ; store the action for undoing
-    (compoundundomanager-postedit
+    (hd-postedit
      undo-manager
      (make-undoable-edit
       "Set start node"
@@ -547,7 +552,7 @@
   (define newlink-name (make-input-dialogbox-custom nodeeditor-frame "" "New link" "Link name"))
   
   (define (newlink-undoable-postedit newlink-name newlink-ID)
-    (compoundundomanager-beginupdate undo-manager)
+    (hd-begin-update undo-manager)
     (define thelink (get 'links newlink-ID))
     (if thelink
         (begin
@@ -560,7 +565,7 @@
           ;; (define from-node (get 'nodes from-nodeID))
           ;; (define usedest (ask thelink 'use-destination))
           ;; (define usealtdest (ask thelink 'use-alt-destination))
-          (compoundundomanager-postedit 
+          (hd-postedit 
            undo-manager
            (make-undoable-edit
             "New Link"
@@ -577,7 +582,7 @@
               (delete-link-undo redo-sexpr newlink-ID from-nodeID update-node-style-callback #t)
               )))
             ))
-    (compoundundomanager-endupdate undo-manager undo-action redo-action)
+    (hd-end-update undo-manager undo-action redo-action)
     
     ;; hack to save content of node everytime link is created
     (nodeeditor-save)
@@ -613,8 +618,6 @@
             (update-dirty-state)
 
             ;; used to need to add the editlink part as well to this action
-            ;(compoundundomanager-beginupdate undo-manager)
-            
             (newlink-undoable-postedit newlink-name newlink-ID)
             
             ; show edit rule dialog
@@ -644,7 +647,7 @@
           (define from-nodeID (ask thelink 'source))
           (define redo-sexpr (ht-build-sexpr-from-object-with-rule thelink)) ; store the action for undoing
           
-          (compoundundomanager-postedit
+          (hd-postedit
            undo-manager
            (make-undoable-edit
             "Delete Link"
@@ -685,7 +688,7 @@
     (if (not (is-null? newname))
         (begin
           ; store the action for undoing
-          (compoundundomanager-postedit
+          (hd-postedit
              undo-manager
              (make-undoable-edit
               "Rename Link"

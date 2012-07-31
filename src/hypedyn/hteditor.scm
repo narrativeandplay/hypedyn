@@ -57,7 +57,7 @@
 (require "htfileio.scm")
 (require "node-graphview.scm")
 (require 'srfi-1)
-(require "hypedyn-undo.scm")
+(require "hypedyn-undo.scm") ;; hd-postedit, hd-begin-update, hd-end-update
 (require "about-hypedyn.scm")
 (require "rules-manager.scm") ;; rmgr-init
 (require "properties-ui.scm") ;; make-properties-ui, show-properties
@@ -837,7 +837,7 @@
         
         (actual-duplicate)
         
-        (compoundundomanager-postedit 
+        (hd-postedit 
          undo-manager
          (make-undoable-edit 
           "Duplicate Node"
@@ -896,7 +896,7 @@
           (update-dirty-state)
 
           ;; add the undoable edit
-          (compoundundomanager-postedit
+          (hd-postedit
            undo-manager
            (make-undoable-edit
             "Add Node"
@@ -956,7 +956,7 @@
 
 ;; add the undoable edit for rename node
 (define (post-rename-node-undoable-event nodeID oldname newname)
-  (compoundundomanager-postedit 
+  (hd-postedit 
    undo-manager
    (make-undoable-edit 
     "Rename Node"
@@ -1071,11 +1071,11 @@
           '())))
   
   ;; wrap delete link and delete node in one operation
-  ;; delete-node invokes delete-link which has its own compoundundomanager-postedit
+  ;; delete-node invokes delete-link which has its own hd-postedit
   (if (not post-undo?)
       (begin
         (display "compound start here ")(newline)
-        (compoundundomanager-beginupdate undo-manager))
+        (hd-begin-update undo-manager))
       )
   
   ;; delete follow link actions to this node
@@ -1087,7 +1087,7 @@
   
   (if (not post-undo?)
       ;; add the undoable edit
-      (compoundundomanager-postedit
+      (hd-postedit
        undo-manager
        (make-undoable-edit
         "Delete Node"
@@ -1106,7 +1106,7 @@
   (if (not post-undo?)
       (begin
         (display "compound end here ")(newline)
-        (compoundundomanager-endupdate undo-manager undo-action redo-action)))
+        (hd-end-update undo-manager undo-action redo-action)))
       )
 
 ; delete a node
@@ -1267,7 +1267,7 @@
           (define newfact-sexpr (ask new-fact 'to-save-sexpr))
           
           ;; add the undoable edit
-          (compoundundomanager-postedit
+          (hd-postedit
            undo-manager
            (make-undoable-edit
             "Add Fact"
@@ -1330,7 +1330,7 @@
           
           ;; add undoable actions
           (define cache-factID selected-factID) ;; copy the factID
-          (compoundundomanager-postedit
+          (hd-postedit
            undo-manager
            (make-undoable-edit
             "Rename Fact"
@@ -1375,7 +1375,7 @@
   (define factname (ask fact-to-del 'name))
   
   ;; add the undoable edit
-  (compoundundomanager-postedit
+  (hd-postedit
    undo-manager
    (make-undoable-edit
     "Delete Fact"
