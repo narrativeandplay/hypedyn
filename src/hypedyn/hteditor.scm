@@ -546,7 +546,7 @@
     ;(create-actions-main-panel)
     (rmgr-init)
     
-    (create-update-text-action-panel)
+    ;(create-update-text-action-panel)
     
     ; create link editor
     (create-editlink-dialog (get-nodeeditor-frame))

@@ -266,7 +266,7 @@
                           (write mysexpr output-port)
                           
                           ;; debug
-                          (write "<script language='javascript'> alert('POPED') </script>" output-port)
+                          ;;(write "<script language='javascript'> alert('POPED') </script>" output-port)
                           
                           
                           (close-output-port output-port)

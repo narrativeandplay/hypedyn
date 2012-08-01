@@ -58,7 +58,7 @@
                create-editlink-dialog
                ;create-if-condition-panel
                ;create-actions-main-panel
-               create-update-text-action-panel
+               ;create-update-text-action-panel
                
                add-follow-link-rule-display remove-follow-link-rule-display
                add-link-display remove-link-display
@@ -563,6 +563,10 @@
            ;; Update Text Action
            (display "action type in confirm ")(display action-type)(newline)
            (cond ((equal? action-type "update text using")
+                  (define update-text-using-panel (list-ref (get-container-children action-panel) 1))
+                  (define action-type-combobox (utap-get-action-type-combobox update-text-using-panel))
+                  (define second-comp (utap-get-second-comp update-text-using-panel))
+                  
                   ;; text of fact?
                   (define text-or-fact (get-combobox-selecteditem action-type-combobox))
                   (define text-type #f)
@@ -571,20 +575,10 @@
                     (("alternative text")
                      (display "came into alt ")(newline)
                      (set! text-type "alternative text")
-                     (set! text-value (get-text alt-text-textfield)))
-                    (("text fact")
-                     (display "came into str fact ")(newline)
+                     (set! text-value (get-text second-comp)))
+                    (("text fact" "number fact")
                      (set! text-type "text fact")
-                     ;; TOFIX: get fact string during runtime instead of from the start
-                     ;; (might not need to) just need to store factID
-                     ;; problem is fact is not accessible to our interpreter since it is in a different environment
-                     (define factID (get-comboboxwithdata-selecteddata fact-string-choice-combobox))
-                     (set! text-value factID)
-                     )
-                    (("number fact")
-                     (display "came into num fact ")(newline)
-                     (set! text-type "number fact")
-                     (define factID (get-comboboxwithdata-selecteddata fact-number-choice-combobox))
+                     (define factID (get-comboboxwithdata-selecteddata second-comp))
                      (set! text-value factID)
                      )
                     )
@@ -954,13 +948,14 @@
     ))
 
 (define (update-text-using-panel-valid? panel)
+  (define update-text-using-panel (list-ref (get-container-children panel) 1))
+  (define action-type-combobox (utap-get-action-type-combobox update-text-using-panel))
+  (define second-comp (utap-get-second-comp update-text-using-panel))
   (let ((selected-item (to-string (get-combobox-selecteditem action-type-combobox))))
     (case selected-item
       (("alternative text") #t) ;; no checking required
-      (("text fact") 
-       (not (= (get-comboboxwithdata-selecteddata fact-string-choice-combobox) -1)))
-      (("number fact") 
-       (not (= (get-comboboxwithdata-selecteddata fact-number-choice-combobox) -1)))
+      (("text fact" "number fact") ;; make sure combobox does not have none selected
+       (not (= (get-comboboxwithdata-selecteddata second-comp) -1)))
       )))
 
 ;; show in popup and follow link checks does the same thing
@@ -1021,34 +1016,30 @@
   
   ;; alter the configuration of the ui objects if args-lst given
   (cond ((equal? action-type "update text using")
+         (define update-text-action-panel (create-update-text-action-panel))
+         (define action-type-combobox (utap-get-action-type-combobox update-text-action-panel))
          (if (= (length args-lst) 2)
-             (let ((using-type (car args-lst))
-                   (alt-text (cadr args-lst)))
-               (display "args lst ")(display using-type)(newline)
-               (set-combobox-selection-object action-type-combobox (create-combobox-string-item using-type))
-
+             (let* ((using-type (car args-lst))
+                    (alt-text (cadr args-lst)))
+               
+               ;; set the mode of update text
+               (set-combobox-selection-object action-type-combobox
+                                              (create-combobox-string-item using-type))
+               
+               ;; the second component in update-text-action-panel is switched in depending on what is selected in action-type-combobox 
+               (define second-comp (utap-get-second-comp update-text-action-panel))
+               
                (cond ((equal? using-type "alternative text")
-                      (set-text alt-text-textfield alt-text)
+                      (set-text second-comp alt-text)
                       )
-                     ((equal? using-type "text fact")
+                     ((or (equal? using-type "text fact")
+                          (equal? using-type "number fact"))
                       (define target-fact (get 'facts alt-text))
                       (define fact-name (ask target-fact 'name))
 
                       (define for-selection (create-combobox-string-item fact-name))
-                      (set-combobox-selection-object fact-string-choice-combobox for-selection)
-                      )
-                     ((equal? using-type "number fact")
-                      (define target-fact (get 'facts alt-text))
-                      (define fact-name (ask target-fact 'name))
-
-                      (define for-selection (create-combobox-string-item fact-name))
-                      (set-combobox-selection-object fact-number-choice-combobox for-selection)
+                      (set-combobox-selection-object second-comp for-selection)
                       ))
-               )
-             ;; if this is a new action, just reset fact type selection to alternative text
-             (begin
-               (set-combobox-selection-object action-type-combobox (create-combobox-string-item "alternative text"))
-               (set-text alt-text-textfield "")
                ))
          (pack-component update-text-action-panel)
          (add-component panel-to-return update-text-action-panel)
@@ -1062,8 +1053,6 @@
                     )
                (set! node-choice-combobox (create-node-choice link-dest1 #t -1))
                
-               ;;
-               ;(set-combobox-selection-object node-choice-combobox (create-combobox-string-item dest-node-name))
                )
              (set! node-choice-combobox (create-node-choice #f #t -1)))
          
@@ -1494,121 +1483,122 @@
         )))
 
 ;;  ===========================
-;;;; Update text action panels
+;;;; Update text action panels (utap)
 ;;  ===========================
 
-(define update-text-action-panel #f)
-(define alt-text-textfield #f)
-(define action-type-combobox #f)
-(define fact-string-choice-combobox #f)
-(define fact-boolean-choice-combobox #f)
-(define fact-number-choice-combobox #f)
+;(define update-text-action-panel #f)
+;(define action-type-combobox #f)
 
-;; update the panel UI state for "update text using" action
-(define (action-update-text-combobox-callback)
+;(define alt-text-textfield #f)
+;(define fact-string-choice-combobox #f)
+;(define fact-boolean-choice-combobox #f)
+;(define fact-number-choice-combobox #f)
 
-  (define link-obj (get 'links edited-linkID))
-  (define link-alttext (ask link-obj 'alt-text))
+(define (utap-get-action-type-combobox utap)
+  (let ((children (get-container-children utap)))
+    (list-ref children 0)))
 
-  (define selected-item (to-string (get-combobox-selecteditem action-type-combobox)))
-
-  (cond ((equal? selected-item "alternative text")
-         (clear-container update-text-action-panel)
-         (add-component update-text-action-panel action-type-combobox)
-         (add-component update-text-action-panel alt-text-textfield)
-         )
-        ((or (equal? selected-item "text fact")
-             (equal? selected-item "number fact"))
-         (clear-container update-text-action-panel)
-         (add-component update-text-action-panel action-type-combobox)
-         
-         ;; string/number fact differentiation
-         (define fact-choice
-           (case selected-item
-             (("text fact") (location fact-string-choice-combobox))
-             (("number fact") (location fact-number-choice-combobox))
-             (else "HUH")
-             ))
-         (define fact-type
-           (case selected-item
-             (("text fact") 'string)
-             (("number fact") 'number)))
-         
-         ;; **** Explanation of how location and setter works 
-         ;; location just gets a "pointer" to the variable, it is a getter function of the variable
-         ;; (define x 1)
-         ;; (define lx (location x))
-         ;; (display (lx)) ==> 1
-         ;; setter when given a location gets the setter function of that 
-         ;;   particular variable associated with the location
-         ;; ((setter lx) 4)
-         ;; (display x) ==> 4
-         ;; the pair of function therefore gives a means to pass a variable by reference
-
-         ;; get selection on fact-string-choice-combobox  
-         ;; Note: this preserves our fact selection when we toggle between text and fact
-         (define fact-selection #f)
-         (display "fact-choice ")(display fact-choice)(newline)
-         (if (fact-choice)
-             (set! fact-selection (get-comboboxwithdata-selecteddata (fact-choice))))
-         
-         ;; create and add the combobox containing the string facts
-         ((setter fact-choice) (create-fact-choice fact-type fact-selection))
-         (pack-component (fact-choice))
-         
-         (add-actionlistener
-          (fact-choice)
-          (make-actionlistener
-           (lambda (e)
-             (display "fact-choice ")(newline)
-             (validate-rule)
-           )))
-         
-         ;; add to a container panel and add to the update-text-action-panel
-         (add-component update-text-action-panel (fact-choice))
-         )
-        )
-  
-  ;;(component-update (get-parent update-text-action-panel))
-  ;;(component-revalidate (get-parent update-text-action-panel))
-  
-  (pack-component update-text-action-panel)
-  
-  (pack-frame editlink-dialog)
-  )
+;; depending on whether "alternate text" "text fact" "number fact" is selected
+;; this will return alt-text-textfield fact-string-choice-combobox fact-number-choice-combobox respectively
+(define (utap-get-second-comp utap)
+  (let ((children (get-container-children utap)))
+    (list-ref children 1)))
 
 ;; the panel that comes behind the combobox selecting actions type
 (define (create-update-text-action-panel)
-  (set! update-text-action-panel (make-panel))
-  (set! action-type-combobox (make-combobox "alternative text" "text fact" "number fact"))
-  (set! alt-text-textfield (make-textfield "" 20))
   
-  (set! fact-string-choice-combobox
-    (create-fact-choice 'string -1))
+  ;; new code
+  (let ((top-panel (make-panel))
+        (action-type-combobox (make-combobox "alternative text" "text fact" "number fact"))
+        (alt-text-textfield (make-textfield "" 20))
+        (fact-string-choice-combobox (create-fact-choice 'string -1))
+        ;; TODO: we should be able to show boolean as well 
+        (fact-boolean-choice-combobox (create-fact-choice 'boolean -1))
+        (fact-number-choice-combobox (create-fact-choice 'number -1)))
+    
+    ;; layout
+    (set-container-layout top-panel 'horizontal)
+    (pack-component action-type-combobox)
+
+    (add-component top-panel action-type-combobox)
+    (add-component top-panel alt-text-textfield)
   
-  ;; TODO: we should be able to show boolean as well 
-  (set! fact-boolean-choice-combobox
-    (create-fact-choice 'boolean -1))
-  
-  (set! fact-number-choice-combobox
-    (create-fact-choice 'number -1))
-  
-  ;; layout
-  (set-container-layout update-text-action-panel 'horizontal)
-  (pack-component action-type-combobox)
-  
-  (add-component update-text-action-panel action-type-combobox)
-  (add-component update-text-action-panel alt-text-textfield)
-  
-  ;(set! update-text-combobox-callback (lambda (
-  
-  (add-actionlistener action-type-combobox 
-                      (make-actionlistener 
-                       (lambda (e)
-                         (display "action type combobox")(newline)
-                         (validate-rule)
-                         (action-update-text-combobox-callback))))
-  )
+  ;; update the panel UI state for "update text using" action
+  (define (action-update-text-combobox-callback)
+
+    (define link-obj (get 'links edited-linkID))
+    (define selected-item (to-string (get-combobox-selecteditem action-type-combobox)))
+
+    (cond ((equal? selected-item "alternative text")
+           (clear-container top-panel)
+           (add-component top-panel action-type-combobox)
+           (add-component top-panel alt-text-textfield)
+           )
+          ((or (equal? selected-item "text fact")
+               (equal? selected-item "number fact"))
+           (clear-container top-panel)
+           (add-component top-panel action-type-combobox)
+
+           ;; **** Explanation of how location and setter works 
+           ;; location just gets a "pointer" to the variable, it is a getter function of the variable
+           ;; (define x 1)
+           ;; (define lx (location x))
+           ;; (display (lx)) ==> 1
+           ;; setter when given a location gets the setter function of that 
+           ;;   particular variable associated with the location
+           ;; ((setter lx) 4)
+           ;; (display x) ==> 4
+           ;; the pair of function therefore gives a means to pass a variable by reference
+
+           ;; string/number fact differentiation
+           (define fact-choice
+             (case selected-item
+               (("text fact") fact-string-choice-combobox)
+               (("number fact") fact-number-choice-combobox)
+               (else "HUH")
+               ))
+
+           (define fact-type
+             (case selected-item
+               (("text fact") 'string)
+               (("number fact") 'number)))
+
+           ;; get selection on fact-string-choice-combobox  
+           ;; Note: this preserves our fact selection when we toggle between text and fact
+           (define fact-selection #f)
+
+           (if fact-choice
+               (set! fact-selection (get-comboboxwithdata-selecteddata fact-choice)))
+
+           ;; create and add the combobox containing the string facts
+           ;;((setter fact-choice) (create-fact-choice fact-type fact-selection))
+           (pack-component fact-choice)
+
+           (add-actionlistener
+            fact-choice
+            (make-actionlistener
+             (lambda (e)
+               (display "fact-choice ")(newline)
+               (validate-rule)
+               )))
+
+           ;; add to a container panel and add to the top-panel
+           (add-component top-panel fact-choice)
+           )
+          ) ;; end of cond
+
+    (pack-component top-panel)
+    (pack-frame editlink-dialog)
+    )
+    
+    (add-actionlistener action-type-combobox
+                        (make-actionlistener
+                         (lambda (e)
+                           (display "action type combobox")(newline)
+                           (action-update-text-combobox-callback)
+                           (validate-rule)
+                           )))
+    top-panel))
 
 (define (create-editlink-dialog parent)
   ; remember parent

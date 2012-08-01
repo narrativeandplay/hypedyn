@@ -41,11 +41,11 @@ function createFact(name, type, id) {
 }
 
 // assume value is of the correct type
-function setFact( id, value) {
-	//disp("set fact "+id);
-	//disp(" value "+value);
+function setFact( id, value ) {
+	disp("set fact "+id);
+	disp(" value "+value);
 	var fact = factlist[id];
-    if(fact != undefined)
+    if( fact != undefined )
         fact.value = value;
     else
         alert("setFact: fact " + id + " undefined");
