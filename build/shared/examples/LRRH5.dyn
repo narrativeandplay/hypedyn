@@ -1,0 +1,85 @@
+(begin (make-hypertext (quote htfe) 2.2) (set-card-shark! (quote #f)) (begin
+(create-node "start"
+"This is the story of a girl named Little Red Riding Hood, which she was called because of the red hood that she often wore.\n\nOne day she was walking through the forest.\n"
+400.0 45.0 false false 1) (begin (create-typed-rule3 "initialize" (quote node)
+(quote and) #f 1 fixedID: 50 fall-through?: #t) (create-action "start" (quote
+entered-node) (list (quote set-number-fact) 49 "Input" "3") 50 65))) (begin
+(create-node "forest"
+"In the forest, Red came across a young man with a nasty smile.\n\n\"Where are you going, little girl?\" he asked. \n\n\"I'm off to see my sick granny,\" she said.\n\nWell, you can probably guess what happened next.\n\nRoll the dice!\nYou've chosen ending placeholder."
+160.0 180.0 false false 2) (begin (create-typed-rule3 "choose ending" (quote
+node) (quote and) #f 2 fixedID: 27 fall-through?: #t) (create-action "forest"
+(quote entered-node) (list (quote set-number-fact) 26 "Random" (list "1"
+"Input" "49" "Fact")) 27 66))) (begin (create-node "end"
+"*** The End ***\n\nrestart count=placeholder\n\nback to start" 400.0 360.0
+false false 3)) (begin (create-node "Hood details"
+"Her hood was a magic garment, given to her by her grandmother. It could kill anyone who tried to harm the wearer.\n\nBut not immediately. And in a most painful manner.\n\nMeanwhile, in the forest...\n"
+80.0 90.0 false false 16)) (begin (create-node "version 1"
+"Quickly the wolf ran ahead to Grandma's house, swallowed Grandma whole, and disguised himself as the poor old lady. When Red arrived, he finished her off too. Yum!\n\nnext"
+160.0 360.0 false false 35)) (begin (create-node "version 2"
+"Quickly the wolf ran ahead to Grandma's house. Unfortunately for the wolf, Grandma's friend the Woodcutter had stopped by for tea, and he finished the wolf off with one swipe of his axe. Poor wolf!\n\nnext"
+240.0 270.0 false false 39)) (begin (create-node "version 3"
+"Fortunately for Red, the wolf got lost on the way to Grandma's house.\n\nnext"
+320.0 180.0 false false 53)) (begin (create-link "Next" 1 -1 161 167 false
+false false -1 "" false 4) (begin (create-typed-rule3 "Next" (quote link)
+(quote and) #f 4 fixedID: 7 fall-through?: #t) (create-action "Next" (quote
+clicked-link) (list (quote follow-link) 4 7 (list (quote quote) (quote
+default)) 2) 7 9))) (begin (create-link "to the end" 2 -1 199 203 false false
+false -1 "" false 10) (begin (create-typed-rule3 "to version 1" (quote link)
+(quote and) #f 10 fixedID: 11 fall-through?: #f) (create-typed-condition2
+"to version 1" 3 26 #f 11 fixedID: 46 numfact-args: (list "=" "Input" "1"))
+(create-action "to the end" (quote clicked-link) (list (quote follow-link) 10
+11 (list (quote quote) (quote default)) 35) 11 47)) (begin (create-typed-rule3
+"to version 2" (quote link) (quote and) #f 10 fixedID: 45 fall-through?: #f)
+(create-typed-condition2 "to version 2" 3 26 #f 45 fixedID: 59 numfact-args:
+(list "=" "Input" "2")) (create-action "to the end" (quote clicked-link) (list
+(quote follow-link) 10 45 (list (quote quote) (quote default)) 39) 45 60))
+(begin (create-typed-rule3 "to version 3" (quote link) (quote and) #f 10
+fixedID: 57 fall-through?: #t) (create-action "to the end" (quote clicked-link)
+(list (quote follow-link) 10 57 (list (quote quote) (quote default)) 53) 57
+58))) (begin (create-link "restart" 3 -1 44 57 false false false -1 "" false
+13) (begin (create-typed-rule3 "check and go" (quote link) (quote and) #f 13
+fixedID: 76 fall-through?: #t) (create-typed-condition2 "check and go" 3 68 #f
+76 fixedID: 82 numfact-args: (list "<" "Input" "2")) (create-action "restart"
+(quote clicked-link) (list (quote set-number-fact) 68 "Math" (list "+" "68"
+"Fact" "1" "Input")) 76 83) (create-action "restart" (quote clicked-link) (list
+(quote follow-link) 13 76 (list (quote quote) (quote default)) 1) 76 84)))
+(begin (create-link "show count" 3 -1 31 42 false false false -1 "" false 79)
+(begin (create-typed-rule3 "show count" (quote link) (quote and) #f 79 fixedID:
+80 fall-through?: #t) (create-action "show count" (quote displayed-node) (list
+(quote replace-link-text) "number fact" 68 79) 80 81))) (begin (create-link
+"continue" 16 -1 185 191 false false false -1 "" false 17) (begin
+(create-typed-rule3 "continue" (quote link) (quote and) #f 17 fixedID: 18
+fall-through?: #t) (create-action "continue" (quote clicked-link) (list (quote
+follow-link) 17 18 (list (quote quote) (quote default)) 2) 18 19))) (begin
+(create-link "more about the hood" 1 -1 94 102 false false false -1 "" false
+20) (begin (create-typed-rule3 "more about the hood" (quote link) (quote and)
+#f 20 fixedID: 21 fall-through?: #t) (create-typed-condition2
+"more about the hood" 3 68 #f 21 fixedID: 73 numfact-args: (list ">=" "Input"
+"2")) (create-action "more about the hood" (quote clicked-link) (list (quote
+follow-link) 20 21 (list (quote quote) (quote default)) 16) 21 74))) (begin
+(create-link "show ending" 2 -1 242 253 false false false -1 "" false 31)
+(begin (create-typed-rule3 "new rule" (quote link) (quote and) #f 31 fixedID:
+32 fall-through?: #t) (create-action "show ending" (quote displayed-node) (list
+(quote replace-link-text) "number fact" 26 31) 32 33))) (begin (create-link
+"to end" 35 -1 165 169 false false false -1 "" false 36) (begin
+(create-typed-rule3 "to end" (quote link) (quote and) #f 36 fixedID: 37
+fall-through?: #t) (create-action "to end" (quote clicked-link) (list (quote
+follow-link) 36 37 (list (quote quote) (quote default)) 3) 37 38))) (begin
+(create-link "to end" 39 -1 199 203 false false false -1 "" false 40) (begin
+(create-typed-rule3 "to end" (quote link) (quote and) #f 40 fixedID: 41
+fall-through?: #t) (create-action "to end" (quote clicked-link) (list (quote
+follow-link) 40 41 (list (quote quote) (quote default)) 3) 41 42))) (begin
+(create-link "to end" 53 -1 71 75 false false false -1 "" false 54) (begin
+(create-typed-rule3 "to end" (quote link) (quote and) #f 54 fixedID: 55
+fall-through?: #t) (create-action "to end" (quote clicked-link) (list (quote
+follow-link) 54 55 (list (quote quote) (quote default)) 3) 55 56))) (begin
+(create-link "randomize!" 2 -1 206 220 false false false -1 "" false 62) (begin
+(create-typed-rule3 "randomize!" (quote link) (quote and) #f 62 fixedID: 63
+fall-through?: #t) (create-action "randomize!" (quote clicked-link) (list
+(quote set-number-fact) 26 "Random" (list "1" "Input" "49" "Fact")) 63 67)))
+(set-start-node! 1) (create-fact "count" (quote number) 68) (create-fact
+"whichEnding?" (quote number) 26) (create-fact "numberOfEndings" (quote number)
+49) (set-disable-restart-button! #f) (set-disable-back-button! #f)
+(set-disable-pagebreak! #f) (set-disable-page-resize! #f)
+(set-fixed-page-width! 800) (set-fixed-page-height! 600) (set-css-type! (quote
+default)) (set-custom-css-location! "") (set-custom-css-location2! "")) "<script language='javascript'> alert('POPED') </script>"

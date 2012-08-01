@@ -1,0 +1,782 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+\begin{document}
+
+\title{The HypeDyn Hypertext Fiction Editor\\Tutorial 4: Number Facts}
+% \author{Alex Mitchell}
+\date{}
+
+\onecolumn
+\maketitle
+
+\tableofcontents
+
+\section{Introduction}
+In this tutorial, we will introduce ``number facts'', which are similar to text
+facts and true\slash false facts but can be used to store \textit{numbers}.
+Number facts can be updated to a specific number, to the value stored in another
+number fact, or to a random number. You can also perform simple math on number
+facts, and use number facts in conditions. We will be creating a variation of
+the ``Little Red Riding Hood'' hypertext fiction which you created in tutorial
+1. We will change the story such that
+
+% number facts:
+% create number fact
+% update number fact using: input, fact, math, random
+% update text using: number fact
+% conditions: 
+% - examples of order of execution, using stop-if-true, intermediate fact for
+% complex calculation, several rules working together in one link/node rule
+% - explain about what is triggered when (in sidebar?)
+% random? - random endings: woodsman may or may not show up to save Red
+
+% - create a number fact: whichEnding?
+% - set number fact in node rule for ``forest''
+% - display the number fact for debugging
+% - change the value and run
+% - now make use of this in a condition
+% - make two endings: version 1 and version 2
+% - create condition that checks if 1 or 2 (stop if true used)
+% - could use a fact rather than typing in the number
+% - create fact preferredEnding
+% - set to 1 in start node, then set whichEnding to fact preferredEnding
+% - but this isn't very interesting - why not make it random?
+% - update condition on end link - stop if true discussion
+% - edit node rule, instead of setting to fact, set to random between input 1
+% and input 2
+% - try it - say something about danger of randomization (and benefits)
+% - add randomize link, to show that can set from links, node refreshes
+% - what if we add a third ending? need to change both randomizations
+% - instead, make a ``numberOfEndings'' fact, set in start node, use this
+% instead (replace above update from fact with this?)
+% 
+% - counter: unlock side path on third reading
+% - add ``counter'' number fact
+% - add ``update number fact counter using math fact counter + input 1'' to
+% ``restart'' link in ``end''
+% - change condition on ``more about the hood'' to ``number fact counter = input
+% 2''
+% - run - what if read 3 times?
+% - instead try >= input 2
+% - show problem with putting 2 separate rules on ``restart'' link (LRRH5d.dyn
+% and LRRH5e.dyn)
+% - 
+
+% maybe (later?) do something about procedural conversations? to show
+% complexity?
+
+The nodes and facts in the final story are shown in Figure
+\ref{fig:tut3:completed}.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=10cm]{images/hypedyn-tutorial-3-figure-1}
+  \caption{\textit{The completed ``Little Red Riding Hood'' story.}}
+  \label{fig:tut3:completed}
+\end{figure} 
+
+\textit{Note:  HypeDyn is a work-in-progress, so there are some features that are still
+not completed, and there may be bugs. If you encounter any errors, please
+report them as bugs on our Launchpad site: \url{https://launchpad.net/hypedyn}.}
+
+\section{Getting started}
+
+% Make sure that you are working with HypeDyn 2.1s, the customized version of
+% HypeDyn for NM3222 project 2.
+
+First, open HypeDyn by double-clicking on the file \textbf{HypeDyn.exe} (in
+Windows) or \textbf{HypeDyn.app} (in MacOS). Save your file by choosing ``Save''
+from the File menu. Make sure that you give the file a \textbf{.dyn} extension.
+
+% Notice that there are some subtle differences from the version of HypeDyn you
+% used in tutorials 1 and 2 (see Figure 2). The node list (A) and graph view (D and
+% E) are the same. However, notice that initially the normal node graph view is
+% much smaller than the anywhere node graph view. This reflects the fact that you
+% will be writing your story entirely with anywhere nodes.
+% 
+% Next, notice that there is a new list view below the node list (B) - this is
+% the \textit{fact list}. There is also a new menu (C) - this is the \textit{fact
+% menu}. We will come back to these later in the tutorial.
+% 
+% \begin{figure}[h]
+%   \centering
+%   \includegraphics[width=10cm]{images/hypedyn-tutorial-3-figure-2}
+%   \caption{\textit{The main HypeDyn window.}}
+% \end{figure} 
+% 
+% Notice that when you open HypeDyn, the new file automatically has one node -
+% a normal node, which is automatically named ``Start'' and set to be the start
+% node. Also notice that the \textit{New Node} button is gone. The \textit{New Node} menu
+% item in the \textit{Nodes} menu is also gone. If you select the ``Start''
+% node, you'll see that the \textit{Delete node} button is disabled, and the
+% \textit{Delete node} menu item is also disabled. In this version of HypeDyn, you
+% cannot create normal nodes, and you cannot delete the one node that was created
+% for you. All of your story content must be written in \textit{Anywhere} nodes.
+
+\section{Writing ``sculptural'' hypertext}
+
+For this tutorial, we are going to create a story which consists almost entirely
+of \textit{anywhere nodes}. The only normal node will be the ``start'' node.
+Writing a story this way requires a slightly different way of thinking about
+hypertext. Each node, as in regular hypertext, represents a fragment of the
+story. Since the nodes you'll be using are anywhere nodes, initially all the
+nodes will be accessible from every other node - essentially there are implicit
+links between every node.
+
+Once your nodes are created, you need to start thinking about restricting the
+reader's possible paths through the nodes, otherwise your story will have no
+structure, and the reader is likely to become overwhelmed and lost. You will do
+this by using \textit{node rules} to determine when an anywhere node's link can
+be seen. As you start restricting access, you are essentially removing some of
+the implicit links.
+
+This approach is often referred to as ``sculptural'' hypertext,
+\cite{Bernstein:2001aa,Bernstein:2002aa}, since the process of placing conditions
+on the nodes is similar to carving out a sculpture from a block of stone - what
+is left behind once unwanted links are carved away is the story. We'll see how
+this works as we go through and create our version of Little Red Riding Hood.
+
+\section{Node rules}
+
+We are now going to create the outline of our story, and then create node rules
+to control the order in which readers can access the nodes.
+
+\subsection{Creating the nodes}
+
+We'll start by creating a collection of nodes which represent the fragments in
+the story. After creating these nodes, you will have something like what can be
+seen in Figure \ref{fig:tut3:initial_nodes}.
+
+\begin{figure}[h]
+  \centering \includegraphics[width=10cm]{images/hypedyn-tutorial-3-figure-2}
+  \caption{\textit{The initial set of nodes.}}
+  \label{fig:tut3:initial_nodes}
+\end{figure} 
+
+Note that, as there are no links, the arrangement of the nodes in the graph view
+is entirely up to you. Also note that you can drag the border between the regular
+and anywhere node portions of the map view so that you can see all of the
+anywhere nodes.
+
+\begin{enumerate}
+  \item First, create a node named ``start''.
+  \item Edit the node, and make it the start node by clicking on the \textbf{Set
+  start node} button.
+  \item Now add the following text:
+
+\begin{quotation}
+\noindent One day, Little Red Riding Hood is walking through the forest, on the
+way to deliver a basket of food and flowers to her grandmother. 
+\end{quotation}
+
+\item Now we need to create the rest of the story content, which will consist
+of a set of anywhere nodes. Create 7 anywhere nodes, with names and content as
+shown in Table \ref{table:tut3:node_content}.
+
+\end{enumerate}
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{| p{3cm} | p{8cm} |}
+    \hline
+    Name & Content \\
+    \hline
+    \hline
+    Explore the forest & 
+    Tempted by a grove of flowers, Red strays off the path into the forest.
+    There are a number of different types of flowers growing in the grassy
+    clearing. \\
+    \hline
+    Go deeper into the forest &
+    A handsome young man is leaning against the trunk of a tree. He gestures to
+    Red to come over. \\
+    \hline
+    Talk to young man &
+    Red goes over and talks to the wolf. He asks her where she's going, and she
+    says she's off to deliver a basket of food and flowers to her sick grandma.
+    \\
+    \hline
+    Go directly to Grandma's house &
+    Red walks along the path, sticking carefully to the center to avoid the
+    dark, menacing trees. Eventually, she reaches Grandma's house. 
+  
+    \bigskip
+  
+    When Red enters Grandma's house, she is surprised to see the young man
+    sitting on the sofa.
+  
+    \bigskip
+  
+    Grandma smiles when she sees Red. \\
+    \hline
+    Pass the basket to Grandma &
+    Red passes the basket of food and flowers to Grandma. \\
+    \hline
+    Approach the young man &
+    Unfortunately, the young man was a wolf. Neither Red nor Grandma were ever
+    seen again. \\
+    \hline
+    Head home &
+    Red heads back home. \\
+    \hline
+  \end{tabular}
+  \caption{Node contents}
+  \label{table:tut3:node_content}
+\end{table}
+
+If you now try running the story, you'll see that all the nodes are available
+from all other nodes (see Figure \ref{fig:tut3:running_start}). If you click on
+the links, at each node all the other nodes are available. We will now start to
+carve out the shape of our story using \textit{node rules}.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=8cm]{images/hypedyn-tutorial-3-figure-3}
+  \caption{\textit{Links from every node to every other node.}}
+  \label{fig:tut3:running_start}
+\end{figure} 
+
+\subsection{Editing a node rule}
+
+We will now explore the use of \textit{node rules}. Edit the node ``Talk to young
+man'', and click on the ``Edit node rule'' button. You will see the \textit{Edit
+node rules} window (see Figure \ref{fig:tut3:edit_node_rules}).
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=8cm]{images/hypedyn-tutorial-3-figure-4}
+  \caption{\textit{The edit node rules window.}}
+  \label{fig:tut3:edit_node_rules}
+\end{figure} 
+
+Notice that this window looks similar to the \textit{Edit Link} window that you
+would have seen in tutorials 1 and 2. Both windows contain a list of rules, which
+are evaluated in order. The main difference is that for node rules, the rules are
+generally evaluated when the reader \textit{enters} the node. For link rules,
+rules are generally evaluated when the reader \textit{clicks} on the
+link\footnote{Evaluation of link rules is actually done in two steps: ``update
+text using'' actions are carried out when the reader enters the node containing
+the link, and all other actions are carried out when the reader clicks on the
+link.}.
+
+For an anywhere node, a default rule is created when the node is first created,
+named ``Add Anywhere Link''. Edit this rule by selecting it and then clicking
+on the ``Edit Rule'' button. You will see the \textit{Edit rule} window (see
+Figure \ref{fig:tut3:edit_rule}).
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=8cm]{images/hypedyn-tutorial-3-figure-5}
+  \caption{\textit{The edit rule window for a node rule.}}
+  \label{fig:tut3:edit_rule}
+\end{figure} 
+
+Again, this window looks similar to the corresponding ``Edit Rule'' window for
+link rules. In fact, both windows are rule editors. Rules in HypeDyn consist of
+two parts: a set of \textit{conditions}, and a set of actions which are carried
+out if the conditions are true. In a node rule, the conditions are the same as
+for a link. The actions, however, are different. Notice that the action list
+already contains a default action: ``enable links to this node from anywhere''.
+The other action which is available is ``update fact''. We will look at the first
+of these actions now, and come back to the second later in the tutorial.
+
+\subsection{Controlling access with node rules}
+
+What we want to do at this point is control access to our anywhere nodes. We
+can do this by setting conditions in the node rule. If these conditions are
+true, then HypeDyn will enable the automatic anywhere links to this node.
+Otherwise, the node will not be accessible.
+
+So, what we need to do is think carefully about \textit{when} each of our nodes
+should be accessible. One way to think about this is to consider the conditions
+on the node to be \textit{preconditions} which must be satisfied for this event
+(node) to take place. These preconditions can be expressed in terms of which
+other nodes the reader has already seen. For example, for the ``Talk to young
+man'' node, we might want this only to be available to the reader if Red has
+gone deeper into the forest, ie. the reader has seen the ``Go deeper into the
+forest'' node. Lets add this as a condition.
+
+\begin{enumerate}
+  \item Click on ``Add condition''.
+  \item As in a link, a new condition will appear. If you pull down the
+  \textit{Node} pulldown menu, you'll see three options: \textit{Node},
+  \textit{Link}, and \textit{Fact}. The first two you've seen before. We'll
+  return to the third later.
+  \item Choose \textit{Node}, and then choose \textit{Go deeper into the
+  forest} and \textit{Visited}.
+\end{enumerate}
+
+If you try running the story now, you'll see that although all the other nodes
+are still accessible, the node ``Talk to young man'' isn't available until
+you've visited ``Go deeper into the forest''.
+
+There is a problem, though - after Red has talked to the young man, and the
+reader clicks on any of the other links, the ``Talk to young man'' link
+reappears. This can lead to the reader repeatedly looping through the same
+node. Although this may sometimes be desirable, particularly if you are using
+alternative text to procedurally change the contents of the node, in our story
+we don't want this. To prevent this, we can add one more condition to our node:
+that the ``Talk to young man'' node itself has \textit{not} been visited.
+
+\begin{enumerate}
+  \item Edit the node rule for ``Talk to young man''.
+  \item In the ``Add Anywhere Link'' rule, add another condition, as follows:
+  ``Node Talk to young man Not Visited''.
+\end{enumerate}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=10cm]{images/hypedyn-tutorial-3-figure-6}
+  \caption{\textit{The node rule for ``Talk to young man''.}}
+  \label{fig:tut3:talk}
+\end{figure} 
+
+Your node rule should be similar to what is shown in Figure \ref{fig:tut3:talk}.
+
+Now if you run the story, the ``Talk to young man'' node is \textit{only}
+available after you visit ``Go deeper into the forest'' and haven't yet
+visited ``Talk to young man''.
+
+This handles most of the conditions. However, what if the reader had decided
+to, for example, click on ``Head home'' or ``Go directly to Grandma's house''?
+Would it make sense for Red to still be able to talk to the young man at this
+point? Probably not, so we need to add two more conditions.
+
+\begin{enumerate}
+  \item Edit the ``Add Anywhere Link'' rule for ``Talk to young man''.
+  \item Add another condition, as follows: ``Node Head home Not
+  Visited''.
+  \item Finally, add the condition ``Go directly to Grandma's house Not
+  Visited''.
+\end{enumerate}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=10cm]{images/hypedyn-tutorial-3-figure-7}
+  \caption{\textit{The final node rule for ``Talk to young man''.}}
+  \label{fig:tut3:talk_final}
+\end{figure} 
+
+Your final node rule should be similar to what is shown in Figure
+\ref{fig:tut3:talk_final}.
+
+\subsection{Adding the rest of the node rules}
+
+We can now go through and consider each of the other nodes, and add appropriate
+conditions. A good way to do this is to work back from the most constrained
+nodes to the least constrained nodes. So, working back from ``Talk to young
+man'', we can now consider ``Go deeper into the forest''. Logically, this node
+should only be available if the reader has chosen to visit ``Explore the
+forest'', and should only be seen once. It should also not be available if the
+reader has chosen ``Head home'' or ``Go directly to Grandma's house''. To get
+this to work, we can follow a similar approach to what we did above.
+
+\begin{enumerate}
+  \item Edit the ``Add Anywhere Link'' node rule for ``Go deeper into the
+  forest.
+  \item Add the following conditions:
+  \begin{enumerate}
+  \item``Node Explore the forest Visited''.
+  \item ``Node Go deeper into the forest Not Visited''.
+  \item ``Node Head home Not Visited''.
+  \item ``Go directly to Grandma's house Not Visited''.
+  \end{enumerate}
+\end{enumerate}
+
+The next node we'll consider is ``Explore the forest''. This node is much less
+restricted, as we want this to be available to the reader immediately, but only
+if it has not yet been visited. As with ``Go deeper into the forest, it should
+also not be available if the reader has chosen ``Head home'' or ``Go directly
+to Grandma's house''.
+
+\begin{enumerate}
+  \item Edit the ``Add Anywhere Link'' node rule for ``Explore the forest''.
+  \item Add the following conditions: 
+  \begin{enumerate}
+  \item ``Node Explore the forest Not Visited''.
+  \item ``Node Head home Not Visited''.
+  \item ``Go directly to Grandma's house Not Visited''.
+\end{enumerate}
+\end{enumerate}
+
+We have now set out a path for the reader from the start through to talking to
+the young man. Next, lets turn our attention to the path to Grandma's house.
+The node ``Go directly to Grandma's house'' should always be available
+\textit{unless} the reader has already seen it, or has decided to view ``Head
+home''.
+
+\begin{enumerate}
+  \item Edit the ``Add Anywhere Link'' node rule for ``Go directly to Grandma's
+  house''.
+  \item Add the following conditions: 
+  \begin{enumerate}
+  \item ``Node Head home Not Visited''.
+  \item ``Go directly to Grandma's house Not Visited''.
+\end{enumerate}
+\end{enumerate}
+
+Notice that there is also some text in this node which probably should have
+conditions attached to it. Following what we did in the previous tutorials, set
+it up so that the second paragraph only appears if Red talked to the young man,
+and the third paragraph only appears if she \textit{didn't} talk to him.
+
+There are three nodes left: ``Pass the basket to Grandma'', ``Approach the
+young man'', and ``Head home''. The first two are important, since they depend
+on whether or not Red told the young man where she is going. Because of this,
+we need to carefully design their conditions.
+
+For ``Pass the basket to Grandma'', we want the node to be available only if
+Red has gone to Grandma's, she \textit{didn't} talk to the wolf, she hasn't gone
+home, and she hasn't yet passed the basket to Grandma. This translates into the
+following conditions:
+
+\begin{enumerate}
+  \item Edit the ``Add Anywhere Link'' node rule for ``Pass the basket to
+  Grandma''.
+  \item Add the following conditions:
+  \begin{enumerate}
+  \item ``Go directly to Grandma's house Visited''.
+  \item ``Node Talk to young man Not Visited''.
+  \item ``Node Head home Not Visited''.
+  \item ``Node Pass the basket to Grandma Not Visited''.
+\end{enumerate}
+\end{enumerate}
+
+For ``Approach the young man'' we have a similar set of conditions, although
+this time we want to specify that Red \textit{did} talk to the young man.
+
+\begin{enumerate}
+  \item Edit the ``Add Anywhere Link'' node rule for ``Approach the young man''.
+  \item Add the following conditions:
+  \begin{enumerate}
+  \item ``Go directly to Grandma's house
+  Visited''.
+  \item ``Node Talk to young man Visited''.
+  \item ``Node Head home Not Visited''.
+  \item ``Node Approach the young man Not Visited''.
+\end{enumerate}
+\end{enumerate}
+
+Finally, we have to set the conditions for ``Head home''. This is the least
+constrained of all the nodes, as it should be available everywhere
+\textit{except} if Red and Grandma were eaten by the wolf.
+
+\begin{enumerate}
+  \item Edit the ``Add Anywhere Link'' node rule for ``Head home''.
+  \item Add the condition: ``Node Approach the young man Not Visited''.
+\end{enumerate}
+
+Now run the story. You should be able to explore several variations of the
+story, and see that the conditions that we specified ensure that our events
+only occur if their preconditions are satisfied.
+
+\subsection{Disabling the back button}
+
+There is one remaining problem: the reader can click on the ``back'' button and
+return to the previous node. In some cases, this does not make sense. For
+example, after clicking on ``Talk to young man'', if the reader clicks on the
+``back'' button, she will see the ``Go deeper into the forest'' node. We could
+either have the contents of the nodes adapt to whether or not the reader has
+seen the next node, which is quite complicated, or we could \textit{disable}
+the back button. We'll do the latter.
+
+To disable the back button, go to the File menu and choose Properties. You should
+see the ``Properties'' dialog (see Figure \ref{fig:tut3:preferences}). Check the
+checkbox to the left of ``Disable back button'', and click on the ``Ok'' button.
+Now try running the story. You should see that the back button has been removed.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=4cm]{images/hypedyn-tutorial-3-figure-8}
+  \caption{\textit{Disabling the back button.}}
+  \label{fig:tut3:preferences}
+\end{figure} 
+
+Disabling the back button is useful for cases such as this, where the procedural
+nature of the story makes the back button problematic. It can also be useful if
+you want to force readers to commit to their choices. Note, however, that it can
+be frustrating for readers not to be able to go back, so use this feature with
+care. Also note that preferences are saved with the story file, and only apply to
+a specific story, so if you create a new story, the preferences will be set back
+to their default settings.
+
+\subsection{Sculptural vs. regular hypertext}
+
+One thing to note is that we could have achieved a very similar effect using
+regular nodes, links, and conditions. However, the \textit{process} of
+developing a story using this form of hypertext is very different from what we
+saw in tutorials 1 and 2. As a result, the type of story that you are likely to
+create is also much different.
+
+It would also be possible to reduce the complexity of the conditions that we
+created above by making use of \textit{facts} to keep track of important
+information in the story, and use this information to control when nodes are
+available. We will now look at how to use \textit{facts}.
+
+\section{Using \textit{facts} to keep track of what happened}
+
+In previous tutorials, we have seen that HypeDyn can keep track of what the
+reader has done by referring to which nodes have been visited, and which links
+have been followed. This allows for quite complex procedural change. However,
+one major limitaton is that you, as the author, are unable to have HypeDyn
+\textit{forget} that a node was visited or a link was followed. There are also
+times when a condition depends on one of several nodes having been visited,
+which can lead to fairly complex conditions. You also might want to have a
+condition that depends on, for example, the reader visiting a node several
+times, which requires that you count the number of visits to a node.
+
+To handle these limitations, we will now introduce \textit{facts}. In HypeDyn, a
+fact is something which is important to the story. There are three types of
+facts: \textit{true/false} facts, \textit{text} facts, and number facts.
+\textit{True/false} facts are either \textit{true} or \textit{false}, and can be
+checked in a condition and updated by an action. \textit{Text} facts contain a
+piece of text, such as a sentence, can be updated by an action, and can be used
+to replace text in a node in the same way as \textit{alternative text}.
+\textit{Number} facts contain integers, such as 1 or 42, can be checked in a
+condition, updated by an action, and can be used to replace text in a node. In
+this tutorial we will cover true/false and text facts. See tutorial 4 for
+details on how to use number facts.
+
+\subsection{Creating the nodes}
+
+Suppose we want to let Red pick the flowers in the forest grove, and put them
+in the basket for Grandma. We could do this by using conditions and conditional
+text. However, we will now show how this can be done with facts, and then
+explain how this is actually more flexible than the approaches used in
+tutorials 1 and 2.
+
+First, create two new anywhere nodes:
+
+\begin{enumerate}
+  \item \textit{Name}: Pick the geraniums\\
+  \textit{Content}: 
+  \begin{quotation}
+  \noindent Red decides to pick some of the geraniums in the grove and exchange
+  them for the flowers in the basket for Grandma.
+  \end{quotation}
+  \item \textit{Name}: Pick the violets\\
+  \textit{Content}: 
+  \begin{quotation}
+  \noindent Red decides to pick some of the violets in the grove and exchange
+  them for the flowers in the basket for Grandma.
+  \end{quotation}
+\end{enumerate}
+
+\subsection{Creating the facts}
+
+We will now create two facts to keep track of whether or not Red has picked the
+flowers and which flowers she picked, and one fact to keep track of whether or
+not Red is in the forest grove (and therefore able to pick flowers).
+
+\begin{enumerate}
+  \item In the main HypeDyn window, go to the \textit{Fact} menu, and pick the
+  \textit{New} menu item, and the \textit{True/False} submenu item. 
+  \item The ``New True/False Fact'' dialogue will appear (see Figure
+  \ref{fig:tut3:newfact}). Enter the name of the fact as ``Picked flowers'', and
+  click ``ok''.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=4cm]{images/hypedyn-tutorial-3-figure-9}
+  \caption{\textit{Creating a new fact.}}
+  \label{fig:tut3:newfact}
+\end{figure}
+
+  \item Now go to the \textit{Fact} menu, and pick the
+  \textit{New} menu item and the \textit{True/False} submenu item again. 
+  \item The ``New True/False Fact'' dialogue will appear. Enter
+  the name of the fact as ``In the forest grove'', and click ``ok''.
+  \item Now go to the \textit{Fact} menu, and pick the
+  \textit{New} menu item and the \textit{Text} submenu item. 
+  \item The ``New Text Fact'' dialogue will appear. Enter
+  the name of the fact as ``The flowers'', and click ``ok''.
+\end{enumerate}
+
+We will use the fact ``Picked flowers'' to remember whether or not the reader has
+had Red pick the flowers, and ``The flowers'' to remember the type of flowers. We
+will use the fact ``In the forest grove'' to make sure that the flowers can only
+be picked in the forest grove. This could be done by checking which nodes have
+and haven't been visited, but in this case using a fact is much simpler, and
+allows for greater flexibility.
+
+\subsection{Using facts in node rule conditions}
+
+Now we need to make sure that the two nodes for picking the flowers are only
+available when Red is in the forest grove, and hasn't yet picked the flowers.
+We'll do this by using the two \textit{true/false} facts created above.
+
+\begin{enumerate}
+  \item Edit the ``Add Anywhere Link'' rule in the node rule for node ``Pick the
+  violets''.
+  \item Add a condition, and select \textit{True/False Fact} as the type. Now
+  choose the fact \textit{Picked flowers} and value \textit{False}. This means
+  that the condition is true when the fact \textit{Picked flowers} is false,
+  ie. Red hasn't picked the flowers. Note that facts are always \textit{false}
+  until they have been updated, so when the story is started, both
+  \textit{Picked flowers} and \textit{In the forest grove} are false.
+  \item Add another condition, and set it to ``True/False Fact In the forest
+  grove True''. This means that the condition is true when Red is in the
+  forest grove.
+\end{enumerate}
+
+You should have conditions as in Figure \ref{fig:tut3:picktheviolets}.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=10cm]{images/hypedyn-tutorial-3-figure-10}
+  \caption{\textit{Conditions for ``Pick the Violets''.}}
+  \label{fig:tut3:picktheviolets}
+\end{figure}
+
+\subsection{Updating facts when picking the flowers}
+
+Now that we have our condition set, we need to update our facts. Facts can be
+updated either when nodes are visited, or when links are clicked. In our case,
+when the node``Pick the violets'' is visited, we'll update the fact ``Picked
+flowers'' to \textit{true}, and update the fact ``The Flowers'' to hold the name
+of the flowers that were picked.
+
+\begin{enumerate}
+  \item If you aren't already, edit the ``Add Anywhere Link'' rule in the
+  node rule for node ``Pick the violets'' again.
+  \item Add an ``update fact'' action.
+  \item Set the action's fact type to ``True/False''. 
+  \item Now choose the fact \textit{Picked flowers} and set the value to
+  \textit{True}. This means that when the node ``Pick the violets'' is
+  visited, the fact \textit{Picked flowers} is set to \textit{true}, ie. Red
+  has picked the flowers.
+  \item Add another ``update fact'' action, and select \textit{Text} as the
+  type.
+  \item Now choose the fact \textit{The flowers}. You should see a text entry
+  field appear to the right. Type in the text ``violets''.
+\end{enumerate}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=10cm]{images/hypedyn-tutorial-3-figure-11}
+  \caption{\textit{Updating facts for ``Pick the Violets''.}}
+  \label{fig:tut3:picktheviolets2}
+\end{figure}
+
+You should have actions as in Figure \ref{fig:tut3:picktheviolets2}. Note that
+in this image the original ``Enable links to this node from anywhere'' action
+is scrolled off the top.
+
+Now do exactly the same thing for the node ``Pick the geraniums'', except in
+the last step, type in the text ``geraniums'' instead of ``violets''.
+
+\subsection{Updating facts when in the forest grove}
+
+At this point we are missing one key step - we don't ever update the fact ``In
+the forest grove''. We want to use this to keep track of when the reader can have
+Red pick the flowers. To do this, we need to set the fact to \textit{true} when
+Red enters the forest, ie. when the reader visits the node ``Explore the
+forest'', and set it to \textit{false} whenever any of the nodes which represent
+leaving the forest grove are visited. These nodes are ``Go directly to Grandma's
+house'', ``Head home'', and ``Go deeper into the forest''.
+
+\begin{enumerate}
+  \item Edit the node ``Explore the forest''.
+  \item Edit the ``Add Anywhere Link'' rule for the node's node rule, and add
+  an ``update fact'' action to set the fact ``In the forest grove'' to
+  \textit{true}.
+  \item Now do the same for nodes ``Go directly to Grandma's house'', ``Head
+  home'', and ``Go deeper into the forest'', but instead of setting the fact to
+  \textit{true}, set it to \textit{false}.
+\end{enumerate}
+
+We now have the ``In the forest grove'' fact set up to track whether or not Red
+is in the forest grove. Note that this would be \textit{very} difficult to
+accomplish using conditions on whether nodes where visited or not. (Try it!)
+
+\subsection{Using text facts with conditional text}
+
+The one thing remaining to be done is to update the text where the flowers are
+mentioned, so that the specific type of flowers that Red picked are shown.
+There are two places where this can be done: ``Pass the basket to Grandma'',
+and ``Talk to young man''. We'll to the first, and the second is left as an
+exercise.
+
+\begin{enumerate}
+  \item Edit the node ``Pass the basket to Grandma''.
+  \item Select the text ``flowers'', and create a new link named ``flowers''.
+  \item Add a new rule to the link, and edit the rule.
+  \item Name the rule ``display the flowers''.
+  \item Add an ``update text using'' action.
+  \item Now change the type of text from ``alternative text'' to ``text
+  fact'', and choose the fact \textit{The flowers}.
+
+This means that the link text will be replaced by whatever value for the
+fact ``The flowers'' we have set it to - either ``violets'' or ``geraniums'',
+depending on which node the reader visited. 
+
+\item We also need to make sure this replacement is only done if the flowers have
+been picked. Add a condition, and select type \textit{Fact}. Choose the fact
+\textit{Picked flowers}, and the value \textit{True}.
+  This means that the default text will be shown if the flowers have \textit{not}
+  been picked, and the value of the fact \textit{The flowers} will be shown if
+  the flowers \textit{have} been picked.
+\end{enumerate}
+
+The link for the alternative text should look something like Figure
+\ref{fig:tut3:conditional_text}.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=10cm]{images/hypedyn-tutorial-3-figure-12}
+  \caption{\textit{Substituting alternative text with a fact.}}
+  \label{fig:tut3:conditional_text}
+\end{figure}
+
+Try running the story and picking the flowers. Notice that for either of the
+flowers that are picked, the correct name is substituted in the node ``Pass the
+basket to Grandma''. Add the same alternative text to ``Talk to young man''.
+
+Note that, as with the other examples where we have used facts, we could have
+done the same thing with regular node conditions and alternative text. However,
+it would have required several links in the ``Pass the basket to Grandma'' node.
+In addition, we can easily add a third flower, and no changes need to be made to
+either of the nodes where the text is substituted. This allows for much more
+systematic use of procedural change than the alternative text mechanism
+introduced in tutorial 2.
+
+\section{Next steps}
+
+We have created a simple story using the ``sculptural'' approach to hypertext,
+where all nodes implicitly have links between them, and the creation of the
+story structure consists of using conditions to gradually restrict which nodes
+are and are not available to the reader. We have also used facts to keep track
+of what the reader has done, and to procedurally change the text in nodes. The
+completed version of this story can be found in the file \textsc{LRRH4.dyn}.
+
+There are several things that you could try to enhance the story. For example,
+you could allow the reader to go back from ``Go deeper into the forest'' to pick
+the flowers. This can easily be done by making use of the ``In the forest grove''
+fact. Try adding a third type of flower to be picked. You might also want to go
+back and use facts instead of node conditions to simplify the conditions we
+placed on the anywhere nodes in the first part of this tutorial.
+
+\section{Conclusion}
+
+In this tutorial, we have created a simple ``sculptural'' hypertext fiction. By
+creating a collection of story fragments, and then specifying a set of
+conditions for when these fragments can be seen, we have taken a very different
+approach to writing a hypertext story than was seen in the earlier versions of
+HypeDyn. In addition, by using \textit{facts} to keep track of what the reader
+has done, either as true or false conditions, or as text, we now have a much
+more flexible way of changing the behaviour of the system based on the reader's
+actions. This provides much more powerful possibilities in terms of
+procedural change and interactivity.
+
+% \section{Final notes}
+% 
+% As mentioned above, the HypeDyn hypertext editor is still a work-in-progress.
+% Please let me know if you encounter any problems. Also, please post your
+% questions about using the tool to the IVLE forum.
+
+  \bibliographystyle{apalike}
+  \bibliography{../../../Research/references/papers/thesis}
+
+\end{document}
