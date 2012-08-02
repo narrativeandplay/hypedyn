@@ -145,14 +145,20 @@ function ruleRelevant(eventType, rule) {
  // eventType can be one of these ["clicked-links" "entered-node"]
  // goes through all the rules in this obj
  function eventTrigger( eventType, obj ) {
-	var firing_candidates = filter_out_relevant( obj.rules, eventType );
+ 
+    // we don't want to fire irrelevant rules
+	// but this does throw away blocking information
+	//var firing_candidates = filter_for_relevant( obj.rules, eventType );
 	
-	for ( var i=0; i<firing_candidates.length; i++ ) {
-		var rule = firing_candidates[i];
+	for ( var i=0; i<obj.rules.length; i++ ) {
+		var rule = obj.rules[i];
 		if ( checkCondition( rule ) ) {
 			for (var j in rule.actions) {
-				var action = rule.actions[j];
-				action.doaction(eventType);
+				// only fire when relevant
+				if ( ruleRelevant( eventType, rule ) ) {
+					var action = rule.actions[j];
+					action.doaction(eventType);
+				}
 			}
 			if ( ! rule.fall_through )
 				break;
@@ -160,16 +166,67 @@ function ruleRelevant(eventType, rule) {
 	}
 }
 
+// simulate firing. 
+// do fall through checks to see if a rule relev
+function fall_through_till_relevant( eventType, rules ) {
+
+	for ( var i=0; i< rules.length; i++ ) {
+		var rule =  rules[i];
+		if ( checkCondition( rule ) ) {
+			// changed removed do action block
+			
+			// found a relevant rule so return it;
+			if ( ruleRelevant( eventType, rule ) ) {
+				return rule;
+			}
+			
+			// met with blocking rule but not relevant
+			if ( ! rule.fall_through ) {
+				return false;
+			}
+		}
+	}
+	
+	// fell through every rule, none of them has condition satisfied
+	// OR if some were satisfied, none of those satisfied blocked and none are relevant
+	return false;
+}
+
  // if ready is true, we check whether the condition for 
  // that action is satisfied
  function link_clickable (link, ready) {
-	var fireable = firingCandidate( link.rules, "clickedLink", ready);
-	fireable = filter_out_empty_rules( fireable );
+ 
+	//var fireable = firingCandidate( link.rules, "clickedLink", ready );
+	
+	// fireable = filter_out_empty_rules( fireable );
+	
 	//console.log("FIREABLE len "+fireable.length);
-	return (fireable.length != 0);
+	//return ( fireable.length != 0 );
+	
+	// if ready, we're looking for clickable links
+	if ( ready ) {
+		var fall_through_check = fall_through_till_relevant( "clickedLink", link.rules );
+		
+		// clickabel rule found
+		if ( fall_through_check )
+			return true;
+		else                      
+			return false;
+		
+	// if not ready, we're looking for the existence of actions making this link clickable 
+	// (link can be possibly dormant links or already active)
+	} else {
+		var relevant_rules = filter_for_relevant( link.rules, "clickedLink" );
+		if (relevant_rules > 0)
+			return true;
+		else
+			return false;
+	}
 }
  
+ // NOT USED ANYMORE
 // goes through the list of rules and filters out those not satisfied
+/*
 function filter_out_unsatisfied( rules ) {
 	var to_return = [];
 	for ( var i=0; i<rules.length; i++ ) {
@@ -181,8 +238,9 @@ function filter_out_unsatisfied( rules ) {
 	}
 	return to_return;
 }
+*/
 
-function filter_out_relevant( rules, eventType ) {
+function filter_for_relevant( rules, eventType ) {
 	
 	var to_return = []
 	for ( var i=0; i< rules.length; i++ ) {
@@ -193,7 +251,9 @@ function filter_out_relevant( rules, eventType ) {
 	return to_return;
 }
 
+// NOT USED ANYMORE
 // rules without actions
+/*
 function filter_out_empty_rules( rules ) {
 	var to_return = []
 	for ( var i=0; i< rules.length; i++ ) {
@@ -203,14 +263,17 @@ function filter_out_empty_rules( rules ) {
 	}
 	return to_return;
 }
+*/
 	
+ // NOT USED ANYMORE
  // determine the rules which are candidates for firing
- // obj: the object containing the rules (currently node or link)
+ // rules: array of rules
  // eventType: ["clicked-links" "entered-node"]
  // checkCond: false just returns rules relevant to eventType, true means check the condition as well
+ /*
  function firingCandidate( rules, eventType, checkCond ) {
 	
-	var relevant_rules = filter_out_relevant( rules, eventType );
+	//var relevant_rules = filter_for_relevant( rules, eventType );
 	
 	if (checkCond) { // ready for firing
         // if need to check conditions then filter out unsatisfied
@@ -221,6 +284,7 @@ function filter_out_empty_rules( rules ) {
 		return relevant_rules;
 	}
  }
+ */
 
 /*
  *	Conditions

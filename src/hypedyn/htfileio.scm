@@ -1251,5 +1251,5 @@
     (if (not (file-exists? autosave-folder-file))
         (create-directory (make-file "autosave"))))
 
-  (ht-save-to-file (path "autosave/autosave.html") #t)
+  (ht-save-to-file (path "autosave/autosave.dyn") #t)
   )
