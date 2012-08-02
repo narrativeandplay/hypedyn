@@ -451,9 +451,12 @@
     
     (define the-rule (get 'rules edited-ruleID))
     
+    ;; cache a version of the unedited link for creation of undo
+    (before-edit-rule edited-ruleID)
+    
     ;; empty the rule and delte the old actions and conditions
     ;; since we're not recycling the conditions and actions, delete them from data table
-    (display "recycling ")(display (ask the-rule 'actions))(newline)
+    (display "recycling in confirm ")(display (ask the-rule 'actions))(newline)
     (map (lambda (actionID)
            (del 'actions actionID)
            ) (ask the-rule 'actions))
@@ -469,14 +472,13 @@
     (define action-lst (get-list 'actions))
     (display "action lst ")(display action-lst)(newline)
     
+    ;; debug
     (if (pair? action-lst)
         (begin
           (display "action list ")(display (map (lambda (o) (car o)) (get-list 'actions)))(newline))
         (begin
           (display "action lst false ")(newline)
           ))
-     ;; cache a version of the unedited link for creation of undo
-    (before-edit-rule edited-ruleID)
     
     ;; set the and-or and negate? properties
     (if the-rule
@@ -1426,6 +1428,8 @@
         ;; build conditions
         (populate-condition-panel conditions)
 
+        (display "POPULATE ACTIONS ")(display actions)(newline)
+        
         ;; build actions (show them in the ui)
         (map (lambda (actionID)
                (define action (get 'actions actionID))

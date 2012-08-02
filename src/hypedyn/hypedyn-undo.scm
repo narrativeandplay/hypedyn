@@ -157,16 +157,21 @@
   (display unedited-rule-sexpr)(newline)
   )
 (define (after-edit-rule ruleID)
-  (set! edited-rule-sexpr (cache-rule ruleID)))
+  (set! edited-rule-sexpr (cache-rule ruleID))
+  (display "after edit rule ")(newline)
+  (display edited-rule-sexpr)(newline)
+  )
 
 ;; create the sexpr of the rule complete with actions and conditions
 (define (cache-rule rule-ID)
+  (display "[cache rule] ")(newline)
   (define rule-obj (get 'rules rule-ID))
   (if rule-obj
       (begin
         (define actions (ask rule-obj 'actions))
         (define conditions (ask rule-obj 'conditions))
         (define rule-sexpr (ask rule-obj 'to-save-sexpr))
+        (display "cache rule actions ")(display actions)(newline)
         (define combined-sexpr
           (append (list 'begin
                         rule-sexpr)
@@ -191,9 +196,16 @@
 ;; NOTE: undoing/redoing of rule edit does not bring up the rule editor UI
 (define (post-edit-rule-undoable-event type obj-ID ruleID)
   
+;  (display "posting edit rule undoable ")(newline)
   ;; copy the cache and store in this context (the cache would be reused for other edits)
   (define unedited-sexpr-copy (list-copy unedited-rule-sexpr))
   (define edited-sexpr-copy (list-copy edited-rule-sexpr))
+  
+;  (display "unedited-sexpr-copy ")(newline)
+;  (display unedited-sexpr-copy)(newline)
+;  
+;  (display "edited-sexpr-copy ")(newline)
+;  (display edited-sexpr-copy)(newline) 
   
   (define (empty-rule)
     (define the-rule (get 'rules ruleID))
@@ -223,7 +235,7 @@
         ((link) ;; link need to update node graph display (follow link action)
          (remove-follow-link-rule-display ruleID)
          (remove-show-popup-rule-display ruleID)
-         (display "UNDOING edit rule ")(display unedited-sexpr-copy)(newline)
+         ;(display "UNDOING edit rule ")(display unedited-sexpr-copy)(newline)
          (empty-rule)
          (eval-sexpr unedited-sexpr-copy)
          (add-follow-link-rule-display ruleID)
@@ -247,7 +259,7 @@
          (remove-show-popup-rule-display ruleID)
          (empty-rule)
          (eval-sexpr edited-sexpr-copy)
-         (display "REDOING edit rule ")(display edited-sexpr-copy)(newline)
+         ;(display "REDOING edit rule ")(display edited-sexpr-copy)(newline)
          (add-follow-link-rule-display ruleID)
          (add-show-popup-rule-display ruleID)
          )
