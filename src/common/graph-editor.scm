@@ -70,6 +70,8 @@
                tab-width tab-height node-width node-height node-buffer)
 (module-static 'init-run)
 
+
+;;;; global var
 ; the default node colour
 (define default-node-color  (list 91 91 184 255))
 
@@ -91,7 +93,7 @@
 ;                          (else (get-method named-obj message))))))
 
 ; ----------------------------------------------------------------------------
-; line
+;;;; line
 ; ----------------------------------------------------------------------------
 (define-private (create-line source target editor)
                 (let ((the-line (make-line source target editor)))
@@ -219,7 +221,7 @@
                   this-obj))
 
 ; ----------------------------------------------------------------------------
-; tab
+;;;; tab
 ; ----------------------------------------------------------------------------
 (define-private (create-tab x y type node editor . name)
                 (if (not (null? name))
@@ -411,7 +413,7 @@
                   this-obj))
 
 ; ----------------------------------------------------------------------------
-; node
+;;;; node
 ; ----------------------------------------------------------------------------
 
 (define-private (create-node id data name x y editor style)
@@ -948,7 +950,7 @@
 
 
 ; ----------------------------------------------------------------------------
-; graph editor
+;;;; graph editor
 ; ----------------------------------------------------------------------------
 
 (define (create-graph-editor width height callback user-app)
@@ -1560,9 +1562,9 @@
                                    )))
 
                             ; draw all nodes with tabs and lines
+                            ;; newest node (ie largest id) are drawn last 
                             (do ((i 0 (+ i 1))) ((= i max-id))
-                                (let
-                                    ((node (hash-table-get nodes i #f)))
+                                (let ((node (hash-table-get nodes i #f)))
                                   (if node
                                       (if (equal? node selected-node)
                                           (ask node 'show #t)
@@ -1591,50 +1593,38 @@
                         ((obj #f)
                          ;(ioblocks? (is-ioblocks-editor? self-reference))
                          ) ;;use the first node to determine whether this is in ioblocks
+                      
+                      (define (select-node name node)
+                        (let ((selected (ask node 'on-mouse type x y)))
+                          (if selected
+                              (let ((selected-type (ask selected 'obj-type)))
+                                ;; select the first object we come across (also the most recent one)
+                                (if (not obj)
+                                    (cond
+                                     ((equal? selected-type 'node)
+                                      (set! obj selected))
+                                     ((equal? selected-type 'tab)
+                                      (set! obj selected))
+                                     ;;                                    ((and (equal? selected-type 'line)
+                                     ;;                                          ioblocks?)
+                                     ;;                                     (set! obj selected))
+                                     ((equal? selected-type 'line)
+                                      ;; issit ok for lines from other app to be selectable?
+                                      (set! obj selected))
+                                     ((equal? selected-type 'place-node)
+                                      (set! obj selected))
+                                 ))))))
+                      
                       ; go through all nodes
                       (hash-table-walk
                        nodes
-                       (lambda (name node)
-                         (let
-                             ((selected (ask node 'on-mouse type x y)))
-                           (if selected
-                               (begin
-                                 (let ((selected-type (ask selected 'obj-type)))
-                                   (cond
-                                    ((equal? selected-type 'node)
-                                     (set! obj selected))
-                                    ((equal? selected-type 'tab)
-                                     (set! obj selected))
-;                                    ((and (equal? selected-type 'line)
-;                                          ioblocks?)
-;                                     (set! obj selected))
-                                     ((equal? selected-type 'line)
-                                      ;; issit ok for lines from other app to be selectable?
-                                     (set! obj selected))
-                                    )))))))
+                       select-node)
+                      
                       ;; hash walk custom-nodes-hash as well
                       (hash-table-walk
                        custom-nodes-hash
-                       (lambda (name node)
-                         (let
-                             ((selected (ask node 'on-mouse type x y)))
-                           (if selected
-                               (begin
-                                 (let ((selected-type (ask selected 'obj-type)))
-                                   (cond
-                                    ((equal? selected-type 'node)
-                                     (set! obj selected))
-                                    ((equal? selected-type 'tab)
-                                     (set! obj selected))
-;                                    ((and (equal? selected-type 'line)
-;                                          ioblocks?)
-;                                     (set! obj selected))
-                                     ((equal? selected-type 'line)
-                                      ;; issit ok for lines from other app to be selectable?
-                                     (set! obj selected))
-                                    ((equal? selected-type 'place-node)
-                                     (set! obj selected))
-                                    )))))))
+                       select-node)
+                      
                       obj))
                   
                   ;; mouse-handler-mould is the object that keeps track 
