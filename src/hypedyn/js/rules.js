@@ -114,6 +114,11 @@ function ruleRelevant(eventType, rule) {
 	newaction.id = id;
 	newaction.args = args; // array of to be passed to the function
 	newaction.doaction = function (evtType) {
+		//debug
+		if (func == setNumberFact) {
+			disp("[set num fact] fired");
+		}
+	
 		if (func == undefined)
 			func = function () {}
 		if (args == undefined)
@@ -145,7 +150,7 @@ function ruleRelevant(eventType, rule) {
  // eventType can be one of these ["clicked-links" "entered-node"]
  // goes through all the rules in this obj
  function eventTrigger( eventType, obj ) {
- 
+	disp("[event trigger] "+eventType );
     // we don't want to fire irrelevant rules
 	// but this does throw away blocking information
 	//var firing_candidates = filter_for_relevant( obj.rules, eventType );

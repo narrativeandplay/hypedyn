@@ -118,9 +118,11 @@ function clickedLink(linkID) {
 	}
 	var anywhere_node_check = get_activated_anywhere_node ( linkID );
 	if ( anywhere_node_check ) {
-		eventTrigger("enteredNode", anywhere_node_check); // linkID is actually anywhere node id
-		gotoNode( linkID ); // anywhere node has no explicit goto actions in its rules.
-		//disp("clicked link true in clickedLink");
+		// linkID is actually anywhere node id
+		
+		// anywhere node's explicit goto node behavior
+		gotoNode( linkID ); 
+		
 		clicked_link_flag = true;
         clickHandled = true; // tell touchHandler that the click was handled
 	}
@@ -407,6 +409,7 @@ function gotoNode(nodeID) {
 		node.visited = true;
 		currNodeID = nodeID;
 
+		disp("goto node enter node ");
         // trigger enteredNode events on the node
 		eventTrigger("enteredNode", node);
 
