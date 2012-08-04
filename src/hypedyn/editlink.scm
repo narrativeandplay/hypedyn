@@ -931,9 +931,12 @@
            (("Math")
             (if (>= (length fp-children) 5)
                 (let* ((math-panel (list-ref fp-children 4))
-                       (math-panel-lst (get-container-children math-panel))
-                       (operand1-panel (list-ref math-panel-lst 0))
-                       (operand2-panel (list-ref math-panel-lst 2)))
+                       (math-panel-lst (get-container-children math-panel)))
+                  ;(display "math-panel class type ")(display (invoke math-panel 'get-class))(newline)
+                  
+                       (define operand1-panel (list-ref math-panel-lst 0))
+                       (define operand2-panel (list-ref math-panel-lst 2))
+                  
                   (and (operand-panel-valid? operand1-panel)
                        (operand-panel-valid? operand2-panel))))
             )
@@ -992,12 +995,12 @@
 ;; add an action to the action list of type action-type ["update text using", "follow link to", "update fact", "show in popup"]
 ;; args-lst null means we're adding a new empty action panel,
 ;; if args-lst not null load the information provided (present existing action) 
-(define (add-specific-action action-type . args-lst)
-;  (display "[add-specific-action] ")(newline)
+(define (create-action-panel action-type . args-lst)
+;  (display "[create-action-panel] ")(newline)
 ;  (display "  action type ")(display action-type)(newline)
 ;  (display "  args-lst ")(display args-lst)(newline)
   
-  (define panel-to-return (create-action-panel action-type))
+  (define panel-to-return (create-action-panel-common action-type))
   (set-container-layout panel-to-return 'horizontal)
   (set-component-align-x panel-to-return 'left)
   
@@ -1046,6 +1049,7 @@
          (pack-component update-text-action-panel)
          (add-component panel-to-return update-text-action-panel)
          )
+        
         ((equal? action-type "follow link to")
          (if (= (length args-lst) 1)
              (let* ((link-dest1 (car args-lst))
@@ -1066,6 +1070,7 @@
          (pack-component node-choice-combobox)
          (add-component panel-to-return node-choice-combobox)
          )
+        
         ((equal? action-type "update fact")
          (cond ((= (length args-lst) 3)
                 (let ((the-action (car args-lst))
@@ -1082,8 +1087,10 @@
                 )
              (else (add-component panel-to-return (create-fact-panel #f #f #f)))
          ))
+        
         ((equal? action-type "enable links to this node from anywhere")
          #f)
+        
         ((equal? action-type "show in popup")
          (if (= (length args-lst) 1)
              (set! node-choice-combobox2 (create-node-choice (car args-lst) #t -1))
@@ -1138,7 +1145,7 @@
   
     ;; get the selected type
   (define selected-action-type (get-combobox-selecteditem action-type-choice))
-  (define new-action-panel (add-specific-action selected-action-type))
+  (define new-action-panel (create-action-panel selected-action-type))
   
   (if (= (length (get-selected-action-panel)) 0)
      (begin
@@ -1377,7 +1384,7 @@
 
 ;; an instance of the action type selector panel
 ;; updates the action choice combobox and returns a panel with a name label
-(define (create-action-panel action-type) ; the-type )
+(define (create-action-panel-common action-type) ; the-type )
   (if (not (eq? action-type #!null))
       (let* ((top-panel (make-panel))
              (the-checkbox (make-checkbox "")))
@@ -1438,7 +1445,7 @@
                (cond
                 ((equal? 'follow-link (car action-sexpr))
                  (define dest-nodeID (list-ref action-sexpr 4))
-                 (add-component action-list-panel (add-specific-action "follow link to" dest-nodeID)))
+                 (add-component action-list-panel (create-action-panel "follow link to" dest-nodeID)))
 
                 ((equal? 'replace-link-text (car action-sexpr))  ;(replace-link-text text-type value linkID)
                  (display "inside replace link text ")(newline)
@@ -1450,7 +1457,7 @@
 
                  ;; 'text maps to "alternative text", 'fact maps to "text fact" 
                  (define text-type-string #f)
-                 (add-component action-list-panel (add-specific-action "update text using" text-type text-value))
+                 (add-component action-list-panel (create-action-panel "update text using" text-type text-value))
                  )
                 ((or (equal? 'retract (car action-sexpr))
                      (equal? 'assert (car action-sexpr))
@@ -1464,7 +1471,7 @@
                                        (caddr action-sexpr)
                                        'NA))
 
-                 (add-component action-list-panel (add-specific-action "update fact" the-action targetID the-value))
+                 (add-component action-list-panel (create-action-panel "update fact" the-action targetID the-value))
                  )
                 ((equal? 'set-number-fact (car action-sexpr))
                  (define the-action (list-ref action-sexpr 0))
@@ -1473,14 +1480,14 @@
                  (define the-value (list-ref action-sexpr 3))
                  
                  (display "ADDING update NUMBER fact ")(display the-value)(newline)
-                 (add-component action-list-panel (add-specific-action "update fact" the-action targetID num-fact-mode the-value))
+                 (add-component action-list-panel (create-action-panel "update fact" the-action targetID num-fact-mode the-value))
                  )
                 ((equal? 'add-anywhere-link (car action-sexpr))
-                 (add-component action-list-panel (add-specific-action "enable links to this node from anywhere"))
+                 (add-component action-list-panel (create-action-panel "enable links to this node from anywhere"))
                  )
                 ((equal? 'show-in-popup (car action-sexpr))
                  (define target-nodeID (list-ref action-sexpr 1))
-                 (add-component action-list-panel (add-specific-action "show in popup" target-nodeID))
+                 (add-component action-list-panel (create-action-panel "show in popup" target-nodeID))
                  )
                 )
                ) actions)
@@ -1746,14 +1753,24 @@
                  (let* ((thisfactID (car a))
                         (thisfact (cdr a))
                         (name (ask thisfact 'name))
+                        
+                        (truncated-name
+                         ;; truncate fact name at 20
+                         (if (> (string-length name) 20)
+                             (string-append (substring name 0 (- 20 3)) "...")
+                             name))
+                        
+                        ;; name with ID
                         (display-name 
                          (if (show-IDs?)
-                             (string-append name
+                             (string-append truncated-name
                                             " ("
                                             (number->string thisfactID)
                                             ")")
-                             name))
+                             truncated-name))
+                        
                         (thistype (ask thisfact 'type)))
+                   
                    (if (or (eq? thistype 'any)
                            (eq? thistype the-type))
                        (add-comboboxwithdata-string fact-list display-name thisfactID))
@@ -2629,7 +2646,14 @@
            (add-component top-panel the-fact-list-number)
            (add-component top-panel (make-label-with-title " using "))
            (add-component top-panel num-fact-mode-choice)
-           (add-component top-panel the-number-entry)))
+           (add-component top-panel the-number-entry)
+           
+           ;; change the slot at the-number-entry based on what is 
+           ;; appropriate through actionlistener on num-fact-mode-choice
+           (set-combobox-selection-object 
+            num-fact-mode-choice 
+            (get-combobox-selecteditem num-fact-mode-choice))
+           ))
 
         (pack-component top-panel)
         (pack-frame editlink-dialog)

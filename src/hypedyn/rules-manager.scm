@@ -121,10 +121,11 @@
   (let* ((rule-obj (get 'rules ruleID))
          (rule-name (ask rule-obj 'name)))
     
+    ;; truncate rule name display
     (define limit 40)
     (if (> (string-length rule-name) limit)
-        (set! rule-name (string-append (substring rule-name 0 (- limit 3)) "..."))
-        )
+        (set! rule-name (string-append (substring rule-name 0 (- limit 3)) "...")))
+    
     (if (show-IDs?)
         (to-string (string-append rule-name "(" (to-string ruleID) ")"))
         rule-name))

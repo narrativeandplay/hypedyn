@@ -101,11 +101,13 @@
                 (if (> y max-h)
                     (ask clicked 'y-set! (- max-h (* h 0.5)))
                     (ask clicked 'y-set! y)
-                    )
-                )
+                    ))
+
             (ask graph-ed-obj 'layout (ask clicked 'get-id))
-            )
+            ) ;; end of let-values
           )
+      
+      
       (ask graph-ed-obj 'begin-paint)
       (ask clicked 'show #t)
 ;      (ask graph-ed-obj 'set-selected! (ask clicked 'get-id))
@@ -115,6 +117,7 @@
       (node-left-clicked-mouse-event x y click-count clicked)
       
       (ask graph-ed-obj 'my-on-paint)
+      
       ;(ask graph-ed-obj 'my-refresh)
       
       ;reset dragging previous marker 

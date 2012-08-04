@@ -451,8 +451,9 @@
                                         ; forget selected link
                                     (set! selected-linkID '())
 
-                                        ; disable delete link buttons and menu items
-                                    (enable-link-buttons #f))))
+                                    ; disable delete link buttons and menu items
+                                    (enable-link-buttons #f)
+                                    )))
                             (lambda (del-linkID)
                               (delete-link del-linkID
                                            #f
@@ -824,10 +825,14 @@
 (define (linklist-onmouse e)
   (let ((event-type (get-mouseevent-type e)))
     (if (eq? event-type 'left-clicked)
-        (let ((event-click-count (get-mouseevent-click-count e)))
-          (if (= 2 event-click-count)
-              (rmgr-edit 'link selected-linkID)
-              )))))
+        (begin
+          ;; fix for windows where we need focus to show the hightlight
+          (request-focus (ask node-editor 'getcomponent))
+          
+          (let ((event-click-count (get-mouseevent-click-count e)))
+            (if (= 2 event-click-count)
+                (rmgr-edit 'link selected-linkID)
+                ))))))
 
 ; get the text of the specified link, used by editlink
 (define (get-link-text in-linkID)
