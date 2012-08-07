@@ -193,6 +193,7 @@
     
     ; clickback for links
     (define (clickback this-linkID)
+      (display "clickback in hypertext pane ")(newline)
       (if (procedure? selectlink-callback)
           (selectlink-callback this-linkID)))
 
@@ -1244,6 +1245,10 @@
              (lambda (self proc)
                (set! htp-endupdate proc)
                ))
+    ;; based on the selection, determine whether to enable newlink button
+    (obj-put this-obj 'selection-newlink-check
+             (lambda (self)
+               (check-links-overlap (getselstart) (getselend))))
     this-obj))
 
 ; read-only hypertextpane

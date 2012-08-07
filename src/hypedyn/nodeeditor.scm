@@ -488,6 +488,7 @@
 
 ; enable/disable link-related buttons
 (define (enable-link-buttons newstate)
+  (display "enable link buttons ")(display newstate)(newline)
   (set-button nodeeditor-toolbar-button-editlink newstate)
   (set-button nodeeditor-toolbar-button-dellink newstate)
   (set-button nodeeditor-toolbar-button-renamelink newstate)
@@ -575,12 +576,18 @@
               (display "[undo add new link]")(newline)
               ; delete the link - not sure about del-in-nodeeditor?
               (delete-link-action newlink-ID from-nodeID #t update-node-style-callback)
+              
+              ;; enable/disable newlink button based on whether text is selected
+              (ask node-editor 'selection-newlink-check)
               )
             
             (lambda () ;;redo
               (display "[REDO add new link]")(newline)
                ; restore the link
               (delete-link-undo redo-sexpr newlink-ID from-nodeID update-node-style-callback #t)
+              
+              ;; enable/disable newlink button based on whether text is selected
+              (ask node-editor 'selection-newlink-check)
               )))
             ))
     (hd-end-update undo-manager undo-action redo-action)
@@ -613,8 +620,12 @@
             (ask link-list 'select-link newlink-ID)
             
             ; disable new link button and menu item (until selection changes)
-            (enable-newlink-button #f)
+            ;; seem like now it disables correctly without this
+            ;(enable-newlink-button #f)
 
+            ;; disables the newlink button because node editor sees a link in the selection
+            (ask node-editor 'selection-newlink-check)
+            
             ; update main window label to show file is dirty
             (update-dirty-state)
 
