@@ -881,6 +881,8 @@
                          80 45
                          anywhere update-display-nodes))
           
+          (ask node-list 'select-node newnode-ID)
+          
           ;; if anywhere add a rule with add-anywhere-link action
           (if anywhere
               (begin

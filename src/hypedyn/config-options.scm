@@ -48,6 +48,7 @@
                
                java-reader? set-java-reader!
                get-temp-dir set-temp-dir! get-local-port set-local-port!
+               node-name-limit choice-name-limit rule-name-limit
                )
 
 ; enable/disable undo
@@ -351,3 +352,8 @@
   local-port)
 (define (set-local-port! in-port)
   (set! local-port in-port))
+
+;; truncation
+(define node-name-limit 20)
+(define choice-name-limit 20)
+(define rule-name-limit 40)

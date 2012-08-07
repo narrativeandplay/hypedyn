@@ -436,6 +436,7 @@
                       
                       ;; for drawing
                        (custom-draw #f) ;custom-draw provides a way to put custom drawings for the node
+                       (custom-node-text-draw #f)
                        (custom-offset (list)) ;; offset from the node's centre
                        (node-color default-node-color)
                        (text-color white-color)
@@ -704,25 +705,27 @@
                   (define (draw show? selected?)
                     (set! visible? show?)
                     (set! is-selected? selected?)
-                    (let
-                        ((dc (ask editor 'get-buffer))
-                         (color #f))
+                    (let ((dc (ask editor 'get-buffer))
+                          (color #f))
 
-                      (if custom-draw 
+                      (if (procedure? custom-draw)
                           ;; if there is a custom draw then draw using that
-                          (custom-draw dc x y bg-color selected? data)
+                          (begin
+                            (custom-draw dc x y bg-color selected? data)
+                            
+                            )
                           ;; if not draw default drawing
                           (default-node-draw show? selected?)
                           )
-                      
-                      ; should text drawing be default for all apps?
-                      ; draw the text           
+
+                      ;; custom draw text if any
                       (let-values
                           (((tw th td ta) (get-text-extent dc name text-height)))
-                        (drawtext dc
-                                  (- x (* tw 0.5)) (+ y (* th 0.5))
-                                  text-color bg-color name)))
-                    
+                        (if (procedure? custom-node-text-draw)
+                            (custom-node-text-draw dc x y tw th td ta text-color bg-color name text-height)
+                            (drawtext dc (- x (* tw 0.5)) (+ y (* th 0.5))
+                                      text-color bg-color name))))
+
                     ;; go through all in tab of this node and draw them
                     (do ((i 0 (+ i 1))) ((= i (hash-table-count tab-in)))
                         (let
@@ -730,7 +733,7 @@
                           (if show?
                               (ask tab 'show)
                               (ask tab 'hide))))
-                    
+
                     ;; go through all out tab of this node and draw them
                     (do ((i 0 (+ i 1))) ((= i (hash-table-count tab-out)))
                         (let
@@ -933,6 +936,10 @@
                   (obj-put this-obj 'set-custom-node-draw
                            (lambda (self drawfunc)
                              (set! custom-draw drawfunc)))
+                  (obj-put this-obj 'set-custom-node-text-draw
+                           (lambda (self func)
+                             (set! custom-node-text-draw func)
+                             ))
                   (obj-put this-obj 'set-node-color
                            (lambda (self in-color)
                              (set-node-color in-color)))
@@ -1548,7 +1555,6 @@
                             ; draw it first
                             (if bgdraw
                                 (bgdraw))
-                            ;(display "custom-hash size ")(display (hash-table-size custom-nodes-hash))(newline) 
 
                             (if (not (equal? (hash-table-size custom-nodes-hash) 0))
                                 (begin

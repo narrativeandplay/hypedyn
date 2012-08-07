@@ -44,7 +44,7 @@
 (require "../common/main-ui.scm") ; for get-main-ui-frame
 (require "../common/list-helpers.scm") ;; list-replace, list-insert
 
-(require "config-options.scm")
+(require "config-options.scm") ; choice-name-limit
 (require "datastructure.scm")
 (require "hteditor.scm")
 (require "hypedyn-undo.scm") ;; hd-postedit, hd-begin-update, hd-end-update
@@ -1491,6 +1491,8 @@
                  )
                 )
                ) actions)
+        (resize-all-action-panels)
+        (resize-all-condition-panels)
         )))
 
 ;;  ===========================
@@ -1678,12 +1680,17 @@
                  (let* ((thisnodeID (car n))
                         (thisnode (cdr n))
                         (name (ask thisnode 'name))
+                        (truncated-name
+                         ;; truncate fact name at choice-name-limit
+                         (if (> (string-length name) choice-name-limit)
+                             (string-append (substring name 0 choice-name-limit) "...")
+                             name))
                         (display-name (if (show-IDs?)
-                                          (string-append name
+                                          (string-append truncated-name
                                                          " ("
                                                          (number->string thisnodeID)
                                                          ")")
-                                          name))
+                                          truncated-name))
                         (anywhere (ask thisnode 'anywhere?)))
                    (if (and (not (eq? in-edited-nodeID thisnodeID))
                             (not (and excludeAnywhere anywhere)))
@@ -1716,12 +1723,17 @@
                  (let* ((thislinkID (car l))
                         (thislink (cdr l))
                         (name (ask thislink 'name))
+                        (truncated-name
+                         ;; truncate fact name at choice-name-limit
+                         (if (> (string-length name) choice-name-limit)
+                             (string-append (substring name 0 choice-name-limit) "...")
+                             name))
                         (display-name (if (show-IDs?)
-                                          (string-append name
+                                          (string-append truncated-name
                                                          " ("
                                                          (number->string thislinkID)
                                                          ")")
-                                          name)))
+                                          truncated-name)))
                    (add-comboboxwithdata-string link-list display-name thislinkID)))
                the-links)))
 
@@ -1756,8 +1768,8 @@
                         
                         (truncated-name
                          ;; truncate fact name at 20
-                         (if (> (string-length name) 20)
-                             (string-append (substring name 0 (- 20 3)) "...")
+                         (if (> (string-length name) choice-name-limit)
+                             (string-append (substring name 0 choice-name-limit) "...")
                              name))
                         
                         ;; name with ID
@@ -1805,11 +1817,11 @@
   ;; [action panel [ fact-panel [math-panel [operand-choice]]
   
   ;; number fact comparator
-  (define (make-comparator-panel)
+  (define (make-comparator-panel top-panel)
     (let ((comparator-panel (make-panel))
           (comparator-cb (make-combobox "=" "<" ">" "<=" ">=")))
       (add-component comparator-panel comparator-cb)
-      (add-component comparator-panel (make-operand-choice #f #f 'cond))
+      (add-component comparator-panel (make-operand-choice #f #f 'cond top-panel))
       (pack-component comparator-panel)
       comparator-panel))
   
@@ -1841,7 +1853,7 @@
                                        (make-combobox "Not Visited" "Visited")))
          (the-link-operator-choice (make-combobox "Not Followed" "Followed"))
          (the-fact-operator-choice (make-combobox "False" "True"))
-         (comparator-panel (make-comparator-panel))
+         (comparator-panel (make-comparator-panel top-panel))
          )
 
     (format #t "Creating condition-panel: targetID:~a, in-edited-nodeID:~a~%~!" targetID in-edited-nodeID)
@@ -2252,8 +2264,6 @@
   (let ((operand-choice (cadr child-lst)))
     (operand-panel-valid? operand-choice)))
 
-
-
 (define (all-conditions-valid?)
   (define (my-and lst)
     (if (null? lst) 
@@ -2313,11 +2323,77 @@
                ) (get-container-children pnl))
         )))
 
+;; TODO: shift this to component.scm or container.scm somewhere
+;; problem is it belongs to component.scm but needs get-container-children from container.scm
+;; skip-top-level allows us to skip packing for top most level
+(define (recursive-pack-component comp :: <java.awt.Component>
+                                  #!optional skip-top-level ) 
+  (let ((children (get-container-children comp)))
+    (map 
+     (lambda (child-comp)
+       (recursive-pack-component child-comp))
+       children)
+    (if (not skip-top-level)
+        (pack-component comp))
+    ))
+
+
+(define (resize-selectable-panel ap)
+  ;; pack all its children component
+  (recursive-pack-component ap #t)
+  
+  ;; return the preferred width
+  (get-preferred-width ap)
+  )
+
+;; type can be 'action or 'cond
+(define (resize-all-selectable-panel type)
+  
+  (define all-selectable-panels 
+    (get-container-children 
+     (case type
+       ((action) action-list-panel)
+       ((cond) condition-list-panel))))
+  
+  (define width-lst 
+    (map (lambda (selectable-panel)
+           (resize-selectable-panel selectable-panel))
+         all-selectable-panels))
+  
+  ;; update the maximum width for either action or condition panels
+  (define max-panel-width-loc
+    (case type
+      ((action) (location max-action-panel-width))
+      ((cond) (location max-action-panel-width))))
+  
+  (define panel-height
+    (case type
+      ((action) action-panel-height)
+      ((cond) cond-panel-height)))
+        
+  ;; update the maximum width 
+  ((setter max-panel-width-loc)
+   (apply max (cons (max-panel-width-loc) width-lst)))
+
+  (map (lambda (selectable-panel)
+         (set-component-non-resizable-size
+          selectable-panel
+          (max-panel-width-loc)
+          panel-height)
+         (component-revalidate selectable-panel))
+       all-selectable-panels) ;; end of let
+  )
+
+(define (resize-all-action-panels)
+  (resize-all-selectable-panel 'action))
+
+(define (resize-all-condition-panels)
+  (resize-all-selectable-panel 'cond))
+
 ;; resize parent action or condition panels with this
 ;; resizing is done by altering the maximum width or either action or cond panels
 ;; then set the max to that particular action/cond panel
 (define (resize-parent comp levels action-or-cond)
-  ;(display "resize ")(display levels)(newline)
   (if (> levels 0)
       (begin
         ;;(display "resize level ")(display levels)(newline)
@@ -2333,7 +2409,6 @@
               (resize-parent parent (- levels 1) action-or-cond))))
       (begin
         (define parent-panel-width #f)
-        ;;(display "comp resize parent ")(newline)(display comp)(newline)
         (case action-or-cond
           ((action)
            (set! max-action-panel-width
@@ -2347,21 +2422,17 @@
            (set! parent-panel-width max-cond-panel-width)
            ))
 
-        ;;(display "parent size here ")(display (get-preferred-width comp))(newline)
-        ;;(display "resize parent max action width ")(display max-action-panel-width)(newline) 
-        ;; debug
         (set-component-non-resizable-size comp
                                           parent-panel-width
                                           action-panel-height)
-        ;;(component-update comp)
-        ;;(component-revalidate comp)
         )))
 
 ;; operand choice returns a panel for inputing number facts value
 ;; 2 modes are provided now "Input" and "Fact" 
 ;; levels-to-parent is an int that gives the number of levels to go up before you hit the panel 
 ;;   we need to resize when  
-(define (make-operand-choice opr opr-type action-or-cond)
+;; top-panel can be the parent action panel or condition panel both are not direct parent
+(define (make-operand-choice opr opr-type action-or-cond top-panel)
   (let ((operand-panel (make-panel))
         (mode-choice (make-combobox "Input" "Fact"))
         (number-entry (make-textfield "0" 4))
@@ -2421,7 +2492,10 @@
             ((action) 3)
             ((cond) 2)))
 
-        (resize-parent operand-panel levels-to-parent action-or-cond)
+        ;(resize-parent operand-panel levels-to-parent action-or-cond)
+        (case action-or-cond
+          ((action) (resize-all-action-panels))  ;(resize-all-action-panel))
+          ((cond) (resize-all-condition-panels)))     ;(resize-all-condition-panel)))
         )))
     
     (add-actionlistener
@@ -2482,8 +2556,9 @@
 ;;  =============
 
 ;; create math UI
-(define (make-math-panel #!optional op opr1 opr1-type opr2 opr2-type)
-  (display "make math panel ")(display (list op opr1 opr1-type opr2 opr2-type))(newline)
+;; action-panel the parent action-panel
+(define (make-math-panel action-panel #!optional op opr1 opr1-type opr2 opr2-type)
+  ;;(display "make math panel ")(display (list op opr1 opr1-type opr2 opr2-type))(newline)
   (define math-panel (make-panel))
 
   (define operator-choice (make-combobox "+" "-" "x" "/" "%"))
@@ -2495,9 +2570,9 @@
       (set-combobox-selection-object operator-choice (create-combobox-string-item op)))
   (set-container-layout math-panel 'horizontal)
   (add-components math-panel
-                  (make-operand-choice opr1 opr1-type 'action)
+                  (make-operand-choice opr1 opr1-type 'action action-panel)
                   operator-choice
-                  (make-operand-choice opr2 opr2-type 'action))
+                  (make-operand-choice opr2 opr2-type 'action action-panel))
   ;; to trigger the panel resize
   
   (pack-component math-panel)
@@ -2519,14 +2594,6 @@
       (set-combobox-selection-object op-cb (create-combobox-string-item op))
       (set-operand-choice opr1-cb opr1 opr1-type 'action)
       (set-operand-choice opr2-cb opr2 opr2-type 'action)
-      
-      
-      ;(component-update math-panel)
-      ;(component-revalidate math-panel)
-      ;(pack-component math-panel)
-      ;(component-update math-panel)
-      ;(component-revalidate math-panel)
-      ;(resize-parent math-panel 2 'action)
       )))
 
 (define (set-random-panel random-panel val-lst)
@@ -2541,22 +2608,15 @@
           (opr2-cb (list-ref comp-lst 3)))
       (set-operand-choice opr1-cb opr1 opr1-type 'action)
       (set-operand-choice opr2-cb opr2 opr2-type 'action)
-      
-      ;(component-update random-panel)
-      ;(component-revalidate random-panel)
-      ;(pack-component random-panel)
-      ;(component-update random-panel)
-      ;(component-revalidate random-panel)
-      ;(resize-parent random-panel 2 'action)
       )))
 
-(define (make-random-panel #!optional opr1 opr1-type opr2 opr2-type)
+(define (make-random-panel action-panel #!optional opr1 opr1-type opr2 opr2-type)
   (define random-panel (make-panel))
   (set-container-layout random-panel 'horizontal)
   (define betw-label (make-label-with-title " between "))
   (define and-label (make-label-with-title " and "))
-  (define opr-choice1 (make-operand-choice opr1 opr1-type 'action))
-  (define opr-choice2 (make-operand-choice opr2 opr2-type 'action))
+  (define opr-choice1 (make-operand-choice opr1 opr1-type 'action action-panel))
+  (define opr-choice2 (make-operand-choice opr2 opr2-type 'action action-panel))
   (add-components random-panel
                   betw-label
                   opr-choice1
@@ -2712,14 +2772,16 @@
           (("Math")
            ;; only create math-panel once (to values when switching between modes)
            (if (not math-panel)
-               (set! math-panel (make-math-panel)))
+               (set! math-panel (make-math-panel top-panel)))
            (add-component top-panel math-panel)
            )
           (("Random")
            (if (not random-panel)
-               (set! random-panel (make-random-panel)))
+               (set! random-panel (make-random-panel top-panel)))
            (add-component top-panel random-panel)
            ))
+        
+        (resize-all-action-panels)
         
         (component-revalidate top-panel)
         (pack-component top-panel)

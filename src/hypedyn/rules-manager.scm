@@ -41,7 +41,7 @@
 (require "../common/list-helpers.scm") ;; swap-left swap-right  
  
 (require "nodeeditor.scm") ;get-nodeeditor-frame
-(require "config-options.scm") ;; is-undo-enabled?
+(require "config-options.scm") ;; is-undo-enabled? rule-name-limit
 (require "hypedyn-undo.scm") ;; undo-action, cache-rule
 (require "editlink.scm") ;; doeditlink, set-edit-mode
 (require "datastructure.scm") ;; create-typed-rule2
@@ -122,9 +122,8 @@
          (rule-name (ask rule-obj 'name)))
     
     ;; truncate rule name display
-    (define limit 40)
-    (if (> (string-length rule-name) limit)
-        (set! rule-name (string-append (substring rule-name 0 (- limit 3)) "...")))
+    (if (> (string-length rule-name) rule-name-limit)
+        (set! rule-name (string-append (substring rule-name 0 rule-name-limit) "...")))
     
     (if (show-IDs?)
         (to-string (string-append rule-name "(" (to-string ruleID) ")"))

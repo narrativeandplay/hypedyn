@@ -23,7 +23,7 @@
 (require "../common/datatable.scm") ;; get 
 (require "../kawa/graphics-kawa.scm")
 (require "../kawa/color.scm")
-(require "config-options.scm")
+(require "config-options.scm") ;; node-name-limit
 (require "datastructure.scm")
 (require "hypedyn-graphed-mouse.scm")
 
@@ -148,7 +148,31 @@
           ; set custom drawing
           (ask new-node 'set-custom-node-draw
                (lambda (dc x y bg-color selected? data)
-                 (draw-node new-node dc x y bg-color selected? data))))
+                 ;; truncate the node name 
+                 (draw-node new-node dc x y bg-color selected? data ))
+                 )
+        
+         ;; override the text drawing behavior of graph-editor
+          (ask new-node 'set-custom-node-text-draw
+               (lambda (dc x y tw th td ta text-color bg-color name text-height)
+                 (set! name
+                       (if (> (string-length name) node-name-limit)
+                           (string-append (substring name 0 node-name-limit) "...")
+                           name))
+                 (let-values
+                     (((tw1 th1 td1 ta1) (get-text-extent dc name text-height)))
+                   (drawtext dc (- x (* tw1 0.5)) (+ y (* th1 0.5)) text-color bg-color name))
+                 ))
+          
+          ;(ask new-node 'show (ask new-node 'is-selected?))
+          ;(ask this-obj 'update
+          
+          ;; draw the new node selected
+          (ask new-node 'show #t)
+          
+          ) ;; end of let
+        
+        
 
         ; set node emphasis
         (update-node-emphasis new-nodeID)))
@@ -157,6 +181,11 @@
     (define (draw-node this-node dc x y bg-color selected? data)
       (let ((color #f))
         (let-values (((width height) (ask this-node 'get-size)))
+          (define node-name (ask this-node 'get-name))
+          (if (> (string-length node-name) node-name-limit)
+              (begin
+                (set! width 150)
+                ))
           ; draw or undraw selected square
           (if selected?
               (set! color red-color)

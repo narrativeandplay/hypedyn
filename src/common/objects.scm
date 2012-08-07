@@ -236,13 +236,18 @@
         ;(apply <- (append (list obj argv)))
         (apply gotten-attr (append (list obj) argv))
         )
+      ;; Display Error
       (begin
         (newline)
         (display "NOT PROC ")(display gotten-attr)(newline)
         ;(display "obj ")(display obj)(newline)
         (display "prop ")(display prop)(newline)
         (display "argv ")(display argv)(newline)
-        (display "class ")(display (invoke gotten-attr 'get-class))(newline)
+        (if (and (not (void? gotten-attr))
+                 (not (null? gotten-attr)))
+            (begin
+              (display "class ")(display (invoke gotten-attr 'get-class))(newline)
+              ))
         gotten-attr
         )
       ))
