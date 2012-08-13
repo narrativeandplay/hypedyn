@@ -243,7 +243,9 @@
               ;; add 1 because we always pass self as a mandatory argument
               (define (arg-num-check proc)
                 (and (>= (+ (length argv) 1) (invoke proc 'min-args))
-                     (<= (+ (length argv) 1) (invoke proc 'max-args))))
+                     (<= (+ (length argv) 1) (invoke proc 'max-args)))
+                
+                )
               
               (if (arg-num-check gotten-proc)
                   (apply gotten-proc (append (list obj) argv))

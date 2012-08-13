@@ -978,7 +978,6 @@
     ;; make-input-dialogbox-check-empty ensure no "" empty string 
     (if (not (is-null? newname)) ;; null when canceled
         (begin
-          (display "setting new node name ")(display newname)(newline)
           (rename-node selected-nodeID newname)
           (post-rename-node-undoable-event selected-nodeID oldname newname)
           ))

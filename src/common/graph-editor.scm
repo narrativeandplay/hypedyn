@@ -524,10 +524,10 @@
                           (ask tab 'y-set! (+ (+ y (/ height 2.0)) (* tab-height 0.5))))))
 
                   (define (set-emph-height in-height)
-                    (hide #f)
+                    (ask self 'hide self )
                     (set! emph-height in-height)
                     (set! height (get-real-height))
-                    (show #f)
+                    (ask self 'show #f)
                     (ask editor 'layout id))
 
                   ; check whether any of the tabs is connected
@@ -541,7 +541,7 @@
                       connected?))
 
                   ; default tab-decr
-                  (define (tab-decr tab-list type)
+                  (define (tab-decr self tab-list type)
                     (let*
                         ((n (hash-table-count tab-list)))
                       (if (> n 0)
@@ -554,7 +554,7 @@
                                      (no (hash-table-count tab-out))
                                      (max-width #f)
                                      (req-width (* (+ n n 0.0) tab-width)))
-                                  (hide #f)
+                                  (ask self 'hide #f)
                                   (hash-table-remove! tab-list n)
                                   (if (equal? type 'in)
                                       (set! max-width (max (* (- (+ ni ni) 1.0) tab-width)
@@ -570,12 +570,12 @@
                                             ((tab (hash-table-get tab-list i #f)))
                                           (ask tab 'x-set! sx)
                                           (set! sx (+ sx (* 2.0 tab-width))))))
-                                  (show #f)
+                                  (ask self 'show #f)
                                   (ask editor 'my-on-paint)))))))
 
                   ;; the default tab-incr
                   (define (tab-incr self tab-list type . name)
-                    (hide #f)
+                    (ask self hide #f)
                     (let*((n (hash-table-count tab-list))
                           (ni (hash-table-count tab-in))
                           (no (hash-table-count tab-out))
@@ -608,7 +608,7 @@
                                    type self editor tab-name)))
                           (hash-table-put! tab-list n tab)
                           tab))
-                      (show #f)
+                      (ask self 'show #f)
                       (ask editor 'layout id)
                       ))
                   
@@ -700,8 +700,8 @@
                                   (drawnodesquare dc show? (+ x 2.0) (- y 2.0))))
                             (drawnodesquare dc show? x y))))
                   
-                  ;; draw the node
-                  (define (draw show? selected?)
+                  ;; draw the node (overriden in hypedyn)
+                  (define (draw self show? selected?)
                     (set! visible? show?)
                     (set! is-selected? selected?)
                     (let ((dc (ask editor 'get-buffer))
@@ -721,9 +721,9 @@
                       (let-values
                           (((tw th td ta) (get-text-extent dc name text-height)))
                         (if (procedure? custom-node-text-draw)
-                            (custom-node-text-draw dc x y tw th td ta text-color bg-color name text-height)
+                            (custom-node-text-draw dc x y tw th td ta text-color bg-color (ask self 'name) text-height)
                             (drawtext dc (- x (* tw 0.5)) (+ y (* th 0.5))
-                                      text-color bg-color name))))
+                                      text-color bg-color (ask self 'name)))))
 
                     ;; go through all in tab of this node and draw them
                     (do ((i 0 (+ i 1))) ((= i (hash-table-count tab-in)))
@@ -742,12 +742,12 @@
                               (ask tab 'hide))))
                     )
 
-                  (define (show selected?)
-                    (draw #t selected?)
+                  (define (show self selected?)
+                    (ask self 'draw #t selected?)
                     )
 
-                  (define (hide selected?)
-                    (draw #f selected?)
+                  (define (hide self selected?)
+                    (ask self 'draw #f selected?)
                     )
 
                   ;; node on mouse
@@ -772,17 +772,17 @@
                      (else #f)))
 
                   ; set node colour
-                  (define (set-node-color in-color)
+                  (define (set-node-color self in-color)
                     (begin
                       (set! node-color in-color)
-                      (draw visible? is-selected?)
+                      (ask self 'draw visible? is-selected?)
                       (ask editor 'my-refresh)))
 
                   ; set text colour
-                  (define (set-text-color in-color)
+                  (define (set-text-color self in-color)
                     (begin
                       (set! text-color in-color)
-                      (draw visible? is-selected?)
+                      (ask self 'draw visible? is-selected?)
                       (ask editor 'my-refresh)))
 
                   ;; initialize
@@ -818,7 +818,7 @@
 ;                                          'out self editor)))
                     )
 
-                  ;; public methods
+                  ;; NODE public methods
                   (obj-put this-obj 'init
                            (lambda (self) (init self)))
                   (obj-put this-obj 'get-data
@@ -832,10 +832,10 @@
                   (obj-put this-obj 'set-name
                            (lambda (self str)
                              (begin
-                               (hide #f)
-                               (set! name str)
+                               (ask self 'hide #f)
+                               (ask self 'set-name! str)
                                (set! width (get-real-width))
-                               (show #f)
+                               (ask self 'show #f)
                                (ask editor 'layout id))))
                   (obj-put this-obj 'get-x
                            (lambda (self) x))
@@ -843,12 +843,16 @@
                            (lambda (self) y))
                   (obj-put this-obj 'get-style
                            (lambda (self) style))
+                  (obj-put this-obj 'get-visible?
+                           (lambda (self) visible?))
+                  (obj-put this-obj 'get-selected?
+                           (lambda (self) is-selected?))
                   (obj-put this-obj 'set-style
                            (lambda (self in-style)
                              (begin
-                               (hide #f)
+                               (ask self 'hide #f)
                                (set! style in-style)
-                               (show #f)
+                               (ask self 'show #f)
                                (ask editor 'layout id))))
                   (obj-put this-obj 'is-shown?
                            (lambda (self) visible?))
@@ -910,10 +914,10 @@
                              (tab-connected? tab-out)))
                   (obj-put this-obj 'tab-in-decr
                            (lambda (self)
-                             (tab-decr tab-in 'in)))
+                             (tab-decr self tab-in 'in)))
                   (obj-put this-obj 'tab-out-decr
                            (lambda (self)
-                             (tab-decr tab-out 'out)))
+                             (tab-decr self tab-out 'out)))
                   (obj-put this-obj 'tab-in-incr
                            (lambda (self . portname)                 ;ioblocks need portname
                              (if (not (null? portname))
@@ -924,11 +928,10 @@
                              (if (not (null? portname))
                                  (tab-incr self tab-out 'out (car portname))
                                  (tab-incr self tab-out 'out ))))
-                  (obj-put this-obj 'show
-                           (lambda (self selected?) (show selected?)))
-                          ;; for hide shouldn't we just don't draw?
-                  (obj-put this-obj 'hide
-                           (lambda (self selected?) (hide selected?)))
+                  (obj-put this-obj 'show show)
+                  ;; for hide shouldn't we just don't draw?
+                  (obj-put this-obj 'hide hide)
+                  (obj-put this-obj 'draw draw)
                   (obj-put this-obj 'on-mouse
                            (lambda (self type cx cy)
                              (on-mouse self type cx cy)))
@@ -939,12 +942,8 @@
                            (lambda (self func)
                              (set! custom-node-text-draw func)
                              ))
-                  (obj-put this-obj 'set-node-color
-                           (lambda (self in-color)
-                             (set-node-color in-color)))
-                  (obj-put this-obj 'set-text-color
-                           (lambda (self in-color)
-                             (set-text-color in-color)))
+                  (obj-put this-obj 'set-node-color set-node-color)
+                  (obj-put this-obj 'set-text-color set-text-color)
                   (obj-put this-obj 'set-size
                            (lambda (self newwidth newheight)
                              (set! width newwidth)
@@ -1406,7 +1405,8 @@
                             ;; no after-line-del in ioblocks's callback
                             (if callback
                                 (callback 'after-line-del #f))
-                            (my-on-paint)))))
+                            (my-on-paint))))
+                    )
                   
                   ;; create a subclass of node without putting it in the node hash
 ;                  (define (custom-wrap-anode editor data name x y style superclass-wrapper)
@@ -1430,8 +1430,6 @@
                         ;; put into nodes hash
                         (hash-table-put! nodes max-id custom-node)
                         (set! max-id (+ max-id 1))
-                        ;;                                 (display "name key class ")(display (invoke namekey 'get-class))(newline)
-                        ;;                                 (display "custom node add success")(newline)
 
                         ;; ensure that the node is not outside of screen
                         (let-values

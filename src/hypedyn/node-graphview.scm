@@ -125,35 +125,6 @@
     (define (custom-tab-draw dc type show?)
       #t)
     
-    
-    ;; TODO: subclass of node should be able to override 
-    ;; 1) truncating name behavior without putting in callbacks
-    ;; 2) drawing function without putting in callbacks
-    ;;  the main obstacle now is that within the old node, it is still calling the draw inside the old node.
-    ;;  in order for subclass to work, all the calls to internal functions should use (ask node 'message) instead of calling directly
-    (define (create-graph-node ID name x y style)
-      
-      (define (create-node-wrapper in-node)
-        
-        (let ((this-obj (new-object in-node))
-              (width 0.0)
-              (height 0.0))
-          
-          ;; override get-size
-          (obj-put this-obj 'get-size
-                   (lambda (self)
-                     ;; get the default width and height and override it
-                     (let-values (((old-width old-height) (ask in-node 'get-size)))
-                       (values (if (> (string-length (ask in-node 'name)) node-name-limit)
-                                   150
-                                   old-width)
-                               old-height))))
-          ))
-
-      (ask (ask parent-obj 'get-graph-editor) 'custom-node-add
-           ID name x y style create-node-wrapper)
-      )
-    
     ; update node display in graph view
     (define (add-node new-nodeID name x y)
       (let* ((the-style (if (has-alt-text? new-nodeID)
@@ -205,77 +176,136 @@
         
         ; set node emphasis
         (update-node-emphasis new-nodeID)))
+    
+    ;; custom drawing of nodes
+          (define (draw-node this-node dc x y bg-color selected? data)
+            (let ((color #f))
+              (let-values (((width height) (ask this-node 'get-size)))
+                
+                (define node-name (ask this-node 'get-name))
+                ;; draw or undraw selected square
+                (if selected?
+                    (set! color red-color)
+                    (set! color bg-color))
+                (rectangle-fill dc
+                                (- x (/ width 2.0) 4)
+                                (- y (/ height 2.0) 4)
+                                (+ x (/ width 2.0) 5)
+                                (+ y (/ height 2.0) 5)
+                                color 'solid)
 
-        ; custom drawing of nodes
-    (define (draw-node this-node dc x y bg-color selected? data)
-      (let ((color #f))
-        (let-values (((width height) (ask this-node 'get-size)))
-          (define node-name (ask this-node 'get-name))
-;          (if (> (string-length node-name) node-name-limit)
-;              (begin
-;                (set! width 150)
-;                ))
-          ; draw or undraw selected square
-          (if selected?
-              (set! color red-color)
-              (set! color bg-color))
-          (rectangle-fill dc
-                          (- x (/ width 2.0) 4)
-                          (- y (/ height 2.0) 4)
-                          (+ x (/ width 2.0) 5)
-                          (+ y (/ height 2.0) 5)
-                          color 'solid)
+                ;; draw node square
+                (drawnodesquare dc #t x y width height)
+                ))
+            )
+          
+          ; draw node square helper 
+          (define (drawnodesquare dc show? bx by width height)
+                                        ; draw the node square
+                                        ; draw boundary border
+            (if show?
+                (rectangle-fill dc
+                                (- bx (/ width 2.0))
+                                (- by (/ height 2.0))
+                                (+ bx (/ width 2.0))
+                                (+ by (/ height 2.0))
+                                default-node-color 'solid) ;dark-grey-color 'solid)
+                (rectangle-fill dc
+                                (- bx (/ width 2.0))
+                                (- by (/ height 2.0))
+                                (+ bx (/ width 2.0))
+                                (+ by (/ height 2.0))
+                                white-color 'solid))
 
-          ; draw node square
-          (drawnodesquare dc #t x y width height))))
+                                        ; draw a white line on top and left
+            (drawline dc
+                      (- bx (/ width 2.0))
+                      (- by (/ height 2.0))
+                      (- bx (/ width 2.0))
+                      (+ by (/ height 2.0))
+                      white-color 'solid)
+            (drawline dc
+                      (- bx (/ width 2.0))
+                      (- by (/ height 2.0))
+                      (+ bx (/ width 2.0))
+                      (- by (/ height 2.0))
+                      white-color 'solid)
 
-    ; draw node square helper 
-    (define (drawnodesquare dc show? bx by width height)
-      ; draw the node square
-      ; draw boundary border
-      (if show?
-          (rectangle-fill dc
-                          (- bx (/ width 2.0))
-                          (- by (/ height 2.0))
-                          (+ bx (/ width 2.0))
-                          (+ by (/ height 2.0))
-                          default-node-color 'solid) ;dark-grey-color 'solid)
-          (rectangle-fill dc
-                          (- bx (/ width 2.0))
-                          (- by (/ height 2.0))
-                          (+ bx (/ width 2.0))
-                          (+ by (/ height 2.0))
-                          white-color 'solid))
+                                        ; draw a black line on bottom and right
+            (drawline dc
+                      (- bx (/ width 2.0))
+                      (- (+ by (/ height 2.0)) 1.0)
+                      (+ bx (/ width 2.0))
+                      (- (+ by (/ height 2.0)) 1.0)
+                      black-color 'solid)
+            (drawline dc
+                      (+ bx (/ width 2.0))
+                      (- by (/ height 2.0))
+                      (+ bx (/ width 2.0))
+                      (- (+ by (/ height 2.0)) 1.0)
+                      black-color 'solid)
+            )
 
-      ; draw a white line on top and left
-      (drawline dc
-                (- bx (/ width 2.0))
-                (- by (/ height 2.0))
-                (- bx (/ width 2.0))
-                (+ by (/ height 2.0))
-                white-color 'solid)
-      (drawline dc
-                (- bx (/ width 2.0))
-                (- by (/ height 2.0))
-                (+ bx (/ width 2.0))
-                (- by (/ height 2.0))
-                white-color 'solid)
+     ;; TODO: subclass of node should be able to override 
+    ;; 1) truncating name behavior without putting in callbacks
+    ;; 2) drawing function without putting in callbacks
+    ;;  the main obstacle now is that within the old node, it is still calling the draw inside the old node.
+    ;;  in order for subclass to work, all the calls to internal functions should use (ask node 'message) instead of calling directly
+    (define (create-graph-node ID name x y style)
+      
+      (define (create-node-wrapper in-node)
+        (let ((this-obj (new-object in-node))
+              (width 0.0)
+              (height 0.0))
 
-      ; draw a black line on bottom and right
-      (drawline dc
-                (- bx (/ width 2.0))
-                (- (+ by (/ height 2.0)) 1.0)
-                (+ bx (/ width 2.0))
-                (- (+ by (/ height 2.0)) 1.0)
-                black-color 'solid)
-      (drawline dc
-                (+ bx (/ width 2.0))
-                (- by (/ height 2.0))
-                (+ bx (/ width 2.0))
-                (- (+ by (/ height 2.0)) 1.0)
-                black-color 'solid)
-      )
-
+          (define (local-draw self show? selected?)
+            
+                               ;(draw show? selected?)
+                     ;(display "graph editor ")(display the-graph-editor)(newline)
+                     ;#f
+                     ;(let ((dc (ask (ask parent-obj 'get-graph-editor) 'get-buffer)))
+                     ;  (display "DC ")(display dc)(newline)
+                       (draw-node self
+                                   (ask (ask parent-obj 'get-graph-editor) 'get-buffer)
+                     ;             #f #f #f #f #f #f);dc
+                                  (ask self 'get-x)
+                                  (ask self 'get-y)
+                                  bg-color
+                                  (ask self 'get-selected?)
+                                  (ask self 'get-data))
+            
+            ;(draw-node self #f #f #f #f #f #f)
+            ;(local-draw self show? selected?)
+            (display "local draw ")(newline)
+            )
+          
+          ;; use underlying draw for the moment
+          ;;(obj-put this-obj 'draw local-draw)
+          
+          ;; override get-size
+          (obj-put this-obj 'get-size
+                   (lambda (self)
+                     ;; get the default width and height and override it
+                     (let-values (((old-width old-height) (ask in-node 'get-size)))
+                       
+                       (values (if (> (string-length (ask in-node 'name)) node-name-limit)
+                                   150
+                                   old-width)
+                               old-height))))
+                     )) ;; end of wrapper
+;      
+;      (define create-node-wrapper 
+;        (lambda (a) 
+;          (ask parent-obj 'get-graph-editor)
+;          a)
+;        )
+      
+      ;; TODO DEBUG THIS there is no way of passing a create-node-wrapper that has a reference to anything outside this function scope
+      ;; this the one that throws exception
+      (ask (ask parent-obj 'get-graph-editor) 'custom-node-add
+           ID name x y style create-node-wrapper)
+        )
+    
     ; helper to check if node has any alt text
     ;; TODO: remove outdated
     (define (has-alt-text? thisnodeID)
