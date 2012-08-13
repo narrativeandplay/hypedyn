@@ -83,13 +83,94 @@
 
 ; open: optional arg for filename, if no arg passed then show file dialogue
 (define (doopen . args)
-  (if
-      ; check if data has changed
-      (confirm-save)
+  ; check if data has changed
+  (if (confirm-save)
       ; safe, so proceed
       (let ((newfilename (if (pair? args) (car args) (get-file-to-open (get-last-saved-dir) #f (list ".dyn")))))
         (open-file-by-name newfilename)
         (set-runstate #f))))
+
+;; used when opening and importing files
+;; return file-version-number when accepted
+;; return #f when incompatible or canceled
+(define (open-file-version-check! newfilename)
+  
+  ;; the version of hypedyn that saved this file
+  (define file-version-number 1)
+  (define file-type #f)
+  (define (get-version-number lst)
+    (if (and (pair? lst)
+             (equal? (car lst) 'make-hypertext))
+        (begin
+          ;(display "[make ht found!] ")(display lst)(newline)
+          (set! file-version-number (list-ref lst 2))
+          (set! file-type (list-ref (list-ref lst 1) 1))
+          ;(display "file-version num ")(display file-version-number)(newline)
+          ;(display "file type ")(display file-type)(newline)
+          ))
+    )
+  (parse-sexpr-file newfilename get-version-number)
+  
+  ;; incompatible conditions or conditions that need notifications
+  (cond ((not (equal? file-type (get-fileformat-type))) ;; file format does not match htfe
+         ;; error dialog
+         (make-error-dialog (get-main-ui-frame)
+                            "Hypedyn Open Error"
+                            (string-append
+                             "Error: this is not a HypeDyn file"
+                             (if (symbol? file-type)
+                                 (string-append " (type: " (symbol->string file-type) ").")
+                                 ".")))
+         #f
+         )
+        ;; opening file saved in older versions of hypedyn (or same version if equal)
+        ((>= (get-fileformat-version) file-version-number)
+
+         (define open-choice #f)
+         (define diff-version? (not (= (get-fileformat-version) file-version-number)))
+
+         ;; newer app opening older file
+         ;; warn here when opening 
+         (if diff-version?
+                                        ;(make-confirm-dialogbox #!null 1 "Sorry, no start node defined.")
+             (begin
+               (set! open-choice (make-confirm-dialogbox
+                                  (get-main-ui-frame)
+                                  4
+                                  (string-append
+                                   "Warning: Opening a file saved in an older version ("
+                                   (to-string file-version-number)
+                                   ").\nFile will be saved as version "
+                                   (to-string (get-fileformat-version))
+                                   ".")
+                                  ))
+               )
+             )
+
+         ;; user decides to open the file anyway 
+         ;; or it is of the same version 
+         ;; these are the only condition to go ahead with loading
+         (if (or (and diff-version?
+                      (equal? open-choice 1))
+                 (not diff-version?))
+             file-version-number
+             #f)
+         )
+        ;; older app opening newer file
+        ((< (get-fileformat-version) file-version-number)
+         ;; error dialog
+         (make-error-dialog (get-main-ui-frame)
+                            "Hypedyn Open Error"
+                            (string-append
+                             "Error: Trying to open a file saved in a newer version ("
+                             (to-string file-version-number)
+                             ").\nPlease try again using HypeDyn version "
+                             (to-string file-version-number)
+                             " or later.")
+                            )
+         #f
+         ))
+  )
 
 ; actually open the file given a path, used by doopen and doopenrecent
 (define (open-file-by-name newfilename)
@@ -109,95 +190,33 @@
            ; clear the UI
            (clear-display)
 
-           ;; the version of hypedyn that saved this file
-           (define file-version-number 1)
-           (define file-type #f)
-           (define (get-version-number lst)
-             (if (and (pair? lst)
-                      (equal? (car lst) 'make-hypertext))
+           ;; version-check checks whether the version number on the file is compatible
+           ;; if older versions ask for confirmation
+           ;; if incompatible file-version-number is false
+           (let ((file-version-number (open-file-version-check! newfilename)))
+             (if file-version-number
                  (begin
-                   (display "[make ht found!] ")(display lst)(newline)
-                   (set! file-version-number (list-ref lst 2))
-                   (set! file-type (list-ref (list-ref lst 1) 1))
-                   (display "file-version num ")(display file-version-number)(newline)
-                   (display "file type ")(display file-type)(newline)
-                   ))
-             )
-           (parse-sexpr-file newfilename get-version-number)
-           
-           ;; check loading conditions
-           (cond ((not (equal? file-type (get-fileformat-type))) ;; file format does not match htfe
-                  ;; error dialog
-                  (make-error-dialog (get-main-ui-frame)
-                                     "Hypedyn Open Error"
-                                     (string-append
-                                      "Error: this is not a HypeDyn file"
-                                      (if (symbol? file-type)
-                                          (string-append " (type: " (symbol->string file-type) ").")
-                                          "."))))
-                 ;; opening file saved in older versions of hypedyn (or same version if equal)
-                 ((>= (get-fileformat-version) file-version-number) 
-                  
-                  (define open-choice #f)
-                  (define diff-version? (not (= (get-fileformat-version) file-version-number)))
+                   (set! loaded-file-version file-version-number)
                    
-                  ;; newer app opening older file
-                  ;; warn here when opening 
-                  (if diff-version?
-                      ;(make-confirm-dialogbox #!null 1 "Sorry, no start node defined.")
-                      (begin
-                        (set! open-choice (make-confirm-dialogbox
-                                           (get-main-ui-frame)
-                                           4
-                                           (string-append
-                                            "Warning: Opening a file saved in an older version ("
-                                            (to-string file-version-number)
-                                            ").\nFile will be saved as version "
-                                            (to-string (get-fileformat-version))
-                                            ".")
-                                           ))
-                        )
-                      )
-                  
-                  
-                  (display "diff-version? ")(display diff-version?)(newline)
-                  
-                  ;; user decides to open the file anyway 
-                  ;; or it is of the same version 
-                  (if (or (and diff-version?
-                               (equal? open-choice 1))
-                          (not diff-version?))
-                      (begin
-                        (set! loaded-file-version file-version-number)
-                        ; load from file
-                        (if (load-from-file newfilename)
-                            (begin
-                              (add-recent-file newfilename)  ;; add to recent menu
-                              (obj-conversion-2.2)           ;; if loading pre 2.2 objects convert to post 2.2 format
-                              (populate-display)             ;; populate the display (important to convert first)
-                              ))
-                        )))
-                 ;; older app opening newer file
-                 ((< (get-fileformat-version) file-version-number)
-                  ;; error dialog
-                  (make-error-dialog (get-main-ui-frame)
-                                     "Hypedyn Open Error"
-                                     (string-append
-                                      "Error: Trying to open a file saved in a newer version ("
-                                      (to-string file-version-number)
-                                      ").\nPlease try again using HypeDyn version "
-                                      (to-string file-version-number)
-                                      " or later.")
-                                     )
-                  ))
+                   ;; if different version then mark the new objects for conversion
+                   (if (not (= (get-fileformat-version) file-version-number))
+                       (set-conversion-flag! #t))
+                   
+                   ;; load from file
+                   (define load-file-result (load-from-file newfilename))
+                   
+                   (if (not (= (get-fileformat-version) file-version-number))
+                       (set-conversion-flag! #f))
+                   
+                   (if load-file-result
+                       (begin
+                         (add-recent-file newfilename)  ;; add to recent menu
+                         (obj-conversion-2.2)           ;; if loading pre 2.2 objects convert to post 2.2 format
+                         (populate-display)             ;; populate the display (important to convert first)
+                         ))
+                   )))
            ))
    (ex <java.lang.Throwable>
-   ;; extra to do after exception
-;     (make-message-box (get-main-ui-frame)
-;                       (*:toString ex)
-;                       "")
-       
-    ;(display (*:toString ex))(newline)
     (*:printStackTrace ex)
      ))
   
@@ -218,18 +237,86 @@
               ; clear the UI
               (clear-display)
 
+              ;; also asks for confirmations when file version is not the same
+              (define version-number (open-file-version-check! newfilename))
+              
+              (if version-number 
+                  (if (not (= (get-fileformat-version) version-number))
+                      (begin
+                        (add-recent-file newfilename)  ;; add to recent menu
+
+                        (define (cache-datatable name-sym)
+                          (let ((new-lst '()))
+                            (table-map
+                             name-sym
+                             (lambda (ID obj)
+                               ;; put into our tmp lst
+                               (set! new-lst
+                                     (cons (cons ID obj) new-lst))
+                               ;; delete from datatable
+                               (del name-sym ID)
+                               ))
+                            new-lst))
+
+                        ;(define tmp-node-lst (cache-datatable 'nodes))
+                        ;(define tmp-link-lst (cache-datatable 'links))
+                        ;(define tmp-fact-lst (cache-datatable 'facts))
+                        ;(define tmp-rule-lst (cache-datatable 'rules))
+                        ;(define tmp-action-lst (cache-datatable 'actions))
+                        ;(define tmp-cond-lst (cache-datatable 'conditions))
+
+                                        ;                    ;; import the file 
+                        (set-conversion-flag! #t)
+                        (define import-result (import-from-file newfilename))
+                        (set-conversion-flag! #f)
+                        
+                        (if import-result
+                            ;; convert the imported data
+                            (obj-conversion-2.2)           ;; if loading pre 2.2 objects convert to post 2.2 format
+                            )
+
+                        (define (restore-datatable name-sym lst)
+                                        ;(display "name sym ")(display name-sym)(newline)
+                          (map (lambda (pair)
+                                 (let ((ID (car pair))
+                                       (obj (cdr pair)))
+                                        ;(display " ID ")(display ID)(newline)
+                                        ;(display " obj ")(display obj)(newline)
+                                   (put name-sym ID obj)))
+                               lst)
+                                        ;(display "end of restore datatable ")(newline)
+                          )
+
+                                        ; (restore-datatable 'nodes tmp-node-lst)
+                                        ; (restore-datatable 'links tmp-link-lst)
+                                        ; (restore-datatable 'facts tmp-fact-lst)
+                                        ; (restore-datatable 'rules tmp-rule-lst)
+                                        ; (restore-datatable 'actions tmp-action-lst)
+                                        ; (restore-datatable 'conditions tmp-cond-lst)
+
+
+                        (populate-display)             ;; populate the display (important to convert first)
+                        )
+                      (begin
+                       (if (import-from-file newfilename)
+                           (obj-conversion-2.2))
+                       (populate-display))))
+              
+              
               ; import from file
-              (if (import-from-file newfilename)
-                  (begin
-                    
-                    ;; TODO needs work and testing
-                    ;; I would assume we need to do a object conversion in import as well
-                    ;; the below two lines is to be put in and tested
-                    ;; (add-recent-file newfilename)  ;; add to recent menu
-                    ;; (obj-conversion-2.2)           ;; if loading pre 2.2 objects convert to post 2.2 format
-                    
-                    ; populate the display
-                    (populate-display)))))))))
+;              (if (import-from-file newfilename)
+;                  (begin
+;                    
+;                    ;; TODO needs work and testing
+;                    ;; I would assume we need to do a object conversion in import as well
+;                    ;; the below two lines is to be put in and tested
+;                    ;; (add-recent-file newfilename)  ;; add to recent menu
+;                    ;;(obj-conversion-2.2)           ;; if loading pre 2.2 objects convert to post 2.2 format
+;                    
+;                    ; populate the display
+;                    (populate-display)))
+              
+              ))))))
 
 ; export to web (applet)
 (define (doexport-hypedyn-web)
@@ -502,30 +589,37 @@
 ;;  ==============================
 ;;;; pre 2.2 save file conversion
 ;;  ==============================
+
+;; use with care
+;; assumes whatever is inside the data table are all pre 2.2
+;; since there is no clear way to differentiate between pre 2.2 and post 2.2 
 (define (obj-conversion-2.2)
   (newline)
   (display "STARTed v2.2 conversion ")
   (newline)
   (newline)
   
-  (if (<= loaded-file-version 2.1)
-      (begin
+  ;(if (<= loaded-file-version 2.1)
+  ;    (begin
         (table-map 'links convert-pre-2.2-links)
         (table-map 'nodes convert-pre-2.2-nodes)
         ;(table-map 'actions convert-pre-2.2-actions)
-        )))
+  ;      ))
+  )
 
 (define (convert-pre-2.2-nodes nodeID node-obj)
+
+  ;;(display "converting node ")(display nodeID)(newline)
   ;; convert standard node
   (let* ((ruleID (ask node-obj 'rule))
          (rule-obj (get 'rules ruleID))
          (node-name (ask node-obj 'name))
          (anywhere? (ask node-obj 'anywhere?))
          (new-ruleID (create-typed-rule2 "Set fact" 'node 'and #f nodeID))
-         ;(conditions (ask rule-obj 'conditions))
-         ;(actions (ask rule-obj 'actions))
+                                        ;(conditions (ask rule-obj 'conditions))
+                                        ;(actions (ask rule-obj 'actions))
          )
-    
+
     ;; add the dummy add-anywhere-link action
     ;; (does nothing, just a place holder to let it show up in the rule editor)
     ;; Note: this however is important in the export to js 
@@ -533,74 +627,89 @@
         (create-action "Enable Link" 'anywhere-check
                        (list 'add-anywhere-link nodeID)
                        new-ruleID))
-    
+
     ;; add all actions to the new rule (only set fact actions are on pre 2.2 nodes)
-    (if rule-obj
-        (begin
-          (define actions (ask rule-obj 'actions))
-          (display "actions count in CONVERSION ")(display (length actions))(newline)
-          (map (lambda (actionID)
-                 (define action (get 'actions actionID))
-                 (define action-string (ask action 'expr))
-                 
-                 (define action-input-port (open-input-string action-string))
-                 (define action-sexpr (read action-input-port))
-                 
-                 (if (not (eof-object? action-sexpr))
-                     (begin
-                       (display "SEXPR ")(display action-sexpr)(newline)
-                       (display "pair? ")(display (pair? action-sexpr))(newline)
-                       (define new-rule (get 'rules new-ruleID))
-                       ;; set fact actions
-                       (create-action node-name 'entered-node
-                                      action-sexpr
-                                      new-ruleID)
-                       
-                       ;; remove the old actions 
-                       ;; that has expr in the string form
-                       (display "deleting old action ")(display actionID)(newline)
-                       (del 'actions actionID)
-                       
-                       ;;(create-condition name nodeID operator ruleID . args)
-                       ;; add the conditions to the rules
-                       ))
-                 ) actions)
-          
-          (display "actions count2 in CONVERSION ")(display (length (ask rule-obj 'actions)))(newline)
-          (display "actions ")(display (ask rule-obj 'actions))(newline)
-          (display "new-ruleID ")(display new-ruleID)(newline)
-          (display "new actions ")(display (ask (get 'rules new-ruleID) 'actions))(newline)
-          ;; transfer the condition from the original old rule to the new rules
-        ;(create-typed-condition2 name type targetID operator ruleID #!key fixedID comparator-args)
-        (define old-conditions (ask rule-obj 'conditions))
-        (map (lambda (condition)
-               (define this-cond (get 'conditions condition))
-               (let ((type (ask this-cond 'type))
-                     (targetID (ask this-cond 'targetID))
-                     (operator (ask this-cond 'operator)))
-                 (create-typed-condition2 "Enable link" type targetID operator new-ruleID))
-               ) old-conditions)
-          )
-          ;; no rule for node so no need to transfer anything to new rule
-        (begin
-          ;(display "no rule for node ")(display nodeID)(newline)
-          #f
-          ))
-  ))
+    (if (ask node-obj 'convert-flag)
+        (if rule-obj
+            (begin
+              ;;(display "REALLY converting node ")(display nodeID)(newline)
+              
+              ;; conversion underway for this one so the flag has done its job
+              (ask node-obj 'set-convert-flag! #f)
+
+              (define actions (ask rule-obj 'actions))
+              (display "actions count in CONVERSION ")(display (length actions))(newline)
+              (map (lambda (actionID)
+                     (define action (get 'actions actionID))
+                     (define action-string (ask action 'expr))
+
+                     (define action-input-port (open-input-string action-string))
+                     (define action-sexpr (read action-input-port))
+
+                     (if (not (eof-object? action-sexpr))
+                         (begin
+                           (display "SEXPR ")(display action-sexpr)(newline)
+                           (display "pair? ")(display (pair? action-sexpr))(newline)
+                           (define new-rule (get 'rules new-ruleID))
+                           ;; set fact actions
+                           (create-action node-name 'entered-node
+                                          action-sexpr
+                                          new-ruleID)
+
+                           ;; remove the old actions 
+                           ;; that has expr in the string form
+                           (display "deleting old action ")(display actionID)(newline)
+                           (del 'actions actionID)
+
+                           ;;(create-condition name nodeID operator ruleID . args)
+                           ;; add the conditions to the rules
+                           ))
+                     ) actions)
+
+              (display "actions count2 in CONVERSION ")(display (length (ask rule-obj 'actions)))(newline)
+              (display "actions ")(display (ask rule-obj 'actions))(newline)
+              (display "new-ruleID ")(display new-ruleID)(newline)
+              (display "new actions ")(display (ask (get 'rules new-ruleID) 'actions))(newline)
+              
+              ;; transfer the condition from the original old rule to the new rules
+              ;(create-typed-condition2 name type targetID operator ruleID #!key fixedID comparator-args)
+              (define old-conditions (ask rule-obj 'conditions))
+              (map (lambda (condition)
+                     (define this-cond (get 'conditions condition))
+                     (let ((type (ask this-cond 'type))
+                           (targetID (ask this-cond 'targetID))
+                           (operator (ask this-cond 'operator)))
+                       (create-typed-condition2 "Enable link" type targetID operator new-ruleID))
+                     ) old-conditions)
+              )
+            ;; no rule for node so no need to transfer anything to new rule
+            (begin
+              (ask node-obj 'set-convert-flag! #f)
+                                        ;(display "no rule for node ")(display nodeID)(newline)
+              #f
+              )))
+    ))
 
 ;; convertion of pre 2.2 links to 2.2 format
 ;; need to create 2 rules: one (if) with the conditions in the old rule and a "stop", the other (else) with no conditions
 ;; note old rules are still around in the datatable, just not invoked
 (define (convert-pre-2.2-links linkID link-obj)
   
-  (define version-one? (= loaded-file-version 1))
+  (display "converting link ")(display linkID)(newline)
   
-  ;(display "CONVERT LINKS pre 2.2")(newline)
-  (define selected-rule-ID (ask link-obj 'rule))
-  (if (or (not (eq? selected-rule-ID 'not-set))
-          version-one?)
-      (begin
+  (define version-one? (= loaded-file-version 1))
 
+                                        ;(display "CONVERT LINKS pre 2.2")(newline)
+  (define selected-rule-ID (ask link-obj 'rule))
+  (if ;(or (not (eq? selected-rule-ID 'not-set))
+      ;    version-one?)
+      (ask link-obj 'convert-flag)
+      (begin
+        ;; conversion underway for this one so the flag has done its job
+        (ask link-obj 'set-convert-flag! #f)
+        
+         (display "REALLY converting link ")(display linkID)(newline)
+        
         ;; NOTE: rule, destination, use-destination, use-alt-destination,
         ;;       use-alt-text, alt-destination, alt-text
         ;;       should not be removed but should be kept as a compatibility layer so that the 
@@ -608,7 +717,7 @@
         ;; TODO: move these attributes out to a separate object type inherited by the new link
         (define selected-rule (get 'rules selected-rule-ID))
         (define link-name (ask link-obj 'name))
-        
+
         ;; old attributes
         (define link-dest1 (ask link-obj 'destination))
         (define link-uselink (ask link-obj 'use-destination))
@@ -616,15 +725,15 @@
         (define link-usealttext (ask link-obj 'use-alt-text))
         (define link-dest2 (ask link-obj 'alt-destination))
         (define link-alttext (ask link-obj 'alt-text))
-        
+
         (define link-start-index (ask link-obj 'start-index))
         (define link-end-index (ask link-obj 'end-index))
-        
-        (define and-or 
+
+        (define and-or
           (if version-one?
               'and
               (ask selected-rule 'and-or)))
-        
+
         (define if-rule-ID (create-typed-rule3 "IF" 'link and-or #f linkID fall-through?: #f))
         (define else-rule-ID (create-typed-rule2 "ELSE" 'link and-or #f linkID))
         (define if-rule (get 'rules if-rule-ID))
@@ -639,7 +748,7 @@
                                  (list 'replace-link-text
                                        "alternative text"
                                        link-alttext
-                                       ;(string-append "\"" link-alttext "\"")
+                                        ;(string-append "\"" link-alttext "\"")
                                        linkID)
                                  else-rule-ID))
                 ;; if use-alt-text is a factID use fact text
@@ -662,6 +771,9 @@
                                  (list 'quote 'default)
                                  link-dest1)
                            if-rule-ID))
+        
+        (display "else ruleID ")(display else-rule-ID)(newline)
+        (display "link-dest2 ")(display link-dest2)(newline)
 
         ;; link-dest2 is used in the else so it should be in the not rules instead
         (if (not (equal? link-dest2 -1))

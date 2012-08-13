@@ -111,6 +111,7 @@
 (define (get-list lst-sym-ID) (ask global-table 'get-list lst-sym-ID))
 
 (define (put lst-sym-ID value-ID value)
+  ;(display "put ")(display lst-sym-ID)(display " ")(display value-ID)(newline)
   (ask global-table 'put lst-sym-ID value-ID value))
 (define (get lst-sym-ID value-ID)
   (ask global-table 'get lst-sym-ID value-ID))

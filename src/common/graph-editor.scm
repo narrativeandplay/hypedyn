@@ -274,12 +274,11 @@
                   ;; draw the tab
                   (define (draw show?)
                     (set! visible? show?)
-                    (let*
-                        ((dc (ask editor 'get-buffer))
-                         (parent-node node)
-;                         (ioblocks-node? (is-ioblocks-node? parent-node));(member 'ioblocks-node (ask parent-node 'get-style) ))
-;                         (hidden-tabs? (member 'hidden-tabs (ask parent-node 'get-style) ))
-                         )
+                    (let* ((dc (ask editor 'get-buffer))
+                           (parent-node node)
+                           ;;                         (ioblocks-node? (is-ioblocks-node? parent-node));(member 'ioblocks-node (ask parent-node 'get-style) ))
+                           ;;                         (hidden-tabs? (member 'hidden-tabs (ask parent-node 'get-style) ))
+                           )
                       
                       ;; use custom draw if it is set
                       (if custom-tab-draw 
@@ -293,6 +292,7 @@
                              (ask lin 'show)
                              (ask lin 'hide)))
                        lines)
+                      
                       ))
 
                   (define (drawtabsquare dc show? bx by)
@@ -441,7 +441,6 @@
                        (node-color default-node-color)
                        (text-color white-color)
                        (node-type #f))
-                  
                   
                   ;; private methods
 
@@ -1171,6 +1170,7 @@
                             (hash-table-put! nodes id node)
                             ; increment the maximum id number
                             (set! max-id (+ max-id 1))
+                            
                             ; ensure that the node is not outside of screen
                             (let-values
                                 (((w h) (ask node 'get-size)))
@@ -1178,11 +1178,13 @@
                                   (ask node 'x-set! (* w 0.5)))
                               (if (< y 0)
                                   (ask node 'y-set! (* 0.5 (+ h tab-height tab-height)))))
+                            
                             ; do a full layout
                             (layout id)
                             ;; no after-node-add in ioblocks's callback
                             (if callback
                                 (callback 'after-node-add node))
+                            
                             node)
                           #f)))
 
@@ -1216,6 +1218,7 @@
                       ok?))
 
 
+                  ;; not searching inside custom-node-hash at the moment
                   (define (node-get-by-data data)
                     (let ((ok? #f)
                           (n max-id))
@@ -1224,14 +1227,6 @@
                             (if (and node
                                      (equal? (ask node 'get-data) data))
                                 (set! ok? node))))
-                      ;; if still not found look inside custom-node-hash
-                      (if (not ok?)
-                          (let ((node (hash-table-get custom-nodes-hash data #f)))
-                            ;(display "finding in custom-nodes-hash ")(display data)(newline)
-                            (if (and node
-                                     (equal? (ask node 'get-data) data))
-                                (set! ok? node))))
-                          
                       ok?))
 
                   ; func has two arguments
@@ -1413,19 +1408,41 @@
                                 (callback 'after-line-del #f))
                             (my-on-paint)))))
                   
-                  ;; custom objects is a subclasses of node
-                  ;; superclass-wrapper is an object/function that takes  
-                  ;; the node object as the only argument
-                  (define (custom-wrap-anode editor data name x y superclass-wrapper)
-                    ;(node-add self data name x y style)
-                    ;; id is name for now
-;                    (let* ((node (create-node name data name x y editor 'style-notapplicable))
-;                           (new-custom (superclass-wrapper node)))
-                    (let ((node (create-node name data name x y editor 'style-notapplicable)))
-                          (let ((new-custom (superclass-wrapper node)))
-                      ;; return the custom-node
-                      new-custom
-                    )))
+                  ;; create a subclass of node without putting it in the node hash
+;                  (define (custom-wrap-anode editor data name x y style superclass-wrapper)
+;                    ;(node-add self data name x y style)
+;                    ;; id is name for now
+;                    ;                    (let* ((node (create-node name data name x y editor 'style-notapplicable))
+;                    ;                           (new-custom (superclass-wrapper node)))
+;                    
+;                    (let ((node (create-node max-id data name x y editor style)))
+;                      (let ((new-custom (superclass-wrapper node)))
+;                      ;; return the custom-node
+;                      new-custom
+;                    )))
+                  
+                  (define (custom-node-add editor data name x y style subclass-wrapper) ;; obj is the ac
+
+                    ;; wrap the node
+                    (let ((node (create-node max-id data name x y editor style)))
+                      (let ((custom-node (subclass-wrapper node)))
+
+                        ;; put into nodes hash
+                        (hash-table-put! nodes max-id custom-node)
+                        (set! max-id (+ max-id 1))
+                        ;;                                 (display "name key class ")(display (invoke namekey 'get-class))(newline)
+                        ;;                                 (display "custom node add success")(newline)
+
+                        ;; ensure that the node is not outside of screen
+                        (let-values
+                            (((w h) (ask custom-node 'get-size)))
+                          (if (< x 0)
+                              (ask custom-node 'x-set! (* w 0.5)))
+                          (if (< y 0)
+                              (ask custom-node 'y-set! (* 0.5 (+ h tab-height tab-height)))))
+                        ))
+                    )
+                  
                   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
                   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1891,15 +1908,15 @@
                                  (begin 
                                    (display "callback of graph-editor does not exist")(newline)
                                    #f))))
-                  (obj-put this-obj 'custom-wrap-anode
-                           (lambda (self date name x y superclass-wrapper)
-                             (custom-wrap-anode self date name x y superclass-wrapper)
-                             ))
-                          ;; add custom-node to a seperate hashtable from normal node
-                          ;; custom-nodes-hash is handled differently
-                  (obj-put this-obj 'custom-node-add
-                           (lambda (self namekey custom-node) ;; obj is the ac
-                             (hash-table-put! custom-nodes-hash namekey custom-node)))
+;                  (obj-put this-obj 'custom-wrap-anode
+;                           (lambda (self data name x y style subclass-wrapper)
+;                             (custom-wrap-anode self data name x y style subclass-wrapper)
+;                             ))
+                  
+                  ;; add subclass of the node to the nodes hash
+                  ;; subclass-wrapper is an object/function that takes a node as its only argument
+                  (obj-put this-obj 'custom-node-add custom-node-add)
+                           
                           ; set text height
                   (obj-put this-obj 'set-text-height!
                            (lambda (self in-text-height)

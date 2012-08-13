@@ -125,6 +125,35 @@
     (define (custom-tab-draw dc type show?)
       #t)
     
+    
+    ;; TODO: subclass of node should be able to override 
+    ;; 1) truncating name behavior without putting in callbacks
+    ;; 2) drawing function without putting in callbacks
+    ;;  the main obstacle now is that within the old node, it is still calling the draw inside the old node.
+    ;;  in order for subclass to work, all the calls to internal functions should use (ask node 'message) instead of calling directly
+    (define (create-graph-node ID name x y style)
+      
+      (define (create-node-wrapper in-node)
+        
+        (let ((this-obj (new-object in-node))
+              (width 0.0)
+              (height 0.0))
+          
+          ;; override get-size
+          (obj-put this-obj 'get-size
+                   (lambda (self)
+                     ;; get the default width and height and override it
+                     (let-values (((old-width old-height) (ask in-node 'get-size)))
+                       (values (if (> (string-length (ask in-node 'name)) node-name-limit)
+                                   150
+                                   old-width)
+                               old-height))))
+          ))
+
+      (ask (ask parent-obj 'get-graph-editor) 'custom-node-add
+           ID name x y style create-node-wrapper)
+      )
+    
     ; update node display in graph view
     (define (add-node new-nodeID name x y)
       (let* ((the-style (if (has-alt-text? new-nodeID)
@@ -134,17 +163,21 @@
              (editor (ask parent-obj 'get-graph-editor)))
 
         ; add the node
-        (ask editor 'node-add
-             (number->string new-nodeID)
-             (make-displayname the-node)
-             x y the-style)
+;        (ask editor 'node-add
+;             (number->string new-nodeID)
+;             (make-displayname the-node)
+;             x y the-style)
+        
+        ;; our custom create-node
+        (create-graph-node (number->string new-nodeID) (make-displayname the-node) x y the-style)
 
         (let ((new-node (ask editor 'node-get-by-data (number->string new-nodeID))))
           ; why do I set tabs?
           (let-values (((width height) (ask new-node 'get-size)))
             (set! tab-in (ask new-node 'custom-tab-incr x y 'in custom-tab-draw))
             (set! tab-out (ask new-node 'custom-tab-incr x y 'out custom-tab-draw)))
-
+          
+          
           ; set custom drawing
           (ask new-node 'set-custom-node-draw
                (lambda (dc x y bg-color selected? data)
@@ -164,16 +197,12 @@
                    (drawtext dc (- x (* tw1 0.5)) (+ y (* th1 0.5)) text-color bg-color name))
                  ))
           
-          ;(ask new-node 'show (ask new-node 'is-selected?))
-          ;(ask this-obj 'update
-          
           ;; draw the new node selected
           (ask new-node 'show #t)
           
           ) ;; end of let
         
         
-
         ; set node emphasis
         (update-node-emphasis new-nodeID)))
 
@@ -182,10 +211,10 @@
       (let ((color #f))
         (let-values (((width height) (ask this-node 'get-size)))
           (define node-name (ask this-node 'get-name))
-          (if (> (string-length node-name) node-name-limit)
-              (begin
-                (set! width 150)
-                ))
+;          (if (> (string-length node-name) node-name-limit)
+;              (begin
+;                (set! width 150)
+;                ))
           ; draw or undraw selected square
           (if selected?
               (set! color red-color)

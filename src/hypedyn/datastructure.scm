@@ -42,10 +42,15 @@
                create-condition create-typed-condition  create-typed-condition2
                ;;dup-offset-ID dup-offset-x dup-offset-anywhere-x 
                get-duplicate-offsets
+               conversion-flag set-conversion-flag!
                )
 
-;; debug var 
-(define debug-node #f)
+
+;; mark for conversion
+;; when this flag is on, any new node and link created would be marked for conversion
+(define conversion-flag #f)
+(define (set-conversion-flag! new-flag)
+  (set! conversion-flag new-flag))
 
 ;; importing
 
@@ -129,6 +134,7 @@
                        (inspectable-fields (list (list 'visited? 'number "visited: ")))
                        (start-indices (make-hash-table))
                        (end-indices (make-hash-table))
+                       (convert-flag #f) ;; marked for conversion
                        )
                   (obj-put this-obj 'content
                            (lambda (self)
@@ -182,6 +188,13 @@
                          content "\n\n -- \n")))
                   (obj-put this-obj 'get-inspectable-fields
                       (lambda (self) inspectable-fields))
+                  
+                  ;; mark for conversion
+                  (obj-put this-obj 'convert-flag
+                           (lambda (self) convert-flag))
+                  (obj-put this-obj 'set-convert-flag!
+                           (lambda (self new-flag)
+                             (set! convert-flag new-flag)))
                   this-obj))
 
 ;; link
@@ -196,7 +209,9 @@
                        (link-type 'default) ; 'default or 'hover
                        (custom-cursor-image #f) ; filename of custom cursor for this link, if any
                        (user-data #f) ; arbitrary end-user specified data
-                       (inspectable-fields (list (list 'followed? 'number "followed: "))))
+                       (inspectable-fields (list (list 'followed? 'number "followed: ")))
+                       (convert-flag #f) ;; marked for conversion
+                       )
                   (obj-put this-obj 'source (lambda (self) source))
                   (obj-put this-obj 'destination (lambda (self) destination))
                   (obj-put this-obj 'set-destination!
@@ -294,6 +309,14 @@
                                    (ask self 'ID))))                           ; linkID (int)
                   (obj-put this-obj 'get-inspectable-fields
                            (lambda (self) inspectable-fields))
+                  
+                  ;; marked for conversion
+                  (obj-put this-obj 'convert-flag
+                           (lambda (self) convert-flag))
+                  (obj-put this-obj 'set-convert-flag!
+                           (lambda (self new-flag)
+                             (set! convert-flag new-flag)))
+                  
                   this-obj))
 
 ;; this has the ability to initialize fall-through? on rule creation
@@ -668,6 +691,7 @@
                             ruleID))
   ;(ht-set-dirty!)
   )
+
 (define (get-document-ruleID)
   document-ruleID)
 (define (reset-document-ruleID)
@@ -745,11 +769,13 @@
                                   (if (importing?)
                                       (+ (car args) import-offset-ID) ; if importing, shift by offset
                                       (car args))))))
-    (set! debug-node new-node)
+    
+    ;; marking conversion
+    (if conversion-flag
+        (ask new-node 'set-convert-flag! #t))
     
     (let ((new-nodeID (ask new-node 'ID)))
       
-      (display "nodeID in creaet-node ")(display new-nodeID)(newline)
       ; add to table
       (put 'nodes new-nodeID new-node)
 
@@ -781,14 +807,20 @@
   
   ;(format #t "Creating link: ~a~%~!" name)
   (let* ((actual-fromnodeID (if (importing?)
-                                (+ fromnodeID import-offset-ID)
+                                (if (not (= fromnodeID -1))
+                                    (+ fromnodeID import-offset-ID)
+                                    -1)
                                 fromnodeID))
          ;; Note: tonodeID is not used now
          (actual-tonodeID (if (importing?)
-                              (+ tonodeID import-offset-ID)
+                              (if (not (= tonodeID -1))
+                                  (+ tonodeID import-offset-ID)
+                                  -1)
                               tonodeID))
          (actual-alt-destination (if (importing?)
-                                     (+ alt-destination import-offset-ID)
+                                     (if (not (= alt-destination -1))
+                                         (+ alt-destination import-offset-ID)
+                                         -1)
                                      alt-destination))
          (new-link (make-link name
                               actual-fromnodeID
@@ -803,6 +835,11 @@
          (from-node (get 'nodes actual-fromnodeID))
          (to-node (get 'nodes actual-tonodeID))
          (new-linkID (ask new-link 'ID)))
+    
+    (display "create link conversion flag ")(display conversion-flag)(newline)
+     ;; marking conversion
+    (if conversion-flag
+        (ask new-link 'set-convert-flag! #t))
     
     (if from-node
         (ask from-node 'addlink new-linkID))
@@ -974,16 +1011,19 @@
   )
 
 ; create an action
-(define (create-action name type expr ruleID . args)
+(define (create-action name type expr ruleID #!key fixedID)
   ;(display "[create-action] expr ")(display expr)(newline)
+  (display "CREATE ACTION importing? ")(display (importing?))(newline)
+  ;(display "expr class ")(display (invoke expr 'get-class))(newline)
+  
   (let* ((actual-ruleID (if (importing?)
                             (+ ruleID import-offset-ID)
                             ruleID))
          (new-action (make-action name type expr actual-ruleID
-                                  (if (pair? args)
+                                  (if fixedID
                                       (if (importing?)
-                                          (+ (car args) import-offset-ID)
-                                          (car args)))))
+                                          (+ fixedID import-offset-ID)
+                                          fixedID))))
          (the-rule (get 'rules actual-ruleID))
          (new-action-ID (ask new-action 'ID))
          )
@@ -999,22 +1039,21 @@
           (display "expr class ")(display (invoke expr 'get-class))(newline)
           ))
     
-    ;; TODO ideally, we do not need to check for (pair? expr)
-    ;; but we overlooked doing conversion to newer object format when doing importing 
-    
-    (if (and (importing?)
-             (pair? expr))
-        (cond ((equal? (car expr) 'follow-link)
-               ;; import offset for the dest node ID of follow-link action
-               ;; (follow-link2 linkID parent-ruleID link-type dest-nodeID)
-               (ask new-action 'set-expr!
-                    (list-replace expr 4 (+ (list-ref expr 4) import-offset-ID))))
-              ((equal? (car expr) 'replace-link-text)
-               ;; import offset for target linkID's for replace-link-text action
-               ;;(replace-link-text text-type value linkID)
-               (ask new-action 'set-expr!
-                    (list-replace expr 3 (+ (list-ref expr 3) import-offset-ID))))
-              ))
+    ;; this is for importing actions that need no version conversion 
+    ;; those that needs conversion already has the import offset added before conversion
+    (if (importing?)
+        (begin
+          (cond ((equal? (car expr) 'follow-link)
+                 ;; import offset for the dest node ID of follow-link action
+                 ;; (follow-link2 linkID parent-ruleID link-type dest-nodeID)
+                 (ask new-action 'set-expr!
+                      (list-replace expr 4 (+ (list-ref expr 4) import-offset-ID))))
+                ((equal? (car expr) 'replace-link-text)
+                 ;; import offset for target linkID's for replace-link-text action
+                 ;;(replace-link-text text-type value linkID)
+                 (ask new-action 'set-expr!
+                      (list-replace expr 3 (+ (list-ref expr 3) import-offset-ID))))
+                )))
 
     ; add action to rule
     ; note: for nodes, before=then=step and after=else=init for now

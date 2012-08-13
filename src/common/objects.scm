@@ -150,6 +150,10 @@
   ; property as a list, so you can get and modify the
   ; hierarchy at runtime.
 (define (obj-get obj prop)
+  (if (not obj)
+      (begin
+        (display obj)(newline)
+        ))
   (hash-table-get obj prop
                   ;; do when cant get in this hash-table (in this case get from super objects)
                   (lambda ()
@@ -230,25 +234,48 @@
         nextID)))
 
 (define (ask obj prop . argv)
-  (define gotten-attr (obj-get obj prop))
-  (if (procedure? gotten-attr)
+  (if (hash-table? obj)
       (begin
-        ;(apply <- (append (list obj argv)))
-        (apply gotten-attr (append (list obj) argv))
-        )
-      ;; Display Error
-      (begin
-        (newline)
-        (display "NOT PROC ")(display gotten-attr)(newline)
-        ;(display "obj ")(display obj)(newline)
-        (display "prop ")(display prop)(newline)
-        (display "argv ")(display argv)(newline)
-        (if (and (not (void? gotten-attr))
-                 (not (null? gotten-attr)))
+        (define gotten-proc (obj-get obj prop))
+        (if (procedure? gotten-proc)
             (begin
-              (display "class ")(display (invoke gotten-attr 'get-class))(newline)
-              ))
-        gotten-attr
+              ;; argument count check 
+              ;; add 1 because we always pass self as a mandatory argument
+              (define (arg-num-check proc)
+                (and (>= (+ (length argv) 1) (invoke proc 'min-args))
+                     (<= (+ (length argv) 1) (invoke proc 'max-args))))
+              
+              (if (arg-num-check gotten-proc)
+                  (apply gotten-proc (append (list obj) argv))
+                  (begin
+                    (display "[objects.scm](ask) argument count does not match ")(newline)
+                    (display (length argv))(display " arguments given")(newline)
+                    (display (invoke gotten-proc 'min-args)) (display " to ")(display (invoke gotten-proc 'max-args))(display " expected")(newline)
+                    
+                    (display "ask prop ")(display prop)(newline)
+                    (display "argv ")(display argv)(newline)
+                    )))
+            ;; Display Error
+            (begin
+              (display "asked ")(display prop)(newline)
+              (display "[objects.scm](ask) no such message ")(newline)
+              ;;(display "NOT PROC ")(display gotten-proc)(newline)
+                                        ;(display "obj ")(display obj)(newline)
+              ;;(display "prop ")(display prop)(newline)
+              ;;(display "argv ")(display argv)(newline)
+              
+;              (if (and (not (void? gotten-proc))
+;                       (not (null? gotten-proc)))
+;                  (begin
+;                    (display "class ")(display (invoke gotten-proc 'get-class))(newline)
+;                    ))
+;              gotten-proc
+              )
+            ))
+      (begin
+        (display "asked ")(display prop)(newline)
+        (display "[objects.scm](ask) obj is not a hashtable object ")(newline)
+        (display "obj ")(display obj)(newline)
         )
       ))
 

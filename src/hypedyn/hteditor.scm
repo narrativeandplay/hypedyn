@@ -920,7 +920,7 @@
   (ask node-list 'add-node new-nodeID name)
   (if anywhere
       (ask anywhere-graph 'add-node new-nodeID name x y)
-      (ask node-graph 'add-node new-nodeID name x y anywhere)))
+      (ask node-graph 'add-node new-nodeID name x y))) ;; anywhere)))
 
 ; edit a node
 (define (doeditnode)
@@ -1735,7 +1735,7 @@
   ; and fill in nodes and lines in graph
   (populate-graphs)
   
-  ; finally, update frame label
+  ; finally, update frame label 
   (update-dirty-state)
   )
 
