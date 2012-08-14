@@ -754,21 +754,22 @@
                   (define (on-mouse self type cx cy)
                     (cond
                      ((member type '(left-down left-up motion right-down right-up))
-                      (cond
-                       ((and (<= (- x (* width  0.5)) cx (+ x (* width  0.5)))
-                             (<= (- y (* height 0.5)) cy (+ y (* height 0.5))))
-                        self)
-                       (else
-                        (let
-                            ((found? #f)
-                             (n-in  (hash-table-count tab-in))
-                             (n-out (hash-table-count tab-out)))
-                          (do ((i 0 (+ i 1))) ((or found? (= i n-in)))
-                              (set! found? (ask (hash-table-get tab-in i #f) 'on-mouse type cx cy)))
-                          (do ((i 0 (+ i 1))) ((or found? (= i n-out)))
-                              (set! found? (ask (hash-table-get tab-out i #f) 'on-mouse type cx cy)))
-                          found?)
-                        )))
+                      (let-values (((width height) (ask self 'get-size)))
+                        (cond
+                         ((and (<= (- x (* width  0.5)) cx (+ x (* width  0.5)))
+                               (<= (- y (* height 0.5)) cy (+ y (* height 0.5))))
+                          self)
+                         (else
+                          (let
+                              ((found? #f)
+                               (n-in  (hash-table-count tab-in))
+                               (n-out (hash-table-count tab-out)))
+                            (do ((i 0 (+ i 1))) ((or found? (= i n-in)))
+                                (set! found? (ask (hash-table-get tab-in i #f) 'on-mouse type cx cy)))
+                            (do ((i 0 (+ i 1))) ((or found? (= i n-out)))
+                                (set! found? (ask (hash-table-get tab-out i #f) 'on-mouse type cx cy)))
+                            found?)
+                          ))))
                      (else #f)))
 
                   ; set node colour
