@@ -609,33 +609,35 @@
 
 (define (convert-pre-2.2-nodes nodeID node-obj)
 
-  ;;(display "converting node ")(display nodeID)(newline)
   ;; convert standard node
   (let* ((ruleID (ask node-obj 'rule))
          (rule-obj (get 'rules ruleID))
          (node-name (ask node-obj 'name))
          (anywhere? (ask node-obj 'anywhere?))
-         (new-ruleID (create-typed-rule2 "Set fact" 'node 'and #f nodeID))
                                         ;(conditions (ask rule-obj 'conditions))
                                         ;(actions (ask rule-obj 'actions))
          )
 
-    ;; add the dummy add-anywhere-link action
-    ;; (does nothing, just a place holder to let it show up in the rule editor)
-    ;; Note: this however is important in the export to js 
-    (if anywhere?
-        (create-action "Enable Link" 'anywhere-check
-                       (list 'add-anywhere-link nodeID)
-                       new-ruleID))
 
     ;; add all actions to the new rule (only set fact actions are on pre 2.2 nodes)
     (if (ask node-obj 'convert-flag)
         (if rule-obj
             (begin
-              ;;(display "REALLY converting node ")(display nodeID)(newline)
+              (display "REALLY converting node ")(display nodeID)(newline)
               
               ;; conversion underway for this one so the flag has done its job
               (ask node-obj 'set-convert-flag! #f)
+              
+              (define new-ruleID (create-typed-rule2 "Set fact" 'node 'and #f nodeID))
+              
+              ;; add the dummy add-anywhere-link action
+              ;; (does nothing, just a place holder to let it show up in the rule editor)
+              ;; Note: this however is important in the export to js 
+              (if anywhere?
+                  (create-action "Enable Link" 'anywhere-check
+                                 (list 'add-anywhere-link nodeID)
+                                 new-ruleID))
+              
 
               (define actions (ask rule-obj 'actions))
               (display "actions count in CONVERSION ")(display (length actions))(newline)
@@ -695,12 +697,6 @@
 ;; note old rules are still around in the datatable, just not invoked
 (define (convert-pre-2.2-links linkID link-obj)
   
-  (display "converting link ")(display linkID)(newline)
-  
-  (define version-one? (= loaded-file-version 1))
-
-                                        ;(display "CONVERT LINKS pre 2.2")(newline)
-  (define selected-rule-ID (ask link-obj 'rule))
   (if ;(or (not (eq? selected-rule-ID 'not-set))
       ;    version-one?)
       (ask link-obj 'convert-flag)
@@ -708,7 +704,11 @@
         ;; conversion underway for this one so the flag has done its job
         (ask link-obj 'set-convert-flag! #f)
         
-         (display "REALLY converting link ")(display linkID)(newline)
+        ;(display "REALLY converting link ")(display linkID)(newline)
+        
+        (define version-one? (= loaded-file-version 1))
+
+        (define selected-rule-ID (ask link-obj 'rule))
         
         ;; NOTE: rule, destination, use-destination, use-alt-destination,
         ;;       use-alt-text, alt-destination, alt-text
