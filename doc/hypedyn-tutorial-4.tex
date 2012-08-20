@@ -58,7 +58,8 @@ Windows) or \textbf{HypeDyn.app} (in MacOS).
 We will continue from the story that you created in tutorial 1. If you don't
 have the story, you can start from the file \textsc{LRRH.dyn} in the
 \textsc{examples} folder. HypeDyn files always end with a \textbf{.dyn} extension.
-Once you've opened \textsc{LRRH.dyn}, save the file under a different name.
+Once you've opened \textsc{LRRH.dyn}, save the file under a different 
+name, such as \textsc{LRRH5.dyn}.
 
 \section{Creating a number fact}
 
@@ -133,7 +134,7 @@ if ``whichEnding?'' is equal to 1, and to ``Version 2'' if
 ``whichEnding?'' is equal to 2. Before we can do this, however, we 
 need to set the value of ``whichEnding?'' As with other types of 
 facts, a number fact can be updated in either a node rule or a link 
-rule. We will use the node rule in the ``start'' node to set the 
+rule. We will use the node rule in the ``forest'' node to set the 
 value.       
 
 \begin{enumerate}
@@ -153,13 +154,15 @@ value.
     ``input''. In the input field, specify ``1''.
 \end{enumerate}
 
+\noindent The rule we've created will set the ``whichEnding?'' fact to 1 when 
+the reader enters the ``forest'' node. 
+
 \subsection{Displaying a number fact using alternative text}
 
-The rule we've created will set the ``whichEnding?'' fact to 1 when 
-the reader enters the ``forest'' node. To check whether this is 
+To check whether our new rule is 
 working, we can temporarily add a link which we will use to display 
 the current value of ``whichEnding?'' This technique is a useful way 
-to debug your stories when using facts.
+to debug your stories when using number facts.
 
 \begin{enumerate}
     \item At the end of the ``forest'' node, add the text 
@@ -182,7 +185,7 @@ to debug your stories when using facts.
     displayed in the forest node is now ``2''.
 \end{enumerate}
 
-Now that we've created our number fact, and have set it to a specific 
+\noindent Now that we've created our number fact, and have set it to a specific 
 value, we can use this number fact to decide which ending to show.
 
 \section{Comparing number facts}
@@ -207,16 +210,19 @@ We'll begin by adding the rule which takes us to ``Version 1''.
     is the action we will use if ``whichEnding?'' is 1.
     \item Add a condition. Choose ``Number Fact'' as the type of 
     condition.
-    \item Notice that there is a pulldown menu to the right of the 
-    fact selection pulldown, which initially shows ``=''. This is the 
-    comparator selection. You can compare number facts using =, $<$, 
-    $>$, 
-    $\le$, and $\ge$. For now, leave the comparator as ``=''.
+    \item Notice that after changing the condition to a number fact 
+    condition, the condition changes to show two pulldown menus and a 
+    text input field. The first pulldown menu contains =, $<$, $>$, 
+    $\le$ and $\ge$. This is the \textit{comparator} 
+    which will be used to compare the chosen number fact (in this 
+    case ``whichEnding?'') with the right-hand side of the condition.
+    
+    For now, leave the comparator as ``=''.
     \item To the right of the comparator is another pulldown menu, 
-    which has two options: input and fact. Choosing ``input'' lets 
+    which has two options: input and fact. Choosing ``Input'' lets 
     you enter a specific number for the comparison, whereas choosing 
-    ``fact'' lets you compare against another fact. Leave the choice 
-    as ``input''.
+    ``Fact'' lets you compare against another fact. Leave the choice 
+    as ``Input''.
     \item In the text entry field, enter ``1''. This means that the 
     actions listed in the rule will be triggered when 
     ``whichEnding?'' is equal to 1.
@@ -316,7 +322,7 @@ than a number which we decided when writing the story.
     to choose the lower and upper range of the random number which 
     will used to update the number fact. These bounds can be 
     specified either using Input or a Fact. For now, leave both 
-    pulldowns as Fact.
+    pulldowns as Input.
     \item We want a random number between 1 and 2, since there are 2 
     versions of the ending. So enter ``1'' in the first input field, 
     and ``2'' in the second input field. 
@@ -442,7 +448,7 @@ get the correct value. We will do that now.
     \item Add the action ``follow link to Version 3''.
 \end{enumerate}
 
-Now try running the story. You should be able to follow the ``next'' 
+\noindent Now try running the story. You should be able to follow the ``next'' 
 link in the ``forest'' node, and have it randomly take you to one of 
 the three endings.
 
@@ -560,32 +566,25 @@ rather than just once.
     \item Edit the ``more about the hood'' link in the ``start'' 
     node, and edit the ``more about the hood'' rule. This rule was 
     added in Tutorial 1. It contains one condition, ``Node end 
-    visited'', and one action, ``follow link to Hood Details''. We 
+    visited'', and one action, ``follow link to Hood Details''. 
+    \item We 
     want to retain the existing action, but instead of triggering the 
     rule if the ``end'' node has been visited, we want to trigger it 
     only if the ``end'' node has been visited two times.
-    
     To do this, we will use our ``counter'' fact, and use a number 
-    fact condition to check the value of the fact. Change the type of 
-    the condition to ``Number Fact'', and choose fact ``counter''.
-    \item Notice that after changing the condition to a number fact 
-    condition, the condition changes to show two pulldown menus and a 
-    text input field. The first pulldown menu is a list of 
-    \textit{operators}: =, $<$, $>$, $\le$ and $\ge$. This is the operator 
-    which will be used to compare the chosen number fact (in this 
-    case ``counter'') with the right-hand side of the condition, 
-    which can either be a number which we input, or a fact. In this 
-    case, we want to check whether the reader has visited the ``end'' 
-    node twice.
+    fact condition to check the value of the fact. 
     
-    Set the operater pulldown menu to show ``='', and make sure the 
-    type pulldown menu for the right-hand side is set to ``Input''. 
-    Then type the value ``2'' in the text entry field.
+    Change the type of 
+    the condition to ``Number Fact'', and choose fact ``counter''.
+    \item We want to check whether the reader has visited the ``end'' 
+    node twice, so set the comparator pulldown menu to show ``='', 
+    and make sure the type pulldown menu for the right-hand side is 
+    set to ``Input''. Then type the value ``2'' in the text entry field.
 \end{enumerate}
 
 % - run - what if read 3 times?
 % - instead try $\ge$ input 2
-Now try running the story. Read through once, and then go back to the 
+\noindent Now try running the story. Read through once, and then go back to the 
 ``start'' node by clicking on the ``back to start'' link in the 
 ``end'' node. Notice that the link on the text ``red hood'' is not 
 clickable. Now continue to read, and once again to back to the start. 
@@ -622,7 +621,7 @@ subsequent rereadings.
 \section{Next steps}
 
 We have modified the original story from Tutorial 1, 
-\textsc{LRRH1.dyn}, by adding random selection of endings, and by 
+\textsc{LRRH.dyn}, by adding random selection of endings, and by 
 adding a counter which both unlocks the side path on the second 
 rereading. The completed version of this story can be found in the 
 file \textsc{LRRH5.dyn}. 
@@ -640,6 +639,6 @@ In this tutorial, we have created a simple hypertext fiction which
 makes use of randomization and a counter to procedurally alter the 
 story which the reader encounters. This provides the basis for much 
 more procedural approaches to creating interactive stories. See what 
-you can think of!
+you can think of, and then try it!
 
 \end{document}
