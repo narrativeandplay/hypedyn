@@ -212,7 +212,8 @@ function fall_through_till_relevant( eventType, rules ) {
 	if ( ready ) {
 		var fall_through_check = fall_through_till_relevant( "clickedLink", link.rules );
 		
-		// clickabel rule found
+		disp("fall through check "+fall_through_check);
+		// clickable rule found
 		if ( fall_through_check )
 			return true;
 		else                      
@@ -221,8 +222,9 @@ function fall_through_till_relevant( eventType, rules ) {
 	// if not ready, we're looking for the existence of actions making this link clickable 
 	// (link can be possibly dormant links or already active)
 	} else {
+		disp("CHECKING FOR DORMANT");
 		var relevant_rules = filter_for_relevant( link.rules, "clickedLink" );
-		if (relevant_rules > 0)
+		if (relevant_rules.length > 0)
 			return true;
 		else
 			return false;
@@ -417,6 +419,9 @@ function filter_out_empty_rules( rules ) {
 			result = (result == undefined) ? false : true;
 			break;
 	} // end of and_or switch
+	
+	disp("Check condition "+rule.id);
+	disp(" result "+result);
 	
 	// negation if not
 	switch (rule.if_not) {

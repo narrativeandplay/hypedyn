@@ -48,9 +48,6 @@ III. IO interaction
 (a) run story (2) (12)
 (a) exit hypedyn (24)
 
-(a) resize window (23)
-(a) drag dividers (23)
-
 (a) open file (confirm/cancel) (17) (18)
 (a) save file (confirm/cancel) (14)
 (a) saveas file (confirm/cancel) (16)
@@ -62,7 +59,11 @@ III. IO interaction
 
 IV. graph interaction
 
+(a) resize window (23)
+(a) drag dividers (23)
+
 (a) node overlap behavior
+
 (a) switch node selection
 (a) unselect node
 
@@ -144,6 +145,10 @@ e Click on the entry with "my node" on the list again
   same result as a
 f Holding down the control key, click on the entry with "my node" on the list
   same as b
+
+  { Switch Selection Node }
+
+
   
   { Rename Node } (should we do rename node on anywhere node as well? )
 a Select the node named "my node" (by clicking on the purple node on the graph view)
@@ -626,6 +631,7 @@ a Click on [File]->[Import...]
   file selector window appears. 
   the default filename given in the textfield is empty
   notice that non .txt files are all filtered out in the listed file
+;; do we check whether importing older hypedyn files pops up a dialog box?
 
   { IO after saving }
 a Click on [File]->[Save as...] and enter "beta-test" as the file name
@@ -640,34 +646,17 @@ a Click on [File]->[Save as...]
   notice "beta-test.dyn" is now the default file name given
 b Click on [Cancel]
 
-;; open new exit should block anymore, should we verify that?
-
-
+;; open, new, exit should block anymore after saving, should we verify that?
 
   
   
   { Story Logic }
-  
-  III. IO interaction
-- when file not saved show warning in following situation
-  1. you try to exit 
-  2. try to open file
-  3. try to make new file
-  
-(a) run story (2) (12)
-(a) exit hypedyn (24)
 
-(a) resize window (23)
-(a) drag dividers (23)
+  { Graph editor }
 
-(a) open file (confirm/cancel) (17) (18)
-(a) save file (confirm/cancel) (14)
-(a) saveas file (confirm/cancel) (16)
 
-(d) new file 
-(d) import file ( there is no undo for import file at the moment )
-(d) export to web
-(d) export as text
+
+
   
 OLD script
 1 start hypedyn

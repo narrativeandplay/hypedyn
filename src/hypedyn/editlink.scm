@@ -99,7 +99,7 @@
 ; remember currently edited node
 ;(define-private edited-nodeID '()) ;; now using nodeeditor.scm's edited-nodeID
 
-; are we editing a link (default) or just a rule?
+; rule editing mode, can be 'link or 'node
 (define edit-mode 'link)
 
 (define (edited-rule)

@@ -51,7 +51,9 @@
 (module-export rmgr-init
                rmgr-edit
                rmgr-close
-               rmgr-update)
+               rmgr-update
+               delete-rule-from-obj
+               )
 ;; rmgr stands for rule manager
 (define rules-manager-main-dialog #f)
 (define rmgr-rules-list-panel #f) ;; the panel that contain all the rule panels
@@ -489,6 +491,22 @@
       (action-restrict-check)
       ))))
 
+;; obj can be a link or node 
+(define (delete-rule-from-obj ruleID obj)
+  ;; actually only applicable to link objects does nothing on a node obj
+  (remove-follow-link-rule-display ruleID)  ;; remove the line display from the ruleID (if any)
+  (remove-show-popup-rule-display ruleID)  ;; remove the line display from ruleID
+
+  ;; remove the rule from the obj
+  (ask obj 'set-rule-lst 
+       (remove (lambda (thisruleID) 
+                 (= ruleID thisruleID)) 
+               (ask obj 'rule-lst)))
+  
+  ;; delete the rule from our datatable
+  (del 'rules ruleID)
+  )
+
 (define (delete-selected-rule-button-callback e)
   ;; because create-typed-rule2 adds the ruleID to the obj 
   ;; it messes up the previous order, so cache it and set it back later
@@ -508,15 +526,12 @@
         
 
         (map (lambda (ruleID)
-               ;; remove the line associated with this rule before we edit it
-               (display "edit mode ? ")(display edit-mode)(newline)
-               (display "eq? link? ")(display (eq? edit-mode 'link))(newline)
-               (if (eq? edit-mode 'link)
-                   (remove-follow-link-rule-display ruleID))  ;; remove the line display from the ruleID (if any)
-               (if (eq? edit-mode 'link)
-                   (remove-show-popup-rule-display ruleID))  ;; remove the line display from ruleID
-               (rmgr-set-rule-lst (remove (lambda (thisruleID) (= ruleID thisruleID)) (rmgr-rule-lst)))
-               (del 'rules ruleID)
+               (delete-rule-from-obj ruleID
+                                     (get
+                                      (case edit-mode
+                                        ((link) 'links)
+                                        ((node) 'nodes))
+                                      edited-obj-ID))
                ) deleted-ID-lst)
         
         ;; the last panel does not disappear even after we do remove-component thus we do this
@@ -543,10 +558,11 @@
             
             ;; restore the lines in the graph associated to the rule's action
             (map (lambda (ruleID)
-               (if (eq? edit-mode 'link)
-                   (add-follow-link-rule-display ruleID))
-               (if (eq? edit-mode 'link)
-                   (add-show-popup-rule-display ruleID))
+                   (if (eq? edit-mode 'link)
+                       (begin
+                         (add-follow-link-rule-display ruleID)
+                         (add-show-popup-rule-display ruleID)
+                         ))
                    ) deleted-ID-lst)
             )
           (lambda () ;; redo
@@ -554,15 +570,13 @@
 
             ;; remove panel first (important to do before remove rule-lst)
             (map (lambda (ruleID)
-                   ;; remove the line associated with this rule before we edit it
-                   (if (eq? edit-mode 'link)
-                       (remove-follow-link-rule-display ruleID))  ;; remove the line display from the ruleID (if any)
-                   (if (eq? edit-mode 'link)
-                       (remove-show-popup-rule-display ruleID))  ;; remove the line display from ruleID
-                   
                    (rmgr-remove-rule-panel ruleID)
-                   (rmgr-set-rule-lst (remove (lambda (thisruleID) (= ruleID thisruleID)) (rmgr-rule-lst)))
-                   (del 'rules ruleID)
+                   (delete-rule-from-obj ruleID
+                                     (get
+                                      (case edit-mode
+                                        ((link) 'links)
+                                        ((node) 'nodes))
+                                      edited-obj-ID))
                    ) deleted-ID-lst)
             (component-update rmgr-rules-list-panel)
             ))))))

@@ -168,7 +168,6 @@
     ; create the line in graph
     ; name and ID should be strings, ID is generally the linkID (plus "~" for "else")
     (define (create-line name fromnodeID tonodeID ID #!optional style)
-      (display "create line ")(display (list name fromnodeID tonodeID ID style))(newline)
       ;; only create line if tonodeID not -1
       (if (not (= tonodeID -1))
           (begin

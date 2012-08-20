@@ -486,6 +486,12 @@
                              (set! conditions '())
                              ))
                   
+                  (obj-put this-obj 'empty-rule?
+                           (lambda (self)
+                             (and (null? actions)
+                                  (null? conditions))
+                             ))
+                  
                   ;; overridden 
                   (obj-put this-obj 'to-save-sexpr
                            (lambda (self)
@@ -836,7 +842,6 @@
          (to-node (get 'nodes actual-tonodeID))
          (new-linkID (ask new-link 'ID)))
     
-    (display "create link conversion flag ")(display conversion-flag)(newline)
      ;; marking conversion
     (if conversion-flag
         (ask new-link 'set-convert-flag! #t))
@@ -1013,7 +1018,6 @@
 ; create an action
 (define (create-action name type expr ruleID #!key fixedID)
   ;(display "[create-action] expr ")(display expr)(newline)
-  (display "CREATE ACTION importing? ")(display (importing?))(newline)
   ;(display "expr class ")(display (invoke expr 'get-class))(newline)
   
   (let* ((actual-ruleID (if (importing?)

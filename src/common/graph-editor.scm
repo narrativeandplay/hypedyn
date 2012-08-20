@@ -1709,6 +1709,8 @@
 
                           ));; end of mouse handler event
                       
+                    
+                      ;; Graph editor messages
                       (obj-put this-obj 'set-event-func
                           (lambda (self obj-type event-slot clicked func)
                             (if (and func-hashtable
@@ -1817,7 +1819,7 @@
                            (lambda (self line old-dst-tab new-dst-tab lineID)
                              (line-change-dest line old-dst-tab new-dst-tab lineID)))
                   (obj-put this-obj 'line-del
-                           (lambda (self line src-tab dst-tab . args)
+                           (lambda (self line src-tab dst-tab #!rest args)
                              (apply line-del (append (list line src-tab dst-tab) args))))
                   (obj-put this-obj 'set-selected-line!
                            (lambda (self line)

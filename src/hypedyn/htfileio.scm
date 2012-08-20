@@ -27,6 +27,7 @@
   (require "hteditor.scm")
   (require "properties-ui.scm")
   (require "nodeeditor.scm")
+  (require "rules-manager.scm") ;; delete-rule-from-obj
   (require "../common/objects.scm")
   (require "../common/datatable.scm") ;; get
   (require "../common/fileio.scm")
@@ -797,6 +798,14 @@
                        (create-typed-condition2 "if-rule" type targetID operator if-rule-ID ))
                      ) old-conditions)
               ))
+        
+        ;; remove empty IF and ELSE rule
+        (if (ask if-rule 'empty-rule?)
+            (delete-rule-from-obj if-rule-ID link-obj))
+        
+        (if (ask else-rule 'empty-rule?)
+            (delete-rule-from-obj else-rule-ID link-obj))
+        
         )))
 
 ;; ============================

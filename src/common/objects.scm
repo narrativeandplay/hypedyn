@@ -239,12 +239,16 @@
         (define gotten-proc (obj-get obj prop))
         (if (procedure? gotten-proc)
             (begin
+              
               ;; argument count check 
               ;; add 1 because we always pass self as a mandatory argument
               (define (arg-num-check proc)
-                (and (>= (+ (length argv) 1) (invoke proc 'min-args))
-                     (<= (+ (length argv) 1) (invoke proc 'max-args)))
                 
+                ;; if max args is -1 it means we have a variable argument length through #!rest or . in that case max arg no longer needs checking
+                ;; the length of argv should at least be as long as min args of the lambda
+                (and (>= (+ (length argv) 1) (invoke proc 'min-args))
+                     (or (<= (+ (length argv) 1) (invoke proc 'max-args))
+                         (= (invoke proc 'max-args) -1)))
                 )
               
               (if (arg-num-check gotten-proc)
