@@ -249,7 +249,7 @@ function filter_out_unsatisfied( rules ) {
 
 function filter_for_relevant( rules, eventType ) {
 	
-	var to_return = []
+	var to_return = [];
 	for ( var i=0; i< rules.length; i++ ) {
 		//disp('filter_for_relevant '+ rules[i].id);
 		//disp('relevant? '+ruleRelevant( eventType, rules[i] ));

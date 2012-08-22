@@ -75,6 +75,10 @@
                
                ;; for datastructure.scm (create-node hack)
                update-display-nodes
+               
+               ;; for import in htfileio.scm
+               dodelnode
+               delete-fact
                )
 
 ;;;; some global variables
