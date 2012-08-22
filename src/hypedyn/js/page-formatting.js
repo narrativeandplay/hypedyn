@@ -232,8 +232,14 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 		br_tg.end_tag = "";
 		anywhere_tg_arr.push( br_tg );
 		
+		disp("activated anywhere nodes "+activated_anywhere_nodes);
+		disp("len "+ activated_anywhere_nodes.length);
+		disp("null? "+ ( activated_anywhere_nodes === null));
+		
+		
 		for ( var j in activated_anywhere_nodes ) {
 			var anywherenode = activated_anywhere_nodes[j];
+			disp("anywhere node "+anywherenode);
 			var anywhere_tg = [];
             // need to escape the content in case name contains special characters
 			anywhere_tg.content = escape_special(anywherenode.name);

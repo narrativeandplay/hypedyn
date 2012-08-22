@@ -730,10 +730,11 @@
         (define link-start-index (ask link-obj 'start-index))
         (define link-end-index (ask link-obj 'end-index))
 
-        (define and-or
-          (if version-one?
-              'and
-              (ask selected-rule 'and-or)))
+;        (define and-or
+;          (if version-one?
+;              'and
+;              (ask selected-rule 'and-or)))
+        (define and-or (ask selected-rule 'and-or))
 
         (define if-rule-ID (create-typed-rule3 "IF" 'link and-or #f linkID fall-through?: #f))
         (define else-rule-ID (create-typed-rule2 "ELSE" 'link and-or #f linkID))
@@ -773,9 +774,6 @@
                                  link-dest1)
                            if-rule-ID))
         
-        (display "else ruleID ")(display else-rule-ID)(newline)
-        (display "link-dest2 ")(display link-dest2)(newline)
-
         ;; link-dest2 is used in the else so it should be in the not rules instead
         (if (not (equal? link-dest2 -1))
             (create-action link-name 'clicked-link
@@ -795,6 +793,7 @@
                      (let ((type (ask this-cond 'type))
                            (targetID (ask this-cond 'targetID))
                            (operator (ask this-cond 'operator)))
+                       
                        (create-typed-condition2 "if-rule" type targetID operator if-rule-ID ))
                      ) old-conditions)
               ))

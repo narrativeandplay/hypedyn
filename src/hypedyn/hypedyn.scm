@@ -41,6 +41,9 @@
   (if (not (java-reader?))
       (begin
         ; create a temporary directory for server
+        
+        (display "system-tmpdir ")(display (system-tmpdir))(newline)
+        
         (set-temp-dir! (string-append (system-tmpdir) "/hypedyn" (number->string (get-current-time))))
         (make-directory (get-temp-dir))
         

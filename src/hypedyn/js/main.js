@@ -195,6 +195,8 @@ function addAnywhereLink(anywhereNodeID) {
 			return; // break to prevent last line from running
 		}
 	}
+	
+	disp("pushing anywhere node "+ nodelist[anywhereNodeID] );
 	activated_anywhere_nodes.push( nodelist[anywhereNodeID] );
 }
 

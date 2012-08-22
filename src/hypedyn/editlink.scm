@@ -1428,6 +1428,7 @@
             (string-append rule-name "(" (to-string (ask rule-obj 'ID)) ")"))
         (define expr (ask rule-obj 'and-or))
 
+        (display "AND OR expr ")(display expr)(newline)
         ;; set boolean operator "all/any"
         (set-combobox-selection editlink-dialog-andor-operator
                                 (get-rule-pos expr)) ; add setting of operator

@@ -51,6 +51,7 @@ function createRule(parentID, parentType, if_not, and_or, fall_through, id) {
 	
 	newrule.parentID = parentID;
 	newrule.fall_through = fall_through;
+	
 	switch (parentType) {
 		case "link":
 			var parent = linklist[parentID];
@@ -88,17 +89,11 @@ function ruleRelevant(eventType, rule) {
 		}
 	}
 	
-
-	
 	// if no action in the rule consider it relevant as well
 	// so that we can check fall through condition
-	if (rule.actions.length == 0)
-		result = true;
+	//if (rule.actions.length == 0)
+	//	result = true;
 		
-	if (rule.id == 10) {
-		disp("checking rule 10");
-		disp(" result "+result);
-	}
 	return result;
 }
 
@@ -158,12 +153,14 @@ function ruleRelevant(eventType, rule) {
 	for ( var i=0; i<obj.rules.length; i++ ) {
 		var rule = obj.rules[i];
 		if ( checkCondition( rule ) ) {
+		
+			// fire all the actions
 			for (var j in rule.actions) {
-				// only fire when relevant
-				if ( ruleRelevant( eventType, rule ) ) {
-					var action = rule.actions[j];
-					action.doaction(eventType);
-				}
+			
+				// fire independent of whether it is relevant
+				// the actions already takes care of that 	
+				var action = rule.actions[j];
+				action.doaction(eventType);
 			}
 			if ( ! rule.fall_through )
 				break;
@@ -210,20 +207,23 @@ function fall_through_till_relevant( eventType, rules ) {
 	
 	// if ready, we're looking for clickable links
 	if ( ready ) {
+	    // find a firable rule with condition satisfied
 		var fall_through_check = fall_through_till_relevant( "clickedLink", link.rules );
 		
-		disp("fall through check "+fall_through_check);
+		disp( "fall through check "+fall_through_check );
 		// clickable rule found
 		if ( fall_through_check )
 			return true;
 		else                      
 			return false;
-		
+			
 	// if not ready, we're looking for the existence of actions making this link clickable 
 	// (link can be possibly dormant links or already active)
+	
 	} else {
 		disp("CHECKING FOR DORMANT");
 		var relevant_rules = filter_for_relevant( link.rules, "clickedLink" );
+		
 		if (relevant_rules.length > 0)
 			return true;
 		else
@@ -251,6 +251,8 @@ function filter_for_relevant( rules, eventType ) {
 	
 	var to_return = []
 	for ( var i=0; i< rules.length; i++ ) {
+		//disp('filter_for_relevant '+ rules[i].id);
+		//disp('relevant? '+ruleRelevant( eventType, rules[i] ));
 		if ( ruleRelevant( eventType, rules[i] ) ) {
 			to_return.push( rules[i] );
 		}
