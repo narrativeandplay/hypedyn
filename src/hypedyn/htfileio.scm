@@ -244,123 +244,138 @@
               ; clear the UI
               (clear-display)
               
-              (if version-number 
-                  (if (not (= (get-fileformat-version) version-number))
-                      (begin
-                        (add-recent-file newfilename)  ;; add to recent menu
+              ;; get the list of ID 
+              (define (datatable-ID-lst name-sym)
+                ;;(display "datatable ID ")(display name-sym)(newline);(display (get-list name-sym))(newline)
+                (let ((lst (get-list name-sym)))
+                  (if (pair? lst)
+                      (map (lambda (pair)
+                             (car pair)
+                             ) lst)
+                      '())
+                  ))
 
-                        ;; get the list of ID 
-                        (define (datatable-ID-lst name-sym)
-                          (display "datatable ID ")(display name-sym)(newline);(display (get-list name-sym))(newline)
-                          (let ((lst (get-list name-sym)))
-                            (if (pair? lst)
-                                (map (lambda (pair)
-                                       (car pair)
-                                       ) lst)
-                                '())
-                            ))
-                        
-                        
-                        ;; caching of rules, actions and conditions are done through caching of node and link
-                        ;; list of ID before import
-                        (define node-lst-b4 (datatable-ID-lst 'nodes))
-                        (define link-lst-b4 (datatable-ID-lst 'links))
-                        (define fact-lst-b4 (datatable-ID-lst 'facts))
-                        
-                        (define start-node-b4 (get-start-node))
-                        
-                        ;; import the file 
-                        (set-conversion-flag! #t)
-                        (define import-result (import-from-file newfilename))
-                        (set-conversion-flag! #f)
-                        
-                        (if import-result
-                            ;; convert the imported data
-                            (obj-conversion-2.2)           ;; if loading pre 2.2 objects convert to post 2.2 format
-                            )
-                        
-                        ;; list of ID after import
-                        (define node-lst-aft (datatable-ID-lst 'nodes))
-                        (define link-lst-aft (datatable-ID-lst 'links))
-                        (define fact-lst-aft (datatable-ID-lst 'facts))
-                        
-                        ;; list of ID that are added during import
-                        (define imported-nodes (lset-difference = node-lst-aft node-lst-b4))
-                        (define imported-links (lset-difference = link-lst-aft link-lst-b4))
-                        (define imported-facts (lset-difference = fact-lst-aft fact-lst-b4))
-                        
-                        ;; make them into alist again
-                        (define imported-nodes-alist
-                              (map (lambda (ID)
-                                     (cons ID (get 'nodes ID))) 
-                                   imported-nodes))
-                        (define imported-links-alist
-                              (map (lambda (ID)
-                                     (cons ID (get 'links ID))) 
-                                   imported-links))
-                        (define imported-facts-alist
-                              (map (lambda (ID)
-                                     (cons ID (get 'facts ID))) 
-                                   imported-facts))
-                        
-                        (define imported-sexpr
-                          (append
-                           (list 'begin)
+              ;; caching of rules, actions and conditions are done through caching of node and link
+              ;; list of ID before import
+              (define node-lst-b4 (datatable-ID-lst 'nodes))
+              (define link-lst-b4 (datatable-ID-lst 'links))
+              (define fact-lst-b4 (datatable-ID-lst 'facts))
+              (define start-node-b4 (get-start-node))
+              
+              (if version-number
+                  (begin
+                    (add-recent-file newfilename)  ;; add to recent menu
 
-                           ;; run through all nodes and generate sexpr
-                           (ht-build-sexpr-from-objectlist-with-rules imported-nodes-alist)
+                    ;; do the import 
+                    (define import-result #f)
+                    (if (not (= (get-fileformat-version) version-number))
+                        (begin
+                          ;; mark the imported object for conversion
+                          
+                          (set-conversion-flag! #t)
+                          (set! import-result (import-from-file newfilename))
+                          (set-conversion-flag! #f)
+                          
+                          ;; convert the imported data
+                          (obj-conversion-2.2)           ;; if loading pre 2.2 objects convert to post 2.2 format
+                          )
+                        (begin
+                          (set! import-result (import-from-file newfilename))))
 
-                           ;; then run through all the links and generate sexpr
-                           (ht-build-sexpr-from-objectlist-with-rules imported-links-alist)
-
-                           ;; record start node, if any
-                           (if (get-start-node)
-                               (list
-                                (list 'set-start-node! (get-start-node)))
-                               '())
-
-                           ;; run through all facts and generate sexpr
-                           (ht-build-sexpr-from-objectlist imported-facts-alist)))
-                        
-                        (hd-begin-update undo-manager)
-                        
-                        ;; undoable event
-                        (hd-postedit
-                         undo-manager
-                         (make-undoable-edit
-                          "Import File"
-                          (lambda () ;; undo
-                            
-                            (map (lambda (node-keypair)
-                                   (dodelnode (car node-keypair) #t))
-                                 imported-nodes-alist)
-                            (map (lambda (fact-keypair)
-                                   (delete-fact (car fact-keypair)))
-                                 imported-facts-alist)
-                            
-                            ;; restore start node
-                             (clear-display)
-                            (if start-node-b4
-                               (set-start-node! start-node-b4))
-                            ;; update start node display
-                            
-                            (populate-display)
-                            )
-                          (lambda () ;; redo
-                            (display "imported-sexpr ")(display imported-sexpr)(newline)
-                            (clear-display)
-                            (runcode-just-sexpr imported-sexpr)
-                            (populate-display)
-                            )))
-                        
-                        (hd-end-update undo-manager undo-action redo-action)
-                        
-                        (populate-display)             ;; populate the display (important to convert first)
+                    ;; if import success
+                    (if import-result
+                        ;; post an undoable edit
+                        (post-import-undo-edit node-lst-b4 link-lst-b4 fact-lst-b4)
+                        (begin
+                          (display "[Error]: doimport failure when doing import-from-file")(newline))
                         )
-                      (begin
-                       (if (import-from-file newfilename)
-                           (obj-conversion-2.2))
-                       (populate-display))))
+                    ))
+
+              ;; post an undo action for import
+              ;; compares the lists of node, link and fact IDs to see which are the imported objects
+              
+              (define (post-import-undo-edit node-lst-b4 link-lst-b4 fact-lst-b4)
+                 ;; list of ID after import
+                (define node-lst-aft (datatable-ID-lst 'nodes))
+                (define link-lst-aft (datatable-ID-lst 'links))
+                (define fact-lst-aft (datatable-ID-lst 'facts))
+
+                ;; list of ID that are added during import
+                (define imported-nodes (lset-difference = node-lst-aft node-lst-b4))
+                (define imported-links (lset-difference = link-lst-aft link-lst-b4))
+                (define imported-facts (lset-difference = fact-lst-aft fact-lst-b4))
+
+                ;; make them into alist again
+                (define imported-nodes-alist
+                  (map (lambda (ID)
+                         (cons ID (get 'nodes ID)))
+                       imported-nodes))
+                (define imported-links-alist
+                  (map (lambda (ID)
+                         (cons ID (get 'links ID)))
+                       imported-links))
+                (define imported-facts-alist
+                  (map (lambda (ID)
+                         (cons ID (get 'facts ID)))
+                       imported-facts))
+
+                (define imported-sexpr
+                  (append
+                   (list 'begin)
+
+                   ;; run through all nodes and generate sexpr
+                   (ht-build-sexpr-from-objectlist-with-rules imported-nodes-alist)
+
+                   ;; then run through all the links and generate sexpr
+                   (ht-build-sexpr-from-objectlist-with-rules imported-links-alist)
+
+                   ;; record start node, if any
+                   (if (get-start-node)
+                       (list
+                        (list 'set-start-node! (get-start-node)))
+                       '())
+
+                   ;; run through all facts and generate sexpr
+                   (ht-build-sexpr-from-objectlist imported-facts-alist)))
+
+                (hd-begin-update undo-manager)
+
+                ;; undoable event
+                (hd-postedit
+                 undo-manager
+                 (make-undoable-edit
+                  "Import File"
+                  (lambda () ;; undo
+
+                    ;; undo deletes the newly imported nodes and facts (links are tied to nodes)
+                    (map (lambda (node-keypair)
+                           (dodelnode (car node-keypair)))
+                         imported-nodes-alist)
+                    (map (lambda (fact-keypair)
+                           (delete-fact (car fact-keypair)))
+                         imported-facts-alist)
+
+                    ;; restore start node
+                    ;; technically we just need to repopulate the node-list but that is not exported at the moment
+                    (clear-display)
+                    (if start-node-b4
+                        (set-start-node! start-node-b4))
+                    ;; update start node display
+
+                    (populate-display)
+                    )
+                  (lambda () ;; redo
+                    ;; just run the expr to recreate the imported objects
+                    (clear-display)
+                    (runcode-just-sexpr imported-sexpr)
+                    (populate-display)
+                    )))
+
+                (hd-end-update undo-manager undo-action redo-action)) ;; end of post-import-undo-edit
+              
+              
+              ;; have to populate since we cleared before
+              (populate-display)
               
               ; import from file
 ;              (if (import-from-file newfilename)
@@ -484,9 +499,12 @@
   (store-node-positions) ; store the node positions in the graph
   (save-to-file in-filename silent?))
 
+(define (hd-dirty?)
+  (or (dirty?) (nodeeditor-dirty?)))
+
 ; prompt for save before close/new - returns #t if its safe to proceed, #f otherwise
 (define (confirm-save)
-  (if (or (dirty?) (nodeeditor-dirty?))
+  (if (hd-dirty?)
       ; dirty, so ask first
       (if (exceeded-node-limit?)
           ; can't save, ask if they want to quit anyway
@@ -652,17 +670,13 @@
 ;; assumes whatever is inside the data table are all pre 2.2
 ;; since there is no clear way to differentiate between pre 2.2 and post 2.2 
 (define (obj-conversion-2.2)
-  (newline)
-  (display "STARTed v2.2 conversion ")
-  (newline)
-  (newline)
+  ;;(newline)
+  ;;(display "STARTed v2.2 conversion ")
+  ;;(newline)
+  ;;(newline)
   
-  ;(if (<= loaded-file-version 2.1)
-  ;    (begin
-        (table-map 'links convert-pre-2.2-links)
-        (table-map 'nodes convert-pre-2.2-nodes)
-        ;(table-map 'actions convert-pre-2.2-actions)
-  ;      ))
+  (table-map 'links convert-pre-2.2-links)
+  (table-map 'nodes convert-pre-2.2-nodes)
   )
 
 (define (convert-pre-2.2-nodes nodeID node-obj)
@@ -681,7 +695,6 @@
     (if (ask node-obj 'convert-flag)
         (if rule-obj
             (begin
-              (display "REALLY converting node ")(display nodeID)(newline)
               
               ;; conversion underway for this one so the flag has done its job
               (ask node-obj 'set-convert-flag! #f)
@@ -698,7 +711,7 @@
               
 
               (define actions (ask rule-obj 'actions))
-              (display "actions count in CONVERSION ")(display (length actions))(newline)
+              ;;(display "actions count in CONVERSION ")(display (length actions))(newline)
               (map (lambda (actionID)
                      (define action (get 'actions actionID))
                      (define action-string (ask action 'expr))
@@ -708,8 +721,8 @@
 
                      (if (not (eof-object? action-sexpr))
                          (begin
-                           (display "SEXPR ")(display action-sexpr)(newline)
-                           (display "pair? ")(display (pair? action-sexpr))(newline)
+                           ;;(display "SEXPR ")(display action-sexpr)(newline)
+                           ;;(display "pair? ")(display (pair? action-sexpr))(newline)
                            (define new-rule (get 'rules new-ruleID))
                            ;; set fact actions
                            (create-action node-name 'entered-node
@@ -726,10 +739,10 @@
                            ))
                      ) actions)
 
-              (display "actions count2 in CONVERSION ")(display (length (ask rule-obj 'actions)))(newline)
-              (display "actions ")(display (ask rule-obj 'actions))(newline)
-              (display "new-ruleID ")(display new-ruleID)(newline)
-              (display "new actions ")(display (ask (get 'rules new-ruleID) 'actions))(newline)
+;;              (display "actions count2 in CONVERSION ")(display (length (ask rule-obj 'actions)))(newline)
+;;              (display "actions ")(display (ask rule-obj 'actions))(newline)
+;;              (display "new-ruleID ")(display new-ruleID)(newline)
+;;              (display "new actions ")(display (ask (get 'rules new-ruleID) 'actions))(newline)
               
               ;; transfer the condition from the original old rule to the new rules
               ;(create-typed-condition2 name type targetID operator ruleID #!key fixedID comparator-args)
@@ -745,7 +758,7 @@
             ;; no rule for node so no need to transfer anything to new rule
             (begin
               (ask node-obj 'set-convert-flag! #f)
-                                        ;(display "no rule for node ")(display nodeID)(newline)
+                                        ;;(display "no rule for node ")(display nodeID)(newline)
               #f
               )))
     ))

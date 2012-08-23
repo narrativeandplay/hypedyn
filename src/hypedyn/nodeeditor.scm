@@ -488,7 +488,6 @@
 
 ; enable/disable link-related buttons
 (define (enable-link-buttons newstate)
-  (display "enable link buttons ")(display newstate)(newline)
   (set-button nodeeditor-toolbar-button-editlink newstate)
   (set-button nodeeditor-toolbar-button-dellink newstate)
   (set-button nodeeditor-toolbar-button-renamelink newstate)
@@ -652,7 +651,6 @@
 ;;      deletes from nodeeditor if del-in-nodeeditor is #t
 ;; 
 (define (delete-link linkID del-in-nodeeditor node-graph update-node-style-callback)
-  (display "[delete-link] ")(newline)
   (let ((thelink (get 'links linkID)))
     (if thelink
         (begin

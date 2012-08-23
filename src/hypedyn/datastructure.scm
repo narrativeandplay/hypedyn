@@ -763,7 +763,7 @@
 
 ; add node to node-list and data-table, and to graph-editor
 (define (create-node name content x y anywhere update-display . args)
-  (format #t "Creating node: ~a~%~!" name)
+  ;;(format #t "Creating node: ~a~%~!" name)
   (let* ((actual-x (if (importing?)
                        (if anywhere
                            (+ x import-offset-anywhere-x)
@@ -812,7 +812,7 @@
                      use-alt-destination use-alt-text alt-destination alt-text
                      update-display . args)
   
-  (format #t "Creating link: ~a~%~!" name)
+  ;;(format #t "Creating link: ~a~%~!" name)
   (let* ((actual-fromnodeID (if (importing?)
                                 (if (not (= fromnodeID -1))
                                     (+ fromnodeID import-offset-ID)
@@ -992,7 +992,6 @@
         (ask the-rule 'add-condition! (ask new-condition 'ID)))))
 
 (define (create-typed-condition2 name type targetID operator ruleID #!key fixedID numfact-args)
-  (display "create typed condition2 ")(display targetID)(newline) 
   (let* ((actual-ruleID (if (importing?)
                             (+ ruleID import-offset-ID)
                             ruleID))
@@ -1019,7 +1018,7 @@
 
 ; create an action
 (define (create-action name type expr ruleID #!key fixedID)
-  (display "[create-action] expr ")(newline)
+  ;;(display "[create-action] expr ")(newline)
   ;(display "expr class ")(display (invoke expr 'get-class))(newline)
   
   (let* ((actual-ruleID (if (importing?)

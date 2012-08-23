@@ -18,7 +18,6 @@
 ;; 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 (require 'list-lib)
-(require "../kawa/ui/undo.scm") ;; for save-point-reset
 
 (require "objects.scm")
 (require "myhashtable.scm") ;; hash-table-get
@@ -47,8 +46,7 @@
              (lambda (self) (set! dirty #t)))
     (obj-put this-obj 'clear-dirty!
              (lambda (self)
-               (set! dirty #f)
-               (save-point-reset)))
+               (set! dirty #f)))
     
     ;; Note: careful putting into the same ID would overwrite the previous value
     (obj-put this-obj 'put

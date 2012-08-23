@@ -173,19 +173,6 @@
         (clear-dirty!)))
   )
 
-;; load from file without reseting environment
-;(define (load-from-file2 filename)
-;  ; read sexpr file into environment
-;  (if (read-sexpr-file filename)
-;      (begin
-;        ; remember filename and directory
-;        (set-saved-filename! filename)
-;        (update-last-saved-dir)
-
-;        ; mark newly loaded file as clean
-;        (clear-dirty!)))
-;  )
-
 ; import flag:
 ; languages can use this to check whether to offset object IDs when importing
 (define-private import-flag #f)

@@ -43,7 +43,7 @@
   (require "languages.scm")
   (require "preferences.scm")
   (require "macos.scm")
-  (require "datatable.scm") ;; dirty?
+  ;;(require "datatable.scm") ;; dirty?
   )
 
 ; export

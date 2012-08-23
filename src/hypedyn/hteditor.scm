@@ -40,7 +40,7 @@
 (require "../kawa/ui/undo.scm")
 
 (require "../common/objects.scm") ;; ask
-(require "../common/datatable.scm") ;; dirty?, reset-table, del, get
+(require "../common/datatable.scm") ;; dirty?, reset-table, del, get, clear-dirty!
 (require "../common/object-listview.scm")
 (require "../common/fileio.scm")
 (require "../common/graphics.scm")
@@ -849,7 +849,7 @@
             ;; NOTE: the postedit called within dodelnode would not be triggered 
             ;; since we do not allow postedit when undoing
             (display "new nodeID ")(display new-nodeID)(newline)
-            (dodelnode new-nodeID #t)
+            (dodelnode new-nodeID)
             (display "undoing duplicate ")(newline)
             )
           (lambda () ;; redo
@@ -1032,7 +1032,7 @@
 
 ; delete currently selected node
 ;; node-to-del if specified would delete that node
-(define (dodelnode #!optional node-to-del-ID post-undo?)
+(define (dodelnode #!optional node-to-del-ID)
   
   ;; if node-to-del-ID not specified, we delete the selected node
   (if (not node-to-del-ID)
@@ -1041,15 +1041,12 @@
   ; first save the node contents if its being edited
   (if (= (get-edited-nodeID) node-to-del-ID)
       (nodeeditor-save))
-  (display "node editor saved ")(newline)
-    
+  
   (define cached-nodeID node-to-del-ID)
   (define node-to-del (get 'nodes cached-nodeID))
   (define nodename (ask node-to-del 'name))
   (define node-anywhere (ask node-to-del 'anywhere?))
   (define node-sexpr (ask node-to-del 'to-save-sexpr))
-  
-  (display "node-sexpr ")(display node-sexpr)(newline)
   
   ; store the position
   (ask (if node-anywhere anywhere-graph node-graph) 'store-node-position cached-nodeID node-to-del)
@@ -1058,8 +1055,6 @@
   
   ; remember if this was the start node
   (define was-start-node (= (get-start-node) cached-nodeID))
-  
-  (display "list of action ")(display (map (lambda (o) (car o)) (get-list 'actions)))(newline)
   
   ;; get the list of follow-link actions going to this node
   (define actionID-lst
@@ -1077,42 +1072,32 @@
   
   ;; wrap delete link and delete node in one operation
   ;; delete-node invokes delete-link which has its own hd-postedit
-  (if (not post-undo?)
-      (begin
-        (display "compound start here ")(newline)
-        (hd-begin-update undo-manager))
-      )
+  (hd-begin-update undo-manager)
   
   ;; delete follow link actions to this node
-  (display "actionID-lst ")(display actionID-lst)(newline)
   (map delete-action actionID-lst)
   
   ;; does not contain any undo postedit
   (delete-node node-to-del-ID)
   
-  (if (not post-undo?)
       ;; add the undoable edit
-      (hd-postedit
-       undo-manager
-       (make-undoable-edit
-        "Delete Node"
-        (lambda () ;; redo new node is undo for delnode - not quite, also need to restore the start node if necessary
-          (display "undoing delete node")(newline)
-          (newnode-redo nodename node-anywhere cached-nodeID node-sexpr)
-          (if was-start-node (set-start-node! cached-nodeID))
-          (update-display-nodes cached-nodeID nodename
-                                actual-x actual-y
-                                node-anywhere))
-        (lambda () ;; undo new node is redo for delnode
-          (display "redoing delete node")(newline)
-          (newnode-undo cached-nodeID))
-        )))
+  (hd-postedit
+   undo-manager
+   (make-undoable-edit
+    "Delete Node"
+    (lambda () ;; redo new node is undo for delnode - not quite, also need to restore the start node if necessary
+      (display "undoing delete node")(newline)
+      (newnode-redo nodename node-anywhere cached-nodeID node-sexpr)
+      (if was-start-node (set-start-node! cached-nodeID))
+      (update-display-nodes cached-nodeID nodename
+                            actual-x actual-y
+                            node-anywhere))
+    (lambda () ;; undo new node is redo for delnode
+      (display "redoing delete node")(newline)
+      (newnode-undo cached-nodeID))
+    ))
   
-  (if (not post-undo?)
-      (begin
-        (display "compound end here ")(newline)
-        (hd-end-update undo-manager undo-action redo-action)))
-      )
+  (hd-end-update undo-manager undo-action redo-action)) ;; end of dodelnode
 
 ; delete a node
 (define (delete-node nodeID)
@@ -1125,9 +1110,9 @@
                 (display "nodeID match so close it ")(display (get-edited-nodeID))(newline)
                 (nodeeditor-close)
                 (set-edited-nodeID! '()))
-              (begin
-                (display "nodeID DOESNOT match so dont close it ")(display (get-edited-nodeID))(newline)
-                )
+;;              (begin
+;;                (display "nodeID DOESNOT match so dont close it ")(display (get-edited-nodeID))(newline)
+;;                )
               )
           (if (= (get-read-nodeID) nodeID)
               (begin

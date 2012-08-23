@@ -63,7 +63,9 @@
    (lambda ()
      (clear-dirty!)
      (nodeeditor-clear-dirty!)
-     (update-dirty-state)))
+     (update-dirty-state)
+     (save-point-reset undo-manager)
+     ))
   )
 
 ; delete link action (do and redo)
@@ -292,6 +294,8 @@
   )
 
 (define (hd-begin-update undo-mgr :: <compoundundomanager>)
+  
+  ;;(display "hd begin update ")(display (compoundundomanager-updatelevel undo-mgr))(newline)
   ;; wrapped operation
   (compoundundomanager-beginupdate undo-mgr))
 
@@ -299,6 +303,7 @@
   ;; wrapped operation
   (compoundundomanager-endupdate undo-mgr undo-action redo-action)
   (auto-save-check undo-mgr)
+  ;;(display "hd end update ")(display (compoundundomanager-updatelevel undo-mgr))(newline)
   )
 
 ;; check whether it is time to autosave, do if if it is
@@ -308,6 +313,6 @@
   ;;   as a single edit using a start-update/end-update pair on the outer most level
   ;; every x number of compound postedit, auto save 
   (if (and (= (compoundundomanager-updatelevel undo-mgr) 0)
-           (= (modulo (get-save-point-offset) 10) 0))
+           (= (modulo (get-save-point-offset undo-mgr) 10) 0))
       (hd-autosave))
   )

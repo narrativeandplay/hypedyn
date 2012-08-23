@@ -28,7 +28,7 @@
 
 (begin
   (require "objects.scm")
-  (require "datatable.scm") ;; get-list
+  (require "datatable.scm") ;; get-list, dirty?
   (require "window-menu.scm")
   (require "../kawa/ui/component.scm")
   (require "../kawa/ui/container.scm")
@@ -294,7 +294,7 @@
 
 ; update inspectors
 (define (update-inspectors)
-  (if dirty?
+  (if (dirty?)
       (let ((the-inspectors (get-list 'inspectors)))
         (if the-inspectors
             (map (lambda (i)

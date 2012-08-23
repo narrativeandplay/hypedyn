@@ -1387,19 +1387,9 @@
                             (ask dst-tab 'line-del line)
                             ;; need to remove from links list as well - alex
                             ;(display "links before del ")(display links)(newline) 
-                            (display "ID ")(display ID)(newline)
-                            (display "line name ")(display (ask line 'get-data))(newline)
-                            (display (map (lambda (link)
-                                            (car link)) links))(newline)
-                            
-                            ;(display "testing name ")(display (ask (cadr (car links)) 'get-data))(newline)
-                            (display (map (lambda (link)
-                                            (ask (cadr link) 'get-data)) (cdr links)))(newline)
                                    
                             (if ID
                                 (set! links (remove (lambda (a) (equal? (car a) ID)) links)))
-                            (display (map (lambda (link)
-                                            (car link)) links))(newline)
                             
                             ;(display "links after aft ")(display links)(newline)
                             (ask line 'hide)

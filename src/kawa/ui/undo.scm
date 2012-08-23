@@ -70,7 +70,6 @@
 (define (undo-manager-discard-all-edits in-undo-manager :: <javax.swing.undo.UndoManager>)
   (invoke in-undo-manager 'discardAllEdits))
 
-
 ;;
 ;; compound undo manager:
 ;; keeps track of a series of edits, combines them into a compound edit, and, 
@@ -87,17 +86,12 @@
   )
 
 ; end a compound edit
+;; TODO undo-action and redo-action is updated internally since undo-mgr keeps track of it
+;; remove undo-action and redo-action arguments
+
 (define (compoundundomanager-endupdate in-undo-manager :: <compoundundomanager>
                                        undo-action redo-action)
-  
-  (invoke in-undo-manager 'endUpdate)
-  
-  ;; if we're not 
-  (if (not (compoundundomanager-locked? in-undo-manager))
-      (save-point-newedit in-undo-manager))
-  
-  (update-undo-action undo-action)
-  (update-redo-action redo-action))
+  (invoke in-undo-manager 'endUpdate))
 
 (define (compoundundomanager-updatelevel in-undo-manager :: <compoundundomanager>)
   (invoke in-undo-manager 'getUpdateLevel)
@@ -113,7 +107,6 @@
                                       in-edit :: <javax.swing.undo.UndoableEdit>)
   (if (undoable-edit? in-edit)
       (begin
-        (save-point-newedit in-undo-manager)
         (invoke in-undo-manager 'postEdit in-edit)
         (update-undo-action (invoke in-undo-manager 'get-undo-action))
         (update-redo-action (invoke in-undo-manager 'get-redo-action))
@@ -134,6 +127,7 @@
   (undo-action :: <undoAction>)
   (redo-action :: <redoAction>)
   (undoing-redoing-lock :: boolean)
+  (save-point-offset :: <int>)
   
   ; constructor
   ((*init*)
@@ -145,37 +139,43 @@
    
    (set! undoing-redoing-lock #f)
    
+   (set! save-point-offset 0)
+   
    ; add ourselves as a listener to our undo edit support class
    (invoke undo-edit-support 'addUndoableEditListener (this)))
   
   ; manual posting of edits, allows tracking of compound edits
   ((postEdit (e :: <javax.swing.undo.UndoableEdit>)) :: <void>
-   (begin
-     ;(format #t "compoundundomanager postEdit: ~a~%~!" e)
-     (if (and (undoable-edit? e)
-              (not undoing-redoing-lock))
-         (begin
-           (invoke undo-edit-support 'postEdit e)
-           )
+
+   ;;(format #t "compoundundomanager postEdit: ~a~%~!" e)
+   (if (and (undoable-edit? e)
+            (not undoing-redoing-lock))
+       (begin
+         (invoke undo-edit-support 'postEdit e)
+         (save-point-newedit)
+         (update-actions)
+         )
 ;         (begin
 ;           (display "[postedit ignored] '")(display (invoke e 'getPresentationName))(display "'")(newline)
 ;           (display "  Either not undoable-edit? ")(display (not (undoable-edit? e)))(newline)
 ;           (display "  Or undoing-redoing-lock ")(display undoing-redoing-lock)(newline)
 ;           )
-         )
-     ))
+         ))
      
   ; begin batching of edits
   ((beginUpdate) :: <void>
-   (begin
-     ;(format #t "compoundundomanager beginUpdate~%~!")
-     (invoke undo-edit-support 'beginUpdate)))
+   ;; can only beginUpdate if not undoing and redoing, if not it is ignored
+   (if (not undoing-redoing-lock)
+       (invoke undo-edit-support 'beginUpdate)))
   
   ; end batching of edits
   ((endUpdate) :: <void>
-   (begin
-     ;(format #t "compoundundomanager endUpdate~%~!")
-     (invoke undo-edit-support 'endUpdate)))
+   ;; can only endUpdate if not undoing and redoing, if not it is ignored
+   (if (not undoing-redoing-lock)
+       (begin
+         (invoke undo-edit-support 'endUpdate)
+         (save-point-newedit)
+         (update-actions))))
   
   ((getUpdateLevel)
    (invoke undo-edit-support 'getUpdateLevel))
@@ -183,6 +183,14 @@
   ((set-undo-redo-actions in-undo-action in-redo-action)
    (set! undo-action in-undo-action)
    (set! redo-action in-redo-action)
+   )
+  
+  ((update-actions) :: <void>
+   (if (not (void? undo-action))
+       (update-undo-action undo-action))
+           
+   (if (not (void? redo-action))
+       (update-redo-action redo-action))
    )
   
   ;; check locks to make sure that you do not post new undoableedit
@@ -197,12 +205,16 @@
   
   ((undo)
    (lock)
+   (display "undoing LOCK")(newline)
    (invoke-special <javax.swing.undo.UndoManager> (this) 'undo)
+   (display "undoing UNLOCK")(newline)
    (unlock)
    )
   ((redo)
    (lock)
+   (display "redoing LOCK")(newline)
    (invoke-special <javax.swing.undo.UndoManager> (this) 'redo)
+   (display "redoing UNLOCK")(newline)
    (unlock)
    )
   
@@ -211,6 +223,34 @@
   
   ((get-redo-action) :: <redoAction>
    redo-action)
+  
+  ((get-save-point-offset) :: <int>
+   save-point-offset)
+  
+  ((save-point-newedit) :: <void>
+   ;; if simple postedit or end of compound then increment
+   (if (= (invoke undo-edit-support 'getUpdateLevel) 0)
+       (set! save-point-offset (+ save-point-offset 1)))
+
+   ;; always set dirty since it is a new edit
+   (set-dirty!))
+  
+  ((save-point-redo) :: <void>
+   (set! save-point-offset (+ save-point-offset 1))
+   (if (= save-point-offset 0)
+       (clear-dirty!)
+       (set-dirty!))
+   )
+  
+  ((save-point-undo) :: <void>
+   (set! save-point-offset (- save-point-offset 1))
+   (if (= save-point-offset 0)
+       (clear-dirty!)
+       (set-dirty!))
+   )
+  
+  ((save-point-reset) :: <void>
+   (set! save-point-offset 0))
   )
 
 ;;
@@ -232,7 +272,7 @@
 ; undo action class
 (define-simple-class <undoAction> (<javax.swing.AbstractAction>)
   ; undo manager
-  (undo :: <javax.swing.undo.UndoManager>)
+  (undo-mgr :: <javax.swing.undo.UndoManager>)
   
   ; associated redo action
   (associatedRedoAction :: <redoAction>)
@@ -253,7 +293,7 @@
                                                              'getMenuShortcutKeyMask))))
      
      ; remember undo manager
-     (set! undo u)
+     (set! undo-mgr u)
      
      ; and enable
      (invoke (this) 'setEnabled #f)))
@@ -265,12 +305,12 @@
   
   ; perform the undo
   ((actionPerformed e :: <java.awt.event.ActionEvent>) :: <void>
-   (define cached-presentation-name (invoke undo 'getUndoPresentationName))
+   (define cached-presentation-name (invoke undo-mgr 'getUndoPresentationName))
    (try-catch
        (begin
-         (invoke undo 'undo)
+         (invoke undo-mgr 'undo)
          (display "undoing ")(newline)
-         (save-point-undo))
+         (save-point-undo undo-mgr))
      (ex <javax.swing.undo.CannotUndoException>
          (begin
            (display cached-presentation-name)(display " [undo failed]")(newline)
@@ -283,10 +323,10 @@
   ; update the action
   ((update) access: 'protected :: <void>
    (begin
-     (if (invoke undo 'canUndo)
+     (if (invoke undo-mgr 'canUndo)
          (begin
            (invoke (this) 'setEnabled #t)
-           (invoke (this) 'putValue <javax.swing.Action>:NAME (invoke undo 'getUndoPresentationName)))
+           (invoke (this) 'putValue <javax.swing.Action>:NAME (invoke undo-mgr 'getUndoPresentationName)))
          (begin
            (invoke (this) 'setEnabled #f)
            (invoke (this) 'putValue <javax.swing.Action>:NAME "Undo")))))
@@ -307,7 +347,7 @@
 ; redo action class
 (define-simple-class <redoAction> (<javax.swing.AbstractAction>)
   ; undo manager
-  (undo :: <javax.swing.undo.UndoManager>)
+  (undo-mgr :: <javax.swing.undo.UndoManager>)
   
   ; associated undo action
   (associatedUndoAction :: <undoAction>)
@@ -327,7 +367,7 @@
                                                              'getMenuShortcutKeyMask))))
 
    ; remember undo manager
-     (set! undo u)
+     (set! undo-mgr u)
      
      ; and disable
      (invoke (this) 'setEnabled #f)))
@@ -338,14 +378,14 @@
   
   ; perform the redo
   ((actionPerformed e :: <java.awt.event.ActionEvent>) :: <void>
-   (define cached-presentation-name (invoke undo 'getUndoPresentationName))
+   (define cached-presentation-name (invoke undo-mgr 'getUndoPresentationName))
    (begin
      (try-catch
          (begin
            ;(save-point-redo)
-           (invoke undo 'redo)
+           (invoke undo-mgr 'redo)
            (display "redoing ")(newline)
-           (save-point-redo)
+           (save-point-redo undo-mgr)
            )
        (ex <javax.swing.undo.CannotRedoException>
            (begin
@@ -359,10 +399,10 @@
   ; update the action
   ((update) access: 'protected :: <void>
    (begin
-     (if (invoke undo 'canRedo)
+     (if (invoke undo-mgr 'canRedo)
          (begin
            (invoke (this) 'setEnabled #t)
-           (invoke (this) 'putValue <javax.swing.Action>:NAME (invoke undo 'getRedoPresentationName)))
+           (invoke (this) 'putValue <javax.swing.Action>:NAME (invoke undo-mgr 'getRedoPresentationName)))
          (begin
            (invoke (this) 'setEnabled #f)
            (invoke (this) 'putValue <javax.swing.Action>:NAME "Redo")))))
@@ -447,6 +487,9 @@
 (define local-set-dirty! #f)
 (define local-clear-dirty! #f)
 
+
+;; since undo manager does changes to the other component which keeps dirty flags
+;; it has to set them too, procedures for setting and clearing are kept here and called
 (define-private (set-dirty!) 
   ;(display "set dirty! ")(newline)
   (if (procedure? local-set-dirty!)
@@ -474,42 +517,24 @@
 
 
 ;; TODO save point offset should be an attribute of the undo manager
-(define save-point-offset 0)
 
-(define (get-save-point-offset)
-  save-point-offset)
+(define (get-save-point-offset undo-mgr)
+  (invoke undo-mgr 'get-save-point-offset))
 
-(define (save-point-newedit in-undo-manager) ;; new edits (compound or simple)
-  ;; if simple postedit or end of compound then increment
-  (if (= (compoundundomanager-updatelevel in-undo-manager) 0)
-      (set! save-point-offset (+ save-point-offset 1)))
-  
-  ;(display "[sp-edit] ")(display save-point-offset)(newline)
-  
-  ;; always set dirty since it is a new edit
-  (set-dirty!)
-  )
+(define (save-point-newedit undo-mgr) ;; new edits (compound or simple)
+  (invoke undo-mgr 'save-point-newedit))
 
 ;; only time to clear dirty is when save-point-offset is 0 
 ;; both redo and undo can trigger it
-(define (save-point-redo)
-  (set! save-point-offset (+ save-point-offset 1))
-  (if (= save-point-offset 0)
-      (clear-dirty!)
-      (set-dirty!))
-;  (display "[sp-redo] ")(display save-point-offset)(newline)
-  )
+(define (save-point-redo undo-mgr)
+  (invoke undo-mgr 'save-point-redo))
 
-(define (save-point-undo)
-  (set! save-point-offset (- save-point-offset 1))
-  (if (= save-point-offset 0)
-      (clear-dirty!)
-      (set-dirty!))
-  )
+(define (save-point-undo undo-mgr)
+  (invoke undo-mgr 'save-point-undo))
 
 ;; called by clear-dirty! as save/load fileio needs
 ;; to start a new save point offset count
-(define (save-point-reset)
-  (set! save-point-offset 0))
+(define (save-point-reset undo-mgr)
+  (invoke undo-mgr 'save-point-reset))
 
 
