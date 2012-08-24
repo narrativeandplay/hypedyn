@@ -254,6 +254,31 @@
                              ) lst)
                       '())
                   ))
+              
+              (define (after-import)
+                (define action-lst
+                  (let ((lst (get-list 'actions)))
+                    (if (pair? lst)
+                        (map (lambda (pair)
+                               (cdr pair)
+                               ) lst)
+                        '())))
+                
+                (display "AFTER IMPORT ")(newline)
+                (map (lambda (action)
+                       (if (ask action 'imported?)
+                           (begin
+                             
+                             (display "AI 2 ")(newline)
+                             ;; do post import processing on the actions
+                             (ask action 'after-import)
+                             
+
+                             ;; remove the flag after that 
+                             (ask action 'set-imported! #f)
+                             ))
+                       ) action-lst)
+                )
 
               ;; caching of rules, actions and conditions are done through caching of node and link
               ;; list of ID before import
@@ -268,10 +293,13 @@
 
                     ;; do the import 
                     (define import-result #f)
+                    (display "IMPORTING")(newline)
+                    (display "fileformat ")(display (get-fileformat-version))(newline)
+                    (display "version number ")(display version-number)(newline)
+                    
                     (if (not (= (get-fileformat-version) version-number))
                         (begin
                           ;; mark the imported object for conversion
-                          
                           (set-conversion-flag! #t)
                           (set! import-result (import-from-file newfilename))
                           (set-conversion-flag! #f)
@@ -284,8 +312,13 @@
 
                     ;; if import success
                     (if import-result
-                        ;; post an undoable edit
-                        (post-import-undo-edit node-lst-b4 link-lst-b4 fact-lst-b4)
+                        (begin
+                          ;; post an undoable edit
+                          (post-import-undo-edit node-lst-b4 link-lst-b4 fact-lst-b4)
+
+                          ;; process the imported actions
+                          (after-import)
+                          )
                         (begin
                           (display "[Error]: doimport failure when doing import-from-file")(newline))
                         )
@@ -708,8 +741,9 @@
                   (create-action "Enable Link" 'anywhere-check
                                  (list 'add-anywhere-link nodeID)
                                  new-ruleID))
-              
 
+              ;; only version 2.1 has actions
+              ;; the expr of the actions has to be converted to list from string
               (define actions (ask rule-obj 'actions))
               ;;(display "actions count in CONVERSION ")(display (length actions))(newline)
               (map (lambda (actionID)
@@ -717,6 +751,8 @@
                      (define action-string (ask action 'expr))
 
                      (define action-input-port (open-input-string action-string))
+                     
+                     ;; just need to read once because action sexpr are one liners
                      (define action-sexpr (read action-input-port))
 
                      (if (not (eof-object? action-sexpr))
@@ -724,11 +760,18 @@
                            ;;(display "SEXPR ")(display action-sexpr)(newline)
                            ;;(display "pair? ")(display (pair? action-sexpr))(newline)
                            (define new-rule (get 'rules new-ruleID))
+                           
                            ;; set fact actions
-                           (create-action node-name 'entered-node
-                                          action-sexpr
-                                          new-ruleID)
-
+                           (define new-action-ID
+                             (create-action node-name 'entered-node
+                                            action-sexpr
+                                            new-ruleID))
+                           
+                           (define new-action (get 'actions new-action-ID))
+                           
+                           ;; transfer the imported? flag
+                           (ask new-action 'set-imported! (ask action 'imported?))
+                           
                            ;; remove the old actions 
                            ;; that has expr in the string form
                            (display "deleting old action ")(display actionID)(newline)

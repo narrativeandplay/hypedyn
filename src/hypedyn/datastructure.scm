@@ -637,7 +637,118 @@
 ;;     replace-link-text has type 'displayed-node
 (define-private (make-action name type expr ruleID . args)
                 (let* ((uniqueID-obj (make-uniqueID-object name (if (pair? args) (car args))))
-                       (this-obj (new-object uniqueID-obj)))
+                       (this-obj (new-object uniqueID-obj))
+                       (imported? (importing?))
+                       )
+                  
+                  (display "make-action imported? ")(display imported?)(newline) 
+                  
+                  (obj-put this-obj 'imported? (lambda (self) imported?))
+                  (obj-put this-obj 'set-imported! (lambda (self flag) 
+                                                     (display "setting import ")(display flag)(newline)
+                                                     (set! imported? flag)))
+                  
+                  ;; TODO: Identify more actions that need their target's ID offset during import
+                  
+                  ;; importing actions needs special treatments for follow link targets etc
+                  (obj-put this-obj 'after-import
+                           (lambda (self)
+                             (if (pair? expr)
+                                 (cond ((or (equal? (car expr) 'follow-link)
+                                            (equal? (car expr) 'show-in-popup))
+                                        ;; import offset for the dest node ID of follow-link action
+                                        ;; (follow-link2 linkID parent-ruleID link-type dest-nodeID)
+                                        (ask self 'set-expr!
+                                             (list-replace expr 4 (+ (list-ref expr 4) import-offset-ID))))
+                                       ((equal? (car expr) 'replace-link-text)
+                                        ;; import offset for target linkID's for replace-link-text action
+                                        ;;(replace-link-text text-type value linkID)
+                                        (ask self 'set-expr!
+                                             (list-replace expr 3 (+ (list-ref expr 3) import-offset-ID))))
+                                       ((or (equal? (car expr) 'set-value!)
+                                            (equal? (car expr) 'assert)
+                                            (equal? (car expr) 'retract))
+                                        ;; import offset for target linkID's for replace-link-text action
+                                        ;;(replace-link-text text-type value linkID)
+                                        (ask self 'set-expr!
+                                             (list-replace expr 1 (+ (list-ref expr 1) import-offset-ID)))
+                                        )
+                                       ((equal? (car expr) 'set-number-fact)
+                                        ;; replace the first factID
+                                        (ask self 'set-expr!
+                                             (list-replace expr 1 (+ (list-ref expr 1) import-offset-ID)))
+
+                                        ;; the third argument's format
+                                        ;; fact  factID 
+
+                                        ;; math (list operator
+                                        ;;            operand1 operand1-type
+                                        ;;            operand2 operand2-type)
+
+                                        ;; random (list operand1 operand1-type
+                                        ;;            operand2 operand2-type)
+
+                                        ;; operand1 and operand2 are strings for both math and random
+
+;                                          (list 'set-number-fact
+;                                              factID
+;                                              num-fact-mode
+;                                              new-fact-value)
+
+                                        (define third-arg (list-ref expr 3))
+                                        
+                                        (display "third arg ")(display third-arg)(newline)
+                                        
+                                        (define corrected-third-arg
+                                          (case (list-ref expr 2)
+                                            (("Fact") (+ third-arg import-offset-ID))
+                                            (("Math")
+                                             (define opr1-str (list-ref third-arg 1))
+                                             (define opr2-str (list-ref third-arg 3))
+                                             (display "here 1")(newline)
+                                             (define opr1 (string->number opr1-str))
+                                             (define opr2 (string->number opr2-str))
+                                             (display "here 2")(newline)
+                                             (define opr1-corrected (+ opr1 import-offset-ID))
+                                             (define opr2-corrected (+ opr2 import-offset-ID))
+                                             (display "here 3")(newline)
+                                             (define opr1-corrected-str (number->string opr1-corrected))
+                                             (define opr2-corrected-str (number->string opr2-corrected))
+                                             (display "here 4")(newline)
+                                             (define retval
+                                               (list (list-ref third-arg 0)
+                                                     opr1-corrected-str
+                                                     (list-ref third-arg 2)
+                                                     opr2-corrected-str
+                                                     (list-ref third-arg 4)))
+                                             (display "retval ")(display retval)(newline)
+                                             retval
+                                             )
+                                            (("Random")
+                                             (define opr1-str (list-ref third-arg 0))
+                                             (define opr2-str (list-ref third-arg 2))
+                                             (display "here 5")(newline)
+                                             (define opr1 (string->number opr1-str))
+                                             (define opr2 (string->number opr2-str))
+                                             (display "here 6")(newline)
+                                             (define opr1-corrected (+ opr1 import-offset-ID))
+                                             (define opr2-corrected (+ opr2 import-offset-ID))
+                                             (display "here 7")(newline)
+                                             (define opr1-corrected-str (number->string opr1-corrected))
+                                             (define opr2-corrected-str (number->string opr2-corrected))
+                                             (display "here 8")(newline)
+                                             (list opr1-corrected-str
+                                                   (list-ref third-arg 1)
+                                                   opr2-corrected-str
+                                                   (list-ref third-arg 3))
+                                             )
+                                            ))
+                                        ;; replace the value 
+                                        (ask self 'set-expr!
+                                             (list-replace expr 3 corrected-third-arg))
+                                        ))) ;; end of if
+                             ))
+                  
                   (obj-put this-obj 'type (lambda (self) type))
                   (obj-put this-obj 'expr (lambda (self) expr))
                   (obj-put this-obj 'set-expr! 
@@ -763,6 +874,7 @@
 
 ; add node to node-list and data-table, and to graph-editor
 (define (create-node name content x y anywhere update-display . args)
+  
   ;;(format #t "Creating node: ~a~%~!" name)
   (let* ((actual-x (if (importing?)
                        (if anywhere
@@ -1037,28 +1149,31 @@
     (put 'actions new-action-ID new-action)
     
     ;; debugging import 
-    (if (not (pair? expr))
-        (begin
-          (display "ERROR NOT PAIR!! ")(display ruleID)(newline)
-          (display "expr in create action ")(display expr)(newline)
-          (display "expr class ")(display (invoke expr 'get-class))(newline)
-          ))
+;    (if (not (pair? expr))
+;        (begin
+;          (display "ERROR NOT PAIR!! ")(display ruleID)(newline)
+;          (display "expr in create action ")(display expr)(newline)
+;          (display "expr class ")(display (invoke expr 'get-class))(newline)
+;          ))
     
     ;; this is for importing actions that need no version conversion 
     ;; those that needs conversion already has the import offset added before conversion
-    (if (importing?)
-        (begin
-          (cond ((equal? (car expr) 'follow-link)
-                 ;; import offset for the dest node ID of follow-link action
-                 ;; (follow-link2 linkID parent-ruleID link-type dest-nodeID)
-                 (ask new-action 'set-expr!
-                      (list-replace expr 4 (+ (list-ref expr 4) import-offset-ID))))
-                ((equal? (car expr) 'replace-link-text)
-                 ;; import offset for target linkID's for replace-link-text action
-                 ;;(replace-link-text text-type value linkID)
-                 (ask new-action 'set-expr!
-                      (list-replace expr 3 (+ (list-ref expr 3) import-offset-ID))))
-                )))
+    ;; Note: still need to check whether it is pair for version 2.1
+    ;;       all the expr in v2.1 is still in string
+;    (if (and (pair? expr)
+;             (importing?))
+;        (begin
+;          (cond ((equal? (car expr) 'follow-link)
+;                 ;; import offset for the dest node ID of follow-link action
+;                 ;; (follow-link2 linkID parent-ruleID link-type dest-nodeID)
+;                 (ask new-action 'set-expr!
+;                      (list-replace expr 4 (+ (list-ref expr 4) import-offset-ID))))
+;                ((equal? (car expr) 'replace-link-text)
+;                 ;; import offset for target linkID's for replace-link-text action
+;                 ;;(replace-link-text text-type value linkID)
+;                 (ask new-action 'set-expr!
+;                      (list-replace expr 3 (+ (list-ref expr 3) import-offset-ID))))
+;                )))
 
     ; add action to rule
     ; note: for nodes, before=then=step and after=else=init for now
