@@ -11,6 +11,7 @@
 (require "../kawa/ui/tabpanel.scm")
 (require "../kawa/ui/radio.scm")
 (require "../kawa/ui/checkbox.scm")
+(require "../kawa/ui/scrollpane.scm")
 (require "../kawa/ui/undo.scm") ; make-undoable-edit
 (require "../common/main-ui.scm") ;;get-main-ui-frame
 (require "../common/fileio.scm") ;; get-last-saved-dir
@@ -57,54 +58,50 @@
 ;(define (get-browse-css-tf2)
 ;  (get-text browse-css-tf2))
 
+(define author-name-tf #f)
+(define story-title-tf #f)
+(define story-comment-tf #f)
+
 (define (make-general-tab)
   (define general-tab (make-panel))
-  (define label-group-panel (make-panel))
+
   (define label-panel-1 (make-panel))
   (define label-panel-2 (make-panel))
   (define label-panel-3 (make-panel))
+  (define label-group-panel (make-panel))
 
-  (define tf-group-panel (make-panel))
   (define tf-panel-1 (make-panel))
   (define tf-panel-2 (make-panel))
   (define tf-panel-3 (make-panel))
-
+  (define tf-group-panel (make-panel))
+  
   (define label-1 (make-label-with-title "Author"))
   (define label-2 (make-label-with-title "Title"))
   (define label-3 (make-label-with-title "Comments"))
 
-  (define tf-1 (make-textfield "" 20))
-  (define tf-2 (make-textfield "" 20))
-  (define tf-3 (make-textfield "" 20))
+  (set! author-name-tf (make-textarea "" 10 20))
+  (set! story-title-tf (make-textarea "" 10 20))
+  (set! story-comment-tf (make-textarea "" 10 20))
 
   (set-container-layout label-group-panel 'grid 3 1)
   (set-container-layout tf-group-panel 'grid 3 1)
-
+  
   (add-component label-panel-1 label-1)
   (add-component label-panel-2 label-2)
   (add-component label-panel-3 label-3)
-
-  (add-component tf-panel-1 tf-1)
-  (add-component tf-panel-2 tf-2)
-  (add-component tf-panel-3 tf-3)
-
-
+  
+  (add-component tf-panel-1 (make-scrollpane-with-policy author-name-tf 'needed 'never))
+  (add-component tf-panel-2 (make-scrollpane-with-policy story-title-tf 'needed 'never))
+  (add-component tf-panel-3 (make-scrollpane-with-policy story-comment-tf 'needed 'never))
+  
   (add-component label-group-panel label-panel-1)
-                                        ;(add-component label-group-panel (invoke-static <javax.swing.Box> 'create-vertical-glue))
   (add-component label-group-panel label-panel-2)
-                                        ;(add-component label-group-panel (invoke-static <javax.swing.Box> 'create-vertical-glue))
   (add-component label-group-panel label-panel-3)
-                                        ;(add-component label-group-panel (invoke-static <javax.swing.Box> 'create-horizontal-glue))
-
 
   (add-component tf-group-panel tf-panel-1)
-                                        ;(add-component tf-group-panel (invoke-static <javax.swing.Box> 'create-vertical-glue))
   (add-component tf-group-panel tf-panel-2)
-                                        ;(add-component tf-group-panel (invoke-static <javax.swing.Box> 'create-vertical-glue))
   (add-component tf-group-panel tf-panel-3)
-                                        ; (add-component tf-group-panel (invoke-static <javax.swing.Box> 'create-vertical-glue))
 
-                                        ;panel.setPreferredSize(panel.getPreferredSize());
   (define (pack-panel panel)
     (invoke panel 'set-preferred-size
             (invoke panel 'get-preferred-size)))
@@ -118,25 +115,18 @@
   (pack-panel tf-group-panel)
   (pack-panel label-group-panel)
 
-  (set-border tf-panel-1 black-border)
-  (set-border tf-panel-2 black-border)
-  (set-border tf-panel-3 black-border)
-  (set-border label-panel-1 black-border)
-  (set-border label-panel-2 black-border)
-  (set-border label-panel-3 black-border)
+;;  (set-border tf-panel-1 black-border)
+;;  (set-border tf-panel-2 black-border)
+;;  (set-border tf-panel-3 black-border)
+;;  (set-border label-panel-1 black-border)
+;;  (set-border label-panel-2 black-border)
+;;  (set-border label-panel-3 black-border)
 
   (set-container-layout general-tab 'horizontal)
-                                        ;(define general-group-panel (make-panel))
-                                        ;(set-container-layout general-group-panel 'horizontal)
-
-                                        ;(add-component general-tab label-group-panel)
-                                        ;(add-component general-tab tf-group-panel)
-                                        ;(add-component general-tab general-group-panel)
 
   (add-components general-tab
                   label-group-panel
                   tf-group-panel
-                                        ;(invoke-static <javax.swing.Box> 'create-horizontal-glue)
                   )
   (pack-panel general-tab)
   
@@ -292,9 +282,13 @@
     ((custom) (radio-button-set-selected rbutton-3 #t)))
   (set-text browse-css-tf (get-custom-css-location))
   ;(set-text browse-css-tf2 (get-custom-css-location2))
+  (set-text author-name-tf (get-author-name))
+  (set-text story-title-tf (get-story-title))
+  (set-text story-comment-tf (get-story-comment))
   )
 
-(define (set-properties back restart break resize width height csstype css-loc1) ;;css-loc2
+(define (set-properties back restart break resize width height csstype css-loc1 
+                        author-name story-title story-comment) ;;css-loc2
   (set-disable-back-button! back)
   (set-disable-restart-button! restart)
   (set-disable-pagebreak! break)
@@ -303,13 +297,17 @@
   (set-fixed-page-height! height)
   (set-css-type! csstype)
   (set-custom-css-location! css-loc1)
+  (set-author-name! author-name)
+  (set-story-title! story-title)
+  (set-story-comment! story-comment)
   ;(set-custom-css-location2! css-loc2)
   )
 
 (define (make-properties-ui)
   (define propt-dialog (make-dialog (get-main-ui-frame) "Properties" #t))
+  (set-dialog-resizable propt-dialog #f)
   (define propt-tabpanel (make-tab-panel))
-  ;(add-tabpanel-tab propt-tabpanel "General" (make-general-tab))
+  (add-tabpanel-tab propt-tabpanel "General" (make-general-tab))
   (add-tabpanel-tab propt-tabpanel "Reader" (make-reader-tab))
 
   (set! confirm-button (make-button "Ok"))
@@ -342,6 +340,9 @@
                                  (get-css-type)
                                  (get-custom-css-location)
                                  ;(get-custom-css-location2)
+                                 (get-author-name)
+                                 (get-story-title)
+                                 (get-story-comment)
                                  ))
                          
                          ;; gotten from ui
@@ -355,8 +356,10 @@
                                  (get-stylesheet-choice)
                                  (get-text browse-css-tf)
                                  ;(get-text browse-css-tf2)
+                                 (get-text author-name-tf)
+                                 (get-text story-title-tf)
+                                 (get-text story-comment-tf)
                                  ))
-                         
                          (apply set-properties new-properties)
                          (hd-postedit
                           undo-manager

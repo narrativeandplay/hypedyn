@@ -45,7 +45,10 @@
                get-css-type set-css-type! reset-css-type
                get-custom-css-location set-custom-css-location! reset-custom-css-location
                get-custom-css-location2 set-custom-css-location2! reset-custom-css-location2
-               
+               get-author-name set-author-name! reset-author-name
+               get-story-title set-story-title! reset-story-title
+               get-story-comment set-story-comment! reset-story-comment
+
                java-reader? set-java-reader!
                get-temp-dir set-temp-dir! get-local-port set-local-port!
                node-name-limit choice-name-limit rule-name-limit
@@ -294,6 +297,29 @@
 (define (set-custom-css-location2! new-loc) (set! custom-css-location2 new-loc))
 (define (reset-custom-css-location2) (set! custom-css-location2 ""))
 
+;;
+;; this stuff should probably go in datastructure.scm, as it is story-specific
+;; 
+
+; author name
+(define author-name "")
+(define (get-author-name) author-name)
+(define (set-author-name! new-name) (set! author-name new-name))
+(define (reset-author-name) (set! author-name ""))
+
+; story title
+(define story-title "")
+(define (get-story-title) story-title)
+(define (set-story-title! new-title) (set! story-title new-title))
+(define (reset-story-title) (set! story-title ""))
+
+; story comments
+(define story-comment "")
+(define (get-story-comment) story-comment)
+(define (set-story-comment! new-comment) (set! story-comment new-comment))
+(define (reset-story-comment) (set! story-comment ""))
+
+
 ;; do this when we start a new story
 (define (reset-properties)
   (reset-back-button)
@@ -304,7 +330,10 @@
   (reset-fixed-page-height)
   (reset-css-type)
   (reset-custom-css-location)
-  (reset-custom-css-location2))
+  (reset-custom-css-location2)
+  (reset-author-name)
+  (reset-story-title)
+  (reset-story-comment))
 
 ;; my attempt at a generic getter setter generator
 #|

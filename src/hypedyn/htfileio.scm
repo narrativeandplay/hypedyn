@@ -691,6 +691,9 @@
       (list 'set-css-type! (list 'quote (get-css-type)))
       (list 'set-custom-css-location! (get-custom-css-location))
       (list 'set-custom-css-location2! (get-custom-css-location2))
+      (list 'set-author-name! (get-author-name))
+      (list 'set-story-title! (get-story-title))
+      (list 'set-story-comment! (get-story-comment))
       )
          
      )))

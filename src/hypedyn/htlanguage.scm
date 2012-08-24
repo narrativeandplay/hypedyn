@@ -138,6 +138,9 @@
   (primitive-procedure-add! 'set-css-type! set-css-type!)
   (primitive-procedure-add! 'set-custom-css-location! set-custom-css-location!)
   (primitive-procedure-add! 'set-custom-css-location2! set-custom-css-location2!)
+  (primitive-procedure-add! 'set-author-name! set-author-name!)
+  (primitive-procedure-add! 'set-story-title! set-story-title!)
+  (primitive-procedure-add! 'set-story-comment! set-story-comment!)
   
   ; some additional useful primitives
   (primitive-procedure-add! 'random generate-random-int)

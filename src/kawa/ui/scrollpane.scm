@@ -60,7 +60,7 @@
     (case hp-sym
       ((always) hori-sb-always)
       ((needed) hori-sb-needed)
-      ((never) jori-sb-never)
+      ((never) hori-sb-never)
       (else (display "Error unknown scrollpane policy ")(display hp-sym)
             hori-sb-needed)))
   
