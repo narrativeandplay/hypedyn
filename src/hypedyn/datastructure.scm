@@ -667,7 +667,8 @@
                                              (list-replace expr 3 (+ (list-ref expr 3) import-offset-ID))))
                                        ((or (equal? (car expr) 'set-value!)
                                             (equal? (car expr) 'assert)
-                                            (equal? (car expr) 'retract))
+                                            (equal? (car expr) 'retract)
+                                            (equal? (car expr) 'add-anywhere-link))
                                         ;; import offset for target linkID's for replace-link-text action
                                         ;;(replace-link-text text-type value linkID)
                                         (ask self 'set-expr!
@@ -705,38 +706,27 @@
                                             (("Math")
                                              (define opr1-str (list-ref third-arg 1))
                                              (define opr2-str (list-ref third-arg 3))
-                                             (display "here 1")(newline)
                                              (define opr1 (string->number opr1-str))
                                              (define opr2 (string->number opr2-str))
-                                             (display "here 2")(newline)
                                              (define opr1-corrected (+ opr1 import-offset-ID))
                                              (define opr2-corrected (+ opr2 import-offset-ID))
-                                             (display "here 3")(newline)
                                              (define opr1-corrected-str (number->string opr1-corrected))
                                              (define opr2-corrected-str (number->string opr2-corrected))
-                                             (display "here 4")(newline)
-                                             (define retval
-                                               (list (list-ref third-arg 0)
-                                                     opr1-corrected-str
-                                                     (list-ref third-arg 2)
-                                                     opr2-corrected-str
-                                                     (list-ref third-arg 4)))
-                                             (display "retval ")(display retval)(newline)
-                                             retval
+                                             (list (list-ref third-arg 0)
+                                                   opr1-corrected-str
+                                                   (list-ref third-arg 2)
+                                                   opr2-corrected-str
+                                                   (list-ref third-arg 4))
                                              )
                                             (("Random")
                                              (define opr1-str (list-ref third-arg 0))
                                              (define opr2-str (list-ref third-arg 2))
-                                             (display "here 5")(newline)
                                              (define opr1 (string->number opr1-str))
                                              (define opr2 (string->number opr2-str))
-                                             (display "here 6")(newline)
                                              (define opr1-corrected (+ opr1 import-offset-ID))
                                              (define opr2-corrected (+ opr2 import-offset-ID))
-                                             (display "here 7")(newline)
                                              (define opr1-corrected-str (number->string opr1-corrected))
                                              (define opr2-corrected-str (number->string opr2-corrected))
-                                             (display "here 8")(newline)
                                              (list opr1-corrected-str
                                                    (list-ref third-arg 1)
                                                    opr2-corrected-str
