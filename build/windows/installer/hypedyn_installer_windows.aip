@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<DOCUMENT Type="Advanced Installer" CreateVersion="7.2" version="9.0.1" Modules="simple" RootPath="." Language="en" Id="{444A7B1E-FE11-4894-B116-12A004422260}">
+<DOCUMENT Type="Advanced Installer" CreateVersion="7.2" version="9.4" Modules="simple" RootPath="." Language="en" Id="{444A7B1E-FE11-4894-B116-12A004422260}">
   <COMPONENT cid="caphyon.advinst.msicomp.MsiPropsComponent">
     <ROW Property="ALLUSERS" Value="2"/>
     <ROW Property="ARPCOMMENTS" Value="This installer database contains the logic and data required to install [|ProductName]." ValueLocId="*"/>
     <ROW Property="ARPPRODUCTICON" Value="hypedyn.exe" Type="8"/>
     <ROW Property="ARPURLINFOABOUT" Value="http://www.partechgroup.org/hypedyn"/>
     <ROW Property="Manufacturer" Value="NUS" ValueLocId="*"/>
-    <ROW Property="ProductCode" Value="1033:{6E6F4260-0669-4ADB-8E88-B946A8D16A52} " Type="16"/>
+    <ROW Property="ProductCode" Value="1033:{15257108-97CE-4637-8D7B-2813CA2DDC4C} " Type="16"/>
     <ROW Property="ProductLanguage" Value="1033"/>
     <ROW Property="ProductName" Value="HypeDyn" ValueLocId="*"/>
-    <ROW Property="ProductVersion" Value="2.2.0.227"/>
+    <ROW Property="ProductVersion" Value="2.2.0.237" Type="32"/>
     <ROW Property="SecureCustomProperties" Value="OLDPRODUCTS;AI_NEWERPRODUCTFOUND"/>
     <ROW Property="UpgradeCode" Value="{4A49B042-B355-40B9-8DA5-F9E45E2ED511}"/>
   </COMPONENT>
@@ -49,7 +49,9 @@
     <ROW File="LRRH2.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH2.dyn" Attributes="0" SourcePath="..\..\..\bin\examples\LRRH2.dyn" SelfReg="false" NextFile="LRRH3.dyn"/>
     <ROW File="LRRH3.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH3.dyn" Attributes="0" SourcePath="..\..\..\bin\examples\LRRH3.dyn" SelfReg="false" NextFile="hypedyn_tutorial_1.pdf"/>
     <ROW File="LRRH4.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH4.dyn" Attributes="0" SourcePath="..\..\..\bin\examples\LRRH4.dyn" SelfReg="false" NextFile="choicebutton.js"/>
-    <ROW File="README.txt" Component_="README.txt" FileName="README.txt" Attributes="0" SourcePath="..\..\..\bin\README.txt" SelfReg="false"/>
+    <ROW File="LRRH5.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH5.dyn" Attributes="0" SourcePath="..\..\..\bin\examples\LRRH5.dyn" SelfReg="false" NextFile="LRRH6.dyn"/>
+    <ROW File="LRRH6.dyn" Component_="rashomon_alt_anywhere.dyn" FileName="LRRH6.dyn" Attributes="0" SourcePath="..\..\..\bin\examples\LRRH6.dyn" SelfReg="false"/>
+    <ROW File="README.txt" Component_="README.txt" FileName="README.txt" Attributes="0" SourcePath="..\..\..\bin\README.txt" SelfReg="false" NextFile="hypedyntutorial4.pdf"/>
     <ROW File="choicebutton.js" Component_="choicebutton.js" FileName="choice~1.js|choice-button.js" Attributes="0" SourcePath="..\..\..\bin\js\choice-button.js" SelfReg="false" NextFile="config.js"/>
     <ROW File="config.js" Component_="choicebutton.js" FileName="config.js" Attributes="0" SourcePath="..\..\..\bin\js\config.js" SelfReg="false" NextFile="datastructure.js"/>
     <ROW File="datastructure.js" Component_="choicebutton.js" FileName="datast~1.js|datastructure.js" Attributes="0" SourcePath="..\..\..\bin\js\datastructure.js" SelfReg="false" NextFile="facts.js"/>
@@ -61,6 +63,7 @@
     <ROW File="hypedyn_tutorial_1.pdf" Component_="hypedyn_tutorial_1.pdf" FileName="hypedy~1.pdf|hypedyn-tutorial-1.pdf" Attributes="0" SourcePath="..\..\..\bin\tutorials\hypedyn-tutorial-1.pdf" SelfReg="false" NextFile="hypedyn_tutorial_2.pdf"/>
     <ROW File="hypedyn_tutorial_2.pdf" Component_="hypedyn_tutorial_2.pdf" FileName="hypedy~2.pdf|hypedyn-tutorial-2.pdf" Attributes="0" SourcePath="..\..\..\bin\tutorials\hypedyn-tutorial-2.pdf" SelfReg="false" NextFile="hypedyn.jar"/>
     <ROW File="hypedyn_tutorial_3.pdf" Component_="hypedyn_tutorial_3.pdf" FileName="hypedy~3.pdf|hypedyn-tutorial-3.pdf" Attributes="0" SourcePath="..\..\..\bin\tutorials\hypedyn-tutorial-3.pdf" SelfReg="false" NextFile="LRRH4.dyn"/>
+    <ROW File="hypedyntutorial4.pdf" Component_="hypedyn_tutorial_1.pdf" FileName="hypedy~4.pdf|hypedyn-tutorial-4.pdf" Attributes="0" SourcePath="..\..\..\bin\tutorials\hypedyn-tutorial-4.pdf" SelfReg="false" NextFile="LRRH5.dyn"/>
     <ROW File="index.html" Component_="choicebutton.js" FileName="index~1.htm|index.html" Attributes="0" SourcePath="..\..\..\bin\js\index.html" SelfReg="false" NextFile="iscroll.js"/>
     <ROW File="iscroll.js" Component_="choicebutton.js" FileName="iscroll.js" Attributes="0" SourcePath="..\..\..\bin\js\iscroll.js" SelfReg="false" NextFile="layout.js"/>
     <ROW File="kawa.jar" Component_="hypedyn.jar" FileName="kawa.jar" Attributes="0" SourcePath="..\..\..\bin\Java\kawa.jar" SelfReg="false" NextFile="AppleJavaExtensions.jar"/>
@@ -85,11 +88,16 @@
   <COMPONENT cid="caphyon.advinst.msicomp.FragmentComponent">
     <ROW Fragment="CommonUI.aip" Path="&lt;AI_FRAGS&gt;CommonUI.aip"/>
     <ROW Fragment="FolderDlg.aip" Path="&lt;AI_THEMES&gt;classic\fragments\FolderDlg.aip"/>
+    <ROW Fragment="MaintenanceTypeDlg.aip" Path="&lt;AI_THEMES&gt;classic\fragments\MaintenanceTypeDlg.aip"/>
+    <ROW Fragment="MaintenanceWelcomeDlg.aip" Path="&lt;AI_THEMES&gt;classic\fragments\MaintenanceWelcomeDlg.aip"/>
     <ROW Fragment="SequenceDialogs.aip" Path="&lt;AI_THEMES&gt;classic\fragments\SequenceDialogs.aip"/>
     <ROW Fragment="Sequences.aip" Path="&lt;AI_FRAGS&gt;Sequences.aip"/>
     <ROW Fragment="StaticUIStrings.aip" Path="&lt;AI_FRAGS&gt;StaticUIStrings.aip"/>
     <ROW Fragment="UI.aip" Path="&lt;AI_THEMES&gt;classic\fragments\UI.aip"/>
     <ROW Fragment="Validation.aip" Path="&lt;AI_FRAGS&gt;Validation.aip"/>
+    <ROW Fragment="VerifyRemoveDlg.aip" Path="&lt;AI_THEMES&gt;classic\fragments\VerifyRemoveDlg.aip"/>
+    <ROW Fragment="VerifyRepairDlg.aip" Path="&lt;AI_THEMES&gt;classic\fragments\VerifyRepairDlg.aip"/>
+    <ROW Fragment="WelcomeDlg.aip" Path="&lt;AI_THEMES&gt;classic\fragments\WelcomeDlg.aip"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiBinaryComponent">
     <ROW Name="aicustact.dll" SourcePath="&lt;AI_CUSTACTS&gt;aicustact.dll"/>
@@ -114,6 +122,12 @@
     <ROW Dialog_="VerifyReadyDlg" Control_="Install" Event="EndDialog" Argument="Return" Condition="AI_PATCH" Ordering="198"/>
     <ROW Dialog_="VerifyReadyDlg" Control_="Install" Event="EndDialog" Argument="Return" Condition="AI_INSTALL" Ordering="199"/>
     <ROW Dialog_="VerifyReadyDlg" Control_="Back" Event="NewDialog" Argument="CustomizeDlg" Condition="AI_MAINT" Ordering="201"/>
+    <ROW Dialog_="VerifyRemoveDlg" Control_="Remove" Event="EndDialog" Argument="Return" Condition="AI_MAINT AND InstallMode = &quot;Remove&quot;" Ordering="299"/>
+    <ROW Dialog_="VerifyRepairDlg" Control_="Repair" Event="EndDialog" Argument="Return" Condition="AI_MAINT AND InstallMode = &quot;Repair&quot;" Ordering="399"/>
+    <ROW Dialog_="VerifyRemoveDlg" Control_="Back" Event="NewDialog" Argument="MaintenanceTypeDlg" Condition="AI_MAINT AND InstallMode = &quot;Remove&quot;" Ordering="1"/>
+    <ROW Dialog_="VerifyRepairDlg" Control_="Back" Event="NewDialog" Argument="MaintenanceTypeDlg" Condition="AI_MAINT AND InstallMode = &quot;Repair&quot;" Ordering="1"/>
+    <ROW Dialog_="MaintenanceTypeDlg" Control_="RemoveButton" Event="NewDialog" Argument="VerifyRemoveDlg" Condition="AI_MAINT AND InstallMode = &quot;Remove&quot;" Ordering="601"/>
+    <ROW Dialog_="MaintenanceTypeDlg" Control_="RepairButton" Event="NewDialog" Argument="VerifyRepairDlg" Condition="AI_MAINT AND InstallMode = &quot;Repair&quot;" Ordering="601"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiCreateFolderComponent">
     <ROW Directory_="SHORTCUTDIR" Component_="SHORTCUTDIR"/>
@@ -125,6 +139,7 @@
     <ROW Action="AI_PREPARE_UPGRADE" Type="65" Source="aicustact.dll" Target="PrepareUpgrade"/>
     <ROW Action="AI_RESTORE_LOCATION" Type="65" Source="aicustact.dll" Target="RestoreLocation"/>
     <ROW Action="AI_ResolveKnownFolders" Type="1" Source="aicustact.dll" Target="AI_ResolveKnownFolders"/>
+    <ROW Action="AI_ResolveLocalizedCredentials" Type="1" Source="aicustact.dll" Target="GetLocalizedCredentials"/>
     <ROW Action="AI_SHOW_LOG" Type="65" Source="aicustact.dll" Target="LaunchLogFile" WithoutSeq="true"/>
     <ROW Action="AI_STORE_LOCATION" Type="51" Source="ARPINSTALLLOCATION" Target="[APPDIR]"/>
     <ROW Action="SET_APPDIR" Type="307" Source="APPDIR" Target="[ProgramFilesFolder][Manufacturer]\[ProductName]" MultiBuildTarget="DefaultBuild:[ProgramFilesFolder][ProductName]"/>
@@ -139,11 +154,13 @@
     <ROW Action="AI_RESTORE_LOCATION" Condition="APPDIR=&quot;&quot;" Sequence="749"/>
     <ROW Action="AI_STORE_LOCATION" Condition="Not Installed" Sequence="1501"/>
     <ROW Action="AI_PREPARE_UPGRADE" Condition="AI_UPGRADE=&quot;No&quot; AND (Not Installed)" Sequence="1399"/>
-    <ROW Action="AI_ResolveKnownFolders" Sequence="51"/>
+    <ROW Action="AI_ResolveKnownFolders" Sequence="52"/>
+    <ROW Action="AI_ResolveLocalizedCredentials" Sequence="51"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiInstallUISequenceComponent">
     <ROW Action="AI_RESTORE_LOCATION" Condition="APPDIR=&quot;&quot;" Sequence="749"/>
-    <ROW Action="AI_ResolveKnownFolders" Sequence="51"/>
+    <ROW Action="AI_ResolveKnownFolders" Sequence="52"/>
+    <ROW Action="AI_ResolveLocalizedCredentials" Sequence="51"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiShortsComponent">
     <ROW Shortcut="HypeDyn" Directory_="SHORTCUTDIR" Name="HypeDyn" Component_="hypedyn.exe" Target="[#hypedyn.exe]" Hotkey="0" IconIndex="0" ShowCmd="1" WkDir="APPDIR"/>

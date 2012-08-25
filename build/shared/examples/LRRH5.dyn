@@ -1,9 +1,9 @@
 (begin (make-hypertext (quote htfe) 2.2) (set-card-shark! (quote #f)) (begin
 (create-node "start"
 "This is the story of a girl named Little Red Riding Hood, which she was called because of the red hood that she often wore.\n\nOne day she was walking through the forest.\n"
-400.0 45.0 false false 1) (begin (create-typed-rule3 "new rule" (quote node)
+400.0 45.0 false false 1) (begin (create-typed-rule3 "initialize" (quote node)
 (quote and) #f 1 fixedID: 72 fall-through?: #t) (create-action "start" (quote
-entered-node) (list (quote set-number-fact) 73 "Input" "3") 72 73))) (begin
+entered-node) (list (quote set-number-fact) 73 "Input" "3") 72 103))) (begin
 (create-node "forest"
 "In the forest, Red came across a young man with a nasty smile.\n\n\"Where are you going, little girl?\" he asked. \n\n\"I'm off to see my sick granny,\" she said.\n\nWell, you can probably guess what happened next.\n\nwhichEnding? = dummy"
 80.0 225.0 false false 2) (begin (create-typed-rule3 "choose ending" (quote
@@ -23,19 +23,19 @@ false 3)) (begin (create-node "Hood details"
 false false -1 "" false 4) (begin (create-typed-rule3 "Next" (quote link)
 (quote and) #f 4 fixedID: 7 fall-through?: #t) (create-action "Next" (quote
 clicked-link) (list (quote follow-link) 4 7 (list (quote quote) (quote
-default)) 2) 7 82))) (begin (create-link "to the end" 2 -1 199 203 false false
+default)) 2) 7 81))) (begin (create-link "to the end" 2 -1 199 203 false false
 false -1 "" false 10) (begin (create-typed-rule3 "randomize" (quote link)
 (quote and) #f 10 fixedID: 63 fall-through?: #t) (create-action "to the end"
 (quote clicked-link) (list (quote set-number-fact) 26 "Random" (list "1"
-"Input" "73" "Fact")) 63 84)) (begin (create-typed-rule3 "to version 1" (quote
+"Input" "73" "Fact")) 63 82)) (begin (create-typed-rule3 "to version 1" (quote
 link) (quote and) #f 10 fixedID: 11 fall-through?: #t) (create-typed-condition2
 "to version 1" 3 26 #f 11 fixedID: 51 numfact-args: (list "=" "Input" "1"))
 (create-action "to the end" (quote clicked-link) (list (quote follow-link) 10
-11 (list (quote quote) (quote default)) 27) 11 85)) (begin (create-typed-rule3
+11 (list (quote quote) (quote default)) 27) 11 83)) (begin (create-typed-rule3
 "to version 2" (quote link) (quote and) #f 10 fixedID: 53 fall-through?: #t)
 (create-typed-condition2 "to version 2" 3 26 #f 53 fixedID: 54 numfact-args:
 (list "=" "Input" "2")) (create-action "to the end" (quote clicked-link) (list
-(quote follow-link) 10 53 (list (quote quote) (quote default)) 28) 53 86))
+(quote follow-link) 10 53 (list (quote quote) (quote default)) 28) 53 84))
 (begin (create-typed-rule3 "to version 3" (quote link) (quote and) #f 10
 fixedID: 77 fall-through?: #t) (create-typed-condition2 "to version 3" 3 26 #f
 77 fixedID: 86 numfact-args: (list "=" "Input" "3")) (create-action
@@ -44,41 +44,42 @@ quote) (quote default)) 80) 77 87))) (begin (create-link "restart" 3 -1 38 51
 false false false -1 "" false 13) (begin (create-typed-rule3 "restart" (quote
 link) (quote and) #f 13 fixedID: 14 fall-through?: #t) (create-action "restart"
 (quote clicked-link) (list (quote follow-link) 13 14 (list (quote quote) (quote
-default)) 1) 14 112) (create-action "restart" (quote clicked-link) (list (quote
-set-number-fact) 88 "Math" (list "+" "88" "Fact" "1" "Input")) 14 113))) (begin
+default)) 1) 14 88) (create-action "restart" (quote clicked-link) (list (quote
+set-number-fact) 88 "Math" (list "+" "88" "Fact" "1" "Input")) 14 89))) (begin
 (create-link "continue" 16 -1 185 191 false false false -1 "" false 17) (begin
 (create-typed-rule3 "continue" (quote link) (quote and) #f 17 fixedID: 18
 fall-through?: #t) (create-action "continue" (quote clicked-link) (list (quote
-follow-link) 17 18 (list (quote quote) (quote default)) 2) 18 105))) (begin
+follow-link) 17 18 (list (quote quote) (quote default)) 2) 18 90))) (begin
 (create-link "to the end" 80 -1 71 75 false false false -1 "" false 81) (begin
 (create-typed-rule3 "to end" (quote link) (quote and) #f 81 fixedID: 82
 fall-through?: #t) (create-action "to end" (quote clicked-link) (list (quote
-follow-link) 81 82 (list (quote quote) (quote default)) 3) 82 106))) (begin
+follow-link) 81 82 (list (quote quote) (quote default)) 3) 82 91))) (begin
 (create-link "more about the hood" 1 -1 94 102 false false false -1 "" false
 20) (begin (create-typed-rule3 "more about the hood" (quote link) (quote and)
 #f 20 fixedID: 21 fall-through?: #t) (create-typed-condition2
 "more about the hood" 3 88 #f 21 fixedID: 97 numfact-args: (list "=" "Input"
 "2")) (create-action "more about the hood" (quote clicked-link) (list (quote
-follow-link) 20 21 (list (quote quote) (quote default)) 16) 21 107))) (begin
+follow-link) 20 21 (list (quote quote) (quote default)) 16) 21 98))) (begin
 (create-link "show counter" 3 -1 25 36 false false false -1 "" false 89) (begin
 (create-typed-rule3 "show counter" (quote link) (quote and) #f 89 fixedID: 90
 fall-through?: #t) (create-action "show counter" (quote displayed-node) (list
-(quote replace-link-text) "number fact" 88 89) 90 108))) (begin (create-link
+(quote replace-link-text) "number fact" 88 89) 90 99))) (begin (create-link
 "debugging" 2 -1 221 226 false false false -1 "" false 31) (begin
 (create-typed-rule3 "debugging" (quote link) (quote and) #f 31 fixedID: 32
 fall-through?: #t) (create-action "debugging" (quote displayed-node) (list
-(quote replace-link-text) "number fact" 26 31) 32 109))) (begin (create-link
+(quote replace-link-text) "number fact" 26 31) 32 100))) (begin (create-link
 "to the end" 27 -1 165 169 false false false -1 "" false 45) (begin
 (create-typed-rule3 "to the end" (quote link) (quote and) #f 45 fixedID: 46
 fall-through?: #t) (create-action "to the end" (quote clicked-link) (list
-(quote follow-link) 45 46 (list (quote quote) (quote default)) 3) 46 110)))
+(quote follow-link) 45 46 (list (quote quote) (quote default)) 3) 46 101)))
 (begin (create-link "to the end" 28 -1 199 203 false false false -1 "" false
 48) (begin (create-typed-rule3 "to the end" (quote link) (quote and) #f 48
 fixedID: 49 fall-through?: #t) (create-action "to the end" (quote clicked-link)
 (list (quote follow-link) 48 49 (list (quote quote) (quote default)) 3) 49
-111))) (set-start-node! 1) (create-fact "numberOfEndings" (quote number) 73)
+102))) (set-start-node! 1) (create-fact "numberOfEndings" (quote number) 73)
 (create-fact "counter" (quote number) 88) (create-fact "whichEnding?" (quote
 number) 26) (set-disable-restart-button! #f) (set-disable-back-button! #f)
 (set-disable-pagebreak! #f) (set-disable-page-resize! #f)
 (set-fixed-page-width! 800) (set-fixed-page-height! 600) (set-css-type! (quote
-default)) (set-custom-css-location! "") (set-custom-css-location2! ""))
+default)) (set-custom-css-location! "") (set-custom-css-location2! "")
+(set-author-name! "") (set-story-title! "") (set-story-comment! ""))
