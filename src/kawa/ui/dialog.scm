@@ -54,9 +54,17 @@
                                      ((eq? choices 3) <javax.swing.JOptionPane>:YES_NO_CANCEL_OPTION)
                                      ((eq? choices 2) <javax.swing.JOptionPane>:YES_NO_OPTION)
                                      ((eq? choices 1) <javax.swing.JOptionPane>:DEFAULT_OPTION)))))
-    (cond ((= option <javax.swing.JOptionPane>:YES_OPTION) 1)
-          ((= option <javax.swing.JOptionPane>:CANCEL_OPTION) 2)
-          (else 3))))
+    (define retval
+      (cond ((= option <javax.swing.JOptionPane>:YES_OPTION) 1)
+            ((= option <javax.swing.JOptionPane>:CANCEL_OPTION) 2)
+            ((= option <javax.swing.JOptionPane>:NO_OPTION) 3)
+            ;; these arent used anywhere yet
+            ((= option <javax.swing.JOptionPane>:CLOSED_OPTION) 4)
+            ((= option <javax.swing.JOptionPane>:OK_OPTION) 5)
+            ))
+    (display "make-confirm-dialogbox returning ")(display retval)(newline)
+    retval
+    ))
 
 ;make an input dialog box
 ;takes some default text, the message to show, and the window title

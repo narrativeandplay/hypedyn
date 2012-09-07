@@ -548,9 +548,13 @@
           ; ask if they want to save
           (let ((reply (make-confirm-dialogbox
                         (get-main-ui-frame) 3 "Current project is not saved.\nDo you want to save the current project?")))
+            (display "reply ")(display reply)(newline)
             (cond ((eq? 1 reply) (dosave-wrapper #f))
-                  ((eq? 2 reply) #f)
-                  (else #t))))
+                  ;; cancel or close dialog
+                  ((or (eq? 2 reply)
+                       (eq? 4 reply)) #f)
+                  ((= 3 reply) #t)
+                  (else #f))))
       ; not dirty so go ahead
       #t))
 
