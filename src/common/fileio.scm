@@ -239,7 +239,6 @@
             ; now go ahead and write
             (if safetoproceed
                 (begin
-                  (display "NO WRITE PERMIT ERROR ")(newline)
                   (format #t "safetoproceed: ~a~%~!" safetoproceed)
                   (let ((output-port
                          (try-catch
@@ -249,6 +248,10 @@
                                  (display (*:toString ex))(newline)
                                  ;(*:printStackTrace ex)
                                  (set! safetoproceed #f)
+                                 
+                                 ;; error handling if any
+                                 (if (procedure? write-permit-error-callback)
+                                     (write-permit-error-callback))
                                  )))))
                     
                     (display "before put ")(newline)
