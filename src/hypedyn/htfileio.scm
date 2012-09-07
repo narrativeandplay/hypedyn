@@ -518,19 +518,31 @@
         (if (not (eq? #f newfile))
             (begin
               (set! loaded-file-version (get-fileformat-version))
-              (ht-save-to-file newfile #f)
-              (set-saved-filename! newfile)
-              (add-recent-file newfile)
-              (update-dirty-state)
-              #t)
+              
+              (if (ht-save-to-file newfile #f)
+                  (begin
+                    (display "ht save to file SUCCESS ")(newline)
+                    (set-saved-filename! newfile)
+                    (add-recent-file newfile)
+                    (update-dirty-state)
+                    #t)
+                  #f)
+              )
             #f))))
+
+(define (ht-write-permit-error-dialog)
+  (make-error-dialog 
+   (get-main-ui-frame)
+   "Error"
+   "Write Permission Error")
+  )
 
 ; ht-save to file:
 ; do any pre-save preparation then calls fileio.scm's save-to-file
 (define (ht-save-to-file in-filename silent?)
   (nodeeditor-save) ; save any content changes in the node editor
   (store-node-positions) ; store the node positions in the graph
-  (save-to-file in-filename silent?))
+  (save-to-file in-filename silent? ht-write-permit-error-dialog))
 
 (define (hd-dirty?)
   (or (dirty?) (nodeeditor-dirty?)))

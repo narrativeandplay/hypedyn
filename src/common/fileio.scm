@@ -202,7 +202,7 @@
     return-value))
 
 ;Writing an sexpr to a file, returns #t if successful, or #f if failed:
-(define (write-sexpr-file filename mysexpr)
+(define (write-sexpr-file filename mysexpr #!optional write-permit-error-callback)
   ;;(format #t "writing to file: ~a~b~%~!" filename mysexpr)
   ; first check for overwrite
   (let* ((safetoproceed #t)
@@ -227,12 +227,19 @@
                       (begin
                         (display (*:toString ex))(newline)
                         (set! safetoproceed #f)
+                        (display "DELETE FAILED ")(newline)
+                        
+                        ;; error handling if any
+                        (if (procedure? write-permit-error-callback)
+                            (write-permit-error-callback))
+                        
                         ;(*:printStackTrace ex)
                         ))))
 
             ; now go ahead and write
             (if safetoproceed
                 (begin
+                  (display "NO WRITE PERMIT ERROR ")(newline)
                   (format #t "safetoproceed: ~a~%~!" safetoproceed)
                   (let ((output-port
                          (try-catch
@@ -251,14 +258,10 @@
                         (begin
                           (format #t "writing~%~!")
                           (write mysexpr output-port)
-                          
-                          ;; debug
-                          ;;(write "<script language='javascript'> alert('POPED') </script>" output-port)
-                          
-                          
                           (close-output-port output-port)
                           #t)
-                        #f)))))))))
+                        #f)))
+                #f))))))
 
 ; install build-sexpr-callback for implementation-specific tags
 (define build-sexpr-callback #f)
@@ -275,13 +278,15 @@
               '())))
 
 ; save data structure to file
-(define (save-to-file filename silent?)
-  (if (write-sexpr-file filename (build-sexpr))
+(define (save-to-file filename silent? #!optional write-permit-error-callback)
+  (if (write-sexpr-file filename (build-sexpr) write-permit-error-callback)
       (if (not silent?)
           (begin
             (set-saved-filename! filename)
             (update-last-saved-dir)
-            (clear-dirty!)))))
+            (clear-dirty!))
+          #f)
+      #f))
 
 ; save data to sexpr
 (define (save-to-sexpr)
