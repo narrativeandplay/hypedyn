@@ -79,10 +79,13 @@
   (define label-2 (make-label-with-title "Title"))
   (define label-3 (make-label-with-title "Comments"))
 
-  (set! author-name-tf (make-textarea "" 10 20))
-  (set! story-title-tf (make-textarea "" 10 20))
-  (set! story-comment-tf (make-textarea "" 10 20))
-
+  (set! author-name-tf (make-textpane))
+  (set! story-title-tf (make-textpane))
+  (set! story-comment-tf (make-textpane))
+  (set-component-preferred-size author-name-tf 250 150)
+  (set-component-preferred-size story-title-tf 250 150)
+    (set-component-preferred-size story-comment-tf 250 150)
+  
   (set-container-layout label-group-panel 'grid 3 1)
   (set-container-layout tf-group-panel 'grid 3 1)
   
@@ -90,9 +93,9 @@
   (add-component label-panel-2 label-2)
   (add-component label-panel-3 label-3)
   
-  (add-component tf-panel-1 (make-scrollpane-with-policy author-name-tf 'needed 'never))
-  (add-component tf-panel-2 (make-scrollpane-with-policy story-title-tf 'needed 'never))
-  (add-component tf-panel-3 (make-scrollpane-with-policy story-comment-tf 'needed 'never))
+  (add-component tf-panel-1 (make-scrollpane-with-policy author-name-tf 'always 'never))
+  (add-component tf-panel-2 (make-scrollpane-with-policy story-title-tf 'always 'never))
+  (add-component tf-panel-3 (make-scrollpane-with-policy story-comment-tf 'always 'never))
   
   (add-component label-group-panel label-panel-1)
   (add-component label-group-panel label-panel-2)

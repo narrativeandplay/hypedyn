@@ -534,7 +534,7 @@
   (make-error-dialog 
    (get-main-ui-frame)
    "Error"
-   "Write Permission Error")
+   "Unable to save as you don't have permission\nto write to this location.")
   )
 
 ; ht-save to file:
@@ -1068,38 +1068,58 @@
 
 
 (define (copy-js-framework-to-folder export-folder)
+  (define safetoproceed #t)
+
   ;; create folder, first deleting if it already exists
-  (export-create-folder export-folder)
+  (try-catch
+      (export-create-folder export-folder)
+    (ex <java.lang.Throwable>
+        (begin
+          (display (*:toString ex))(newline)
+          (set! safetoproceed #f)
+          (display "export-create-folder FAILED")(newline)
+
+          (make-error-dialog
+           (get-main-ui-frame)
+           "Error"
+           "Unable to export: failed to create export folder.")
+
+          ;(*:printStackTrace ex)
+          )))
 
   ;; Note: put try-catch around this and cleanup on failure
-;          (let* ((source-folder-string (path-file (get-content-file "js"))))
-;            (recursively-copy-directory (make-file source-folder-string)
-;                                        export-folder)
-  (define source-folder (get-content-file "js"))
-  (recursively-copy-directory source-folder
-                              export-folder)
+  (if safetoproceed
+  (try-catch
+      (begin
+        (define source-folder (get-content-file "js"))
+        (recursively-copy-directory source-folder
+                                    export-folder)
 
-  ;; copy css files
-  (define styling-css-file
-    (case (get-stylesheet-choice)
-      ((default) (get-content-file "css/styling.css"))
-      ((fancy) (get-content-file "css/styling2.css"))
-      ((custom) (make-file (get-custom-css-location) ))))
+        ;; copy css files
+        (define styling-css-file
+          (case (get-stylesheet-choice)
+            ((default) (get-content-file "css/styling.css"))
+            ((fancy) (get-content-file "css/styling2.css"))
+            ((custom) (make-file (get-custom-css-location) ))))
 
-;          (define dimension-css-file
-;            (case (get-stylesheet-choice)
-;              ((default) (get-content-file "css/dimension.css"))
-;              ((fancy) (get-content-file "css/dimension2.css"))
-;              ((custom) (make-file (get-custom-css-location2)))))
+        (copy-file-nio styling-css-file (make-file (string-append (to-string export-folder) "/styling.css")))
 
-  (copy-file-nio styling-css-file (make-file (string-append (to-string export-folder) "/styling.css")))
-  ;; (copy-file-nio dimension-css-file (make-file (string-append (to-string export-folder) "/dimension.css")))
+        (write-jscode-to
+         (string-append (path-file export-folder) "/dynfile.js")
+         (generate-jscode))
+        #t)
+    (ex <java.lang.Throwable>
+        (begin
+          (display (*:toString ex))(newline)
+          (display "export FAILED")(newline)
 
-  (write-jscode-to
-   (string-append (path-file export-folder) "/dynfile.js")
-   (generate-jscode))
-  ;)
-  #t)
+          (make-error-dialog
+           (get-main-ui-frame)
+           "Error"
+           "Unable to export: failed to copy export files.")
+
+                                        ;(*:printStackTrace ex)
+          )))))
 
 (define (doexport-js) 
   (copy-js-framework))
