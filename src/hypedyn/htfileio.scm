@@ -1389,7 +1389,7 @@
     (display "name ")(display name)(newline)
     (display "type ")(display type)(newline)
     (string-append "\tcreateFact("
-                   (quote-nest name) ", "
+                   (quote-nest (escape-special name)) ", "
                    (quote-nest (to-string type)) ", "
                    (to-string factID) ");\n")
   ))
