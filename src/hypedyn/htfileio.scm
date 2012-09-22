@@ -1135,7 +1135,7 @@
     (apply string-append
            (append
             (list "\tcreateNode("
-                  (quote-nest name) ", " ;; assume no funny characters in these names
+                  (quote-nest (escape-special name)) ", " ;; not safe to assume no funny characters in these names
                   (quote-nest 
 ;                   (preserve-newline 
 ;                    (preserve-quotes (ask node 'content))
