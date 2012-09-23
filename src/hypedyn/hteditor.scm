@@ -736,6 +736,12 @@
           (set! expr (list-replace expr 3 (+ (list-ref expr 3) dup-offset-ID)))
           ))
          
+    ;; add anywhere link action should point to new duplicated node
+    (if (equal? (car expr) 'add-anywhere-link)
+        (begin
+          (set! expr (list-replace expr 1 (+ (list-ref expr 1) dup-offset-ID)))
+          ))
+;;         
     (create-action name type expr parentID new-actionID)
     ))
 
