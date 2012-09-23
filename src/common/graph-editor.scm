@@ -834,7 +834,9 @@
                            (lambda (self str)
                              (begin
                                (ask self 'hide #f)
+                               ; unfortunately we seem to have name stored in 2 places, so update both - alex
                                (ask self 'set-name! str)
+                               (set! name str) 
                                (set! width (get-real-width))
                                (ask self 'show #f)
                                (ask editor 'layout id))))
