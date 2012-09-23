@@ -407,13 +407,19 @@ function gotoNode(nodeID) {
         // update back button state
 		back_button_check();
         
-        // update node state - should this go before or after triggering enteredNode events?
-		node.visited = true;
+        // remember current nodeID
 		currNodeID = nodeID;
 
 		disp("goto node enter node ");
         // trigger enteredNode events on the node
 		eventTrigger("enteredNode", node);
+
+        // Note: this must come *after* triggering enteredNode events,
+        // otherwise there will be inconsistencies with "node visited" 
+        // conditions in node rules on anywhere nodes (see bug #1053942).
+        // Node is not considered visited when it is entered for the first time,
+        // only *after* its events have been triggered.
+		node.visited = true;
 
         // refresh the node display
         refreshNode(node);
