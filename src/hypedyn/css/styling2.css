@@ -2,21 +2,21 @@
 a.intextlink:link {
 	text-decoration: underline; 
 	color: blue;
-	//background-color:#B2FF99;
+	/* background-color:#B2FF99; */
 	font-size: 26px;
 }
 /* in text links (followed): note that link is generated so the usual followed state doesn't work */
 a.intextlink-followed:link {
 	text-decoration: underline;
 	color: purple;
-	//background-color:#FFFF85;
+	/* background-color:#FFFF85; */
 	font-size: 26px;
 }
 /* in text links: hover and active (same for followed and not followed) */
 a.intextlink:hover,a.intextlink-followed:hover {
 	text-decoration: overline;
 	color: salmon;
-	//background-color:#FF704D;
+	/* background-color:#FF704D; */
 	font-size: 26px;
 }
 a.intextlink:active,a.intextlink-followed:active {
@@ -30,19 +30,19 @@ a.intextlink:active,a.intextlink-followed:active {
 a.anywhere:link {
 	text-decoration: underline; 
 	color: blue;
-	//background-color:#B2FF99;
+	/* background-color:#B2FF99; */
 	font-size: 26px;
 }
 a.anywhere:visited {
 	text-decoration: underline;
 	color: purple;
-	//background-color:#FFFF85;
+	/* background-color:#FFFF85; */
 	font-size: 26px;
 }
 a.anywhere:hover {
 	text-decoration: overline;
-	color: chartreuse;//green;
-	//background-color:#FF704D;
+	color: chartreuse;/* green; */
+	/* background-color:#FF704D; */
 	font-size: 26px;
 }
 a.anywhere:active {
@@ -75,7 +75,7 @@ a.anywhere:active {
 }
 
 body {
-	//background-image: url(page_back_320_480.png);
+	/* background-image: url(page_back_320_480.png); */
 	background-color: aliceblue;
 	background-size: 100%;
 }
@@ -126,7 +126,7 @@ body {
 
 #popup {
 	position: relative;
-	//width: 260px;
+	/* width: 260px; */
 	z-Index: -104;
 	opacity: 1.0;
 	overflow: scroll;
@@ -140,7 +140,7 @@ body {
 
 #outer-popup {
 	position: fixed;
-	//width: 290px;
+	/* width: 290px; */
 	z-Index: -104;
 	border-radius: 15px;
 	

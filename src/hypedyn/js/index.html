@@ -2,21 +2,22 @@
 <html>
 <head>
 	<meta name="viewport" content="height=device-height, width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<link rel="stylesheet" type="text/css" href="styling.css" />
 </head>
 
 <body>
 	<div id="buttons-panel">
 		<button id="back_button" type="button" style="position: static; left: 0px; top: 5px; font: 16px/20px Helvetica, sans-serif;" onClick="backPrevNode()">
-			<font size=5>Back</font>
+			<font size=3>Back</font>
 		</button>
 		<button id="restart_button" type="button" style="position: static; left: 0px; top: 5px; font: 16px/20px Helvetica, sans-serif;" onClick="restartStory()">
-			<font size=5>Restart</font>
+			<font size=3>Restart</font>
 		</button>
 	</div>
 	
 	<div id="pages"></div>
-	<div id="test_bed" style=" left: 500px"></div>
+	<div id="test_bed" style="left:500px"></div>
 	
 	<div id="outer-popup">
 		<div id="popup"></div>
@@ -28,20 +29,21 @@
 	
 	<div id="touch_debug"></div>
 	<div id="fact_debug"></div>
-</body>
+	
+	<script src="main.js"></script>
+	<script src="misc.js"></script>
+	<script src="config.js"></script>
+	<script src="layout.js"></script>
+	<script src="facts.js"></script>
+	<script src="rules.js"></script>
+	<script src="dynfile.js"></script>
+	<script src="hdmouse.js"></script>
+	<script src="datastructure.js"></script>
+	<script src="page-formatting.js"></script>
+	<script src="flip-animation.js"></script>
+	<script src="choice-button.js"></script>
+	<script type="application/javascript" src="iscroll.js?v4"></script>
 
-<script src="main.js"></script>
-<script src="misc.js"></script>
-<script src="config.js"></script>
-<script src="layout.js"></script>
-<script src="facts.js"></script>
-<script src="rules.js"></script>
-<script src="dynfile.js"></script>
-<script src="hdmouse.js"></script>
-<script src="datastructure.js"></script>
-<script src="page-formatting.js"></script>
-<script src="flip-animation.js"></script>
-<script src="choice-button.js"></script>
-<script type="application/javascript" src="iscroll.js?v4"></script>
+</body>
 
 </html>

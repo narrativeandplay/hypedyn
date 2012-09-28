@@ -2,7 +2,7 @@
 a.intextlink:link {
 	text-decoration: underline; 
 	color: black;
-	//background-color:#B2FF99;
+	/* background-color:#B2FF99; */
 	font-size: 18px;
 	font-weight: bold;
 }
@@ -10,7 +10,7 @@ a.intextlink:link {
 a.intextlink-followed:link {
 	text-decoration: underline; 
 	color: black;
-	//background-color:#B2FF99;
+	/* background-color:#B2FF99; */
 	font-size: 18px;
 	font-weight: normal;
 }
@@ -18,40 +18,40 @@ a.intextlink-followed:link {
 a.intextlink:hover,a.intextlink-followed:hover {
 	text-decoration: underline;
 	color: blue;
-	//background-color:#FF704D;
-	font-size: 18;
+	/* background-color:#FF704D; */
+	font-size: 18px;
 }
 a.intextlink:active,a.intextlink-followed:active {
 	text-decoration: none;
 	color: red;
-	//background-color: gold;
-	font-size: 18;
+	/* background-color: gold; */
+	font-size: 18px;
 }
 
 /* anywhere links */
 a.anywhere:link {
 	text-decoration: underline; 
 	color: black;
-	//background-color:#B2FF99;
-	font-size: 18;
+	/* background-color:#B2FF99; */
+	font-size: 18px;
 	font-weight: bold;
 }
 a.anywhere:visited {
 	text-decoration: underline;
 	color: black;
-	//background-color:#FFFF85;
-	font-size: 18;
+	/* background-color:#FFFF85; */
+	font-size: 18px;
 }
 a.anywhere:hover {
 	text-decoration: underline;
-	color: blue;//green;
-	//background-color:#FF704D;
+	color: blue; /* green; */
+	/* background-color:#FF704D; */
 	font-size: 18px;
 }
 a.anywhere:active {
 	text-decoration: none;
 	color: red;
-	//background-color: chartreuse;
+	/* background-color: chartreuse; */
 	font-size: 18px;
 }
 
@@ -75,7 +75,7 @@ a.anywhere:active {
 
 
 body {
-	//background-image: url(page_back_320_480.png);
+	/* background-image: url(page_back_320_480.png); */
 	background-color: white;
 	background-size: 100%;
 }
@@ -112,8 +112,9 @@ body {
 	position: fixed; 
     /* keep the button-panel in front of the text */
     z-Index: 10; 
-	height: 30px;
+	height: 27px;
 	left: 0px;
+	right: 0px;
 	top: 0px;
     padding: 5px;
 }
@@ -133,7 +134,7 @@ body {
 
 #popup {
 	position: relative;
-	//width: 260px;
+	/* width: 260px; */
 	z-Index: -104;
 	opacity: 1.0;
 	overflow: scroll;
@@ -147,7 +148,7 @@ body {
 
 #outer-popup {
 	position: fixed;
-	//width: 290px;
+	/* width: 290px; */
 	z-Index: -104;
 	border-radius: 15px;
 	
