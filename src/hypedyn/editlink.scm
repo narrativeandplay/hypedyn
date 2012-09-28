@@ -1898,7 +1898,8 @@
                                                               (set-combobox-selection new-operator 0))
                                                              ((= 3 new-type)
                                                               ;; set color of parent condition panel
-                                                              (set-background-color comparator-panel (get-background-color top-panel)))
+                                                              (set-background-color comparator-panel (get-background-color top-panel))
+                                                              (recursively-colour-panels comparator-panel (get-background-color top-panel)))
                                                            )
                                                        )
 
@@ -2285,16 +2286,23 @@
 (define selected-color (make-colour-rgb 135 206 250))  ;; sky blue
 (define unselected-color (make-colour-rgb 238 238 238))
 
+; recursively colour the panels
+(define (recursively-colour-panels the-panel the-colour)
+  ;; color the child if it is a panel
+  (map (lambda (child-comp)
+         (if (javax.swing.JPanel? child-comp)
+             (begin
+               (set-background-color child-comp the-colour)
+               (recursively-colour-panels child-comp the-colour)))
+         ) (get-container-children the-panel)))
+
+
 ;; used by both action panel and condition panel
 (define (select-panel pnl selected? type)
   (if selected?
       (begin
         (set-background-color pnl selected-color)
-        ;; color the child if it is a panel
-        (map (lambda (child-comp)
-               (if (javax.swing.JPanel? child-comp)
-                   (set-background-color child-comp selected-color))
-               ) (get-container-children pnl))
+        (recursively-colour-panels pnl selected-color)
 
         ;; need to do this to give new-panel a position
         (validate-container editlink-dialog)
@@ -2318,10 +2326,7 @@
            )))
       (begin
         (set-background-color pnl unselected-color)
-        (map (lambda (child-comp)
-               (if (javax.swing.JPanel? child-comp)
-                   (set-background-color child-comp unselected-color))
-               ) (get-container-children pnl))
+        (recursively-colour-panels pnl unselected-color)
         )))
 
 ;; TODO: shift this to component.scm or container.scm somewhere
@@ -2775,11 +2780,17 @@
            (if (not math-panel)
                (set! math-panel (make-math-panel top-panel)))
            (add-component top-panel math-panel)
-           )
+           ;; set color of parent action panel
+           (set-background-color math-panel (get-background-color top-panel))
+           (recursively-colour-panels math-panel (get-background-color top-panel))
+          )
           (("Random")
            (if (not random-panel)
                (set! random-panel (make-random-panel top-panel)))
            (add-component top-panel random-panel)
+           ;; set color of parent action panel
+           (set-background-color random-panel (get-background-color top-panel))
+           (recursively-colour-panels random-panel (get-background-color top-panel))
            ))
         
         (resize-all-action-panels)
