@@ -1181,6 +1181,9 @@
   ;; check whether rule is valid and enable ok button
   (validate-rule)
   
+  ; resize if necessary
+  (resize-all-action-panels)
+  
   ;(add-component action-list-panel new-action-panel)
   (pack-frame editlink-dialog))
 
@@ -1226,6 +1229,10 @@
          ) (action-panel-list))
   (action-panel-restrict)
   (validate-rule)
+  
+  ; resize if necessary
+  (resize-all-action-panels)
+  
   (pack-frame editlink-dialog))
 
 ;; remove an action from the parent rule so that it is never 
@@ -1903,12 +1910,13 @@
                                                            )
                                                        )
 
-                                                     
                                                      (validate-rule)
                                                      
-                                                     (pack-frame editlink-dialog)
-                                                     
+                                                     ; resize if necessary
+                                                     (resize-all-condition-panels)
+
                                                      (component-update top-panel)
+                                                     (pack-frame editlink-dialog)                                                     
                                                      ))))
         (add-component top-panel (make-label-with-title "Node")))
     
@@ -2088,6 +2096,9 @@
   (display "edit rule cancel ")(newline)
   (validate-rule)
   
+  ; resize if necessary
+  (resize-all-condition-panels)
+  
   ;(add-component condition-list-panel (create-condition-panel 0 -1 0 -1))
   (pack-frame editlink-dialog))
 
@@ -2112,6 +2123,10 @@
     (condition-panel-restrict)
     (display "delete condition ")(newline)
     (validate-rule)
+
+  ; resize if necessary
+  (resize-all-condition-panels)
+  
     (pack-frame editlink-dialog)))
 
 ; get expression from position
@@ -2370,7 +2385,7 @@
   (define max-panel-width-loc
     (case type
       ((action) (location max-action-panel-width))
-      ((cond) (location max-action-panel-width))))
+      ((cond) (location max-cond-panel-width))))
   
   (define panel-height
     (case type
@@ -2719,8 +2734,10 @@
            (set-combobox-selection-object 
             num-fact-mode-choice 
             (get-combobox-selecteditem num-fact-mode-choice))
-           ))
+           )) 
 
+        ; resize if necessary
+        (resize-all-action-panels)
         (pack-component top-panel)
         (pack-frame editlink-dialog)
 
