@@ -282,7 +282,7 @@
 
 ; save data structure to file
 (define (save-to-file filename silent? #!optional write-permit-error-callback)
-  (if (write-sexpr-file filename (build-sexpr) write-permit-error-callback)
+  (if (write-sexpr-file filename (build-sexpr) (if silent? #f write-permit-error-callback))
       (if (not silent?)
           (begin
             (set-saved-filename! filename)
