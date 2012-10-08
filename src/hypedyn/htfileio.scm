@@ -56,7 +56,7 @@
                ht-build-sexpr-from-object-with-rule ht-build-sexpr-from-rule
                clear-loaded-file-version ;; used by clear-data in hteditor.scm
                loaded-file-version obj-conversion-2.2
-               hd-autosave
+               get-hypedyn-folder-file check-hypedyn-folder hd-autosave
                )
 
 ; set fileformat version and type
@@ -1517,11 +1517,22 @@
 
 ;;;; Autosave
 
+(define (get-hypedyn-folder-string)
+  (string-append (get-system-property "user.home") "/Documents/HypeDyn"))
+(define (get-hypedyn-folder-file)
+  (make-file (get-hypedyn-folder-string)))
+
+(define (check-hypedyn-folder)
+  (if (not (file-exists? (get-hypedyn-folder-file)))
+      (create-directory (get-hypedyn-folder-file))))
+
 (define (hd-autosave)
   ;; make sure we have an autosave folder in our hypedyn folder
-  (let ((autosave-folder-file (make-file "autosave")))
+  (let* ((autosave-folder-string (string-append (get-hypedyn-folder-string) "/autosave"))
+         (autosave-folder-file (make-file autosave-folder-string)))
+    (check-hypedyn-folder)
     (if (not (file-exists? autosave-folder-file))
-        (create-directory (make-file "autosave"))))
+        (create-directory autosave-folder-file))
 
-  (ht-save-to-file (path "autosave/autosave.dyn") #t)
+    (ht-save-to-file (path (string-append autosave-folder-string "/autosave.dyn")) #t))
   )

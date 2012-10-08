@@ -35,7 +35,7 @@
 (module-export get-fileformat-version set-fileformat-version!
                get-fileformat-type set-fileformat-type!
                get-saved-filename get-saved-filename-string set-saved-filename!
-               get-last-saved-dir set-last-saved-dir!
+               set-default-save-dir! get-last-saved-dir set-last-saved-dir!
                get-file-prefs put-file-prefs!
                load-from-file ;load-from-file2
                importing? import-from-file
@@ -69,12 +69,20 @@
   (if (not (eq? saved-filename #f))
       (get-file-name saved-filename) #f))
 
+; allow application to specify a default save directory
+(define default-save-dir #!null)
+(define (set-default-save-dir! in-dir)
+  (set! default-save-dir in-dir))
+
 ; last saved directory, a <java.io.File>, or #!null if none
 (define last-saved-dir #!null)
 (define (get-last-saved-dir)
   (if (not-null? last-saved-dir)
       last-saved-dir
-      (make-file (get-user-directory))))
+      ; if no last saved dir, use default, and if no default, use the current directory
+      (if (not-null? default-save-dir)
+          default-save-dir
+          (make-file (get-user-directory)))))
 (define (set-last-saved-dir! newdir)
   (set! last-saved-dir newdir))
 (define (update-last-saved-dir)

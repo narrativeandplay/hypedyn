@@ -24,6 +24,7 @@
 (require "../common/fileio.scm")
 (require "../common/vector-processing.scm")
 (require "../kawa/file.scm")
+(require "../kawa/miscutils.scm")
 (require "config-options.scm")
 (require "hypedyn.scm")
 (require "htfileio.scm")
@@ -56,6 +57,10 @@
 ; load preferences, purely for the last-saved-dir
 (getprefs)
 (get-file-prefs)
+
+; make sure there's a HypeDyn folder, and set it as default save dir
+(check-hypedyn-folder)
+(set-default-save-dir! (get-hypedyn-folder-file))
 
 ; load only a specific language
 (set-language! #f 
