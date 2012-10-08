@@ -69,13 +69,28 @@
   (define tf-panel-2 (make-panel))
   (define tf-panel-3 (make-panel))
   
+  (define label-panel-1 (make-panel))
+  (define label-panel-2 (make-panel))
+  (define label-panel-3 (make-panel))
+  
+  (set-container-layout label-panel-1 'vertical)
+  (set-container-layout label-panel-2 'vertical)
+  (set-container-layout label-panel-3 'vertical)
+  
+  (set-component-non-resizable-size label-panel-1 70 150)
+  (set-component-non-resizable-size label-panel-2 70 150)
+  (set-component-non-resizable-size label-panel-3 70 150)
+  
   (define label-1 (make-label-with-title "Author"))
   (define label-2 (make-label-with-title "Title"))
   (define label-3 (make-label-with-title "Comments"))
 
-  (set-component-non-resizable-size label-1 70 150)
-  (set-component-non-resizable-size label-2 70 150)
-  (set-component-non-resizable-size label-3 70 150)
+  (add-component label-panel-1 label-1)
+  (add-component label-panel-2 label-2)
+  (add-component label-panel-3 label-3)
+  
+  (define sep-1 (make-separator))
+  (define sep-2 (make-separator))
   
   (set! author-name-tf (make-textpane))
   (set! story-title-tf (make-textpane))
@@ -85,9 +100,9 @@
   (set-container-layout tf-panel-2 'horizontal)
   (set-container-layout tf-panel-3 'horizontal)
   
-  (add-component tf-panel-1 label-1)
-  (add-component tf-panel-2 label-2)
-  (add-component tf-panel-3 label-3)
+  (add-component tf-panel-1 label-panel-1)
+  (add-component tf-panel-2 label-panel-2)
+  (add-component tf-panel-3 label-panel-3)
   
   (add-component tf-panel-1 (make-scrollpane-with-policy author-name-tf 'always 'never))
   (add-component tf-panel-2 (make-scrollpane-with-policy story-title-tf 'always 'never))
@@ -105,7 +120,9 @@
 
   (add-components general-tab
                   tf-panel-1
+                  sep-1
                   tf-panel-2
+                  sep-2
                   tf-panel-3
                   )
   (pack-panel general-tab)
