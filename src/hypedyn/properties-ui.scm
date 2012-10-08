@@ -65,71 +65,48 @@
 (define (make-general-tab)
   (define general-tab (make-panel))
 
-  (define label-panel-1 (make-panel))
-  (define label-panel-2 (make-panel))
-  (define label-panel-3 (make-panel))
-  (define label-group-panel (make-panel))
-
   (define tf-panel-1 (make-panel))
   (define tf-panel-2 (make-panel))
   (define tf-panel-3 (make-panel))
-  (define tf-group-panel (make-panel))
   
   (define label-1 (make-label-with-title "Author"))
   (define label-2 (make-label-with-title "Title"))
   (define label-3 (make-label-with-title "Comments"))
 
+  (set-component-non-resizable-size label-1 70 150)
+  (set-component-non-resizable-size label-2 70 150)
+  (set-component-non-resizable-size label-3 70 150)
+  
   (set! author-name-tf (make-textpane))
   (set! story-title-tf (make-textpane))
   (set! story-comment-tf (make-textpane))
-  (set-component-preferred-size author-name-tf 250 150)
-  (set-component-preferred-size story-title-tf 250 150)
-    (set-component-preferred-size story-comment-tf 250 150)
   
-  (set-container-layout label-group-panel 'grid 3 1)
-  (set-container-layout tf-group-panel 'grid 3 1)
+  (set-container-layout tf-panel-1 'horizontal)
+  (set-container-layout tf-panel-2 'horizontal)
+  (set-container-layout tf-panel-3 'horizontal)
   
-  (add-component label-panel-1 label-1)
-  (add-component label-panel-2 label-2)
-  (add-component label-panel-3 label-3)
+  (add-component tf-panel-1 label-1)
+  (add-component tf-panel-2 label-2)
+  (add-component tf-panel-3 label-3)
   
   (add-component tf-panel-1 (make-scrollpane-with-policy author-name-tf 'always 'never))
   (add-component tf-panel-2 (make-scrollpane-with-policy story-title-tf 'always 'never))
   (add-component tf-panel-3 (make-scrollpane-with-policy story-comment-tf 'always 'never))
-  
-  (add-component label-group-panel label-panel-1)
-  (add-component label-group-panel label-panel-2)
-  (add-component label-group-panel label-panel-3)
-
-  (add-component tf-group-panel tf-panel-1)
-  (add-component tf-group-panel tf-panel-2)
-  (add-component tf-group-panel tf-panel-3)
 
   (define (pack-panel panel)
     (invoke panel 'set-preferred-size
             (invoke panel 'get-preferred-size)))
 
-  (pack-panel label-panel-1)
-  (pack-panel label-panel-2)
-  (pack-panel label-panel-3)
   (pack-panel tf-panel-1)
   (pack-panel tf-panel-2)
   (pack-panel tf-panel-3)
-  (pack-panel tf-group-panel)
-  (pack-panel label-group-panel)
 
-;;  (set-border tf-panel-1 black-border)
-;;  (set-border tf-panel-2 black-border)
-;;  (set-border tf-panel-3 black-border)
-;;  (set-border label-panel-1 black-border)
-;;  (set-border label-panel-2 black-border)
-;;  (set-border label-panel-3 black-border)
-
-  (set-container-layout general-tab 'horizontal)
+  (set-container-layout general-tab 'vertical)
 
   (add-components general-tab
-                  label-group-panel
-                  tf-group-panel
+                  tf-panel-1
+                  tf-panel-2
+                  tf-panel-3
                   )
   (pack-panel general-tab)
   
@@ -174,20 +151,12 @@
   (set-component-enabled browse-css-tf #f)
   (add-components browse-css-panel browse-css-tf browse-css-button)
 
-;  (define browse-css-panel2 (make-panel))
-;  (define browse-css-button2 (make-button "Find dimension"))
-;  (set! browse-css-tf2 (make-textfield "" 16))
-;  (set-component-enabled browse-css-button2 #f)
-;  (set-component-enabled browse-css-tf2 #f)
-;  (add-components browse-css-panel2 browse-css-button2 browse-css-tf2)
-
   (set-container-layout rbutton-group-panel 'vertical)
   (add-components rbutton-group-panel
                   rbutton-1
                   rbutton-2
                   rbutton-3
                   browse-css-panel
-                  ;browse-css-panel2
                   )
 
   (set-container-layout label-panel-4 'flow 'left)
@@ -260,14 +229,6 @@
                                (set-text browse-css-tf filename)))
                          )))
   
-;  (add-actionlistener browse-css-button2
-;                      (make-actionlistener
-;                       (lambda (e)
-;                         (define filename (get-file-to-open (get-last-saved-dir) #f (list ".css")))
-;                         (if filename
-;                             (set-text browse-css-tf2 filename))
-;                         )))
-  
   reader-tab)
 
 ;; setting ui with internal states
@@ -284,14 +245,16 @@
     ((fancy) (radio-button-set-selected rbutton-2 #t))
     ((custom) (radio-button-set-selected rbutton-3 #t)))
   (set-text browse-css-tf (get-custom-css-location))
-  ;(set-text browse-css-tf2 (get-custom-css-location2))
   (set-text author-name-tf (get-author-name))
+  (set-cursor-pos author-name-tf 0)
   (set-text story-title-tf (get-story-title))
+  (set-cursor-pos story-title-tf 0)
   (set-text story-comment-tf (get-story-comment))
+  (set-cursor-pos story-comment-tf 0)
   )
 
 (define (set-properties back restart break resize width height csstype css-loc1 
-                        author-name story-title story-comment) ;;css-loc2
+                        author-name story-title story-comment)
   (set-disable-back-button! back)
   (set-disable-restart-button! restart)
   (set-disable-pagebreak! break)
@@ -303,7 +266,6 @@
   (set-author-name! author-name)
   (set-story-title! story-title)
   (set-story-comment! story-comment)
-  ;(set-custom-css-location2! css-loc2)
   )
 
 (define (make-properties-ui)
@@ -323,8 +285,6 @@
   (set-container-layout (get-dialog-content-pane propt-dialog) 'vertical)
   (add-components (get-dialog-content-pane propt-dialog) 
                   propt-tabpanel button-panel)
-  ;(add-components (get-dialog-content-pane propt-dialog) 
-  ;                (make-reader-tab) button-panel)
   
   (add-actionlistener cancel-button
                       (make-actionlistener hide-properties))
@@ -342,7 +302,6 @@
                                  (get-fixed-page-height)
                                  (get-css-type)
                                  (get-custom-css-location)
-                                 ;(get-custom-css-location2)
                                  (get-author-name)
                                  (get-story-title)
                                  (get-story-comment)
@@ -358,7 +317,6 @@
                                  (get-text height-tf)
                                  (get-stylesheet-choice)
                                  (get-text browse-css-tf)
-                                 ;(get-text browse-css-tf2)
                                  (get-text author-name-tf)
                                  (get-text story-title-tf)
                                  (get-text story-comment-tf)
@@ -378,8 +336,6 @@
   (add-itemlistener disable-resize-cb
                       (make-itemlistener
                        (lambda (event selected?)
-                         ;(set-component-enabled width-tf (get-checkbox-value disable-resize-cb))
-                         ;(set-component-enabled height-tf (get-checkbox-value disable-resize-cb))
                          (set-component-enabled width-tf selected?)
                          (set-component-enabled height-tf selected?)
                          )))
