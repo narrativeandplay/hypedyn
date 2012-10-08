@@ -89,8 +89,8 @@
   (add-component label-panel-2 label-2)
   (add-component label-panel-3 label-3)
   
-  (define sep-1 (make-separator))
-  (define sep-2 (make-separator))
+;;  (define sep-1 (make-separator))
+;;  (define sep-2 (make-separator))
   
   (set! author-name-tf (make-textpane))
   (set! story-title-tf (make-textpane))
@@ -120,9 +120,9 @@
 
   (add-components general-tab
                   tf-panel-1
-                  sep-1
+;;                  sep-1
                   tf-panel-2
-                  sep-2
+;;                  sep-2
                   tf-panel-3
                   )
   (pack-panel general-tab)
