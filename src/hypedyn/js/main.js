@@ -423,6 +423,11 @@ function gotoNode(nodeID) {
 
         // refresh the node display
         refreshNode(node);
+        
+        // scroll to the top - fixes bug #1088313
+        // note: do this here, rather than in refreshNode, so that updates
+        // to facts which force a refresh don't trigger unnecessary scrolling
+        window.scrollTo(0, 0);
 	}
 }
 
