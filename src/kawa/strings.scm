@@ -73,8 +73,8 @@
 ;    (set! return-val (list-is-numeric? list))
 ;    return-val)
   
-  ;; at least one digit
-  (invoke string 'matches "[0-9]+") 
+  ;; at least one digit - added handling of a leading "-" sign - alex
+  (invoke string 'matches "-?[0-9]+") 
   )
 
 (define (string-is-double? string :: <String>)
