@@ -7,6 +7,12 @@
 </head>
 
 <body>
+	<script type="text/javascript">
+		// Stub hack to prevent errors in IE
+		// from http://stackoverflow.com/questions/8095348/website-with-js-doesnt-work-in-ie9-until-the-developer-tools-is-activated
+		console = window.console || { log: function() {} };
+	</script>
+	
 	<div id="buttons-panel">
 		<button id="back_button" type="button" style="position: static; left: 0px; top: 5px; font: 16px/20px Helvetica, sans-serif;" onClick="backPrevNode()">
 			<font size=3>Back</font>
