@@ -186,6 +186,7 @@
         (mv-allow-overlap (make-checkbox-menu-item "Allow Overlap"))
         (mv-snap-to-grid (make-checkbox-menu-item "Snap to Grid"))
         (mv-layout (make-menu-item "Layout"))
+        (mv-display-stats (make-menu-item "Display Stats"))
         
         ; node menu
         (m-node (make-menu "Node"))
@@ -336,6 +337,14 @@
                                    (lambda (source)
                                      (dolayout))))
     (set-component-enabled mv-layout (snap-to-grid?))
+    
+    ; display stats for story analysis
+    (if (display-stats?)
+        (begin
+          (add-component m-view mv-display-stats)
+          (add-actionlistener mv-display-stats (make-actionlistener
+                                          (lambda (source)
+                                            (display-stats))))))
     
     ; node menu
     (add-component main-menu m-node)

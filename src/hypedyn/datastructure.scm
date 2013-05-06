@@ -43,6 +43,7 @@
                ;;dup-offset-ID dup-offset-x dup-offset-anywhere-x 
                get-duplicate-offsets
                conversion-flag set-conversion-flag!
+               display-stats
                )
 
 
@@ -641,7 +642,7 @@
                        (imported? (importing?))
                        )
                   
-                  (display "make-action imported? ")(display imported?)(newline) 
+                  ;(display "make-action imported? ")(display imported?)(newline) 
                   
                   (obj-put this-obj 'imported? (lambda (self) imported?))
                   (obj-put this-obj 'set-imported! (lambda (self flag) 
@@ -1198,7 +1199,7 @@
 
 ; create an fact
 (define (create-fact name type . args)
-  (display "create fact ")(display name)(newline)
+  ;(display "create fact ")(display name)(newline)
   (let* ((new-fact (make-fact name type
                               (if (pair? args)
                                   (if (importing?)
@@ -1209,3 +1210,213 @@
     
     (put 'facts fact-ID new-fact) ;; add to facts list
     fact-ID))                     ;; and return the ID
+
+;;
+;; display stats for analysis of stories
+;; 
+
+(define (display-stats)
+  (newline)
+  (display "******* begin stats *******")(newline)
+  
+  (let ((the-nodes (get-list 'nodes))
+        (the-links (get-list 'links))
+        (the-facts (get-list 'facts))
+        (the-rules (get-list 'rules))
+        (the-conditions (get-list 'conditions))
+        (the-actions (get-list 'actions))
+        (total-anywhere 0)
+        (total-boolean 0)
+        (total-string 0)
+        (total-number 0)
+        (max-node-rules 0)
+        (min-node-rules -1)
+        (total-node-rules 0)
+        (max-node-conditions 0)
+        (min-node-conditions -1)
+        (total-node-conditions 0)
+        (max-node-actions 0)
+        (min-node-actions -1)
+        (total-node-actions 0)
+        (max-node-linkrules 0)
+        (min-node-linkrules -1)
+        (total-node-linkrules 0)
+        (max-node-linkconditions 0)
+        (min-node-linkconditions -1)
+        (total-node-linkconditions 0)
+        (max-node-linkactions 0)
+        (min-node-linkactions -1)
+        (total-node-linkactions 0)
+        (max-node-destinations 0)
+        (min-node-destinations -1)
+        (total-node-destinations 0))
+  
+    ; overall stats
+    (format #t "*** Overall stats ***~%~!")
+    (if the-nodes (format #t "Total nodes: ~a~%~!" (length the-nodes)))
+    (if the-links (format #t "Total links: ~a~%~!" (length the-links)))
+    (if the-facts (format #t "Total facts: ~a~%~!" (length the-facts)))
+    (if the-rules (format #t "Total rules: ~a~%~!" (length the-rules)))
+    (if the-conditions (format #t "Total conditions: ~a~%~!" (length the-conditions)))
+    (if the-actions (format #t "Total actions: ~a~%~!" (length the-actions)))
+    
+    ; go through all the facts
+    (if the-facts
+        (begin
+          ; for each fact, count based on type
+          (map (lambda (thisfact)
+                 (let* ((thisfact-obj (cdr thisfact))
+                        (thisfact-type (ask thisfact-obj 'type)))
+                   (if (eq? thisfact-type 'boolean) (set! total-boolean (+ total-boolean 1)))
+                   (if (eq? thisfact-type 'string) (set! total-string (+ total-string 1)))
+                   (if (eq? thisfact-type 'number) (set! total-number (+ total-number 1)))))
+               the-facts)
+          
+          ; display fact stats
+          (format #t "Total true/false facts: ~a~%~!" total-boolean)
+          (format #t "Total text facts: ~a~%~!" total-string)
+          (format #t "Total number facts: ~a~%~!" total-number)
+          ))
+                   
+    ; go through all the nodes
+    (if the-nodes
+        (begin
+          ; for each node, calculate the stats
+          (map (lambda (thisnode)
+                 (let* ((thisnode-obj (cdr thisnode))
+                        (thisnode-rules (ask thisnode-obj 'rule-lst))
+                        (thisnode-links (ask thisnode-obj 'links))
+                        (thisnode-noderulecount (length thisnode-rules))
+                        (thisnode-linkrulecount 0)
+                        (thisnode-linkconditioncount 0)
+                        (thisnode-linkactioncount 0))
+
+                   ; count anywhere nodes
+                   (if (ask thisnode-obj 'anywhere?) (set! total-anywhere (+ total-anywhere 1)))
+
+                   ; max/min/average node rules
+                   (if (> thisnode-noderulecount max-node-rules) (set! max-node-rules thisnode-noderulecount))
+                   (if (or
+                        (= -1 min-node-rules)
+                        (< thisnode-noderulecount min-node-rules)) (set! min-node-rules thisnode-noderulecount))
+                   (set! total-node-rules (+ total-node-rules thisnode-noderulecount))
+                   
+                   ; helper for counting conditions and actions
+                   (define (count-conditions-and-actions in-rules)
+                     (let ((the-conditioncount 0)
+                           (the-actioncount 0))
+                       (map (lambda (thisrule)
+                              (let* ((thisrule-obj (get 'rules thisrule))
+                                     (thisrule-conditions (ask thisrule-obj 'conditions))
+                                     (thisrule-actions (ask thisrule-obj 'actions)))
+                                (set! the-conditioncount (+ the-conditioncount (length thisrule-conditions)))
+                                (set! the-actioncount (+ the-actioncount (length thisrule-actions))))
+                              )
+                            in-rules)
+                       (values the-conditioncount the-actioncount)))
+
+                   ; max/min/average node conditions and actions
+                   (let-values (((thisnode-nodeconditioncount thisnode-nodeactioncount) (count-conditions-and-actions thisnode-rules)))
+                     (begin
+                       (if (> thisnode-nodeconditioncount max-node-conditions) (set! max-node-conditions thisnode-nodeconditioncount))
+                       (if (or
+                            (= -1 min-node-conditions)
+                            (< thisnode-nodeconditioncount min-node-conditions)) (set! min-node-conditions thisnode-nodeconditioncount))
+                       (set! total-node-conditions (+ total-node-conditions thisnode-nodeconditioncount))
+                       (if (> thisnode-nodeactioncount max-node-actions) (set! max-node-actions thisnode-nodeactioncount))
+                       (if (or
+                            (= -1 min-node-actions)
+                            (< thisnode-nodeactioncount min-node-actions)) (set! min-node-actions thisnode-nodeactioncount))
+                       (set! total-node-actions (+ total-node-actions thisnode-nodeactioncount))))
+
+                   ; for each link in the node
+                   (map (lambda (thislink)
+                          (let* ((thislink-obj (get 'links thislink))
+                                 (thislink-rules (ask thislink-obj 'rule-lst)))
+                          
+                          ; max/min/total link rules
+                          (set! thisnode-linkrulecount (+ thisnode-linkrulecount (length thislink-rules)))
+                          
+                          ; max/min/total link conditions and actions
+                          (let-values (((thislink-conditioncount thislink-actioncount) (count-conditions-and-actions thislink-rules)))
+                            (set! thisnode-linkconditioncount (+ thisnode-linkconditioncount thislink-conditioncount))
+                            (set! thisnode-linkactioncount (+ thisnode-linkactioncount thislink-actioncount)))
+                          ))
+                        thisnode-links)
+                   
+                   ; now tabulate the link stats for this node
+                   (if (> thisnode-linkrulecount max-node-linkrules) (set! max-node-linkrules thisnode-linkrulecount))
+                   (if (or
+                        (= -1 min-node-linkrules)
+                        (< thisnode-linkrulecount min-node-linkrules)) (set! min-node-linkrules thisnode-linkrulecount))
+                   (set! total-node-linkrules (+ total-node-linkrules thisnode-linkrulecount))
+                   (if (> thisnode-linkconditioncount max-node-linkconditions) (set! max-node-linkconditions thisnode-linkconditioncount))
+                   (if (or
+                        (= -1 min-node-linkconditions)
+                        (< thisnode-linkconditioncount min-node-linkconditions)) (set! min-node-linkconditions thisnode-linkconditioncount))
+                   (set! total-node-linkconditions (+ total-node-linkconditions thisnode-linkconditioncount))
+                   (if (> thisnode-linkactioncount max-node-linkactions) (set! max-node-linkactions thisnode-linkactioncount))
+                   (if (or
+                        (= -1 min-node-linkactions)
+                        (< thisnode-linkactioncount min-node-linkactions)) (set! min-node-linkactions thisnode-linkactioncount))
+                   (set! total-node-linkactions (+ total-node-linkactions thisnode-linkactioncount))
+
+                   ; max/min/average destinations
+
+                   ))
+               the-nodes)
+          
+          ; display node stats
+          (format #t "Total anywhere nodes: ~a~%~!" total-anywhere)
+          (format #t "Total regular nodes: ~a~%~!" (- (length the-nodes) total-anywhere))
+          
+          ; feature usage
+          (format #t "*** Feature usage ***~%~!")
+          (format #t "Max node rules per node: ~a, min node rules per node: ~a, average node rules per node: ~a~%~!" 
+                  max-node-rules (min min-node-rules 0) (if (> (length the-nodes) 0) 
+                                                            (/ (round (* (exact->inexact (/ total-node-rules (length the-nodes))) 100)) 100)
+                                                            "N/A"))
+          (format #t "Max node conditions per node: ~a, min node conditions per node: ~a, average node conditions per node: ~a~%~!" 
+                  max-node-conditions (min min-node-conditions 0) (if (> (length the-nodes) 0) 
+                                                                      (/ (round (* (exact->inexact (/ total-node-conditions (length the-nodes))) 100)) 100)
+                                                                      "N/A"))
+          (format #t "Max node actions per node: ~a, min node actions per node: ~a, average node actions per node: ~a~%~!" 
+                  max-node-actions (min min-node-actions 0) (if (> (length the-nodes) 0) 
+                                                                (/ (round (* (exact->inexact (/ total-node-actions (length the-nodes))) 100)) 100)
+                                                                "N/A"))
+          (format #t "Max link rules per node: ~a, min link rules per node: ~a, average link rules per node: ~a~%~!" 
+                  max-node-linkrules (min min-node-linkrules 0) (if (> (length the-nodes) 0) 
+                                                            (/ (round (* (exact->inexact (/ total-node-linkrules (length the-nodes))) 100)) 100)
+                                                            "N/A"))
+          (format #t "Max link conditions per node: ~a, min link conditions per node: ~a, average link conditions per node: ~a~%~!" 
+                  max-node-linkconditions (min min-node-linkconditions 0) (if (> (length the-nodes) 0) 
+                                                                      (/ (round (* (exact->inexact (/ total-node-linkconditions (length the-nodes))) 100)) 100)
+                                                                      "N/A"))
+          (format #t "Max link actions per node: ~a, min link actions per node: ~a, average link actions per node: ~a~%~!" 
+                  max-node-linkactions (min min-node-linkactions 0) (if (> (length the-nodes) 0) 
+                                                                (/ (round (* (exact->inexact (/ total-node-linkactions (length the-nodes))) 100)) 100)
+                                                                "N/A"))
+          ))
+        
+
+  ; max, min, average:
+  ; number of rules per node  
+  ; number of conditions per node  
+  ; number of actions per node  
+  ; number of exit destinations per node
+  
+  ; total:
+  ; number of true/false facts
+  ; number of text facts
+  ; number of anywhere nodes
+  ; number of regular nodes
+  
+  ; max, min, average:
+  ; number of fact updates per node
+  ; number of fact-based conditions per node
+  ; number of times each fact is updated
+  ; number of alternate text replacements per node
+  ; number of exit destinations per link (regular node)
+  
+  (display "******* end stats *******")(newline)
+))  

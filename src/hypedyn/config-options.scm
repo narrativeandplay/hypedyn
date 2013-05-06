@@ -37,6 +37,7 @@
                allow-overlap? set-allow-overlap!
                snap-to-grid? set-snap-to-grid!
                user-study? set-user-study!
+               display-stats? set-display-stats!
                set-basic-version! set-normal-version! set-sculptural-version! set-full-version!
                
                reset-properties
@@ -173,6 +174,13 @@
   user-study)
 (define (set-user-study! in-flag)
   (set! user-study in-flag))
+
+; display stats for story analysis
+(define-private display-stats #f)
+(define (display-stats?)
+  display-stats)
+(define (set-display-stats! in-flag)
+  (set! display-stats in-flag))
 
 ; some convenience fns to set common sets of options
 

@@ -47,6 +47,8 @@
          (set-java-reader! #f))
         ((equal? "-java-reader" arg)
          (set-java-reader! #t))
+        ((equal? "-display-stats" arg)
+         (set-display-stats! #t))
         ((equal? "-full" arg)
          (set-full-version!))))
      command-line-arguments))

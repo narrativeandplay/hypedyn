@@ -217,6 +217,8 @@
                          (add-recent-file newfilename)  ;; add to recent menu
                          (obj-conversion-2.2)           ;; if loading pre 2.2 objects convert to post 2.2 format
                          (populate-display)             ;; populate the display (important to convert first)
+                         (if (display-stats?) 
+                             (display-stats))
                          ))
                    )))
            ))
