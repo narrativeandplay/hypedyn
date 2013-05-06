@@ -4,7 +4,7 @@
 
 /* Part of the HypeDyn project - http://www.partechgroup.org/hypedyn
  * 
- * Copyright (C) 2008-2012
+ * Copyright (C) 2008-2013
  * National University of Singapore
  *
  * This program is free software; you can redistribute it and/or modify

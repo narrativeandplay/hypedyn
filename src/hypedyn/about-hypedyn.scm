@@ -1,6 +1,6 @@
 ;; Part of the HypeDyn project - http://www.partechgroup.org/hypedyn
 ;; 
-;; Copyright (C) 2008-2012
+;; Copyright (C) 2008-2013
 ;; National University of Singapore
 ;;
 ;; This program is free software; you can redistribute it and/or modify
@@ -51,7 +51,7 @@
   (set-text about-editor 
             "HypeDyn hypertext fiction editor 
 Version 2.2b4 rev 258, 8 October 2012\n
-Copyright (C) 2008-2012
+Copyright (C) 2008-2013
 National Univeristy of Singapore\n
 This program is free software; you can redistribute it and/or 
 modify it under the terms of the GNU General Public License as 
@@ -90,7 +90,7 @@ AppleJavaExtensions\n
 Credits\n
 Programming:
 Ruchi Bajoria, Chuah Teong Leong, Alex Mitchell and
-Zeng Qiang, Alex Mitchell\n
+Zeng Qiang\n
 Testing:
 Ruchi Bajoria, Zeng Qiang, Alex Mitchell,
 Kevin McGee, Kow Wei Man, Tim Merritt, Lim Teng Chek,
