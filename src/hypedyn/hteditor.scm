@@ -61,6 +61,7 @@
 (require "about-hypedyn.scm")
 (require "rules-manager.scm") ;; rmgr-init
 (require "properties-ui.scm") ;; make-properties-ui, show-properties
+(require "stats.scm") ;; display-stats
 
 ; export
 (module-export close-hteditor-subwindows update-node-emphasis do-selectnode-list do-selectnode-graph
