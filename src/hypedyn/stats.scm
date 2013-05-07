@@ -486,11 +486,13 @@
                   max-link-destinations (min min-link-destinations 0) (if (> total-regularnode-links 0)
                                                                           (/ (round (* (exact->inexact (/ total-link-destinations total-regularnode-links)) 100)) 100)
                                                                           "N/A"))
-          (format #t "Max updates per fact\t~a~%~!Min updates per fact\t~a~%~!Average updates per fact\t~a~%~!"
-                  max-fact-updates (min min-fact-updates 0) (if (> (length the-facts) 0)
-                                                                (/ (round (* (exact->inexact (/ total-fact-updates (length the-facts))) 100)) 100)
-                                                                "N/A"))
           ))
+
+    (if the-facts
+        (format #t "Max updates per fact\t~a~%~!Min updates per fact\t~a~%~!Average updates per fact\t~a~%~!"
+                max-fact-updates (min min-fact-updates 0) (if (> (length the-facts) 0)
+                                                              (/ (round (* (exact->inexact (/ total-fact-updates (length the-facts))) 100)) 100)
+                                                              "N/A")))
 
     (format #t "******* end stats *******~%~!")
     ))
