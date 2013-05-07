@@ -85,44 +85,44 @@
 ;; inherited by both make-link and make node
 ;; just keeps track of a list of ruleIDs
 (define-private (rule-containing-object)
-  (let ((rule 'not-set) ;; legacy attribute (dont think we use it anymore)
-        (rule-lst '())
-        (this-obj (new-object)))
-    (obj-put this-obj 'rule (lambda (self) rule))
-    (obj-put this-obj 'rule-lst (lambda (self) rule-lst))
-    (obj-put this-obj 'set-rule!
-             (lambda (self new-rule)
-               (set! rule new-rule)
-                                        ;(ht-set-dirty!)
-               ))
-    (obj-put this-obj 'add-rule
-             (lambda (self new-rule-ID)
-               (set! rule-lst (append rule-lst (list new-rule-ID)))))
-    (obj-put this-obj 'remove-rule
-             (lambda (self ruleID)
-               (set! rule-lst (remove (lambda (this-ruleID) (= this-ruleID ruleID)) rule-lst))))
-    (obj-put this-obj 'replace-rule
-             (lambda (self ruleID new-rule-ID)
-               (display "replace rule ")(display rule-lst)(newline)
-               (set! rule-lst (list-replace rule-lst (list-index (lambda (this-ruleID) (= ruleID this-ruleID)) rule-lst) new-rule-ID))
-               (display "after replace rule ")(display rule-lst)(newline)
-               ))
-    ;; remove the last rule on the lst (right most)
-    (obj-put this-obj 'remove-last-rule
-             (lambda (self)
-               ;; this changes the lst getting passed in
-               (define (remove-last! lst)
-                 (if (not (= (length (cdr lst)) 1))
-                     (remove-last! (cdr lst))
-                     (set-cdr! lst '())))
-               (remove-last! rule-lst))
-               )
-               
-    (obj-put this-obj 'set-rule-lst
-             (lambda (self new-rule-lst)
-               (set! rule-lst new-rule-lst)
-               ))
-    this-obj))
+                (let ((rule 'not-set) ;; legacy attribute (dont think we use it anymore)
+                      (rule-lst '())
+                      (this-obj (new-object)))
+                  (obj-put this-obj 'rule (lambda (self) rule))
+                  (obj-put this-obj 'rule-lst (lambda (self) rule-lst))
+                  (obj-put this-obj 'set-rule!
+                           (lambda (self new-rule)
+                             (set! rule new-rule)
+                             ;(ht-set-dirty!)
+                             ))
+                  (obj-put this-obj 'add-rule
+                           (lambda (self new-rule-ID)
+                             (set! rule-lst (append rule-lst (list new-rule-ID)))))
+                  (obj-put this-obj 'remove-rule
+                           (lambda (self ruleID)
+                             (set! rule-lst (remove (lambda (this-ruleID) (= this-ruleID ruleID)) rule-lst))))
+                  (obj-put this-obj 'replace-rule
+                           (lambda (self ruleID new-rule-ID)
+                             (display "replace rule ")(display rule-lst)(newline)
+                             (set! rule-lst (list-replace rule-lst (list-index (lambda (this-ruleID) (= ruleID this-ruleID)) rule-lst) new-rule-ID))
+                             (display "after replace rule ")(display rule-lst)(newline)
+                             ))
+                  ;; remove the last rule on the lst (right most)
+                  (obj-put this-obj 'remove-last-rule
+                           (lambda (self)
+                             ;; this changes the lst getting passed in
+                             (define (remove-last! lst)
+                               (if (not (= (length (cdr lst)) 1))
+                                   (remove-last! (cdr lst))
+                                   (set-cdr! lst '())))
+                             (remove-last! rule-lst))
+                           )
+
+                  (obj-put this-obj 'set-rule-lst
+                           (lambda (self new-rule-lst)
+                             (set! rule-lst new-rule-lst)
+                             ))
+                  this-obj))
 
 ;; node;
 ;; overloaded to allow passing in of a predetermined uniqueID, for loading from file
@@ -165,10 +165,10 @@
                   (obj-put this-obj 'dellink
                            (lambda (self link)
                              (set! links (delete! link links))))
-                  
+
                   (obj-put this-obj 'start-indices (lambda (self) start-indices))
                   (obj-put this-obj 'end-indices (lambda (self) end-indices))
-                  
+
                   (obj-put this-obj 'to-save-sexpr
                            (lambda (self)
                              (list 'create-node
@@ -181,15 +181,15 @@
                                    (ask self 'ID))))
                   ;; printable version, for export to text file
                   (obj-put this-obj 'to-printable
-                      (lambda (self)
-                        (string-append
-                         ; name and ID
-                         "* " (ask self 'name) " * (" (number->string (ask self 'ID)) ")\n\n"
+                           (lambda (self)
+                             (string-append
+                              ; name and ID
+                              "* " (ask self 'name) " * (" (number->string (ask self 'ID)) ")\n\n"
 ;;                         ; content
-                         content "\n\n -- \n")))
+                              content "\n\n -- \n")))
                   (obj-put this-obj 'get-inspectable-fields
-                      (lambda (self) inspectable-fields))
-                  
+                           (lambda (self) inspectable-fields))
+
                   ;; mark for conversion
                   (obj-put this-obj 'convert-flag
                            (lambda (self) convert-flag))
@@ -246,7 +246,7 @@
                              (set! use-alt-destination new-value)
                              ;(ht-set-dirty!)
                              ))
-                          ; use alternate text: 'true/'false for plain text, 'fact for fact
+                  ; use alternate text: 'true/'false for plain text, 'fact for fact
                   (obj-put this-obj 'use-alt-text (lambda (self) use-alt-text))
                   (obj-put this-obj 'set-use-alt-text!
                            (lambda (self new-value)
@@ -310,36 +310,36 @@
                                    (ask self 'ID))))                           ; linkID (int)
                   (obj-put this-obj 'get-inspectable-fields
                            (lambda (self) inspectable-fields))
-                  
+
                   ;; marked for conversion
                   (obj-put this-obj 'convert-flag
                            (lambda (self) convert-flag))
                   (obj-put this-obj 'set-convert-flag!
                            (lambda (self new-flag)
                              (set! convert-flag new-flag)))
-                  
+
                   this-obj))
 
 ;; this has the ability to initialize fall-through? on rule creation
 (define-private (make-rule3 name type and-or negate? parentID #!key fixedID fall-through?)
                 (define parent-rule (make-rule2 name type and-or negate? parentID fixedID))
                 (define this-obj (new-object parent-rule))
-                
+
                 (obj-put this-obj 'fall-through? (lambda (self) fall-through?))
-                (obj-put this-obj 'set-fall-through? (lambda (self new-ft) 
+                (obj-put this-obj 'set-fall-through? (lambda (self new-ft)
                                                        (set! fall-through? new-ft)))
-                
+
                 (obj-put this-obj 'to-save-sexpr
-                           (lambda (self)
-                             (list 'create-typed-rule3
-                                   (ask self 'name)                        ; name (string)
-                                   (list 'quote (ask self 'type))                      ; type ('link/'node)
-                                   (list 'quote (ask self 'and-or))        ; and-or ('and/'or)
-                                   negate?
-                                   (ask self 'parentID)             ; used to be linkID (int)
-                                   fixedID: (ask self 'ID)
-                                   fall-through?: fall-through?
-                                   )))
+                         (lambda (self)
+                           (list 'create-typed-rule3
+                                 (ask self 'name)                        ; name (string)
+                                 (list 'quote (ask self 'type))                      ; type ('link/'node)
+                                 (list 'quote (ask self 'and-or))        ; and-or ('and/'or)
+                                 negate?
+                                 (ask self 'parentID)             ; used to be linkID (int)
+                                 fixedID: (ask self 'ID)
+                                 fall-through?: fall-through?
+                                 )))
                 this-obj)
 
 ;; make-rule2 provides negate? on top of what we already have
@@ -350,42 +350,42 @@
                 ;(define parent-rule (apply make-rule (append (list name type and-or parentID) args)))
                 (define parent-rule (make-rule name type and-or parentID fixedID))
                 (define this-obj (new-object parent-rule))
-                
-                
+
+
                 ;(define fall-through? #t)
-                
+
                 ;; fall through (triggering this rule will stop other rules below it from getting checked and fired)
                 ;; kept to ensure those hypedyn story that was written and saved using this version of the rule
                 ;; does not crash when we check the fall-through checkbox
                 ;; that version however did not save the fall through value in the save file anyway 
                 (obj-put this-obj 'fall-through? (lambda (self) fall-through?))
-                (obj-put this-obj 'set-fall-through? (lambda (self new-ft) 
+                (obj-put this-obj 'set-fall-through? (lambda (self new-ft)
                                                        (set! fall-through? new-ft)))
-                
+
                 ;; add new features and override rule-expr and to-save-sexpr
-                (obj-put this-obj 'negate? (lambda (self) negate?)) 
+                (obj-put this-obj 'negate? (lambda (self) negate?))
                 (obj-put this-obj 'set-negate!
                          (lambda (self in-negate)
                            (set! negate? in-negate)))
                 (obj-put this-obj 'rule-expr
-                           (lambda (self)
-                             (if negate?
-                                 (list 'not
-                                       (ask parent-rule 'rule-expr))
-                                 (ask parent-rule 'rule-expr))))
+                         (lambda (self)
+                           (if negate?
+                               (list 'not
+                                     (ask parent-rule 'rule-expr))
+                               (ask parent-rule 'rule-expr))))
                 (obj-put this-obj 'type (lambda (self) type))
-                
+
                 ;; overridden 
                 (obj-put this-obj 'to-save-sexpr
-                           (lambda (self)
-                             (list 'create-typed-rule2
-                                   (ask self 'name)                        ; name (string)
-                                   (list 'quote (ask self 'type))                      ; type ('link/'node)
-                                   (list 'quote (ask self 'and-or))        ; and-or ('and/'or)
-                                   negate?
-                                   (ask self 'parentID)             ; used to be linkID (int)
-                                   (ask self 'ID)
-                                   )))
+                         (lambda (self)
+                           (list 'create-typed-rule2
+                                 (ask self 'name)                        ; name (string)
+                                 (list 'quote (ask self 'type))                      ; type ('link/'node)
+                                 (list 'quote (ask self 'and-or))        ; and-or ('and/'or)
+                                 negate?
+                                 (ask self 'parentID)             ; used to be linkID (int)
+                                 (ask self 'ID)
+                                 )))
                 this-obj)
 
 ;; rule
@@ -400,12 +400,12 @@
                        (else-action #f) ; action to take when rule is not satisfied
                        (conditions '()) ; list of conditions which must be satisfied
                        (actions '()))   ; generalized actions, currently used for updating facts in node rules
-                  
+
                   (obj-put this-obj 'parentID (lambda (self) parentID))
                   (obj-put this-obj 'set-parentID! (lambda (self new-parentID) (set! parentID new-parentID)))
                   (obj-put this-obj 'and-or (lambda (self) and-or))
-                  (obj-put this-obj 'set-and-or! 
-                           (lambda (self in-and-or) 
+                  (obj-put this-obj 'set-and-or!
+                           (lambda (self in-and-or)
                              (set! and-or in-and-or)))
                   (obj-put this-obj 'type (lambda (self) type))
 
@@ -420,7 +420,7 @@
                            (lambda (self condition)
                              (set! conditions (delete! condition conditions))))
 
-                          ; then and else actions
+                  ; then and else actions
                   (obj-put this-obj 'then-action
                            (lambda (self) then-action))
                   (obj-put this-obj 'set-then-action!
@@ -437,7 +437,7 @@
                              ))
 
                   ;; generalized actions - for now, this is just for then facts
-                  (obj-put this-obj 'actions    
+                  (obj-put this-obj 'actions
                            (lambda (self) actions))
                   (obj-put this-obj 'add-action!
                            (lambda (self new-action)
@@ -460,7 +460,7 @@
                                                  (targetID (ask thiscondition 'targetID))
                                                  (operator (ask thiscondition 'operator))
                                                  (type (ask thiscondition 'type)))
-                                            
+
                                             (ask thiscondition 'expr)
 ;                                            (cond
 ;                                             ((eq? type 0)
@@ -486,13 +486,13 @@
                              (set! actions '())
                              (set! conditions '())
                              ))
-                  
+
                   (obj-put this-obj 'empty-rule?
                            (lambda (self)
                              (and (null? actions)
                                   (null? conditions))
                              ))
-                  
+
                   ;; overridden 
                   (obj-put this-obj 'to-save-sexpr
                            (lambda (self)
@@ -522,10 +522,10 @@
                   (obj-put this-obj 'targetID (lambda (self) targetID))
                   (obj-put this-obj 'ruleID (lambda (self) ruleID))
                   (obj-put this-obj 'operator (lambda (self) operator))
-                  
+
                   ;; new needs testing TODO in progress
                   ;; this is for java reader
-                  (obj-put this-obj 'expr (lambda (self) 
+                  (obj-put this-obj 'expr (lambda (self)
                                             (cond
                                              ((eq? type 0)
                                               ;; node
@@ -545,7 +545,7 @@
                                               (let ((comparator (string->symbol (car operator)))
                                                     (operand-type (cadr operator))
                                                     (operand-choice (caddr operator))
-                                                    (operand-expr 
+                                                    (operand-expr
                                                      (case operand-type
                                                        (("Input") (string->number operand-choice))
                                                        (("Fact") (list 'get-value (string->number operand-choice))))))
@@ -553,7 +553,7 @@
                                                 (list comparator (list 'get-value targetID) operand-expr)
                                                 ))
                                              )))
-                  
+
                   (obj-put this-obj 'to-save-sexpr
                            (lambda (self)
                              (list 'create-typed-condition
@@ -569,12 +569,12 @@
 (define-private (make-condition2 name type targetID operator ruleID #!key fixedID numfact-args)
                 (define parent-rule (make-condition name type targetID operator ruleID fixedID))
                 (define this-obj (new-object parent-rule))
-                
+
                 (define local-numfact-args
                   (if (pair? numfact-args)
                       (cons 'list numfact-args)
                       #f))
-                
+
                 (obj-put this-obj 'numfact-args (lambda (self) numfact-args))
                 (obj-put this-obj 'to-save-sexpr
                          (lambda (self)
@@ -641,16 +641,16 @@
                        (this-obj (new-object uniqueID-obj))
                        (imported? (importing?))
                        )
-                  
+
                   ;(display "make-action imported? ")(display imported?)(newline) 
-                  
+
                   (obj-put this-obj 'imported? (lambda (self) imported?))
-                  (obj-put this-obj 'set-imported! (lambda (self flag) 
+                  (obj-put this-obj 'set-imported! (lambda (self flag)
                                                      (display "setting import ")(display flag)(newline)
                                                      (set! imported? flag)))
-                  
+
                   ;; TODO: Identify more actions that need their target's ID offset during import
-                  
+
                   ;; importing actions needs special treatments for follow link targets etc
                   (obj-put this-obj 'after-import
                            (lambda (self)
@@ -698,9 +698,9 @@
 ;                                              new-fact-value)
 
                                         (define third-arg (list-ref expr 3))
-                                        
+
                                         (display "third arg ")(display third-arg)(newline)
-                                        
+
                                         (define corrected-third-arg
                                           (case (list-ref expr 2)
                                             (("Fact") (+ third-arg import-offset-ID))
@@ -739,10 +739,10 @@
                                              (list-replace expr 3 corrected-third-arg))
                                         ))) ;; end of if
                              ))
-                  
+
                   (obj-put this-obj 'type (lambda (self) type))
                   (obj-put this-obj 'expr (lambda (self) expr))
-                  (obj-put this-obj 'set-expr! 
+                  (obj-put this-obj 'set-expr!
                            (lambda (self new-expr) (if (pair? new-expr)
                                                        (set! expr new-expr))))
                   (obj-put this-obj 'ruleID (lambda (self) ruleID))
@@ -770,13 +770,13 @@
                   (obj-put this-obj 'type (lambda (self) type))
                   (obj-put this-obj 'holds? (lambda (self) (not (eq? value #f))))
                   (obj-put this-obj 'assert
-                           (lambda (self) 
+                           (lambda (self)
                              (set! value #t)))
                   (obj-put this-obj 'retract
-                           (lambda (self) 
+                           (lambda (self)
                              (set! value #f)))
-                  (obj-put this-obj 'get-value   
-                           (lambda (self) 
+                  (obj-put this-obj 'get-value
+                           (lambda (self)
                              value))
                   (obj-put this-obj 'set-value!
                            (lambda (self in-value)
@@ -810,7 +810,7 @@
 ;; new rule list at document level
 (define-private document-ruleID-lst '())
 (define-private (add-document-ruleID ruleID)
-    (set! document-ruleID-lst (append document-ruleID-lst (list ruleID))))
+                (set! document-ruleID-lst (append document-ruleID-lst (list ruleID))))
 (define (get-document-ruleID-lst) document-ruleID-lst)
 (define (reset-document-ruleID-lst)
   (set! document-ruleID-lst '()))
@@ -865,7 +865,7 @@
 
 ; add node to node-list and data-table, and to graph-editor
 (define (create-node name content x y anywhere update-display . args)
-  
+
   ;;(format #t "Creating node: ~a~%~!" name)
   (let* ((actual-x (if (importing?)
                        (if anywhere
@@ -879,19 +879,19 @@
                                   (if (importing?)
                                       (+ (car args) import-offset-ID) ; if importing, shift by offset
                                       (car args))))))
-    
+
     ;; marking conversion
     (if conversion-flag
         (ask new-node 'set-convert-flag! #t))
-    
+
     (let ((new-nodeID (ask new-node 'ID)))
-      
+
       ; add to table
       (put 'nodes new-nodeID new-node)
 
       ; update node count
       (inc-node-count)
-      
+
       ; update display if necessary
       (if (procedure? update-display)
           (update-display new-nodeID name
@@ -914,7 +914,7 @@
 (define (create-link name fromnodeID tonodeID start-index end-index use-destination
                      use-alt-destination use-alt-text alt-destination alt-text
                      update-display . args)
-  
+
   ;;(format #t "Creating link: ~a~%~!" name)
   (let* ((actual-fromnodeID (if (importing?)
                                 (if (not (= fromnodeID -1))
@@ -945,14 +945,14 @@
          (from-node (get 'nodes actual-fromnodeID))
          (to-node (get 'nodes actual-tonodeID))
          (new-linkID (ask new-link 'ID)))
-    
-     ;; marking conversion
+
+    ;; marking conversion
     (if conversion-flag
         (ask new-link 'set-convert-flag! #t))
-    
+
     (if from-node
         (ask from-node 'addlink new-linkID))
-    
+
     (put 'links new-linkID new-link)
 
     ; return the new link's ID
@@ -994,12 +994,12 @@
                (the-parent (get the-get-symbol actual-parentID)))
           (if the-parent
               (ask the-parent 'set-rule! rule-ID))))
-    
+
     ; return the rule ID
     rule-ID))
 
 (define (create-typed-rule-common new-rule type parentID)
-  
+
   ; add to rule list
   (define ruleID (ask new-rule 'ID))
   (put 'rules ruleID new-rule)
@@ -1030,7 +1030,7 @@
                               parentID))
          ;; was using make-rule2 before
          ;; now calling make-rule3 so that it is using the version which supports fall-through? saved and loaded
-         (new-rule (make-rule3 name type and-or negate? actual-parentID 
+         (new-rule (make-rule3 name type and-or negate? actual-parentID
                                fixedID: (if fixedID
                                             (if (importing?)
                                                 (+ fixedID import-offset-ID)
@@ -1039,9 +1039,9 @@
                                fall-through?: #t ;; defaults to true
                                ))
          (rule-ID (ask new-rule 'ID)))
-    
+
     (create-typed-rule-common new-rule type actual-parentID)
-    
+
     ; return the rule ID
     rule-ID))
 
@@ -1052,17 +1052,17 @@
   (let* ((actual-parentID (if (importing?)
                               (+ parentID import-offset-ID)
                               parentID))
-         (new-rule (make-rule3 name type and-or negate? actual-parentID 
+         (new-rule (make-rule3 name type and-or negate? actual-parentID
                                fixedID: (if fixedID
                                             (if (importing?)
                                                 (+ fixedID import-offset-ID)
-                                                fixedID) 
+                                                fixedID)
                                             #f)
                                fall-through?: fall-through?))
          (rule-ID (ask new-rule 'ID)))
-    
+
     (create-typed-rule-common new-rule type actual-parentID)
-    
+
     ; return the rule ID
     rule-ID))
 
@@ -1086,7 +1086,7 @@
                                                           fixedID)
                                                       #f)))
          (the-rule (get 'rules actual-ruleID)))
-    
+
     ; add to condition list
     (put 'conditions (ask new-condition 'ID) new-condition)
 
@@ -1110,7 +1110,7 @@
                                          numfact-args: numfact-args
                                          ))
          (the-rule (get 'rules actual-ruleID)))
-    
+
     ; add to condition list
     (put 'conditions (ask new-condition 'ID) new-condition)
 
@@ -1123,7 +1123,7 @@
 (define (create-action name type expr ruleID #!key fixedID)
   ;;(display "[create-action] expr ")(newline)
   ;(display "expr class ")(display (invoke expr 'get-class))(newline)
-  
+
   (let* ((actual-ruleID (if (importing?)
                             (+ ruleID import-offset-ID)
                             ruleID))
@@ -1135,10 +1135,10 @@
          (the-rule (get 'rules actual-ruleID))
          (new-action-ID (ask new-action 'ID))
          )
-    
+
     ; add to action list
     (put 'actions new-action-ID new-action)
-    
+
     ;; debugging import 
 ;    (if (not (pair? expr))
 ;        (begin
@@ -1146,7 +1146,7 @@
 ;          (display "expr in create action ")(display expr)(newline)
 ;          (display "expr class ")(display (invoke expr 'get-class))(newline)
 ;          ))
-    
+
     ;; this is for importing actions that need no version conversion 
     ;; those that needs conversion already has the import offset added before conversion
     ;; Note: still need to check whether it is pair for version 2.1
@@ -1171,7 +1171,7 @@
     ;; TODO: need to clean up all these
     ;;       action type is now the event types that trigger the action 
     ;;       so far there is 'clicked-link 'entered-node 'displayed-node
-    
+
     ;; TODO: need to reactivate the before after step init actions somehow
     ;;       it they are still useful
     (if the-rule
@@ -1191,9 +1191,9 @@
 ;         ((eq? type 'init)
 ;          (ask the-rule 'set-else-action! (ask new-action 'ID)))
 ;         )
-          (ask the-rule 'add-action! (ask new-action 'ID))
+        (ask the-rule 'add-action! (ask new-action 'ID))
         )
-    
+
     new-action-ID))
 
 
@@ -1206,8 +1206,8 @@
                                       (+ (car args) import-offset-ID)
                                       (car args)))))
          (fact-ID (ask new-fact 'ID)))
-    
-    
+
+
     (put 'facts fact-ID new-fact) ;; add to facts list
     fact-ID))                     ;; and return the ID
 
@@ -1218,7 +1218,7 @@
 (define (display-stats)
   (newline)
   (display "******* begin stats *******")(newline)
-  
+
   (let ((the-nodes (get-list 'nodes))
         (the-links (get-list 'links))
         (the-facts (get-list 'facts))
@@ -1249,8 +1249,11 @@
         (total-node-linkactions 0)
         (max-node-destinations 0)
         (min-node-destinations -1)
-        (total-node-destinations 0))
-  
+        (total-node-destinations 0)
+        (max-node-entries 0)
+        (min-node-entries -1)
+        (total-node-entries 0))
+
     ; overall stats
     (format #t "*** Overall stats ***~%~!")
     (if the-nodes (format #t "Total nodes: ~a~%~!" (length the-nodes)))
@@ -1259,7 +1262,7 @@
     (if the-rules (format #t "Total rules: ~a~%~!" (length the-rules)))
     (if the-conditions (format #t "Total conditions: ~a~%~!" (length the-conditions)))
     (if the-actions (format #t "Total actions: ~a~%~!" (length the-actions)))
-    
+
     ; go through all the facts
     (if the-facts
         (begin
@@ -1271,25 +1274,28 @@
                    (if (eq? thisfact-type 'string) (set! total-string (+ total-string 1)))
                    (if (eq? thisfact-type 'number) (set! total-number (+ total-number 1)))))
                the-facts)
-          
+
           ; display fact stats
           (format #t "Total true/false facts: ~a~%~!" total-boolean)
           (format #t "Total text facts: ~a~%~!" total-string)
           (format #t "Total number facts: ~a~%~!" total-number)
           ))
-                   
+
     ; go through all the nodes
     (if the-nodes
         (begin
           ; for each node, calculate the stats
           (map (lambda (thisnode)
                  (let* ((thisnode-obj (cdr thisnode))
+                        (thisnode-ID (ask thisnode-obj 'ID))
                         (thisnode-rules (ask thisnode-obj 'rule-lst))
                         (thisnode-links (ask thisnode-obj 'links))
                         (thisnode-noderulecount (length thisnode-rules))
                         (thisnode-linkrulecount 0)
                         (thisnode-linkconditioncount 0)
-                        (thisnode-linkactioncount 0))
+                        (thisnode-linkactioncount 0)
+                        (thisnode-destinationcount 0)
+                        (thisnode-entrycount 0))
 
                    ; count anywhere nodes
                    (if (ask thisnode-obj 'anywhere?) (set! total-anywhere (+ total-anywhere 1)))
@@ -1300,29 +1306,92 @@
                         (= -1 min-node-rules)
                         (< thisnode-noderulecount min-node-rules)) (set! min-node-rules thisnode-noderulecount))
                    (set! total-node-rules (+ total-node-rules thisnode-noderulecount))
-                   
+
                    ; helper for counting conditions and actions
                    (define (count-conditions-and-actions in-rules)
                      (let ((the-conditioncount 0)
-                           (the-actioncount 0))
+                           (the-actioncount 0)
+                           (the-destinationcount 0))
                        (map (lambda (thisrule)
                               (let* ((thisrule-obj (get 'rules thisrule))
                                      (thisrule-conditions (ask thisrule-obj 'conditions))
                                      (thisrule-actions (ask thisrule-obj 'actions)))
                                 (set! the-conditioncount (+ the-conditioncount (length thisrule-conditions)))
-                                (set! the-actioncount (+ the-actioncount (length thisrule-actions))))
+                                (set! the-actioncount (+ the-actioncount (length thisrule-actions)))
+                                ; check for follow-link actions
+                                (map (lambda (thisaction)
+                                       (let* ((thisaction-obj (get 'actions thisaction))
+                                              (thisaction-expr (ask thisaction-obj 'expr))
+                                              (thisaction-type (car thisaction-expr)))
+                                         (cond
+                                          ((equal? 'follow-link thisaction-type)
+                                           (set! the-destinationcount (+ the-destinationcount 1)))
+                                          ((equal? 'replace-link-text thisaction-type)  
+                                           'replace-link-text
+;;                                           (display "inside replace link text ")(newline)
+;;                                           (display "action sexpr ")(display action-sexpr)(newline)
+;;                                           (define text-type (list-ref action-sexpr 1)) ;(using-type (car args-lst)) (alt-text (cadr args-lst)))
+;;                                           (define text-value (list-ref action-sexpr 2))
+;;                                           (display "text type ")(display text-type)(newline)
+;;                                           (display "text value ")(display text-value)(newline)
+
+;;                                           ;; 'text maps to "alternative text", 'fact maps to "text fact" 
+;;                                           (define text-type-string #f)
+;;                                           (add-component action-list-panel (create-action-panel "update text using" text-type text-value))
+                                           )
+                                          ((or (equal? 'retract thisaction-type)
+                                               (equal? 'assert thisaction-type)
+                                               (equal? 'set-value! thisaction-type)
+                                               )
+                                           'set-value
+;;                                           (define the-action (car action-sexpr))
+;;                                           (define targetID (cadr action-sexpr)) ;; factID
+;;                                           (define the-value (if (or (eq? the-action 'set-value!)
+;;                                                                     (eq? the-action 'set-number-fact))
+;;                                                                 (caddr action-sexpr)
+;;                                                                 'NA))
+
+;;                                           (add-component action-list-panel (create-action-panel "update fact" the-action targetID the-value))
+                                           )
+                                          ((equal? 'set-number-fact thisaction-type)
+                                           'set-number-fact
+;;                                           (define the-action (list-ref action-sexpr 0))
+;;                                           (define targetID (list-ref action-sexpr 1)) ;; factID
+;;                                           (define num-fact-mode (list-ref action-sexpr 2))
+;;                                           (define the-value (list-ref action-sexpr 3))
+
+;;                                           (display "ADDING update NUMBER fact ")(display the-value)(newline)
+;;                                           (add-component action-list-panel (create-action-panel "update fact" the-action targetID num-fact-mode the-value))
+                                           )
+                                          ((equal? 'add-anywhere-link thisaction-type)
+                                           'add-anywhere-link
+;;                                           (add-component action-list-panel (create-action-panel "enable links to this node from anywhere"))
+                                           )
+                                          ((equal? 'show-in-popup thisaction-type)
+                                           'show-in-popup
+;;                                           (define target-nodeID (list-ref action-sexpr 1))
+;;                                           (add-component action-list-panel (create-action-panel "show in popup" target-nodeID))
+                                           )
+                                          )
+
+                                         ))
+                                     thisrule-actions)
+                                )
                               )
                             in-rules)
-                       (values the-conditioncount the-actioncount)))
+                       (values the-conditioncount the-actioncount the-destinationcount)))
 
-                   ; max/min/average node conditions and actions
-                   (let-values (((thisnode-nodeconditioncount thisnode-nodeactioncount) (count-conditions-and-actions thisnode-rules)))
+                   ; max/min/average node conditions and actions (destinationcount is a dummy here)
+                   (let-values (((thisnode-nodeconditioncount thisnode-nodeactioncount thisnode-destinationcount) 
+                                 (count-conditions-and-actions thisnode-rules)))
                      (begin
+                       ; conditions
                        (if (> thisnode-nodeconditioncount max-node-conditions) (set! max-node-conditions thisnode-nodeconditioncount))
                        (if (or
                             (= -1 min-node-conditions)
                             (< thisnode-nodeconditioncount min-node-conditions)) (set! min-node-conditions thisnode-nodeconditioncount))
                        (set! total-node-conditions (+ total-node-conditions thisnode-nodeconditioncount))
+                       ; actions
                        (if (> thisnode-nodeactioncount max-node-actions) (set! max-node-actions thisnode-nodeactioncount))
                        (if (or
                             (= -1 min-node-actions)
@@ -1333,90 +1402,112 @@
                    (map (lambda (thislink)
                           (let* ((thislink-obj (get 'links thislink))
                                  (thislink-rules (ask thislink-obj 'rule-lst)))
-                          
-                          ; max/min/total link rules
-                          (set! thisnode-linkrulecount (+ thisnode-linkrulecount (length thislink-rules)))
-                          
-                          ; max/min/total link conditions and actions
-                          (let-values (((thislink-conditioncount thislink-actioncount) (count-conditions-and-actions thislink-rules)))
-                            (set! thisnode-linkconditioncount (+ thisnode-linkconditioncount thislink-conditioncount))
-                            (set! thisnode-linkactioncount (+ thisnode-linkactioncount thislink-actioncount)))
-                          ))
+                            ; max/min/total link rules
+                            (set! thisnode-linkrulecount (+ thisnode-linkrulecount (length thislink-rules)))
+                            ; max/min/total link conditions and actions
+                            (let-values (((thislink-conditioncount thislink-actioncount thislink-destinationcount)
+                                          (count-conditions-and-actions thislink-rules)))
+                              (set! thisnode-linkconditioncount (+ thisnode-linkconditioncount thislink-conditioncount))
+                              (set! thisnode-linkactioncount (+ thisnode-linkactioncount thislink-actioncount))
+                              (set! thisnode-destinationcount (+ thisnode-destinationcount thislink-destinationcount))
+                              )
+                            ))
                         thisnode-links)
                    
-                   ; now tabulate the link stats for this node
+                   ; count entry points
+                   (map (lambda (thislink)
+                          (let* ((thislink-obj (cdr thislink))
+                                 (thislink-nodeID (ask thislink-obj 'source))
+                                 (thislink-rules (ask thislink-obj 'rule-lst)))
+                            (if (not (= thisnode-ID thislink-nodeID))
+                                (map (lambda (thisrule)
+                                       (let* ((thisrule-obj (get 'rules thisrule))
+                                              (thisrule-actions (ask thisrule-obj 'actions)))
+                                         (map (lambda (thisaction)
+                                                (let* ((thisaction-obj (get 'actions thisaction))
+                                                       (thisaction-expr (ask thisaction-obj 'expr))
+                                                       (thisaction-type (car thisaction-expr)))
+                                                  (if (equal? thisaction-type 'follow-link)
+                                                      (let ((thisaction-destID (list-ref thisaction-expr 4)))
+                                                        (if (equal? thisaction-destID thisnode-ID)
+                                                            (set! thisnode-entrycount (+ thisnode-entrycount 1)))))))
+                                              thisrule-actions)))
+                                     thislink-rules))))
+                        the-links)
+
+                   ; now tabulate the link stats for this node - maybe should track the IDs of max nodes/links?
+                   ; rules
                    (if (> thisnode-linkrulecount max-node-linkrules) (set! max-node-linkrules thisnode-linkrulecount))
                    (if (or
                         (= -1 min-node-linkrules)
                         (< thisnode-linkrulecount min-node-linkrules)) (set! min-node-linkrules thisnode-linkrulecount))
                    (set! total-node-linkrules (+ total-node-linkrules thisnode-linkrulecount))
+                   ; conditions
                    (if (> thisnode-linkconditioncount max-node-linkconditions) (set! max-node-linkconditions thisnode-linkconditioncount))
                    (if (or
                         (= -1 min-node-linkconditions)
                         (< thisnode-linkconditioncount min-node-linkconditions)) (set! min-node-linkconditions thisnode-linkconditioncount))
                    (set! total-node-linkconditions (+ total-node-linkconditions thisnode-linkconditioncount))
+                   ; actions
                    (if (> thisnode-linkactioncount max-node-linkactions) (set! max-node-linkactions thisnode-linkactioncount))
                    (if (or
                         (= -1 min-node-linkactions)
                         (< thisnode-linkactioncount min-node-linkactions)) (set! min-node-linkactions thisnode-linkactioncount))
                    (set! total-node-linkactions (+ total-node-linkactions thisnode-linkactioncount))
-
-                   ; max/min/average destinations
-
+                   ; destinations
+                   (if (> thisnode-destinationcount max-node-destinations) (set! max-node-destinations thisnode-destinationcount))
+                   (if (or
+                        (= -1 min-node-destinations)
+                        (< thisnode-destinationcount min-node-destinations)) (set! min-node-destinations thisnode-destinationcount))
+                   (set! total-node-destinations (+ total-node-destinations thisnode-destinationcount))
+                   ; entries
+                   (if (> thisnode-entrycount max-node-entries) (set! max-node-entries thisnode-entrycount))
+                   (if (or
+                        (= -1 min-node-entries)
+                        (< thisnode-entrycount min-node-entries)) (set! min-node-entries thisnode-entrycount))
+                   (set! total-node-entries (+ total-node-entries thisnode-entrycount))
                    ))
                the-nodes)
-          
+
           ; display node stats
           (format #t "Total anywhere nodes: ~a~%~!" total-anywhere)
           (format #t "Total regular nodes: ~a~%~!" (- (length the-nodes) total-anywhere))
-          
+
           ; feature usage
           (format #t "*** Feature usage ***~%~!")
-          (format #t "Max node rules per node: ~a, min node rules per node: ~a, average node rules per node: ~a~%~!" 
-                  max-node-rules (min min-node-rules 0) (if (> (length the-nodes) 0) 
+          (format #t "Max node rules per node: ~a, min node rules per node: ~a, average node rules per node: ~a~%~!"
+                  max-node-rules (min min-node-rules 0) (if (> (length the-nodes) 0)
                                                             (/ (round (* (exact->inexact (/ total-node-rules (length the-nodes))) 100)) 100)
                                                             "N/A"))
-          (format #t "Max node conditions per node: ~a, min node conditions per node: ~a, average node conditions per node: ~a~%~!" 
-                  max-node-conditions (min min-node-conditions 0) (if (> (length the-nodes) 0) 
+          (format #t "Max node conditions per node: ~a, min node conditions per node: ~a, average node conditions per node: ~a~%~!"
+                  max-node-conditions (min min-node-conditions 0) (if (> (length the-nodes) 0)
                                                                       (/ (round (* (exact->inexact (/ total-node-conditions (length the-nodes))) 100)) 100)
                                                                       "N/A"))
-          (format #t "Max node actions per node: ~a, min node actions per node: ~a, average node actions per node: ~a~%~!" 
-                  max-node-actions (min min-node-actions 0) (if (> (length the-nodes) 0) 
+          (format #t "Max node actions per node: ~a, min node actions per node: ~a, average node actions per node: ~a~%~!"
+                  max-node-actions (min min-node-actions 0) (if (> (length the-nodes) 0)
                                                                 (/ (round (* (exact->inexact (/ total-node-actions (length the-nodes))) 100)) 100)
                                                                 "N/A"))
-          (format #t "Max link rules per node: ~a, min link rules per node: ~a, average link rules per node: ~a~%~!" 
-                  max-node-linkrules (min min-node-linkrules 0) (if (> (length the-nodes) 0) 
-                                                            (/ (round (* (exact->inexact (/ total-node-linkrules (length the-nodes))) 100)) 100)
-                                                            "N/A"))
-          (format #t "Max link conditions per node: ~a, min link conditions per node: ~a, average link conditions per node: ~a~%~!" 
-                  max-node-linkconditions (min min-node-linkconditions 0) (if (> (length the-nodes) 0) 
-                                                                      (/ (round (* (exact->inexact (/ total-node-linkconditions (length the-nodes))) 100)) 100)
-                                                                      "N/A"))
-          (format #t "Max link actions per node: ~a, min link actions per node: ~a, average link actions per node: ~a~%~!" 
-                  max-node-linkactions (min min-node-linkactions 0) (if (> (length the-nodes) 0) 
-                                                                (/ (round (* (exact->inexact (/ total-node-linkactions (length the-nodes))) 100)) 100)
-                                                                "N/A"))
+          (format #t "Max link rules per node: ~a, min link rules per node: ~a, average link rules per node: ~a~%~!"
+                  max-node-linkrules (min min-node-linkrules 0) (if (> (length the-nodes) 0)
+                                                                    (/ (round (* (exact->inexact (/ total-node-linkrules (length the-nodes))) 100)) 100)
+                                                                    "N/A"))
+          (format #t "Max link conditions per node: ~a, min link conditions per node: ~a, average link conditions per node: ~a~%~!"
+                  max-node-linkconditions (min min-node-linkconditions 0) (if (> (length the-nodes) 0)
+                                                                              (/ (round (* (exact->inexact (/ total-node-linkconditions (length the-nodes))) 100)) 100)
+                                                                              "N/A"))
+          (format #t "Max link actions per node: ~a, min link actions per node: ~a, average link actions per node: ~a~%~!"
+                  max-node-linkactions (min min-node-linkactions 0) (if (> (length the-nodes) 0)
+                                                                        (/ (round (* (exact->inexact (/ total-node-linkactions (length the-nodes))) 100)) 100)
+                                                                        "N/A"))
+          (format #t "Max destinations per node: ~a, min destinations per node: ~a, average destinations per node: ~a~%~!"
+                  max-node-destinations (min min-node-destinations 0) (if (> (length the-nodes) 0)
+                                                                        (/ (round (* (exact->inexact (/ total-node-destinations (length the-nodes))) 100)) 100)
+                                                                        "N/A"))
+          (format #t "Max entries per node: ~a, min entries per node: ~a, average entries per node: ~a~%~!"
+                  max-node-entries (min min-node-entries 0) (if (> (length the-nodes) 0)
+                                                                        (/ (round (* (exact->inexact (/ total-node-entries (length the-nodes))) 100)) 100)
+                                                                        "N/A"))
           ))
-        
 
-  ; max, min, average:
-  ; number of rules per node  
-  ; number of conditions per node  
-  ; number of actions per node  
-  ; number of exit destinations per node
-  
-  ; total:
-  ; number of true/false facts
-  ; number of text facts
-  ; number of anywhere nodes
-  ; number of regular nodes
-  
-  ; max, min, average:
-  ; number of fact updates per node
-  ; number of fact-based conditions per node
-  ; number of times each fact is updated
-  ; number of alternate text replacements per node
-  ; number of exit destinations per link (regular node)
-  
-  (display "******* end stats *******")(newline)
-))  
+    (display "******* end stats *******")(newline)
+    ))
