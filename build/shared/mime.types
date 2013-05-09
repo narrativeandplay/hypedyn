@@ -1,0 +1,9 @@
+# comments begin with a '#'
+# the format is <mime type> <space separated file extensions>
+# for example:
+#text/plain txt text TXT
+# this would map file.txt, file.text, and file.TXT to
+# the mime type "text/plain"
+text/css css CSS
+text/html html HTML htm HTM
+application/javascript js JS

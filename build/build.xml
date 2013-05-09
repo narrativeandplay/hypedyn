@@ -208,7 +208,11 @@
 	<jar jarfile="${build.hypedyn.jar}"
 	     basedir="${temp.dir}"
 		 excludes="${base.hypedyn.jar}"
-	     manifest="${build.dir}/manifest/Manifest.editor"/>
+	     manifest="${build.dir}/manifest/Manifest.editor">
+    	<metainf dir="${shared.dir}">
+        	<include name="mime.types"/>    
+    	</metainf>
+	</jar>
   </target>
 
   <target name="build-reader" >
