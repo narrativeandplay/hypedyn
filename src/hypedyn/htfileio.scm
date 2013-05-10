@@ -1097,7 +1097,7 @@
 
         ;; copy css files
         (define styling-css-file
-          (case (get-stylesheet-choice)
+          (case (get-css-type) ;(get-stylesheet-choice)
             ((default) (get-content-file "css/styling.css"))
             ((fancy) (get-content-file "css/styling2.css"))
             ((custom) (make-file (get-custom-css-location) ))))
