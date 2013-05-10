@@ -56,13 +56,14 @@
 ; create the main UI
 (create-main-UI)
 
-; load preferences, purely for the last-saved-dir
-(getprefs)
-(get-file-prefs)
-
 ; make sure there's a HypeDyn folder, and set it as default save dir
 (check-hypedyn-folder)
 (set-default-save-dir! (get-hypedyn-folder-file))
+
+; load preferences, purely for the last-saved-dir
+(set-pref-filename! (string-append (get-hypedyn-folder-string) "/" (get-pref-filename)))
+(getprefs)
+(get-file-prefs)
 
 ; load only a specific language
 (set-language! #f 

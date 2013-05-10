@@ -25,16 +25,20 @@
 (require "../kawa/file.scm")
 
 ; export
-(module-export get-pref-languageinfo getprefs putprefs
+(module-export get-pref-filename set-pref-filename! get-pref-languageinfo getprefs putprefs
                init-prefs get-pref-list get-pref put-pref! del-pref!)
 ; (module-static 'init-run)
  
 (define pref-file #f)
-(define-constant pref-filename "./myprefs")
+(define pref-filename "./myprefs")
+(define (get-pref-filename)
+  pref-filename)
+(define (set-pref-filename! in-filename)
+  (set! pref-filename in-filename))
 
 ; get the pref file, returns #f if not found
 (define (find-pref-file) 
-  (let ((the-file (make-file pref-filename)))
+  (let ((the-file (make-file (get-pref-filename))))
     (if (check-file-exists the-file)
         the-file
         #f)))
@@ -107,7 +111,7 @@
       (try-catch
           (let ((the-pref-list (get-pref-list))
                 (the-pref-file (if (not pref-file)
-                                   (let ((the-file (make-file pref-filename)))
+                                   (let ((the-file (make-file (get-pref-filename))))
                                      (display "no pref file, make one...\n")
                                      (display (create-new-file the-file))
                                      the-file)

@@ -56,7 +56,7 @@
                ht-build-sexpr-from-object-with-rule ht-build-sexpr-from-rule
                clear-loaded-file-version ;; used by clear-data in hteditor.scm
                loaded-file-version obj-conversion-2.2
-               get-hypedyn-folder-file check-hypedyn-folder hd-autosave
+               get-hypedyn-folder-file get-hypedyn-folder-string check-hypedyn-folder hd-autosave
                )
 
 ; set fileformat version and type
