@@ -209,7 +209,7 @@
 	     basedir="${temp.dir}"
 		 excludes="${base.hypedyn.jar}"
 	     manifest="${build.dir}/manifest/Manifest.editor">
-    	<metainf dir="${shared.dir}">
+    	<metainf dir="${src.dir}/META-INF/">
         	<include name="mime.types"/>    
     	</metainf>
 	</jar>
