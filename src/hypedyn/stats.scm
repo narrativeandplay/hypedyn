@@ -98,7 +98,14 @@
         (total-regularnode-links 0)
         (max-fact-updates 0)
         (min-fact-updates -1)
-        (total-fact-updates 0))
+        (total-fact-updates 0)
+        (max-combinedrules 0)
+        (min-combinedrules -1)
+        (max-combinedconditions 0)
+        (min-combinedconditions -1)
+        (max-combinedactions 0)
+        (min-combinedactions -1)
+        )
 
     ; overall stats
     (format #t "*** Overall stats ***~%~!")
@@ -177,7 +184,10 @@
                         (thisnode-factupdatecount 0)
                         (thisnode-alttexttypedcount 0)
                         (thisnode-alttextfactcount 0)
-                        (thisnode-factconditionscount 0))
+                        (thisnode-factconditionscount 0)
+                        (thisnode-combinedrulecount 0)
+                        (thisnode-combinedconditioncount 0)
+                        (thisnode-combinedactioncount 0))
 
                    ; count anywhere nodes
                    (if (ask thisnode-obj 'anywhere?) (set! total-anywhere (+ total-anywhere 1)))
@@ -289,6 +299,12 @@
                        (set! thisnode-factupdatecount thisnode-nodefactupdatecount)
                        ; fact-based conditions - note: just combine node rule and link rule count for now
                        (set! thisnode-factconditionscount thisnode-nodefactconditionscount)
+                       ; combined rule count
+                       (set! thisnode-combinedrulecount thisnode-noderulecount)
+                       ; combined condition count
+                       (set! thisnode-combinedconditioncount thisnode-nodeconditioncount)
+                       ; combined action count
+                       (set! thisnode-combinedactioncount thisnode-nodeactioncount)
                        ))
 
                    ; for each link in the node
@@ -414,13 +430,37 @@
                         (= -1 min-node-factconditions)
                         (< thisnode-factconditionscount min-node-factconditions)) (set! min-node-factconditions thisnode-factconditionscount))
                    (set! total-node-factconditions (+ total-node-factconditions thisnode-factconditionscount))
+                   ; combined rules
+                   (set! thinode-combinedrulecount (+ thisnode-combinedrulecount thisnode-linkrulecount))
+                   (if (> thinode-combinedrulecount max-combinedrules) (set! max-combinedrules thinode-combinedrulecount))
+                   (if (or
+                        (= -1 min-combinedrules)
+                        (< thinode-combinedrulecount min-combinedrules)) (set! min-combinedrules thinode-combinedrulecount))
+                   ; combined conditions
+                   (set! thinode-combinedconditioncount (+ thisnode-combinedconditioncount thisnode-linkconditioncount))
+                   (if (> thinode-combinedconditioncount max-combinedconditions) (set! max-combinedconditions thinode-combinedconditioncount))
+                   (if (or
+                        (= -1 min-combinedconditions)
+                        (< thinode-combinedconditioncount min-combinedconditions)) (set! min-combinedconditions thinode-combinedconditioncount))
+                   ; combined actions
+                   (set! thinode-combinedactioncount (+ thisnode-combinedactioncount thisnode-linkactioncount))
+                   (if (> thinode-combinedactioncount max-combinedactions) (set! max-combinedactions thinode-combinedactioncount))
+                   (if (or
+                        (= -1 min-combinedactions)
+                        (< thinode-combinedactioncount min-combinedactions)) (set! min-combinedactions thinode-combinedactioncount))
                    ))
                the-nodes)
 
           ; display node stats
           (format #t "Total anywhere nodes\t~a~%~!" total-anywhere)
           (format #t "Total regular nodes\t~a~%~!" (- (length the-nodes) total-anywhere))
-
+          (format #t "Total node rules\t~a~%~!" total-node-rules)
+          (if the-rules (format #t "Total link rules\t~a~%~!" (- (length the-rules) total-node-rules)))
+          (format #t "Total fact-based conditions\t~a~%~!" total-node-factconditions)
+          (format #t "Total fact updates\t~a~%~!" total-node-factupdates)
+          (format #t "Total alt text (typed)\t~a~%~!" total-node-alttexttyped)
+          (format #t "Total alt text (facts)\t~a~%~!" total-node-alttextfact)
+          
           ; feature usage
           (format #t "\n*** Feature usage ***~%~!")
           (format #t "Max node rules per node\t~a~%~!Min node rules per node\t~a~%~!Average node rules per node\t~a~%~!"
@@ -455,7 +495,19 @@
                   max-node-entries (min min-node-entries 0) (if (> (- (length the-nodes) total-anywhere) 0)
                                                                 (/ (round (* (exact->inexact (/ total-node-entries (- (length the-nodes) total-anywhere))) 100)) 100)
                                                                 "N/A"))
-
+          (format #t "Max rules per node\t~a~%~!Min rules per node\t~a~%~!Average rules per node (disregard node/link distinction)\t~a~%~!"
+                  max-combinedrules (min min-combinedrules 0) (if (and (> (length the-nodes) 0) the-rules)
+                                                                (/ (round (* (exact->inexact (/ (length the-rules) (length the-nodes))) 100)) 100)
+                                                                "N/A"))
+          (format #t "Max conditions per node\t~a~%~!Min conditions per node\t~a~%~!Average conditions per node (disregard node/link distinction)\t~a~%~!"
+                  max-combinedconditions (min min-combinedconditions 0) (if (and (> (length the-nodes) 0) the-conditions)
+                                                                (/ (round (* (exact->inexact (/ (length the-conditions) (length the-nodes))) 100)) 100)
+                                                                "N/A"))
+          (format #t "Max actions per node\t~a~%~!Min actions per node\t~a~%~!Average actions per node (disregard node/link distinction)\t~a~%~!"
+                  max-combinedactions (min min-combinedactions 0) (if (and (> (length the-nodes) 0) the-actions)
+                                                                (/ (round (* (exact->inexact (/ (length the-actions) (length the-nodes))) 100)) 100)
+                                                                "N/A"))
+          
           ; procedurality
           (format #t "\n*** Procedurality ***~%~!")
           (format #t "Max fact updates per node\t~a~%~!Min fact updates per node\t~a~%~!Average fact updates per node\t~a~%~!"
