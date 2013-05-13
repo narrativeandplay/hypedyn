@@ -29,8 +29,8 @@ function init_element_height() {
 	$('popup').style.height = ( device_height - button_panel_height * 2 - 30 ) + "px";
 	$('outer-popup').style.height = ( device_height - button_panel_height * 2 ) + "px";
 	
-	$('popup').style.width = page_width - 90; // 30 more than below (15 padding each side)
-	$('outer-popup').style.width = page_width - 60;
+	$('popup').style.width = ( page_width - 90 ) + "px"; // 30 more than below (15 padding each side)
+	$('outer-popup').style.width = ( page_width - 60 ) + "px";
 	
 	lo_canvas.width = page_width;
 	lo_canvas.height = device_height;
