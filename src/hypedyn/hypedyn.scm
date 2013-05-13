@@ -22,8 +22,10 @@
   (require "hteditor.scm")
   (require "htlanguage.scm")
   (require "config-options.scm")
+  (require "../common/main-ui.scm") ;; get-main-ui-frame
   (require "../kawa/system.scm")
   (require "../kawa/file.scm")
+  (require "../kawa/UI/dialog.scm") ; make-error-dialog
   )
 
 ; export
@@ -39,15 +41,26 @@
   
   ; start server
   (if (not (java-reader?))
-      (begin
-        ; create a temporary directory for server
-        
-        (display "system-tmpdir ")(display (system-tmpdir))(newline)
-        
-        (set-temp-dir! (string-append (system-tmpdir) "/hypedyn" (number->string (get-current-time))))
-        (make-directory (get-temp-dir))
-        
-        ; start the server
-        (gnu.kawa.servlet.KawaHttpHandler:addAutoHandler "/" (get-temp-dir))
-        (gnu.kawa.servlet.KawaHttpHandler:startServer (get-local-port))))
+      (try-catch
+          (begin
+            ; create a temporary directory for server
+            (display "system-tmpdir ")(display (system-tmpdir))(newline)
+
+            (set-temp-dir! (string-append (system-tmpdir) "/hypedyn" (number->string (get-current-time))))
+            (make-directory (get-temp-dir))
+
+            ; start the server
+            (gnu.kawa.servlet.KawaHttpHandler:addAutoHandler "/" (get-temp-dir))
+            (gnu.kawa.servlet.KawaHttpHandler:startServer (get-local-port)))
+        (ex <java.lang.Throwable>
+            (begin
+              (display (*:toString ex))(newline)
+              ;(*:printStackTrace ex)
+              (make-error-dialog (get-main-ui-frame)
+                                 "Hypedyn Error"
+                                 (string-append
+                                  "Unable to start HypeDyn.\nQuit any other copies of HypeDyn\nthat may be running and try again."))
+              (exit)
+              )))
+      )
   )
