@@ -25,6 +25,7 @@
   (require "../common/objects.scm")
   (require "../common/datatable.scm") ;;get, del, put
   (require "../common/myhashtable.scm")
+  (require "../common/fileio.scm") ;; get-saved-filename-string
   (require 'hash-table)
   (require "datastructure.scm")
   (require 'list-lib))
@@ -39,7 +40,8 @@
 
 (define (display-stats)
   (format #t "\n******* begin stats *******~%~!")
-
+  (format #t "filename: ~a~%~!" (get-saved-filename-string))
+  
   (let ((the-nodes (get-list 'nodes))
         (the-links (get-list 'links))
         (the-facts (get-list 'facts))
@@ -56,121 +58,121 @@
         ; max/min/total for nodes
         (max-node-rules 0)
         (min-node-rules -1)
-        (max-node-rulesID -1)
-        (min-node-rulesID -1)
+        (max-node-rulesID '())
+        (min-node-rulesID '())
         (total-node-rules 0)
         (max-node-conditions 0)
         (min-node-conditions -1)
-        (max-node-conditionsID -1)
-        (min-node-conditionsID -1)
+        (max-node-conditionsID '())
+        (min-node-conditionsID '())
         (total-node-conditions 0)
         (max-node-actions 0)
         (min-node-actions -1)
-        (max-node-actionsID -1)
-        (min-node-actionsID -1)
+        (max-node-actionsID '())
+        (min-node-actionsID '())
         (total-node-actions 0)
 
         ; max/min/total for links
         (max-node-linkrules 0)
         (min-node-linkrules -1)
-        (max-node-linkrulesID 0)
-        (min-node-linkrulesID -1)
+        (max-node-linkrulesID '())
+        (min-node-linkrulesID '())
         (total-node-linkrules 0)
         (max-node-linkconditions 0)
         (min-node-linkconditions -1)
-        (max-node-linkconditionsID -1)
-        (min-node-linkconditionsID -1)
+        (max-node-linkconditionsID '())
+        (min-node-linkconditionsID '())
         (total-node-linkconditions 0)
         (max-node-linkactions 0)
         (min-node-linkactions -1)
-        (max-node-linkactionsID 0)
-        (min-node-linkactionsID -1)
+        (max-node-linkactionsID '())
+        (min-node-linkactionsID '())
         (total-node-linkactions 0)
         
         ; destinations per node
         (max-node-destinations 0)
         (min-node-destinations -1)
-        (max-node-destinationsID -1)
-        (min-node-destinationsID -1)
+        (max-node-destinationsID '())
+        (min-node-destinationsID '())
         (total-node-destinations 0)
         (max-node-destinationscond 0)
         (min-node-destinationscond -1)
-        (max-node-destinationscondID -1)
-        (min-node-destinationscondID -1)
+        (max-node-destinationscondID '())
+        (min-node-destinationscondID '())
         (total-node-destinationscond 0)
         (max-node-destinationsnocond 0)
         (min-node-destinationsnocond -1)
-        (max-node-destinationsnocondID -1)
-        (min-node-destinationsnocondID -1)
+        (max-node-destinationsnocondID '())
+        (min-node-destinationsnocondID '())
         (total-node-destinationsnocond 0)
         (max-node-uniquedestinations 0)
         (min-node-uniquedestinations -1)
-        (max-node-uniquedestinationsID -1)
-        (min-node-uniquedestinationsID -1)
+        (max-node-uniquedestinationsID '())
+        (min-node-uniquedestinationsID '())
         (total-node-uniquedestinations 0)
         
         ; entries per node
         (max-node-entries 0)
         (min-node-entries -1)
-        (max-node-entriesID -1)
-        (min-node-entriesID -1)
+        (max-node-entriesID '())
+        (min-node-entriesID '())
         (total-node-entries 0)
         
         ; link destinations
         (max-link-destinations 0)
         (min-link-destinations -1)
-        (max-link-destinationsID -1)
-        (min-link-destinationsID -1)
+        (max-link-destinationsID '())
+        (min-link-destinationsID '())
         (total-link-destinations 0)
         (total-regularnode-links 0)
         
         ; fact updates
         (max-node-factupdates 0)
         (min-node-factupdates -1)
-        (max-node-factupdatesID -1)
-        (min-node-factupdatesID -1)
+        (max-node-factupdatesID '())
+        (min-node-factupdatesID '())
         (total-node-factupdates 0)
         (max-node-factconditions 0)
         (min-node-factconditions -1)
-        (max-node-factconditionsID -1)
-        (min-node-factconditionsID -1)
+        (max-node-factconditionsID '())
+        (min-node-factconditionsID '())
         (total-node-factconditions 0)
         (max-fact-updates 0)
         (min-fact-updates -1)
-        (max-fact-updatesID -1)
-        (min-fact-updatesID -1)
+        (max-fact-updatesID '())
+        (min-fact-updatesID '())
         (total-fact-updates 0)
         (max-fact-inconditions 0)
         (min-fact-inconditions -1)
-        (max-fact-inconditionsID -1)
-        (min-fact-inconditionsID -1)
+        (max-fact-inconditionsID '())
+        (min-fact-inconditionsID '())
         (total-fact-inconditions 0)
         
         ; alt text
         (max-node-alttexttyped 0)
         (min-node-alttexttyped -1)
-        (max-node-alttexttypedID -1)
-        (min-node-alttexttypedID -1)
+        (max-node-alttexttypedID '())
+        (min-node-alttexttypedID '())
         (total-node-alttexttyped 0)
         (max-node-alttextfact 0)
         (min-node-alttextfact -1)
-        (max-node-alttextfactID -1)
-        (min-node-alttextfactID -1)
+        (max-node-alttextfactID '())
+        (min-node-alttextfactID '())
         (total-node-alttextfact 0)
 
         ; rules
         (max-combinedrules 0)
         (min-combinedrules -1)
-        (max-combinedrulesID -1)
-        (min-combinedrulesID -1)
+        (max-combinedrulesID '())
+        (min-combinedrulesID '())
         (max-combinedconditions 0)
         (min-combinedconditions -1)
-        (max-combinedconditionsID -1)
-        (min-combinedconditionsID -1)
+        (max-combinedconditionsID '())
+        (min-combinedconditionsID '())
         (max-combinedactions 0)
         (min-combinedactions -1)
-        (max-combinedactionsID -1)
-        (min-combinedactionsID -1)
+        (max-combinedactionsID '())
+        (min-combinedactionsID '())
         )
 
     ; overall stats
@@ -227,31 +229,41 @@
                             (if (or (eq? thiscondition-type 2) (eq? thiscondition-type 3))
                                 ; check if its this fact
                                 (if (= thiscondition-targetID thisfact-ID)
-                                    (set! thisfact-inconditioncount (+ thisfact-inconditioncount 1))))))
+                                    (set! thisfact-inconditioncount (+ thisfact-inconditioncount 1))
+                                    ))))
                         the-conditions)
 
                    ; calculate stats
-                   (if (> thisfact-updatecount max-fact-updates) 
-                       (begin
-                         (set! max-fact-updates thisfact-updatecount)
-                         (set! max-fact-updatesID thisfact-ID)))
-                   (if (or
-                        (= -1 min-fact-updates)
-                        (< thisfact-updatecount min-fact-updates)) 
-                       (begin
-                         (set! min-fact-updates thisfact-updatecount)
-                         (set! min-fact-updatesID thisfact-ID)))
+                   (if (= thisfact-updatecount max-fact-updates)
+                       (set! max-fact-updatesID (cons thisfact-ID max-fact-updatesID))
+                       (if (> thisfact-updatecount max-fact-updates)
+                           (begin
+                             (set! max-fact-updates thisfact-updatecount)
+                             (set! max-fact-updatesID (list thisfact-ID)))))
+                   (if (= thisfact-updatecount min-fact-updates)
+                       (set! min-fact-updatesID (cons thisfact-ID min-fact-updatesID))
+                       (if (or
+                            (= -1 min-fact-updates)
+                            (< thisfact-updatecount min-fact-updates))
+                           (begin
+                             (set! min-fact-updates thisfact-updatecount)
+                             (set! min-fact-updatesID (list thisfact-ID)))))
                    (set! total-fact-updates (+ total-fact-updates thisfact-updatecount))
-                   (if (> thisfact-inconditioncount max-fact-inconditions) 
-                       (begin
-                         (set! max-fact-inconditions thisfact-inconditioncount)
-                         (set! max-fact-inconditionsID thisfact-ID)))
-                   (if (or
-                        (= -1 min-fact-inconditions)
-                        (< thisfact-inconditioncount min-fact-inconditions)) 
-                       (begin
-                         (set! min-fact-inconditions thisfact-inconditioncount)
-                         (set! min-fact-inconditionsID thisfact-ID)))
+                   
+                   (if (= thisfact-inconditioncount max-fact-inconditions)
+                       (set! max-fact-inconditionsID (cons thisfact-ID max-fact-inconditionsID))
+                       (if (> thisfact-inconditioncount max-fact-inconditions)
+                           (begin
+                             (set! max-fact-inconditions thisfact-inconditioncount)
+                             (set! max-fact-inconditionsID (list thisfact-ID)))))
+                   (if (= thisfact-inconditioncount min-fact-inconditions)
+                       (set! min-fact-inconditionsID (cons thisfact-ID min-fact-inconditionsID))
+                       (if (or
+                            (= -1 min-fact-inconditions)
+                            (< thisfact-inconditioncount min-fact-inconditions))
+                           (begin
+                             (set! min-fact-inconditions thisfact-inconditioncount)
+                             (set! min-fact-inconditionsID (list thisfact-ID)))))
                    (set! total-fact-inconditions (+ total-fact-inconditions thisfact-inconditioncount))
                    ))
                the-facts)
@@ -292,16 +304,20 @@
                    (if (ask thisnode-obj 'anywhere?) (set! total-anywhere (+ total-anywhere 1)))
 
                    ; max/min/average node rules
-                   (if (> thisnode-noderulecount max-node-rules) 
-                       (begin
-                         (set! max-node-rules thisnode-noderulecount)
-                         (set! max-node-rulesID thisnode-ID)))
-                   (if (or
-                        (= -1 min-node-rules)
-                        (< thisnode-noderulecount min-node-rules)) 
-                       (begin
-                         (set! min-node-rules thisnode-noderulecount)
-                         (set! min-node-rulesID thisnode-ID)))
+                   (if (= thisnode-noderulecount max-node-rules)
+                       (set! max-node-rulesID (cons thisnode-ID max-node-rulesID))
+                       (if (> thisnode-noderulecount max-node-rules)
+                           (begin
+                             (set! max-node-rules thisnode-noderulecount)
+                             (set! max-node-rulesID (list thisnode-ID)))))
+                   (if (= thisnode-noderulecount min-node-rules)
+                       (set! min-node-rulesID (cons thisnode-ID min-node-rulesID))
+                       (if (or
+                            (= -1 min-node-rules)
+                            (< thisnode-noderulecount min-node-rules))
+                           (begin
+                             (set! min-node-rules thisnode-noderulecount)
+                             (set! min-node-rulesID (list thisnode-ID)))))
                    (set! total-node-rules (+ total-node-rules thisnode-noderulecount))
 
                    ; helper for counting various elements of rules
@@ -403,28 +419,36 @@
                                  (count-conditions-and-actions thisnode-rules)))
                      (begin
                        ; conditions
-                       (if (> thisnode-nodeconditioncount max-node-conditions) 
-                           (begin
-                             (set! max-node-conditions thisnode-nodeconditioncount)
-                             (set! max-node-conditionsID thisnode-ID)))
-                       (if (or
-                            (= -1 min-node-conditions)
-                            (< thisnode-nodeconditioncount min-node-conditions)) 
-                           (begin
-                             (set! min-node-conditions thisnode-nodeconditioncount)
-                             (set! min-node-conditionsID thisnode-ID)))
+                       (if (= thisnode-nodeconditioncount max-node-conditions)
+                           (set! max-node-conditionsID (cons thisnode-ID max-node-conditionsID))
+                           (if (> thisnode-nodeconditioncount max-node-conditions)
+                               (begin
+                                 (set! max-node-conditions thisnode-nodeconditioncount)
+                                 (set! max-node-conditionsID (list thisnode-ID)))))
+                       (if (= thisnode-nodeconditioncount min-node-conditions)
+                           (set! min-node-conditionsID (cons thisnode-ID min-node-conditionsID))
+                           (if (or
+                                (= -1 min-node-conditions)
+                                (< thisnode-nodeconditioncount min-node-conditions))
+                               (begin
+                                 (set! min-node-conditions thisnode-nodeconditioncount)
+                                 (set! min-node-conditionsID (list thisnode-ID)))))
                        (set! total-node-conditions (+ total-node-conditions thisnode-nodeconditioncount))
                        ; actions
-                       (if (> thisnode-nodeactioncount max-node-actions) 
-                           (begin
-                             (set! max-node-actions thisnode-nodeactioncount)
-                             (set! max-node-actionsID thisnode-ID)))
-                       (if (or
-                            (= -1 min-node-actions)
-                            (< thisnode-nodeactioncount min-node-actions)) 
-                           (begin
-                             (set! min-node-actions thisnode-nodeactioncount)
-                             (set! min-node-actionsID thisnode-ID)))
+                       (if (= thisnode-nodeactioncount max-node-actions)
+                           (set! max-node-actionsID (cons thisnode-ID max-node-actionsID))
+                           (if (> thisnode-nodeactioncount max-node-actions)
+                               (begin
+                                 (set! max-node-actions thisnode-nodeactioncount)
+                                 (set! max-node-actionsID (list thisnode-ID)))))
+                       (if (= thisnode-nodeactioncount min-node-actions)
+                           (set! min-node-actionsID (cons thisnode-ID min-node-actionsID))
+                           (if (or
+                                (= -1 min-node-actions)
+                                (< thisnode-nodeactioncount min-node-actions))
+                               (begin
+                                 (set! min-node-actions thisnode-nodeactioncount)
+                                 (set! min-node-actionsID (list thisnode-ID)))))
                        (set! total-node-actions (+ total-node-actions thisnode-nodeactioncount))
                        ; fact updates - note: just combine node rule and link rule count for now
                        (set! thisnode-factupdatecount thisnode-nodefactupdatecount)
@@ -468,16 +492,20 @@
                               (if (not (ask thisnode-obj 'anywhere?))
                                   (begin
                                     (set! total-regularnode-links (+ total-regularnode-links 1))
-                                    (if (> thislink-destinationcount max-link-destinations) 
-                                        (begin
-                                          (set! max-link-destinations thislink-destinationcount)
-                                          (set! max-link-destinationsID thislink-ID)))
-                                    (if (or
-                                         (= -1 min-link-destinations)
-                                         (< thislink-destinationcount min-link-destinations)) 
-                                        (begin
-                                          (set! min-link-destinations thislink-destinationcount)
-                                          (set! min-link-destinationsID thislink-ID)))
+                                    (if (= thislink-destinationcount max-link-destinations)
+                                        (set! max-link-destinationsID (cons thislink-ID max-link-destinationsID))
+                                        (if (> thislink-destinationcount max-link-destinations)
+                                            (begin
+                                              (set! max-link-destinations thislink-destinationcount)
+                                              (set! max-link-destinationsID (list thislink-ID)))))
+                                    (if (= thislink-destinationcount min-link-destinations)
+                                        (set! min-link-destinationsID (cons thislink-ID min-link-destinationsID))
+                                        (if (or
+                                             (= -1 min-link-destinations)
+                                             (< thislink-destinationcount min-link-destinations))
+                                            (begin
+                                              (set! min-link-destinations thislink-destinationcount)
+                                              (set! min-link-destinationsID (list thislink-ID)))))
                                     (set! total-link-destinations (+ total-link-destinations thislink-destinationcount))
                                     )))))
                         thisnode-links)
@@ -506,188 +534,249 @@
 
                    ; now tabulate the link stats for this node - maybe should track the IDs of max nodes/links?
                    ; rules
-                   (if (> thisnode-linkrulecount max-node-linkrules) 
-                       (begin
-                         (set! max-node-linkrules thisnode-linkrulecount)
-                         (set! max-node-linkrulesID thisnode-ID)))
-                   (if (or
-                        (= -1 min-node-linkrules)
-                        (< thisnode-linkrulecount min-node-linkrules)) 
-                       (begin
-                         (set! min-node-linkrules thisnode-linkrulecount)
-                         (set! min-node-linkrulesID thisnode-ID)))
+                   (if (= thisnode-linkrulecount max-node-linkrules)
+                       (set! max-node-linkrulesID (cons thisnode-ID max-node-linkrulesID))
+                       (if (> thisnode-linkrulecount max-node-linkrules)
+                           (begin
+                             (set! max-node-linkrules thisnode-linkrulecount)
+                             (set! max-node-linkrulesID (list thisnode-ID)))))
+                   (if (< thisnode-linkrulecount min-node-linkrules)
+                       (set! min-node-linkrulesID (cons thisnode-ID min-node-linkrulesID))
+                       (if (or
+                            (= -1 min-node-linkrules)
+                            (< thisnode-linkrulecount min-node-linkrules))
+                           (begin
+                             (set! min-node-linkrules thisnode-linkrulecount)
+                             (set! min-node-linkrulesID (list thisnode-ID)))))
                    (set! total-node-linkrules (+ total-node-linkrules thisnode-linkrulecount))
                    ; conditions
-                   (if (> thisnode-linkconditioncount max-node-linkconditions) 
+                   (if (= thisnode-linkconditioncount max-node-linkconditions) 
+                         (set! max-node-linkconditionsID (cons thisnode-ID max-node-linkconditionsID))
+                       (if (> thisnode-linkconditioncount max-node-linkconditions) 
                        (begin
                          (set! max-node-linkconditions thisnode-linkconditioncount)
-                         (set! max-node-linkconditionsID thisnode-ID)))
-                   (if (or
-                        (= -1 min-node-linkconditions)
-                        (< thisnode-linkconditioncount min-node-linkconditions)) 
-                       (begin
-                         (set! min-node-linkconditions thisnode-linkconditioncount)
-                         (set! min-node-linkconditionsID thisnode-ID)))
+                         (set! max-node-linkconditionsID (list thisnode-ID)))))
+                   (if (< thisnode-linkconditioncount min-node-linkconditions)
+                       (set! min-node-linkconditionsID (cons thisnode-ID min-node-linkconditionsID))
+                       (if (or
+                            (= -1 min-node-linkconditions)
+                            (< thisnode-linkconditioncount min-node-linkconditions))
+                           (begin
+                             (set! min-node-linkconditions thisnode-linkconditioncount)
+                             (set! min-node-linkconditionsID (list thisnode-ID)))))
                    (set! total-node-linkconditions (+ total-node-linkconditions thisnode-linkconditioncount))
                    ; actions
-                   (if (> thisnode-linkactioncount max-node-linkactions) 
-                       (begin
-                         (set! max-node-linkactions thisnode-linkactioncount)
-                         (set! max-node-linkactionsID thisnode-ID)))
-                   (if (or
-                        (= -1 min-node-linkactions)
-                        (< thisnode-linkactioncount min-node-linkactions)) 
-                       (begin
-                         (set! min-node-linkactions thisnode-linkactioncount)
-                         (set! min-node-linkactionsID thisnode-ID)))
+                   (if (= thisnode-linkactioncount max-node-linkactions)
+                       (set! max-node-linkactionsID (cons thisnode-ID max-node-linkactionsID))
+                       (if (> thisnode-linkactioncount max-node-linkactions)
+                           (begin
+                             (set! max-node-linkactions thisnode-linkactioncount)
+                             (set! max-node-linkactionsID (list thisnode-ID)))))
+                   (if (< thisnode-linkactioncount min-node-linkactions)
+                       (set! min-node-linkactionsID (cons thisnode-ID min-node-linkactionsID))
+                       (if (or
+                            (= -1 min-node-linkactions)
+                            (< thisnode-linkactioncount min-node-linkactions))
+                           (begin
+                             (set! min-node-linkactions thisnode-linkactioncount)
+                             (set! min-node-linkactionsID (list thisnode-ID)))))
                    (set! total-node-linkactions (+ total-node-linkactions thisnode-linkactioncount))
                    ; fact updates
-                   (if (> thisnode-factupdatecount max-node-factupdates) 
-                       (begin
-                         (set! max-node-factupdates thisnode-factupdatecount)
-                         (set! max-node-factupdatesID thisnode-ID)))
-                   (if (or
-                        (= -1 min-node-factupdates)
-                        (< thisnode-factupdatecount min-node-factupdates)) 
-                       (begin
-                         (set! min-node-factupdates thisnode-factupdatecount)
-                         (set! min-node-factupdatesID thisnode-ID)))
+                   (if (= thisnode-factupdatecount max-node-factupdates)
+                       (set! max-node-factupdatesID (cons thisnode-ID max-node-factupdatesID))
+                       (if (> thisnode-factupdatecount max-node-factupdates)
+                           (begin
+                             (set! max-node-factupdates thisnode-factupdatecount)
+                             (set! max-node-factupdatesID (list thisnode-ID)))))
+                   (if (= thisnode-factupdatecount min-node-factupdates)
+                       (set! min-node-factupdatesID (cons thisnode-ID min-node-factupdatesID))
+                       (if (or
+                            (= -1 min-node-factupdates)
+                            (< thisnode-factupdatecount min-node-factupdates))
+                           (begin
+                             (set! min-node-factupdates thisnode-factupdatecount)
+                             (set! min-node-factupdatesID (list thisnode-ID)))))
                    (set! total-node-factupdates (+ total-node-factupdates thisnode-factupdatecount))
                    ; text updates (typed)
-                   (if (> thisnode-alttexttypedcount max-node-alttexttyped) 
-                       (begin
-                         (set! max-node-alttexttyped thisnode-alttexttypedcount)
-                         (set! max-node-alttexttypedID thisnode-ID)))
-                   (if (or
-                        (= -1 min-node-alttexttyped)
-                        (< thisnode-alttexttypedcount min-node-alttexttyped)) 
-                       (begin
-                         (set! min-node-alttexttyped thisnode-alttexttypedcount)
-                         (set! min-node-alttexttypedID thisnode-ID)))
+                   (if (= thisnode-alttexttypedcount max-node-alttexttyped)
+                       (set! max-node-alttexttypedID (cons thisnode-ID max-node-alttexttypedID))
+                       (if (> thisnode-alttexttypedcount max-node-alttexttyped)
+                           (begin
+                             (set! max-node-alttexttyped thisnode-alttexttypedcount)
+                             (set! max-node-alttexttypedID (list thisnode-ID)))))
+                   (if (= thisnode-alttexttypedcount min-node-alttexttyped)
+                       (set! min-node-alttexttypedID (cons thisnode-ID min-node-alttexttypedID))
+                       (if (or
+                            (= -1 min-node-alttexttyped)
+                            (< thisnode-alttexttypedcount min-node-alttexttyped))
+                           (begin
+                             (set! min-node-alttexttyped thisnode-alttexttypedcount)
+                             (set! min-node-alttexttypedID (list thisnode-ID)))))
                    (set! total-node-alttexttyped (+ total-node-alttexttyped thisnode-alttexttypedcount))
                    ; text updates (fact)
-                   (if (> thisnode-alttextfactcount max-node-alttextfact) 
-                       (begin
-                         (set! max-node-alttextfact thisnode-alttextfactcount)
-                         (set! max-node-alttextfactID thisnode-ID)))
-                   (if (or
-                        (= -1 min-node-alttextfact)
-                        (< thisnode-alttextfactcount min-node-alttextfact)) 
-                       (begin
-                         (set! min-node-alttextfact thisnode-alttextfactcount)
-                         (set! min-node-alttextfactID thisnode-ID)))
+                   (if (= thisnode-alttextfactcount max-node-alttextfact)
+                       (set! max-node-alttextfactID (cons thisnode-ID max-node-alttextfactID))
+                       (if (> thisnode-alttextfactcount max-node-alttextfact)
+                           (begin
+                             (set! max-node-alttextfact thisnode-alttextfactcount)
+                             (set! max-node-alttextfactID (list thisnode-ID)))))
+                   (if (= thisnode-alttextfactcount min-node-alttextfact)
+                       (set! min-node-alttextfactID (cons thisnode-ID min-node-alttextfactID))
+                       (if (or
+                            (= -1 min-node-alttextfact)
+                            (< thisnode-alttextfactcount min-node-alttextfact))
+                           (begin
+                             (set! min-node-alttextfact thisnode-alttextfactcount)
+                             (set! min-node-alttextfactID (list thisnode-ID)))))
                    (set! total-node-alttextfact (+ total-node-alttextfact thisnode-alttextfactcount))
                    ; fact-based conditions
-                   (if (> thisnode-factconditionscount max-node-factconditions) 
-                       (begin
-                         (set! max-node-factconditions thisnode-factconditionscount)
-                         (set! max-node-factconditionsID thisnode-ID)))
-                   (if (or
-                        (= -1 min-node-factconditions)
-                        (< thisnode-factconditionscount min-node-factconditions)) 
-                       (begin
-                         (set! min-node-factconditions thisnode-factconditionscount)
-                         (set! min-node-factconditionsID thisnode-ID)))
+                   (if (= thisnode-factconditionscount max-node-factconditions)
+                       (set! max-node-factconditionsID (cons thisnode-ID max-node-factconditionsID))
+                       (if (> thisnode-factconditionscount max-node-factconditions)
+                           (begin
+                             (set! max-node-factconditions thisnode-factconditionscount)
+                             (set! max-node-factconditionsID (list thisnode-ID)))))
+                   (if (= thisnode-factconditionscount min-node-factconditions)
+                       (set! min-node-factconditionsID (cons thisnode-ID min-node-factconditionsID))
+                       (if (or
+                            (= -1 min-node-factconditions)
+                            (< thisnode-factconditionscount min-node-factconditions))
+                           (begin
+                             (set! min-node-factconditions thisnode-factconditionscount)
+                             (set! min-node-factconditionsID (list thisnode-ID)))))
                    (set! total-node-factconditions (+ total-node-factconditions thisnode-factconditionscount))
+                   
                    ; combined rules
                    (set! thinode-combinedrulecount (+ thisnode-combinedrulecount thisnode-linkrulecount))
-                   (if (> thinode-combinedrulecount max-combinedrules) 
-                       (begin
-                         (set! max-combinedrules thinode-combinedrulecount)
-                         (set! max-combinedrulesID thisnode-ID)))
-                   (if (or
-                        (= -1 min-combinedrules)
-                        (< thinode-combinedrulecount min-combinedrules)) 
-                       (begin
-                         (set! min-combinedrules thinode-combinedrulecount)
-                         (set! min-combinedrulesID thisnode-ID)))
+                   (if (= thinode-combinedrulecount max-combinedrules)
+                       (set! max-combinedrulesID (cons thisnode-ID max-combinedrulesID))
+                       (if (> thinode-combinedrulecount max-combinedrules)
+                           (begin
+                             (set! max-combinedrules thinode-combinedrulecount)
+                             (set! max-combinedrulesID (list thisnode-ID)))))
+                   (if (= thinode-combinedrulecount min-combinedrules)
+                       (set! min-combinedrulesID (cons thisnode-ID min-combinedrulesID))
+                       (if (or
+                            (= -1 min-combinedrules)
+                            (< thinode-combinedrulecount min-combinedrules))
+                           (begin
+                             (set! min-combinedrules thinode-combinedrulecount)
+                             (set! min-combinedrulesID (list thisnode-ID)))))
                    ; combined conditions
                    (set! thinode-combinedconditioncount (+ thisnode-combinedconditioncount thisnode-linkconditioncount))
-                   (if (> thinode-combinedconditioncount max-combinedconditions) 
-                       (begin
-                         (set! max-combinedconditions thinode-combinedconditioncount)
-                         (set! max-combinedconditionsID thisnode-ID)))
-                   (if (or
-                        (= -1 min-combinedconditions)
-                        (< thinode-combinedconditioncount min-combinedconditions))
-                       (begin
-                         (set! min-combinedconditions thinode-combinedconditioncount)
-                         (set! min-combinedconditionsID thisnode-ID)))
+                   (if (= thinode-combinedconditioncount max-combinedconditions)
+                       (set! max-combinedconditionsID (cons thisnode-ID max-combinedconditionsID))
+                       (if (> thinode-combinedconditioncount max-combinedconditions)
+                           (begin
+                             (set! max-combinedconditions thinode-combinedconditioncount)
+                             (set! max-combinedconditionsID (list thisnode-ID)))))
+                   (if (= thinode-combinedconditioncount min-combinedconditions)
+                       (set! min-combinedconditionsID (cons thisnode-ID min-combinedconditionsID))
+                       (if (or
+                            (= -1 min-combinedconditions)
+                            (< thinode-combinedconditioncount min-combinedconditions))
+                           (begin
+                             (set! min-combinedconditions thinode-combinedconditioncount)
+                             (set! min-combinedconditionsID (list thisnode-ID)))))
                    ; combined actions
                    (set! thinode-combinedactioncount (+ thisnode-combinedactioncount thisnode-linkactioncount))
-                   (if (> thinode-combinedactioncount max-combinedactions) 
-                       (begin
-                         (set! max-combinedactions thinode-combinedactioncount)
-                         (set! max-combinedactionsID thisnode-ID)))
-                   (if (or
-                        (= -1 min-combinedactions)
-                        (< thinode-combinedactioncount min-combinedactions)) 
-                       (begin
-                         (set! min-combinedactions thinode-combinedactioncount)
-                         (set! min-combinedactionsID thisnode-ID)))
+                   (if (= thinode-combinedactioncount max-combinedactions)
+                       (set! max-combinedactionsID (cons thisnode-ID max-combinedactionsID))
+                       (if (> thinode-combinedactioncount max-combinedactions)
+                           (begin
+                             (set! max-combinedactions thinode-combinedactioncount)
+                             (set! max-combinedactionsID (list thisnode-ID)))))
+                   (if (= thinode-combinedactioncount min-combinedactions)
+                       (set! min-combinedactionsID (cons thisnode-ID min-combinedactionsID))
+                       (if (or
+                            (= -1 min-combinedactions)
+                            (< thinode-combinedactioncount min-combinedactions))
+                           (begin
+                             (set! min-combinedactions thinode-combinedactioncount)
+                             (set! min-combinedactionsID (list thisnode-ID)))))
                    
                    ; the following are for regular nodes only
                    (if (not (ask thisnode-obj 'anywhere?))
                        (begin
                          ; destinations
-                         (if (> thisnode-destinationcount max-node-destinations)
-                             (begin
-                               (set! max-node-destinations thisnode-destinationcount)
-                               (set! max-node-destinationsID thisnode-ID)))
-                         (if (or
-                              (= -1 min-node-destinations)
-                              (< thisnode-destinationcount min-node-destinations))
-                             (begin
-                               (set! min-node-destinations thisnode-destinationcount)
-                               (set! min-node-destinationsID thisnode-ID)))
+                         (if (= thisnode-destinationcount max-node-destinations)
+                             (set! max-node-destinationsID (cons thisnode-ID max-node-destinationsID))
+                             (if (> thisnode-destinationcount max-node-destinations)
+                                 (begin
+                                   (set! max-node-destinations thisnode-destinationcount)
+                                   (set! max-node-destinationsID (list thisnode-ID)))))
+                         (if (= thisnode-destinationcount min-node-destinations)
+                             (set! min-node-destinationsID (cons thisnode-ID min-node-destinationsID))
+                             (if (or
+                                  (= -1 min-node-destinations)
+                                  (< thisnode-destinationcount min-node-destinations))
+                                 (begin
+                                   (set! min-node-destinations thisnode-destinationcount)
+                                   (set! min-node-destinationsID (list thisnode-ID)))))
                          (set! total-node-destinations (+ total-node-destinations thisnode-destinationcount))
                          ; destinations with conditions
-                         (if (> thisnode-destinationcondcount max-node-destinationscond)
-                             (begin
-                               (set! max-node-destinationscond thisnode-destinationcondcount)
-                               (set! max-node-destinationscondID thisnode-ID)))
-                         (if (or
-                              (= -1 min-node-destinationscond)
-                              (< thisnode-destinationcondcount min-node-destinationscond))
-                             (begin
-                               (set! min-node-destinationscond thisnode-destinationcondcount)
-                               (set! min-node-destinationscondID thisnode-ID)))
+                         (if (= thisnode-destinationcondcount max-node-destinationscond)
+                             (set! max-node-destinationscondID (cons thisnode-ID max-node-destinationscondID))
+                             (if (> thisnode-destinationcondcount max-node-destinationscond)
+                                 (begin
+                                   (set! max-node-destinationscond thisnode-destinationcondcount)
+                                   (set! max-node-destinationscondID (list thisnode-ID)))))
+                         (if (= thisnode-destinationcondcount min-node-destinationscond)
+                             (set! min-node-destinationscondID (cons thisnode-ID min-node-destinationscondID))
+                             (if (or
+                                  (= -1 min-node-destinationscond)
+                                  (< thisnode-destinationcondcount min-node-destinationscond))
+                                 (begin
+                                   (set! min-node-destinationscond thisnode-destinationcondcount)
+                                   (set! min-node-destinationscondID (list thisnode-ID)))))
                          (set! total-node-destinationscond (+ total-node-destinationscond thisnode-destinationcondcount))
                          ; destinations with no conditions
-                         (if (> thisnode-destinationnocondcount max-node-destinationsnocond)
-                             (begin
-                               (set! max-node-destinationsnocond thisnode-destinationnocondcount)
-                               (set! max-node-destinationsnocondID thisnode-ID)))
-                         (if (or
-                              (= -1 min-node-destinationsnocond)
-                              (< thisnode-destinationnocondcount min-node-destinationsnocond))
-                             (begin
-                               (set! min-node-destinationsnocond thisnode-destinationnocondcount)
-                               (set! min-node-destinationsnocondID thisnode-ID)))
+                         (if (= thisnode-destinationnocondcount max-node-destinationsnocond)
+                             (set! max-node-destinationsnocondID (cons thisnode-ID max-node-destinationsnocondID))
+                             (if (> thisnode-destinationnocondcount max-node-destinationsnocond)
+                                 (begin
+                                   (set! max-node-destinationsnocond thisnode-destinationnocondcount)
+                                   (set! max-node-destinationsnocondID (list thisnode-ID)))))
+                         (if (= thisnode-destinationnocondcount min-node-destinationsnocond)
+                             (set! min-node-destinationsnocondID (cons thisnode-ID min-node-destinationsnocondID))
+                             (if (or
+                                  (= -1 min-node-destinationsnocond)
+                                  (< thisnode-destinationnocondcount min-node-destinationsnocond))
+                                 (begin
+                                   (set! min-node-destinationsnocond thisnode-destinationnocondcount)
+                                   (set! min-node-destinationsnocondID (list thisnode-ID)))))
                          (set! total-node-destinationsnocond (+ total-node-destinationsnocond thisnode-destinationnocondcount))
                          ; unique destinations
-                         (if (> thisnode-uniquedestinationcount max-node-uniquedestinations)
-                             (begin
-                               (set! max-node-uniquedestinations thisnode-uniquedestinationcount)
-                               (set! max-node-uniquedestinationsID thisnode-ID)))
-                         (if (or
-                              (= -1 min-node-uniquedestinations)
-                              (< thisnode-uniquedestinationcount min-node-uniquedestinations))
-                             (begin
-                               (set! min-node-uniquedestinations thisnode-uniquedestinationcount)
-                               (set! min-node-uniquedestinationsID thisnode-ID)))
+                         (if (= thisnode-uniquedestinationcount max-node-uniquedestinations)
+                             (set! max-node-uniquedestinationsID (cons thisnode-ID max-node-uniquedestinationsID))
+                             (if (> thisnode-uniquedestinationcount max-node-uniquedestinations)
+                                 (begin
+                                   (set! max-node-uniquedestinations thisnode-uniquedestinationcount)
+                                   (set! max-node-uniquedestinationsID (list thisnode-ID)))))
+                         (if (= thisnode-uniquedestinationcount min-node-uniquedestinations)
+                             (set! min-node-uniquedestinationsID (cons thisnode-ID min-node-uniquedestinationsID))
+                             (if (or
+                                  (= -1 min-node-uniquedestinations)
+                                  (< thisnode-uniquedestinationcount min-node-uniquedestinations))
+                                 (begin
+                                   (set! min-node-uniquedestinations thisnode-uniquedestinationcount)
+                                   (set! min-node-uniquedestinationsID (list thisnode-ID)))))
                          (set! total-node-uniquedestinations (+ total-node-uniquedestinations thisnode-uniquedestinationcount))
                          ; entries
-                         (if (> thisnode-entrycount max-node-entries)
-                             (begin
-                               (set! max-node-entries thisnode-entrycount)
-                               (set! max-node-entriesID thisnode-ID)))
-                         (if (or
-                              (= -1 min-node-entries)
-                              (< thisnode-entrycount min-node-entries))
-                             (begin
-                               (set! min-node-entries thisnode-entrycount)
-                               (set! min-node-entriesID thisnode-ID)))
+                         (if (= thisnode-entrycount max-node-entries)
+                             (set! max-node-entriesID (cons thisnode-ID max-node-entriesID))
+                             (if (> thisnode-entrycount max-node-entries)
+                                 (begin
+                                   (set! max-node-entries thisnode-entrycount)
+                                   (set! max-node-entriesID (list thisnode-ID)))))
+                         (if (= thisnode-entrycount min-node-entries)
+                             (set! min-node-entriesID (cons thisnode-ID min-node-entriesID))
+                             (if (or
+                                  (= -1 min-node-entries)
+                                  (< thisnode-entrycount min-node-entries))
+                                 (begin
+                                   (set! min-node-entries thisnode-entrycount)
+                                   (set! min-node-entriesID (list thisnode-ID)))))
                          (set! total-node-entries (+ total-node-entries thisnode-entrycount))
                          ))
                    ))
@@ -707,43 +796,43 @@
           (format #t "\n*** Feature usage ***~%~!")
           (format #t "Max node rules per node\t~a\t~a~%~!Min node rules per node\t~a\t~a~%~!Average node rules per node\t~a~%~!"
                   max-node-rules max-node-rulesID
-                  (min min-node-rules 0) min-node-rulesID
+                  min-node-rules min-node-rulesID
                   (if (> (length the-nodes) 0)
                       (/ (round (* (exact->inexact (/ total-node-rules (length the-nodes))) 100)) 100)
                       "N/A"))
           (format #t "Max node conditions per node\t~a\t~a~%~!Min node conditions per node\t~a\t~a~%~!Average node conditions per node\t~a~%~!"
                   max-node-conditions max-node-conditionsID
-                  (min min-node-conditions 0) min-node-conditionsID
+                  min-node-conditions min-node-conditionsID
                   (if (> (length the-nodes) 0)
                       (/ (round (* (exact->inexact (/ total-node-conditions (length the-nodes))) 100)) 100)
                       "N/A"))
           (format #t "Max node actions per node\t~a\t~a~%~!Min node actions per node\t~a\t~a~%~!Average node actions per node\t~a~%~!"
                   max-node-actions max-node-actionsID
-                  (min min-node-actions 0) min-node-actionsID
+                  min-node-actions min-node-actionsID
                   (if (> (length the-nodes) 0)
                       (/ (round (* (exact->inexact (/ total-node-actions (length the-nodes))) 100)) 100)
                       "N/A"))
           (format #t "Max link rules per node\t~a\t~a~%~!Min link rules per node\t~a\t~a~%~!Average link rules per node\t~a~%~!"
                   max-node-linkrules max-node-linkrulesID
-                  (min min-node-linkrules 0) min-node-linkrulesID
+                  min-node-linkrules min-node-linkrulesID
                   (if (> (length the-nodes) 0)
                       (/ (round (* (exact->inexact (/ total-node-linkrules (length the-nodes))) 100)) 100)
                       "N/A"))
           (format #t "Max link conditions per node\t~a\t~a~%~!Min link conditions per node\t~a\t~a~%~!Average link conditions per node\t~a~%~!"
                   max-node-linkconditions max-node-linkconditionsID
-                  (min min-node-linkconditions 0) min-node-linkconditionsID
+                  min-node-linkconditions min-node-linkconditionsID
                   (if (> (length the-nodes) 0)
                       (/ (round (* (exact->inexact (/ total-node-linkconditions (length the-nodes))) 100)) 100)
                       "N/A"))
           (format #t "Max link actions per node\t~a\t~a~%~!Min link actions per node\t~a\t~a~%~!Average link actions per node\t~a~%~!"
                   max-node-linkactions max-node-linkactionsID
-                  (min min-node-linkactions 0) min-node-linkactionsID
+                  min-node-linkactions min-node-linkactionsID
                   (if (> (length the-nodes) 0)
                       (/ (round (* (exact->inexact (/ total-node-linkactions (length the-nodes))) 100)) 100)
                       "N/A"))
           (format #t "Max destinations per node\t~a\t~a~%~!Min destinations per node\t~a\t~a~%~!Average destinations per node (regular nodes only)\t~a~%~!"
                   max-node-destinations max-node-destinationsID
-                  (min min-node-destinations 0) min-node-destinationsID
+                  min-node-destinations min-node-destinationsID
                   (if (> (- (length the-nodes) total-anywhere) 0)
                       (/ (round (* (exact->inexact (/ total-node-destinations (- (length the-nodes) total-anywhere))) 100)) 100)
                       "N/A"))
@@ -755,25 +844,25 @@
                       "N/A"))
           (format #t "Max entries per node\t~a\t~a~%~!Min entries per node\t~a\t~a~%~!Average entries per node (regular nodes only)\t~a~%~!"
                   max-node-entries max-node-entriesID
-                  (min min-node-entries 0) min-node-entriesID
+                  min-node-entries min-node-entriesID
                   (if (> (- (length the-nodes) total-anywhere) 0)
                       (/ (round (* (exact->inexact (/ total-node-entries (- (length the-nodes) total-anywhere))) 100)) 100)
                       "N/A"))
           (format #t "Max rules per node\t~a\t~a~%~!Min rules per node\t~a\t~a~%~!Average rules per node (disregard node/link distinction)\t~a~%~!"
                   max-combinedrules max-combinedrulesID
-                  (min min-combinedrules 0) min-combinedrulesID
+                  min-combinedrules min-combinedrulesID
                   (if (and (> (length the-nodes) 0) the-rules)
                       (/ (round (* (exact->inexact (/ (length the-rules) (length the-nodes))) 100)) 100)
                       "N/A"))
           (format #t "Max conditions per node\t~a\t~a~%~!Min conditions per node\t~a\t~a~%~!Average conditions per node (disregard node/link distinction)\t~a~%~!"
                   max-combinedconditions max-combinedconditionsID
-                  (min min-combinedconditions 0) min-combinedconditionsID
+                  min-combinedconditions min-combinedconditionsID
                   (if (and (> (length the-nodes) 0) the-conditions)
                       (/ (round (* (exact->inexact (/ (length the-conditions) (length the-nodes))) 100)) 100)
                       "N/A"))
           (format #t "Max actions per node\t~a\t~a~%~!Min actions per node\t~a\t~a~%~!Average actions per node (disregard node/link distinction)\t~a~%~!"
                   max-combinedactions max-combinedactionsID
-                  (min min-combinedactions 0) min-combinedactionsID
+                  min-combinedactions min-combinedactionsID
                   (if (and (> (length the-nodes) 0) the-actions)
                       (/ (round (* (exact->inexact (/ (length the-actions) (length the-nodes))) 100)) 100)
                       "N/A"))
@@ -782,43 +871,43 @@
           (format #t "\n*** Procedurality ***~%~!")
           (format #t "Max fact updates per node\t~a\t~a~%~!Min fact updates per node\t~a\t~a~%~!Average fact updates per node\t~a~%~!"
                   max-node-factupdates max-node-factupdatesID
-                  (min min-node-factupdates 0) min-node-factupdatesID
+                  min-node-factupdates min-node-factupdatesID
                   (if (> (length the-nodes) 0)
                       (/ (round (* (exact->inexact (/ total-node-factupdates (length the-nodes))) 100)) 100)
                       "N/A"))
           (format #t "Max alt text (typed) replacements per node\t~a\t~a~%~!Min alt text (typed) replacements per node\t~a\t~a~%~!Average alt text (typed) replacements per node\t~a~%~!"
                   max-node-alttexttyped max-node-alttexttypedID
-                  (min min-node-alttexttyped 0) min-node-alttexttypedID
+                  min-node-alttexttyped min-node-alttexttypedID
                   (if (> (length the-nodes) 0)
                       (/ (round (* (exact->inexact (/ total-node-alttexttyped (length the-nodes))) 100)) 100)
                       "N/A"))
           (format #t "Max alt text (fact) replacements per node\t~a\t~a~%~!Min alt text (fact) replacements per node\t~a\t~a~%~!Average alt text (fact) replacements per node\t~a~%~!"
                   max-node-alttextfact max-node-alttextfactID
-                  (min min-node-alttextfact 0) min-node-alttextfactID
+                  min-node-alttextfact min-node-alttextfactID
                   (if (> (length the-nodes) 0)
                       (/ (round (* (exact->inexact (/ total-node-alttextfact (length the-nodes))) 100)) 100)
                       "N/A"))
           (format #t "Max fact-based conditions per node\t~a\t~a~%~!Min fact-based conditions per node\t~a\t~a~%~!Average fact-based conditions per node\t~a~%~!"
                   max-node-factconditions max-node-factconditionsID
-                  (min min-node-factconditions 0) min-node-factconditionsID
+                  min-node-factconditions min-node-factconditionsID
                   (if (> (length the-nodes) 0)
                       (/ (round (* (exact->inexact (/ total-node-factconditions (length the-nodes))) 100)) 100)
                       "N/A"))
           (format #t "Max destinations with conditions per node\t~a\t~a~%~!Min destinations with conditions per node\t~a\t~a~%~!Average destinations with conditions per node (regular nodes only)\t~a~%~!"
                   max-node-destinationscond max-node-destinationscondID
-                  (min min-node-destinationscond 0) min-node-destinationscondID
+                  min-node-destinationscond min-node-destinationscondID
                   (if (> (- (length the-nodes) total-anywhere) 0)
                       (/ (round (* (exact->inexact (/ total-node-destinationscond (- (length the-nodes) total-anywhere))) 100)) 100)
                       "N/A"))
           (format #t "Max destinations with no conditions per node\t~a\t~a~%~!Min destinations with no conditions per node\t~a\t~a~%~!Average destinations with no conditions per node (regular nodes only)\t~a~%~!"
                   max-node-destinationsnocond max-node-destinationsnocondID
-                  (min min-node-destinationsnocond 0) min-node-destinationsnocondID
+                  min-node-destinationsnocond min-node-destinationsnocondID
                   (if (> (- (length the-nodes) total-anywhere) 0)
                       (/ (round (* (exact->inexact (/ total-node-destinationsnocond (- (length the-nodes) total-anywhere))) 100)) 100)
                       "N/A"))
           (format #t "Max destinations per link\t~a\t~a~%~!Min destinations per link\t~a\t~a~%~!Average destinations per link (regular nodes only)\t~a~%~!"
                   max-link-destinations max-link-destinationsID
-                  (min min-link-destinations 0) min-link-destinationsID
+                  min-link-destinations min-link-destinationsID
                   (if (> total-regularnode-links 0)
                       (/ (round (* (exact->inexact (/ total-link-destinations total-regularnode-links)) 100)) 100)
                       "N/A"))
@@ -828,13 +917,13 @@
         (begin
           (format #t "Max updates per fact\t~a\t~a~%~!Min updates per fact\t~a\t~a~%~!Average updates per fact\t~a~%~!"
                   max-fact-updates max-fact-updatesID
-                  (min min-fact-updates 0) min-fact-updatesID
+                  min-fact-updates min-fact-updatesID
                   (if (> (length the-facts) 0)
                       (/ (round (* (exact->inexact (/ total-fact-updates (length the-facts))) 100)) 100)
                       "N/A"))
           (format #t "Max times in condition per fact\t~a\t~a~%~!Min times in condition per fact\t~a\t~a~%~!Average times in condition per fact\t~a~%~!"
                   max-fact-inconditions max-fact-inconditionsID
-                  (min min-fact-inconditions 0) min-fact-inconditionsID
+                  min-fact-inconditions min-fact-inconditionsID
                   (if (> (length the-facts) 0)
                       (/ (round (* (exact->inexact (/ total-fact-inconditions (length the-facts))) 100)) 100)
                       "N/A"))
