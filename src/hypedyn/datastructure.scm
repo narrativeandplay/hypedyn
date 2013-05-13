@@ -505,7 +505,7 @@
                   this-obj))
 
 ;; condition
-;; type: either node (0), link (1), or fact (2)
+;; type: either node (0), link (1), boolean fact (2) or number fact (3)
 ;; targetID: either nodeID or linkID depending on type
 ;; operator: the condition operator: 
 ;;     for nodes: not visited (0), visited (1), or previous (2)

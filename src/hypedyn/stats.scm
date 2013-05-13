@@ -95,13 +95,13 @@
         (total-node-destinations 0)
         (max-node-destinationscond 0)
         (min-node-destinationscond -1)
-        (max-node-destinationscondsID -1)
-        (min-node-destinationscondsID -1)
+        (max-node-destinationscondID -1)
+        (min-node-destinationscondID -1)
         (total-node-destinationscond 0)
         (max-node-destinationsnocond 0)
         (min-node-destinationsnocond -1)
-        (max-node-destinationsnocondsID -1)
-        (min-node-destinationsnocondsID -1)
+        (max-node-destinationsnocondID -1)
+        (min-node-destinationsnocondID -1)
         (total-node-destinationsnocond 0)
         (max-node-uniquedestinations 0)
         (min-node-uniquedestinations -1)
@@ -220,11 +220,11 @@
                    ; count times used in a condition
                    (map (lambda (thiscondition)
                           (let* ((thiscondition-obj (cdr thiscondition))
-                                 (thiscondition-type (ask thiscondition-obj 'type)) ; either node (0), link (1), or fact (2)
+                                 (thiscondition-type (ask thiscondition-obj 'type)) ; type: either node (0), link (1), boolean fact (2) or number fact (3)
                                  (thiscondition-targetID (ask thiscondition-obj 'targetID))
                                  )
                             ; check if its a fact condition
-                            (if (eq? thiscondition-type 2)
+                            (if (or (eq? thiscondition-type 2) (eq? thiscondition-type 3))
                                 ; check if its this fact
                                 (if (= thiscondition-targetID thisfact-ID)
                                     (set! thisfact-inconditioncount (+ thisfact-inconditioncount 1))))))
@@ -385,17 +385,21 @@
                                      thisrule-actions)))
                             in-rules)
                        (values the-conditioncount the-actioncount 
-                               the-destinationcount the-destinationcondcount the-destinationnocondcount the-uniquedestinationcount
-                               the-factupdatecount the-alttexttypedcount the-alttextfactcount the-factconditionscount)))
+                               the-destinationcount the-destinationcondcount 
+                               the-destinationnocondcount the-uniquedestinationcount
+                               the-factupdatecount 
+                               the-alttexttypedcount the-alttextfactcount 
+                               the-factconditionscount)))
 
                    ; max/min/average node conditions and actions 
                    ; Note: thisnode-destinationcount, thisnode-destinationcondcount, thisnode-destinationnocondcount, thisnode-alttexttypedcount and thisnode-alttextfactcount 
                    ; are ignored here as they are irrelevant
-                   (let-values (((thisnode-nodeconditioncount thisnode-nodeactioncount thisnode-destinationcount
-                                                              thisnode-destinationcondcount thisnode-destinationnocondcount
-                                                              thisnode-uniquedestinationcount
-                                                              thisnode-nodefactupdatecount thisnode-alttexttypedcount
-                                                              thisnode-alttextfactcount thisnode-nodefactconditionscount)
+                   (let-values (((thisnode-nodeconditioncount thisnode-nodeactioncount 
+                                                              thisnode-destinationcount thisnode-destinationcondcount 
+                                                              thisnode-destinationnocondcount thisnode-uniquedestinationcount
+                                                              thisnode-nodefactupdatecount 
+                                                              thisnode-alttexttypedcount thisnode-alttextfactcount 
+                                                              thisnode-nodefactconditionscount)
                                  (count-conditions-and-actions thisnode-rules)))
                      (begin
                        ; conditions
@@ -442,9 +446,9 @@
                             ; max/min/total link rules
                             (set! thisnode-linkrulecount (+ thisnode-linkrulecount (length thislink-rules)))
                             ; max/min/total link conditions and actions
-                            (let-values (((thislink-conditioncount thislink-actioncount thislink-destinationcount
-                                                                   thislink-destinationcondcount thislink-destinationnocondcount
-                                                                   thislink-uniquedestinationcount
+                            (let-values (((thislink-conditioncount thislink-actioncount 
+                                                                   thislink-destinationcount thislink-destinationcondcount 
+                                                                   thislink-destinationnocondcount thislink-uniquedestinationcount
                                                                    thislink-factupdatecount
                                                                    thislink-alttexttypedcount thislink-alttextfactcount
                                                                    thislink-factconditionscount)
@@ -455,8 +459,8 @@
                               (set! thisnode-destinationcount (+ thisnode-destinationcount thislink-destinationcount))
                               (set! thisnode-destinationcondcount (+ thisnode-destinationcondcount thislink-destinationcondcount))
                               (set! thisnode-destinationnocondcount (+ thisnode-destinationnocondcount thislink-destinationnocondcount))
-                              (set! thisnode-destinationnocondcount (+ thisnode-destinationnocondcount thislink-destinationnocondcount))
                               (set! thisnode-uniquedestinationcount (+ thisnode-uniquedestinationcount thislink-uniquedestinationcount))
+                              (set! thisnode-factupdatecount (+ thisnode-factupdatecount thislink-factupdatecount))
                               (set! thisnode-alttexttypedcount (+ thisnode-alttexttypedcount thislink-alttexttypedcount))
                               (set! thisnode-alttextfactcount (+ thisnode-alttextfactcount thislink-alttextfactcount))
                               (set! thisnode-factconditionscount (+ thisnode-factconditionscount thislink-factconditionscount))
@@ -478,26 +482,27 @@
                                     )))))
                         thisnode-links)
 
-                   ; count entry points
-                   (map (lambda (thislink)
-                          (let* ((thislink-obj (cdr thislink))
-                                 (thislink-nodeID (ask thislink-obj 'source))
-                                 (thislink-rules (ask thislink-obj 'rule-lst)))
-                            (if (not (= thisnode-ID thislink-nodeID))
-                                (map (lambda (thisrule)
-                                       (let* ((thisrule-obj (get 'rules thisrule))
-                                              (thisrule-actions (ask thisrule-obj 'actions)))
-                                         (map (lambda (thisaction)
-                                                (let* ((thisaction-obj (get 'actions thisaction))
-                                                       (thisaction-expr (ask thisaction-obj 'expr))
-                                                       (thisaction-type (car thisaction-expr)))
-                                                  (if (equal? thisaction-type 'follow-link)
-                                                      (let ((thisaction-destID (list-ref thisaction-expr 4)))
-                                                        (if (equal? thisaction-destID thisnode-ID)
-                                                            (set! thisnode-entrycount (+ thisnode-entrycount 1)))))))
-                                              thisrule-actions)))
-                                     thislink-rules))))
-                        the-links)
+                   ; count entry points (only regular nodes)
+                   (if (not (ask thisnode-obj 'anywhere?))
+                       (map (lambda (thislink)
+                              (let* ((thislink-obj (cdr thislink))
+                                     (thislink-nodeID (ask thislink-obj 'source))
+                                     (thislink-rules (ask thislink-obj 'rule-lst)))
+                                (if (not (= thisnode-ID thislink-nodeID))
+                                    (map (lambda (thisrule)
+                                           (let* ((thisrule-obj (get 'rules thisrule))
+                                                  (thisrule-actions (ask thisrule-obj 'actions)))
+                                             (map (lambda (thisaction)
+                                                    (let* ((thisaction-obj (get 'actions thisaction))
+                                                           (thisaction-expr (ask thisaction-obj 'expr))
+                                                           (thisaction-type (car thisaction-expr)))
+                                                      (if (equal? thisaction-type 'follow-link)
+                                                          (let ((thisaction-destID (list-ref thisaction-expr 4)))
+                                                            (if (equal? thisaction-destID thisnode-ID)
+                                                                (set! thisnode-entrycount (+ thisnode-entrycount 1)))))))
+                                                  thisrule-actions)))
+                                         thislink-rules))))
+                            the-links))
 
                    ; now tabulate the link stats for this node - maybe should track the IDs of max nodes/links?
                    ; rules
@@ -536,66 +541,6 @@
                          (set! min-node-linkactions thisnode-linkactioncount)
                          (set! min-node-linkactionsID thisnode-ID)))
                    (set! total-node-linkactions (+ total-node-linkactions thisnode-linkactioncount))
-                   ; destinations
-                   (if (> thisnode-destinationcount max-node-destinations) 
-                       (begin
-                         (set! max-node-destinations thisnode-destinationcount)
-                         (set! max-node-destinationsID thisnode-ID)))
-                   (if (or
-                        (= -1 min-node-destinations)
-                        (< thisnode-destinationcount min-node-destinations)) 
-                       (begin
-                         (set! min-node-destinations thisnode-destinationcount)
-                         (set! min-node-destinationsID thisnode-ID)))
-                   (set! total-node-destinations (+ total-node-destinations thisnode-destinationcount))
-                   ; destinations with conditions
-                   (if (> thisnode-destinationcondcount max-node-destinationscond) 
-                       (begin
-                         (set! max-node-destinationscond thisnode-destinationcondcount)
-                         (set! max-node-destinationscondID thisnode-ID)))
-                   (if (or
-                        (= -1 min-node-destinationscond)
-                        (< thisnode-destinationcondcount min-node-destinationscond)) 
-                       (begin
-                         (set! min-node-destinationscond thisnode-destinationcondcount)
-                         (set! min-node-destinationscondID thisnode-ID)))
-                   (set! total-node-destinationscond (+ total-node-destinationscond thisnode-destinationcondcount))
-                   ; destinations with no conditions
-                   (if (> thisnode-destinationnocondcount max-node-destinationsnocond) 
-                       (begin
-                        (set! max-node-destinationsnocond thisnode-destinationnocondcount)
-                        (set! max-node-destinationsnocondID thisnode-ID)))
-                   (if (or
-                        (= -1 min-node-destinationsnocond)
-                        (< thisnode-destinationnocondcount min-node-destinationsnocond)) 
-                       (begin
-                         (set! min-node-destinationsnocond thisnode-destinationnocondcount)
-                         (set! min-node-destinationsnocondID thisnode-ID)))
-                   (set! total-node-destinationsnocond (+ total-node-destinationsnocond thisnode-destinationnocondcount))
-                   ; unique destinations
-                   (if (> thisnode-uniquedestinationcount max-node-uniquedestinations) 
-                       (begin
-                         (set! max-node-uniquedestinations thisnode-uniquedestinationcount)
-                         (set! max-node-uniquedestinationsID thisnode-ID)))
-                   (if (or
-                        (= -1 min-node-uniquedestinations)
-                        (< thisnode-uniquedestinationcount min-node-uniquedestinations)) 
-                       (begin
-                         (set! min-node-uniquedestinations thisnode-uniquedestinationcount)
-                         (set! min-node-uniquedestinationsID thisnode-ID)))
-                   (set! total-node-uniquedestinations (+ total-node-uniquedestinations thisnode-uniquedestinationcount))
-                   ; entries
-                   (if (> thisnode-entrycount max-node-entries) 
-                       (begin
-                         (set! max-node-entries thisnode-entrycount)
-                         (set! max-node-entriesID thisnode-ID)))
-                   (if (or
-                        (= -1 min-node-entries)
-                        (< thisnode-entrycount min-node-entries)) 
-                       (begin
-                         (set! min-node-entries thisnode-entrycount)
-                         (set! min-node-entriesID thisnode-ID)))
-                   (set! total-node-entries (+ total-node-entries thisnode-entrycount))
                    ; fact updates
                    (if (> thisnode-factupdatecount max-node-factupdates) 
                        (begin
@@ -680,6 +625,71 @@
                        (begin
                          (set! min-combinedactions thinode-combinedactioncount)
                          (set! min-combinedactionsID thisnode-ID)))
+                   
+                   ; the following are for regular nodes only
+                   (if (not (ask thisnode-obj 'anywhere?))
+                       (begin
+                         ; destinations
+                         (if (> thisnode-destinationcount max-node-destinations)
+                             (begin
+                               (set! max-node-destinations thisnode-destinationcount)
+                               (set! max-node-destinationsID thisnode-ID)))
+                         (if (or
+                              (= -1 min-node-destinations)
+                              (< thisnode-destinationcount min-node-destinations))
+                             (begin
+                               (set! min-node-destinations thisnode-destinationcount)
+                               (set! min-node-destinationsID thisnode-ID)))
+                         (set! total-node-destinations (+ total-node-destinations thisnode-destinationcount))
+                         ; destinations with conditions
+                         (if (> thisnode-destinationcondcount max-node-destinationscond)
+                             (begin
+                               (set! max-node-destinationscond thisnode-destinationcondcount)
+                               (set! max-node-destinationscondID thisnode-ID)))
+                         (if (or
+                              (= -1 min-node-destinationscond)
+                              (< thisnode-destinationcondcount min-node-destinationscond))
+                             (begin
+                               (set! min-node-destinationscond thisnode-destinationcondcount)
+                               (set! min-node-destinationscondID thisnode-ID)))
+                         (set! total-node-destinationscond (+ total-node-destinationscond thisnode-destinationcondcount))
+                         ; destinations with no conditions
+                         (if (> thisnode-destinationnocondcount max-node-destinationsnocond)
+                             (begin
+                               (set! max-node-destinationsnocond thisnode-destinationnocondcount)
+                               (set! max-node-destinationsnocondID thisnode-ID)))
+                         (if (or
+                              (= -1 min-node-destinationsnocond)
+                              (< thisnode-destinationnocondcount min-node-destinationsnocond))
+                             (begin
+                               (set! min-node-destinationsnocond thisnode-destinationnocondcount)
+                               (set! min-node-destinationsnocondID thisnode-ID)))
+                         (set! total-node-destinationsnocond (+ total-node-destinationsnocond thisnode-destinationnocondcount))
+                         ; unique destinations
+                         (if (> thisnode-uniquedestinationcount max-node-uniquedestinations)
+                             (begin
+                               (set! max-node-uniquedestinations thisnode-uniquedestinationcount)
+                               (set! max-node-uniquedestinationsID thisnode-ID)))
+                         (if (or
+                              (= -1 min-node-uniquedestinations)
+                              (< thisnode-uniquedestinationcount min-node-uniquedestinations))
+                             (begin
+                               (set! min-node-uniquedestinations thisnode-uniquedestinationcount)
+                               (set! min-node-uniquedestinationsID thisnode-ID)))
+                         (set! total-node-uniquedestinations (+ total-node-uniquedestinations thisnode-uniquedestinationcount))
+                         ; entries
+                         (if (> thisnode-entrycount max-node-entries)
+                             (begin
+                               (set! max-node-entries thisnode-entrycount)
+                               (set! max-node-entriesID thisnode-ID)))
+                         (if (or
+                              (= -1 min-node-entries)
+                              (< thisnode-entrycount min-node-entries))
+                             (begin
+                               (set! min-node-entries thisnode-entrycount)
+                               (set! min-node-entriesID thisnode-ID)))
+                         (set! total-node-entries (+ total-node-entries thisnode-entrycount))
+                         ))
                    ))
                the-nodes)
 
