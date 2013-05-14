@@ -25,7 +25,7 @@
   (require "../common/main-ui.scm") ;; get-main-ui-frame
   (require "../kawa/system.scm")
   (require "../kawa/file.scm")
-  (require "../kawa/UI/dialog.scm") ; make-error-dialog
+  (require "../kawa/ui/dialog.scm") ; make-error-dialog
   )
 
 ; export
