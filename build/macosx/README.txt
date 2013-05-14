@@ -1,4 +1,4 @@
-HypeDyn 2.2b4
+HypeDyn 2.2b5
 To install HypeDyn, unzip the hypedyn_2_2b4_macos folder, and copy the entire folder into your Applications folder.
 
 To run HypeDyn, double-click on HypeDyn.app.
