@@ -1,6 +1,6 @@
 HypeDyn 2.2b5
 
-To install HypeDyn, unzip the hypedyn_2_2b4_windows folder, and double-click on hypedyn_installer_windows.msi. After installation, a shortcut to HypeDyn will appear on the desktop.
+To install HypeDyn, unzip the hypedyn_2_2b5_windows folder, and double-click on hypedyn_installer_windows.msi. After installation, a shortcut to HypeDyn will appear on the desktop.
 
 To run HypeDyn, double-click on HypeDyn on the desktop.
 
