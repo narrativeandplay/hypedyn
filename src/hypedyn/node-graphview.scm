@@ -105,7 +105,10 @@
         
         ; allow repaint
         (ask parent-obj 'set-allow-repaint! #t)
-        (ask parent-obj 'refresh)))
+        
+        ; handle resize, forces resize of the canvas which updates scrollbars
+        (ask parent-obj 'handle-resize)
+        ))
     
     
     ; make display name from number and ID

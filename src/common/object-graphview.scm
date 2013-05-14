@@ -357,6 +357,9 @@
     (obj-put this-obj 'layout-all
              (lambda (self)
                (if c (ask c 'layout-all))))
+    (obj-put this-obj 'handle-resize
+             (lambda (self)
+               (if c (ask c 'on-size))))
     (obj-put this-obj 'set-line-draw-proc!
              (lambda (self in-proc)
                (set! line-draw-proc in-proc)))
