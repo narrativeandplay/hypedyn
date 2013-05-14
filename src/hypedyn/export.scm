@@ -52,7 +52,8 @@
 (define (get-last-exported-dir)
   (if (not-null? last-exported-dir)
       last-exported-dir
-      (make-file (get-user-directory))))
+      ; if no last exported directory, use last saved directory
+      (get-last-saved-dir)))
 
 (define (set-last-exported-dir! newdir)
   (set! last-exported-dir newdir))

@@ -1056,7 +1056,7 @@
   (display "last exported dir ")(display (get-last-exported-dir))(newline)
   
   (display "cwd display ")(display (make-file "."))(newline)
-  (let ((export-folder (get-safe-new-filename (make-file ".") #t '() folder-name))) ;; third arg was #t
+  (let ((export-folder (get-safe-new-filename (make-file (get-last-exported-dir)) #t '() folder-name))) ;; third arg was #t
     (if (not (eq? #f export-folder))
         (begin
           (display "export folder ")(display export-folder)(newline)
