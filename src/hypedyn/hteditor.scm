@@ -837,9 +837,7 @@
 
         (define (actual-duplicate)
           (create-node name content
-                       (if anywhere
-                           (+ initial-x dup-offset-anywhere-x)
-                           (+ initial-x dup-offset-x))
+                       (calc-new-node-x anywhere)
                        initial-y anywhere update-display-nodes new-nodeID)
 
           ;; duplicate links in this node
@@ -890,6 +888,19 @@
 (define-constant initial-x 80)
 (define-constant initial-y 45)
 
+; calculate the new x position
+(define (calc-new-node-x in-anywhere)
+  ; get the max positions
+  (let-values (((max-x max-y max-anywhere-x max-anywhere-y)
+                (get-max-node-positions)))
+    ; clamp to grid if necessary
+    (let ((raw-x (if in-anywhere
+                     (+ max-anywhere-x initial-x)
+                     (+ max-x initial-x))))
+      (if (snap-to-grid?)
+          (* initial-x (round (div raw-x initial-x)))
+          raw-x))))
+
 ; create a new node
 (define (donewnode anywhere)
   (let ((newmsg (if anywhere "New anywhere node" "New node"))
@@ -901,9 +912,11 @@
     (if (not (is-null? new-nodename))
         (begin
           ; create the node
+          (define newnode-x (calc-new-node-x anywhere))
+          (define newnode-y initial-y) ;(if anywhere (+ max-anywhere-y initial-y) (+ max-y initial-y)))
           (define newnode-ID
             (create-node new-nodename ""
-                         initial-x initial-y
+                         newnode-x newnode-y
                          anywhere update-display-nodes))
           
           (ask node-list 'select-node newnode-ID)
@@ -933,7 +946,7 @@
             (lambda () ;; redo
               (newnode-redo new-nodename anywhere newnode-ID newnode-sexpr)
               (update-display-nodes newnode-ID new-nodename
-                                    initial-x initial-y ;actual-x y
+                                    newnode-x newnode-y ;actual-x y
                                     anywhere)
               )
             ))
@@ -1974,6 +1987,6 @@
 (define (check-init-sculptural)
   ; if we're in sculptural mode, create a single non-anywhere node, and make it the start node
   (if (sculptural?)
-      (let ((new-nodeID (create-node "Start" "" initial-x initial-y #f #f)))
+      (let ((new-nodeID (create-node "Start" "" (calc-new-node-x #t) initial-y #f #f)))
         (set-start-node! new-nodeID)
         (populate-display))))
