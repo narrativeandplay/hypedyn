@@ -957,8 +957,12 @@
 (define (update-display-nodes new-nodeID name x y anywhere)
   (ask node-list 'add-node new-nodeID name)
   (if anywhere
-      (ask anywhere-graph 'add-node new-nodeID name x y)
-      (ask node-graph 'add-node new-nodeID name x y))) ;; anywhere)))
+      (begin
+        (ask anywhere-graph 'add-node new-nodeID name x y)
+        (ask anywhere-graph 'handle-resize))
+      (begin
+        (ask node-graph 'add-node new-nodeID name x y)
+        (ask node-graph 'handle-resize)))) ;; anywhere)))
 
 ; edit a node
 (define (doeditnode)
