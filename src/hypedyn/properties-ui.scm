@@ -77,9 +77,9 @@
   (set-container-layout label-panel-2 'vertical)
   (set-container-layout label-panel-3 'vertical)
   
-  (set-component-non-resizable-size label-panel-1 70 150)
-  (set-component-non-resizable-size label-panel-2 70 150)
-  (set-component-non-resizable-size label-panel-3 70 150)
+  (set-component-non-resizable-size label-panel-1 70 20)
+  (set-component-non-resizable-size label-panel-2 70 20)
+  (set-component-non-resizable-size label-panel-3 70 100)
   
   (define label-1 (make-label-with-title "Author"))
   (define label-2 (make-label-with-title "Title"))
@@ -182,8 +182,8 @@
   (set-container-layout label-panel-7 'flow 'left)
   (add-component label-panel-4 label-4)
   (add-component label-panel-5 label-5)
-  (add-component label-panel-6 label-6)
-  (add-component label-panel-7 label-7)
+;;  (add-component label-panel-6 label-6)
+;;  (add-component label-panel-7 label-7)
 
   ;; control
   (set! disable-back-cb (make-checkbox "Disable Back Button"))
@@ -215,8 +215,9 @@
   (add-components reader-tab
                   sep-1 label-panel-4 rbutton-group-panel
                   sep-2 label-panel-5 disable-back-cb disable-restart-cb
-                  sep-3 label-panel-6 disable-resize-cb width-tf-panel height-tf-panel
-                  sep-4 label-panel-7 disable-pagebreak-cb)
+                  ;sep-3 label-panel-6 disable-resize-cb width-tf-panel height-tf-panel
+                  ;sep-4 label-panel-7 disable-pagebreak-cb
+                  )
   
   ;; setup action listeners
 
