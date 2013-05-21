@@ -705,11 +705,20 @@
                                             (("Fact") (+ third-arg import-offset-ID))
                                             (("Math")
                                              (define opr1-str (list-ref third-arg 1))
+                                             (define opr1-type (list-ref third-arg 2))
                                              (define opr2-str (list-ref third-arg 3))
+                                             (define opr2-type (list-ref third-arg 4))
                                              (define opr1 (string->number opr1-str))
                                              (define opr2 (string->number opr2-str))
-                                             (define opr1-corrected (+ opr1 import-offset-ID))
-                                             (define opr2-corrected (+ opr2 import-offset-ID))
+                                             ; need to check "Input" or "Fact" for both opr1 and opr2
+                                             (define opr1-corrected 
+                                               (if (equal? "Fact" opr1-type)
+                                                    (+ opr1 import-offset-ID)
+                                                   opr1))
+                                             (define opr2-corrected 
+                                               (if (equal? "Fact" opr2-type)
+                                                    (+ opr2 import-offset-ID)
+                                                   opr2))
                                              (define opr1-corrected-str (number->string opr1-corrected))
                                              (define opr2-corrected-str (number->string opr2-corrected))
                                              (list (list-ref third-arg 0)
@@ -732,6 +741,7 @@
                                                    opr2-corrected-str
                                                    (list-ref third-arg 3))
                                              )
+                                            (("Input") third-arg)
                                             ))
                                         ;; replace the value 
                                         (ask self 'set-expr!
