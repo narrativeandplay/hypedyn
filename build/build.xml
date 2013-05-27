@@ -274,11 +274,6 @@
 </target>
 	
 <target name="dist-common" >
-	<!-- copy the help file -->
-	<copy todir="${dist.editor.package.javadir}/help">
-	  	<fileset dir="${src.dir}/help"/>
-	</copy>
-
 	<!-- copy the examples and tutorials -->
 	<copy todir="${dist.dir}/examples/">
 	  	<fileset dir="${shared.dir}/examples"/>
@@ -317,6 +312,11 @@
   	<!-- <move file="${dist.editor.package.javadir}/${base.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar" /> -->
 	<copy file="${appletlib.dir}/AppleJavaExtensions.jar" todir="${dist.editor.package.javadir}" />
 
+	<!-- copy the help files -->
+	<copy todir="${dist.editor.package}/help">
+	  	<fileset dir="${src.dir}/help"/>
+	</copy>
+
 	<!-- copy the js and css files for export -->
 	<copy todir="${dist.editor.package}/js">
 	  	<fileset dir="${src.dir}/js"/>
@@ -341,6 +341,11 @@
 	<!-- rename to kawa.jar -->
   	 <!-- <move file="${dist.editor.package.javadir}/${base.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar" /> -->
 	<copy file="${appletlib.dir}/AppleJavaExtensions.jar" todir="${dist.editor.package.javadir}" />
+
+	<!-- copy the help files -->
+	<copy todir="${dist.editor.package}/help">
+	  	<fileset dir="${src.dir}/help"/>
+	</copy>
 
 	<!-- copy the js and css files for export -->
 	<copy todir="${dist.editor.package}/js">
@@ -369,6 +374,11 @@
   	   <fileset dir="${src.editor.package}"/>
   	</copy>
 	<chmod file="${dist.editor.package.appstub}" perm="a+x"/>
+
+	<!-- copy the help files -->
+	<copy todir="${dist.editor.package.javadir}/help">
+	  	<fileset dir="${src.dir}/help"/>
+	</copy>
 
 	<!-- copy the js and css files for export -->
 	<copy todir="${dist.editor.package.javadir}/js">
