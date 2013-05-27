@@ -32,7 +32,7 @@
 (module-export make-file create-new-file make-directory set-file-data append-file-data get-file-to-save get-file-to-open
                get-file-separator get-user-directory get-file-data
                lines-in-file get-file-from-directory get-directory-listing recursively-delete-directory recursively-copy-directory
-               get-file-name get-file-absolutepath check-file-exists check-file-content
+               get-file-name get-file-absolutepath get-file-URI check-file-exists check-file-content
                copy-file-nio filename-extension-check delete-dir)
  
 
@@ -441,6 +441,10 @@
 ;get the absolute path of the file
 (define (get-file-absolutepath in-file :: <java.io.File>)
   (invoke in-file 'getAbsolutePath))
+
+;get the URI of a file
+(define (get-file-URI in-file :: <java.io.File>)
+  (invoke in-file 'toURI))
 
 ; check if a file exists
 (define (check-file-exists file :: <java.io.File>)

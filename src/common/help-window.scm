@@ -34,18 +34,17 @@
 (module-export show-help-window set-helpfile!)
   (module-static 'init-run)
   
-; help filename
-(define help-filename "")
+; help file URI
+(define help-file-URI "")
 
 ; show the help window
 (define (show-help-window flag)
-  (format #t "show-help-window: ~a ~%~!" help-filename)
-  (invoke (java.awt.Desktop:getDesktop) 'browse
-          (<java.net.URI> help-filename)))
+  (format #t "show-help-window: ~a ~%~!" help-file-URI)
+  (invoke (java.awt.Desktop:getDesktop) 'browse help-file-URI))
 
 ; set the help file
 (define (set-helpfile! in-help-filename)
   (format #t "set-helpfile!: ~a ~%~!" in-help-filename)
   (let ((file (get-content-file in-help-filename)))
     (if (check-file-exists file)
-        (set! help-filename (string-append "file://" (get-file-absolutepath file))))))
+        (set! help-file-URI (get-file-URI file)))))
