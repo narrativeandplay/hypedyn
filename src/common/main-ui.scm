@@ -413,9 +413,6 @@
   (add-component button-panel button-stop)
   (set-button button-stop #f)
 
-  ; create help window
-  (create-help-window frame)
-
   ; set callbacks for buttons and menu items
   (add-actionlistener button-run (make-actionlistener runit))
   (add-actionlistener button-step (make-actionlistener stepit))
@@ -567,8 +564,8 @@
 ;  (let(( example-info (get-examples langname)))
 ;    (add-languages lang-info set-language!))
 
-  ; load help file
-  (load-helpfile helpfilename)
+  ; set the help file
+  (set-helpfile! helpfilename)
   
   ; update help and about menu item labels
   (set-menu-item-text m-help-language (string-append langname " Help"))

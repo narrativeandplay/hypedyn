@@ -275,7 +275,9 @@
 	
 <target name="dist-common" >
 	<!-- copy the help file -->
-	<copy file="${doc.dir}/hypedyn-help.txt" todir="${dist.editor.package.javadir}"/>
+	<copy todir="${dist.editor.package.javadir}/help">
+	  	<fileset dir="${src.dir}/help"/>
+	</copy>
 
 	<!-- copy the examples and tutorials -->
 	<copy todir="${dist.dir}/examples/">

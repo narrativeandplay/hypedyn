@@ -69,7 +69,7 @@
 (set-language! #f 
                "HypeDyn" ; name of language to appear in main window titlebar
                "hypedyn.scm" ; name of main file to run language
-               "hypedyn.txt" ; name of help text file
+               "help/index.html" ; name of help text file
                starthypedyn)
 
 ; remove language, control and examples menus

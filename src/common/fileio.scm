@@ -43,7 +43,8 @@
                save-to-file save-to-sexpr
                get-safe-new-filename
                parse-sexpr-file
-               write-sexpr-file)
+               write-sexpr-file
+               get-content-file)
 (module-static 'init-run)
 
 ; keep track of file format version number and file type
@@ -356,3 +357,17 @@
                   #f))
             ; no filename, so cancelled
             #f))))
+
+
+; helper, adapted from Processing, for getting file relative to the app
+; http://code.google.com/p/processing/source/browse/trunk/processing/app/src/processing/app/Base.java?r=7522
+(define (get-content-file in-name)
+  (let ((the-path (get-system-property "user.dir")))
+    ; Get a path to somewhere inside the .app folder
+    (if (is-mac-os?) 
+;      <key>javaroot</key>
+;      <string>$JAVAROOT</string>
+        (let ((javaroot (get-system-property "javaroot")))
+          (if (not (is-null? javaroot))
+              (set! the-path javaroot))))
+    (make-file (string-append the-path "/" in-name))))

@@ -27,56 +27,25 @@
 ; (set-helpfile! filename)
 
  
-(require "../kawa/ui/component.scm")
-(require "../kawa/ui/frame.scm")
 (require "../kawa/file.scm")
-(require "../kawa/ui/text.scm")
-(require "../kawa/ui/scrollpane.scm")
+(require "fileio.scm") ; get-content-file
 
 ; export
-(module-export create-help-window show-help-window close-help-window load-helpfile)
+(module-export show-help-window set-helpfile!)
   (module-static 'init-run)
   
-; help window frame
-(define help-window-frame #f)
+; help filename
+(define help-filename "")
 
-; help text
-(define help-editor #f)
-
-; parent
-(define help-window-parent #f)
-
-; create the help window
-(define (create-help-window in-parent)
-  ; remember parent
-  (set! help-window-parent in-parent)
-  
-  ; top-level frame
-  (set! help-window-frame (make-window "Help"))
-  ; text editor
-  (set! help-editor (make-textarea "" 20 25))
-  (set-text-component help-editor #f #t)
-  (let(( help-editor-scroll (make-scrollpane help-editor)))
-    (add-component help-window-frame help-editor-scroll)
-    ;(set-component-visible help-window-frame #t)
-    (pack-frame help-window-frame)))
-  
-; show/hide the help window
+; show the help window
 (define (show-help-window flag)
-  (if (and help-window-frame help-window-parent)
-      (begin
-        (center-frame-in-parent help-window-frame help-window-parent)
-        (set-component-visible help-window-frame flag))))
-  
-; close the help window
-(define (close-help-window)
-  (if help-window-frame
-      (set-component-visible help-window-frame #f)
-      (dispose-frame help-window-frame)))
-  
-; load the help file
-(define (load-helpfile help-filename)
-  (let ((file (make-file help-filename)))
-    (if (and help-editor (check-file-exists file))
-        (let ((str (get-file-data file)))
-          (set-text help-editor str)))))
+  (format #t "show-help-window: ~a ~%~!" help-filename)
+  (invoke (java.awt.Desktop:getDesktop) 'browse
+          (<java.net.URI> help-filename)))
+
+; set the help file
+(define (set-helpfile! in-help-filename)
+  (format #t "set-helpfile!: ~a ~%~!" in-help-filename)
+  (let ((file (get-content-file in-help-filename)))
+    (if (check-file-exists file)
+        (set! help-filename (string-append "file://" (get-file-absolutepath file))))))

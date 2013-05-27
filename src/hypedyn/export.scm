@@ -42,7 +42,7 @@
 (require "htfileio.scm")
 
 (module-export get-last-exported-dir set-last-exported-dir! update-last-exported-dir!
-               get-content-file export-web export-standalone
+               export-web export-standalone
                export-create-folder export-remove-folder
                export-standalone-folder)
 
@@ -396,20 +396,6 @@
                             export-standalone-story-filename))))
     (format #t "saving story file to ~a.~%~!" export-file)
     (ht-save-to-file export-file #t)))
-
-; helper, adapted from Processing, for getting file relative to the app
-; http://code.google.com/p/processing/source/browse/trunk/processing/app/src/processing/app/Base.java?r=7522
-(define (get-content-file in-name)
-  (let ((the-path (get-system-property "user.dir")))
-    ; Get a path to somewhere inside the .app folder
-    (if (is-mac-os?) 
-;      <key>javaroot</key>
-;      <string>$JAVAROOT</string>
-        (let ((javaroot (get-system-property "javaroot")))
-          (if (not (is-null? javaroot))
-              (set! the-path javaroot))))
-    (make-file (string-append the-path "/" in-name))))
-
 
 ; helper fn to create folder, first deleting if it already exists
 ; export-folder is a java file
