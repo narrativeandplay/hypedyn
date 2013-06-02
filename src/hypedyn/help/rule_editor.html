@@ -31,13 +31,49 @@
 
     <!-- Primary content area start -->
 
-	<h1>About HypeDyn</h1>
+	<h1>Rule editor</h1>
+    
+    <p>The rule editor contains a list of conditions, and list of actions.</p>
 
+	<p><img src="images/rule_editor.jpg" width=600 alt="Rule editor" /></p>
+    
+    <!-- 
+    Focus on conditions: test to see if rule should be triggered
+	Evaluated in order
+    Can choose "any" or "all" 
+    -->
+
+    <h4>Conditions include:</h4>
     <p>
+        <ul>
+            <li>Node visited/not visited/previous/not previous</li>
+            <li>Link followed/not followed</li>
+            <li>Comparison of facts (see advanced topics)</li>
+        </ul>
+        </p>
 
-<strong>HypeDyn</strong> (pronounced &quot;hyped in&quot;) is a procedural hypertext fiction authoring tool for people who want to create text-based interactive stories that adapt to reader choice. <br>
+	<p><img src="images/conditions.jpg" width=600 alt="Conditions" /></p>
+    
+    <!--
+    Focus on actions:
+    Show in popup is currently a bit broken
+    Update text and update facts are discussed later
+    When action on a link is triggered is a bit complex: text substitution is done when node is entered, whereas updating of facts and following of links is done when link is clicked
+    -->
 
-    <p><img src="images/hypedyn_new.jpg" width="600" height="419" alt="HypeDyn screenshot" /></div>
+    <h4>Actions include:</h4>
+    <p>
+        <ul>
+            <li>Follow link to</li>
+			<li>Show in popup</li>
+			<li> Update text (see advanced topics)</li>
+			<li>Update fact (see advanced topics)</li>
+        </ul>
+        </p>
+
+	<p><img src="images/actions.jpg" width=600 alt="Actions" /></p>
+
+	</div>
 
     </div>
     </div>
@@ -53,12 +89,12 @@
     <!--   <h4>Latest Publications</h4> -->
        <div class="contentarea">
      	<ul class="linklist">
-     	  <li><b>About HypeDyn</b></li>
+     	  <li><a href="index.html">About HypeDyn</a></li>
      	  <li><a href="basic_concepts.html">Basic concepts</a></li>
      	  <li><a href="main_window.html">Main window</a></li>
      	  <li><a href="node_editor.html">Node editor</a></li>
      	  <li><a href="link_editor.html">Link editor</a></li>
-     	  <li><a href="rule_editor.html">Rule editor</a></li>
+     	  <li><b>Rule editor</b></li>
      	  <li><a href="running.html">Running and exporting</a></li>
      	  <li><a href="multiple_rules.html">Multiple rules</a></li>
      	  <li><a href="conditional_text.html">Conditional text</a></li>
