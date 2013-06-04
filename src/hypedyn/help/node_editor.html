@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
-<title>HypeDyn | About HypeDyn</title>
+<title>HypeDyn Help | Node Editor</title>
 <meta name="keywords" content="" />
 <meta name="description" content="" />
 <link rel="stylesheet" type="text/css" href="default.css" />
@@ -31,13 +31,23 @@
 
     <!-- Primary content area start -->
 
-	<h1>Node editor</h1>
+	<p><h1>Node editor</h1></p>
     
-    <p>The node editor displays links and text content. One node must be set as the start node.</p>
-    
+    <p>The node editor displays the links and text in a single node. The <em>content editor</em> on the right side of the window displays all of textual content in the node. The <em>link list</em> at the left of the window displays all the links in the node. Each link is also represented as underlined text in the content editor. When a link is selected in the link list, the corresponding text is selected in the text. Similarly, when linked text is selected in the content editor, the corresponding link is selected in the link list.</p>
+
     <p><img src="images/node_editor.jpg" alt="Node editor" width=600 /></p>
 
-	</div>
+    <p>To create a new link, click on the <b>New Link</b> button in the toolbar, or select the <b>New Link</b> menu item in the <b>Link</b> menu. You must select some text in the content editor before adding a link. Links cannot overlap. When adding a link, a dialog box will appear asking you to enter the name of the new link, after which the link will be added to the story, appearing in the content editor as underlined text, and appearing alphabetically in the link list.</p>
+    
+    <p>To edit a link, select the link and then click on the <b>Edit Link</b> button in the toolbar, or choose <b>Edit Link</b> from the <b>Link</b> menu. You can also double-click on the link in the link list to edit. Editing a link will open the link in the <a href="link_editor.html" title="link editor">link editor</a>.</p>    
+    
+<p>The selected link may be renamed by clicking on the <b>Rename Link</b> button or the <b>Rename Link</b> menu item in the <b>Link</b> menu. The selected link may be deleted by clicking on the <b>Delete Link</b> button or the <b>Delete Link</b> menu item in the <b>Link</b> menu.</p>
+    
+    <p>Note that one node in your story must be set as the <em>start node</em>. This node is the what the reader will see first when she runs the story. You can designate a node as the start node by clicking on the <b>Set start node</b> button in the toolbar.</p>
+    
+    <p>A node may also have associated <em>node rules</em>, which will be discussed <a href="node_rules.html" title="later">later</a>.
+    
+</div>
 
     </div>
     </div>
@@ -53,7 +63,7 @@
     <!--   <h4>Latest Publications</h4> -->
        <div class="contentarea">
      	<ul class="linklist">
-     	  <li><a href="index.html">About HypeDyn</a></li>
+     	  <li><a href="index.html">Overview</a></li>
      	  <li><a href="basic_concepts.html">Basic concepts</a></li>
      	  <li><a href="main_window.html">Main window</a></li>
      	  <li><b>Node editor</b></li>

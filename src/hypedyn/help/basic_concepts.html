@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
-<title>HypeDyn | About HypeDyn</title>
+<title>HypeDyn Help | Basic Concepts</title>
 <meta name="keywords" content="" />
 <meta name="description" content="" />
 <link rel="stylesheet" type="text/css" href="default.css" />
@@ -31,23 +31,25 @@
 
     <!-- Primary content area start -->
 
-<h1>Basic concepts</h1>
+<p><h1>Basic concepts</h1></p>
 
-<p>A HypeDyn story consists of three main components: <em>nodes</em>, <em>links</em>, and <em>rules</em>.</p>
+<p>A HypeDyn story consists of four main components: <em>nodes</em>, <em>links</em>, <em>rules</em> and <em>facts</em>. We will begin by explaining the first three components. Facts are covered in more detail <a href="facts.html" title="Facts">later</a>.</p>
 
-<h4>Nodes</h4>
+<p><h4>Nodes</h4></p>
 
-<p>Nodes are text fragments which are normally displayed one at a time. A story consists of at least one node. Nodes contain links and node rules.</p>
+<p>Nodes are text fragments which are normally displayed one at a time. A story consists of at least one node, and may potentially contain many nodes. These nodes form the basic material for your story. As a reader moves through the story, she will encounter different nodes, depending on the order in which you connect the nodes.</p> 
 
-<h4>Links</h4>
+<p>In addition to text, nodes can contain links and node rules.</p>
+
+<p><h4>Links</h4></p>
 
 <p>Links are attached to text in a node. Links have link rules associated with them. Associated link rules are evaluated when the link is clicked by the reader.</p>
 
-<h4>Rules</h4>
+<p><h4>Rules</h4></p>
 
-<p>Rules contain conditions and actions. When a rule is evaluated, the condition is checked, and if the condition is true, then the associated actions are triggered</p>
+<p>Rules contain conditions and actions. When a rule is evaluated, the condition is checked, and if the condition is true, then the associated actions are triggered. Rules can be attached to links and to nodes.</p>
 
-<p>The most common use of a rule is to take the reader to a new node</p>
+<p>The most basic type of link and rule combination is a link which contains a single rule, with no conditions and a single action which specifies which node will be shown when the reader clicks on the link. This is similar to the hyperlinks that are found on the web.</p>
     
     </div>
     </div>
@@ -64,7 +66,7 @@
     <!--   <h4>Latest Publications</h4> -->
        <div class="contentarea">
      	<ul class="linklist">
-     	  <li><a href="index.html">About HypeDyn</a></li>
+     	  <li><a href="index.html">Overview</a></li>
      	  <li><b>Basic concepts</b></li>
      	  <li><a href="main_window.html">Main window</a></li>
      	  <li><a href="node_editor.html">Node editor</a></li>
