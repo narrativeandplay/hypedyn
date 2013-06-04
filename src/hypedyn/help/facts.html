@@ -31,17 +31,25 @@
 
     <!-- Primary content area start -->
 
-	<h1>Facts</h1>
+	<p><h1>Facts</h1></p>
     
     <!--
     Facts can be updated from node rules and link rules
     Currently text facts cannot be tested, and cannot be manipulated beyond setting the entire text (so no string manipulation) – this is on the to-do list, but the "programming" interface is already getting rather complicated and is something we want to look at as part of the current research
     -->
     
-    <p>A fact represents some state important to the story. There are three of facts types: text, true/false, and number facts. All fact types can be set by actions. True/false and number facts can be tested in conditions.</p>
+    <p>A <em>fact</em> represents some value which you can use later in the story. This is often called a <em>variable</em> in programming languages. There are three of facts types: <em>text</em>, <em>true/false</em>, and <em>number</em> facts.</p> 
+    
+    <p>You can add a fact to the story by using the <b>New</b> menu item under the <b>Fact</b> menu in the main window, and choosing your desired fact type. After choosing the fact time, you will see a dialogue box where you can name the fact. After the fact is created, it will appear in the <em>fact list</em> in the main window.</p>
 
+    <p>Facts may be selected by clicking on the fact in the fact list. The selected fact will be highlighted in the fact list. The selected fact may be renamed by using the <b>Rename</b> menu item in the <b>Fact</b> menu. The selected fact may be deleted by using the <b>Delete</b> menu item in the <b>Fact</b> menu.</p>  
+    
 	<p><img src="images/facts.jpg" width=600 alt="Facts" /></p>
 	
+    <p>All fact types can be <em>set</em> by actions. Text facts and true/false facts can be set to values which you type in when you are writing the story. Number facts may be set to values you have typed in, but also to the value of other number facts, and to values calculated using simple mathematical expressions. Text facts which have not been set will be set to blank text. True/false facts which have not been set will be false. Number facts which have not been set will have the value 0.</p> 
+    
+    <p>True/false and number facts can be <em>tested</em> in conditions. A true/false fact may be tested for whether it is true or false. Number facts may be tested for whether they are equal to either a value you have typed in when writing the story, or another number fact.</p>
+
     </div>
 
     </div>
@@ -64,13 +72,12 @@
      	  <li><a href="node_editor.html">Node editor</a></li>
      	  <li><a href="link_editor.html">Link editor</a></li>
      	  <li><a href="rule_editor.html">Rule editor</a></li>
-     	  <li><a href="running.html">Running and exporting</a></li>
-     	  <li><a href="multiple_rules.html">Multiple rules</a></li>
      	  <li><a href="conditional_text.html">Conditional text</a></li>
      	  <li><a href="node_rules.html">Node rules</a></li>
      	  <li><a href="anywhere_nodes.html">Anywhere nodes</a></li>
      	  <li><b>Facts</b></li>
      	  <li><a href="customizing_appearance.html">Customizing appearance</a></li>
+     	  <li><a href="running.html">Running and exporting</a></li>
      	  <li><a href="support.html">Support</a></li>
      	  <li><a href="credits.html">Credits</a></li>
      	  <li><a href="http://www.partechgroup.org/hypedyn">Visit the HypeDyn website</a></li>

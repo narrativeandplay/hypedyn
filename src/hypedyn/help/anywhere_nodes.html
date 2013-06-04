@@ -31,17 +31,21 @@
 
     <!-- Primary content area start -->
 
-	<h1>Anywhere nodes</h1>
+	<p><h1>Anywhere nodes</h1></p>
     
     <!--
     Anywhere nodes can contain links with alt text and update fact actions, but not follow link actions
     Note: this means that once you "enter" an anywhere node, you can't get back to the normal nodes
     -->
     
-    <p>Anywhere nodes are automatically linked from all other nodes. The node rules in an anywhere node can specify conditions for when the anywhere node is available. This allows for creations of sculptural hypertext.</p>
+    <p>Anywhere nodes are special nodes which are automatically linked from all other nodes. This allows for creations of sculptural hypertext.</p> 
+    
+    <p>The node rules in an anywhere node can specify conditions for when the anywhere node is available. When an anywhere node is created, one rule is automatically added to the node rules.  This rule contains the special <em>enable links to this node from anywhere</em> action. As long as this rule's conditions are satisfied, a link to the node will appear at the bottom of every other node. The name of the anywhere node will be used for the link text. The node rules on an anywhere node which contain this special action are evaluated <em>every time any node is entered</em>, so that the links can be added to the node.</p>
     
     <p><img src="images/anywhere_nodes.jpg" width=600 alt="Anywhere nodes" /></p>
-    
+
+    <p>Note that anywhere nodes can contain links with rules having <em>Update text</em> and <em>Update fact</em> actions, but may not have <em>Follow link to</em> or <em>Show in popup</em> actions. As a result, once a reader "enters" an anywhere node, there is no way for the reader to get back to the "normal" nodes in a story other than by using the <b>Back</b> button.</p>
+        
     </div>
 
     </div>
@@ -64,13 +68,12 @@
      	  <li><a href="node_editor.html">Node editor</a></li>
      	  <li><a href="link_editor.html">Link editor</a></li>
      	  <li><a href="rule_editor.html">Rule editor</a></li>
-     	  <li><a href="running.html">Running and exporting</a></li>
-     	  <li><a href="multiple_rules.html">Multiple rules</a></li>
      	  <li><a href="conditional_text.html">Conditional text</a></li>
      	  <li><a href="node_rules.html">Node rules</a></li>
      	  <li><b>Anywhere nodes</b></li>
      	  <li><a href="facts.html">Facts</a></li>
      	  <li><a href="customizing_appearance.html">Customizing appearance</a></li>
+     	  <li><a href="running.html">Running and exporting</a></li>
      	  <li><a href="support.html">Support</a></li>
      	  <li><a href="credits.html">Credits</a></li>
      	  <li><a href="http://www.partechgroup.org/hypedyn">Visit the HypeDyn website</a></li>
