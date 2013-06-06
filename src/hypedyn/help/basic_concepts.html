@@ -33,21 +33,25 @@
 
 <p><h1>Basic concepts</h1></p>
 
-<p>A HypeDyn story consists of four main components: <em>nodes</em>, <em>links</em>, <em>rules</em> and <em>facts</em>.</p>
+<p>From the reader's perspective, a HypeDyn story consists of passages of text which contain <em>links</em>, which appear as underlined text. By clicking on a link, the reader is making a <em>choice</em>, which may either lead to a new passage of text, or change the current passage of text. The choice may change how the reader experiences the story, or even what happens in the story, depending on how you, the author, have designed the story.
+    
+	<p><img src="images/reader1.jpg" width=250 alt="Making a choice" /> <img src="images/reader2.jpg" width=250 alt="After a choice" /></p>
+    
+<p>From the author's perspective, a HypeDyn story consists of four main components: <em>nodes</em>, <em>links</em>, <em>rules</em> and <em>facts</em>. As an author, you will be creating nodes, writing text for the nodes, creating links between nodes, and attaching rules to links and nodes to create behaviours.</p>
 
 <p><h4>Nodes</h4></p>
 
 <p>Nodes are text fragments which are normally displayed one at a time. A story consists of at least one node, and may potentially contain many nodes. These nodes form the basic material for your story. As a reader moves through the story, she will encounter different nodes, depending on the order in which you connect the nodes.</p> 
 
-<p>In addition to text, nodes can contain links and node rules.</p>
+<p>In addition to text, nodes can contain <em>links</em> and <em>node rules</em>.</p>
 
 <p><h4>Links</h4></p>
 
-<p>Links are attached to text in a node. Links have link rules associated with them. Associated link rules are evaluated when the link is clicked by the reader.</p>
+<p>Links are attached to text in a node, usually appearing as underlined text. Links have <em>link rules</em> associated with them, which are evaluated when the link is clicked by the reader.</p>
 
 <p><h4>Rules</h4></p>
 
-<p>Rules contain conditions and actions. When a rule is evaluated, the condition is checked, and if the condition is true, then the associated actions are triggered. Rules can be attached to links and to nodes.</p>
+<p>Rules may either be associated with a link (link rules) or a node (node rules). Rules contain <em>conditions</em> and <em>actions</em>. When a rule is evaluated, the conditions are checked, and if the conditions are satisfied, then the associated actions are triggered. Rules can be attached to links and to nodes.</p>
 
 <p>The most basic type of link and rule combination is a link which contains a single rule, with no conditions and a single action which specifies which node will be shown when the reader clicks on the link. This is similar to the hyperlinks that are found on the web.</p>
     
@@ -74,10 +78,9 @@
      	  <li><b>Basic concepts</b></li>
      	  <li><a href="main_window.html">Main window</a></li>
      	  <li><a href="node_editor.html">Node editor</a></li>
-     	  <li><a href="link_editor.html">Link editor</a></li>
+     	  <li><a href="rules_list_editor.html">Rules list editor</a></li>
      	  <li><a href="rule_editor.html">Rule editor</a></li>
      	  <li><a href="conditional_text.html">Conditional text</a></li>
-     	  <li><a href="node_rules.html">Node rules</a></li>
      	  <li><a href="anywhere_nodes.html">Anywhere nodes</a></li>
      	  <li><a href="facts.html">Facts</a></li>
      	  <li><a href="customizing_appearance.html">Customizing appearance</a></li>

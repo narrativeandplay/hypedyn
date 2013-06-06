@@ -16,3 +16,4 @@ export
 .texlipse
 autosave
 tmp
+*.synctex.gz

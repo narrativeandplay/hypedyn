@@ -31,21 +31,22 @@
 
     <!-- Primary content area start -->
     
-    <p><h1>Link editor</h1></p>
+    <p><h1>Rules list editor</h1></p>
 
-    <p>The link editor displays the list of <em>link rules</em> which are associated with a particular link. Rules are evaluated in order, and evaluation stops based on whether or not the stop if true checkbox is checked.</p>
-    
-    <p>A rule can be selected by clicking on the rule, and unselected by either selecting another rule, or clicking again on the currently selected rule. The currently selected rule can be moved up or down in the rule list using the <b>Up</b> and <b>Down</b> buttons. </p>
+    <p>There are two rules list editors in HypeDyn: the <em>link editor</em> and the <em>node rules editor</em>. The link editor displays a list of <em>link rules</em> which are associated with a particular link, whereas the node rules editor displays a list of <em>node rules</em> which are associated with a particular node.  Both editors have the same functionality, as described below, but are used to edit different lists of rules.
     
     <p><img src="images/link_editor.jpg" width=600 alt="Link editor"/></p>    
     
-    <p>Rules can be added to a link by clicking on the <b>Add Rule</b> button in the toolbar. The new rule will be added after the currently selected rule, or at the end of the list if no rule is currently selected. The currently selected rule can be deleted by clicking on the <b>Delete Selected</b> button.</p> 
+    <p>Rules are evaluated in order, and evaluation stops based on whether or not the stop if true checkbox is checked.</p>
     
-<p>The currently selected rule can be edited by clicking on the <b>Edit Rule</b> button, or by double-clicking on the rule. This will open the <a href="rule_editor.html" title="rule editor">rule editor</a>.</p>
-
-	<p>Links which are displayed on the map view in the main window based on the <em>Follow link to</em> actions in the link's rules, and are labelled with the name of the rules associated with the link.</p>
+    <p>A rule can be selected by clicking on the rule, and unselected by either selecting another rule, or clicking again on the currently selected rule. The currently selected rule can be moved up or down in the rule list using the <b>Up</b> and <b>Down</b> buttons. </p>
+    
+    <p>Rules can be added to a link by clicking on the <b>Add Rule</b> button in the toolbar. The new rule will be added after the currently selected rule, or at the end of the list if no rule is currently selected. Links which contain a rule with a <em>Follow link to</em> action will be displayed on the map view in the main window, and will be labelled with the name of the rule containing the <em>Follow link to</em> action.</p>
     
     	<p><img src="images/multiple_rules.jpg" width=600 alt="Multiple rules" /></p>
+
+<p>A selected rule can be deleted by clicking on the <b>Delete Selected</b> button. A selected rule can be edited by clicking on the <b>Edit Rule</b> button, or by double-clicking on the rule. This will open the <a href="rule_editor.html" title="rule editor">rule editor</a>.</p>
+
 
 	    </div>
 
@@ -67,10 +68,9 @@
      	  <li><a href="basic_concepts.html">Basic concepts</a></li>
      	  <li><a href="main_window.html">Main window</a></li>
      	  <li><a href="node_editor.html">Node editor</a></li>
-     	  <li><b>Link editor</b></li>
+     	  <li><b>Rules list editor</b></li>
      	  <li><a href="rule_editor.html">Rule editor</a></li>
      	  <li><a href="conditional_text.html">Conditional text</a></li>
-     	  <li><a href="node_rules.html">Node rules</a></li>
      	  <li><a href="anywhere_nodes.html">Anywhere nodes</a></li>
      	  <li><a href="facts.html">Facts</a></li>
      	  <li><a href="customizing_appearance.html">Customizing appearance</a></li>

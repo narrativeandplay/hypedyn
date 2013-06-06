@@ -35,13 +35,13 @@
     
     <p>Link rules can contain <em>Update text</em> actions. This allows text within a node to change procedurally based on conditions.</p>
     
-    <p>When an <em>Update text</em> action is added to a rule, you can choose from three types of <em>Update text</em> action: using <em>alternative text</em>, <em>text fact</em> or <em>number fact</em>. If you choose to update text using alternative text, you can type some text into the text entry field in the action. If you choose to update using either a text fact or a number fact, you can choose a fact from the pulldown menu.</p>
+    <p>When an <em>Update text</em> action is added to a rule, you can choose from three types of <em>Update text</em> action: using <em>alternative text</em>, <em>text fact</em> or <em>number fact</em>. If you choose to update text using alternative text, you can type some text into the text entry field in the action. If you choose to update using either a text fact or a number fact, you can choose a fact from the pulldown menu. The fact's current value will be used when the action is executed.</p>
     
 	<p><img src="images/conditional_text.jpg" width=600 alt="Conditional text" /></p>
     
     <p>When a node is entered, any link rules which contain <em>Update text</em> actions will have their conditions evaluated. If the conditions are satisfied, only the <em>Update text</em> actions on that rule will be executed, and the text where the link is attached will be replaced with either the alternative text which you entered, or the value of the fact, depending on the type of action you have chosen.</p>
 
-    <p>One thing to watch out for is the order in which rules are evaluated when a node is entered. As described in the Node Rules section, when a node is entered, the node rules are evaluated first. This is followed by any link rules containing <em>Update text</em> actions. Any changes to facts caused by actions in a node rule may impact what text is updated when the link rules on the node are evaluated.</p>
+    <p>One thing to watch out for is the order in which rules are evaluated when a node is entered. As described in the <a href="rule_editor.html" title="Rule editor">Rule editor</a> section, when a node is entered, the node rules are evaluated first. This is followed by any link rules containing <em>Update text</em> actions. Any changes to facts caused by actions in a node rule may impact what text is updated when the link rules on the node are evaluated.</p>
 
 	</div>
 
@@ -63,10 +63,9 @@
      	  <li><a href="basic_concepts.html">Basic concepts</a></li>
      	  <li><a href="main_window.html">Main window</a></li>
      	  <li><a href="node_editor.html">Node editor</a></li>
-     	  <li><a href="link_editor.html">Link editor</a></li>
+     	  <li><a href="rules_list_editor.html">Rules list editor</a></li>
      	  <li><a href="rule_editor.html">Rule editor</a></li>
      	  <li><b>Conditional text</b></li>
-     	  <li><a href="node_rules.html">Node rules</a></li>
      	  <li><a href="anywhere_nodes.html">Anywhere nodes</a></li>
      	  <li><a href="facts.html">Facts</a></li>
      	  <li><a href="customizing_appearance.html">Customizing appearance</a></li>

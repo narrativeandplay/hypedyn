@@ -33,12 +33,12 @@
 
 	<p><h1>Rule editor</h1></p>
     
-    <p>The rule editor displays the contents of a rule. Each rule has a name, and contains a list of <em>conditions</em>, and list of <em>actions</em>. Rules can be associated with links and nodes. A rule may be renamed simply by editing the name in the text field at the top of the editor.</p>
+    <p>The rule editor displays the contents of a rule. Each rule has a name, and contains a list of <em>conditions</em>, and list of <em>actions</em>. Rules can be associated with links and nodes. The rule editor is the same for both link rules and node rules, the only difference being which actions are available in the rule.</p> 
     
 	<p><img src="images/rule_editor.jpg" width=600 alt="Rule editor" /></p>
         
-    <p>When a rule is triggered, the conditions are evaluated in order. If the conditions are satisfied, then the actions are executed in order. The rule's conditions are considered to be satisfied if either <em>all</em> of the conditions are true, or <em>any</em> of the conditions are true, depending on the value selected in the pulldown menu above the condition list.</p>
-
+    <p>A rule may be renamed simply by editing the name in the text field at the top of the editor.</p>
+    
 	    <p><h4>Conditions</h4></p>
     
     <p>A condition can be selected by clicking on the condition, and unselected by either selecting another condition, or clicking again on the currently selected condition. The currently selected condition can be moved up or down in the condition list using the <b>Up</b> and <b>Down</b> buttons. </p>
@@ -47,7 +47,7 @@
 
 	<p><img src="images/conditions.jpg" width=600 alt="Conditions" /></p>
 
-    <p>The type of condition, what the condition applies to, and the operator for the condition can all be changed by using the pulldown menus in the condition. Conditions can be applied to <em>nodes</em>, <em>links</em>, and <em>facts</em>. For nodes, the available operators are <em>visited</em>, <em>not visited</em>, <em>previous</em>, and <em>not previous</em>. For links, the available operators are <em>followed</em> and <em>not followed</em>. For conditions on facts, please see the <a href="facts.html" title="Facts">Facts</a> section.
+    <p>The type of condition, what the condition applies to, and the operator for the condition can all be changed by using the pulldown menus in the condition. Conditions can be applied to <em>nodes</em>, <em>links</em>, and <em>facts</em>. For nodes, the available operators are <em>visited</em>, <em>not visited</em>, <em>previous</em>, and <em>not previous</em>. For links, the available operators are <em>followed</em> and <em>not followed</em>. For more details about conditions on facts, please see the <a href="facts.html" title="Facts">Facts</a> section.
     
     <p><h4>Actions</h4></p>
     <!--
@@ -63,12 +63,16 @@
     
 	<p><img src="images/actions.jpg" width=600 alt="Actions" /></p>
 
-    <p>The types of actions available include <em>Follow link to</em>, <em>Show in popup</em>, <em>Update text</em>, and <em>Update fact</em>. <em>Follow link to</em> is activated when a link is clicked, and takes the reader to the specified node. <em>Show in popup</em> shows the specified node in a popup, overlaid on top of the current node.</p>
+    <p>The types of actions available include <em>Follow link to</em>, <em>Show in popup</em>, <em>Update text</em>, and <em>Update fact</em>. <em>Follow link to</em> is activated when a link is clicked, and takes the reader to the specified node. <em>Show in popup</em> shows the specified node in a popup, overlaid on top of the current node. <em>Update text</em> and <em> Update fact</em> will be discussed in the <a href="conditional_text.html" title="Conditional text">Conditional Text</a> and <a href="facts.html" title="Facts">Facts</a> sections.</p> 
     
-    <p>Note that when a rule is triggered depends on whether it is associated with a link or a node, and what type of actions are contained in the rule. For link rules, the <em>Follow link to</em>, <em>Show popup in</em> and <em>Update fact</em> actions are triggered when a link is clicked. The <em>Update text</em> action is triggered when a node is refreshed.</p>
-
-<p> Node rules will be discussed in the <a href="node_rules.html" title="Node Rules">Node Rules</a> section. <em>Update text</em> and <em> Update fact</em> will be discussed in the <a href="conditional_text.html" title="Conditional text">Conditional Text</a> and <a href="facts.html" title="Facts">Facts</a> sections.</p> 
+    <p>For node rules, and for link rules on anywhere nodes, the <em>Follow link to</em> and <em>Show in popup</em> actions are not available.</p>
+    
+    <p><h4>Triggering rules</h4></p>
         
+    <p>When a rule is triggered depends on whether it is associated with a link or a node, and what type of actions are contained in the rule. For node rules, all rules are triggered when a node is entered. For link rules, any rules containing <em>Follow link to</em>, <em>Show popup in</em> and <em>Update fact</em> actions are triggered when a link is clicked. Any rules containing the <em>Update text</em> action are triggered when a node is entered or refreshed. When a node is entered, node rules are triggered before link rules.</p>
+
+    <p>When a rule is triggered, the conditions are evaluated in order. If the conditions are satisfied, then the actions are executed in order. The rule's conditions are considered to be satisfied if either <em>all</em> of the conditions are true, or <em>any</em> of the conditions are true, depending on the value selected in the pulldown menu above the condition list.</p>
+
 	</div>
 
     </div>
@@ -89,10 +93,9 @@
      	  <li><a href="basic_concepts.html">Basic concepts</a></li>
      	  <li><a href="main_window.html">Main window</a></li>
      	  <li><a href="node_editor.html">Node editor</a></li>
-     	  <li><a href="link_editor.html">Link editor</a></li>
+     	  <li><a href="rules_list_editor.html">Rules list editor</a></li>
      	  <li><b>Rule editor</b></li>
      	  <li><a href="conditional_text.html">Conditional text</a></li>
-     	  <li><a href="node_rules.html">Node rules</a></li>
      	  <li><a href="anywhere_nodes.html">Anywhere nodes</a></li>
      	  <li><a href="facts.html">Facts</a></li>
      	  <li><a href="customizing_appearance.html">Customizing appearance</a></li>
