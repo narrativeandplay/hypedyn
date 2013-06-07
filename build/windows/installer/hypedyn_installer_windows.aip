@@ -13,7 +13,7 @@
     <ROW Property="ProductCode" Value="1033:{1BB2749F-916D-4F74-8202-DB05663EC4F3} " Type="16"/>
     <ROW Property="ProductLanguage" Value="1033"/>
     <ROW Property="ProductName" Value="HypeDyn" ValueLocId="*"/>
-    <ROW Property="ProductVersion" Value="2.2.0.294" Type="32"/>
+    <ROW Property="ProductVersion" Value="2.2.0.302" Type="32"/>
     <ROW Property="SecureCustomProperties" Value="OLDPRODUCTS;AI_NEWERPRODUCTFOUND"/>
     <ROW Property="UpgradeCode" Value="{4A49B042-B355-40B9-8DA5-F9E45E2ED511}"/>
   </COMPONENT>
