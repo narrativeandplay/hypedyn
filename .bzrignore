@@ -17,3 +17,4 @@ export
 autosave
 tmp
 *.synctex.gz
+_notes

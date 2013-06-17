@@ -34,7 +34,7 @@
                get-component-location
                get-parent get-parent-recurse
                set-align-x set-align-y
-               black-border bevel-in-border bevel-out-border
+               black-border bevel-in-border bevel-out-border make-line-border
                get-component-root-pane
                component-update component-revalidate
                pack-component
@@ -48,6 +48,11 @@
 (define black-border (invoke-static <javax.swing.BorderFactory> 'createLineBorder (<java.awt.Color> 0 0 0 255)))
 (define bevel-in-border (invoke-static <javax.swing.BorderFactory> 'createLoweredBevelBorder))
 (define bevel-out-border (invoke-static <javax.swing.BorderFactory> 'createRaisedBevelBorder))
+
+;; custom border
+(define (make-line-border in-colour :: <java.awt.Color>
+                          in-width)
+  (invoke-static <javax.swing.BorderFactory> 'createLineBorder in-colour in-width))
 
 ;;QUESTION: the syntax (invoke container 'add component layout) seems wrong
 ;; add (Component comp, int index)  this is the matching layout i found and it doesn't seem right
@@ -359,13 +364,15 @@
 (define (set-align-x component :: <javax.swing.JComponent> xalign)
   (cond ((equal? xalign 'left) (invoke component 'setAlignmentX <java.awt.Component>:LEFT_ALIGNMENT))
         ((equal? xalign 'center) (invoke component 'setAlignmentX <java.awt.Component>:CENTER_ALIGNMENT))
-        ((equal? xalign 'right) (invoke component 'setAlignmentX <java.awt.Component>:RIGHT_ALIGNMENT))))
+        ((equal? xalign 'right) (invoke component 'setAlignmentX <java.awt.Component>:RIGHT_ALIGNMENT))
+        (else (invoke component 'setAlignmentX xalign))))
 
 ; set alignment y attribute
 (define (set-align-y component :: <javax.swing.JComponent> yalign)
   (cond ((equal? yalign 'top) (invoke component 'setAlignmentY <java.awt.Component>:TOP_ALIGNMENT))
         ((equal? yalign 'center) (invoke component 'setAlignmentY <java.awt.Component>:CENTER_ALIGNMENT))
-        ((equal? yalign 'bottom) (invoke component 'setAlignmentY <java.awt.Component>:BOTTOM_ALIGNMENT))))
+        ((equal? yalign 'bottom) (invoke component 'setAlignmentY <java.awt.Component>:BOTTOM_ALIGNMENT))
+        (else (invoke component 'setAlignmentY yalign))))
 
 ; get the parent of parent recursively until we get a parent without parent
 (define (get-top-parent component :: <java.awt.Component>)

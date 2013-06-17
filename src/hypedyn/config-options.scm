@@ -51,6 +51,7 @@
                get-story-comment set-story-comment! reset-story-comment
 
                java-reader? set-java-reader!
+               new-link-style? set-new-link-style!
                get-temp-dir set-temp-dir! get-local-port set-local-port!
                node-name-limit choice-name-limit rule-name-limit
                )
@@ -373,6 +374,13 @@
   java-reader)
 (define (set-java-reader! in-flag)
   (set! java-reader in-flag))
+
+; enable/disable new style links
+(define-private new-link-style #f)
+(define (new-link-style?)
+  new-link-style)
+(define (set-new-link-style! in-flag)
+  (set! new-link-style in-flag))
 
 ; settings for launching js reader from editor
 

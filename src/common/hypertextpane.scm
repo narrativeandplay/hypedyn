@@ -834,18 +834,16 @@
       (define string-removed (substring (get-text the-editor) offset (+ offset len)))
       (set! remove-cache (list offset string-removed len))
       
-      ;; replace has positive len variable while insert has 0 len
-      (if (> len 0)
-          (filter-bypass-replace fb offset len string (style-to-use offset))
+      (if (not attr) ; not sure if this test is safe, when is attr not null?
           (begin
-;;            (set-text-style the-doc test-cast
-;;                            ;(- (invoke the-doc 'get-length) 6)'
-;;                            0
-;;                            (invoke the-doc 'get-length) #t)
-            (filter-bypass-insert fb offset string (style-to-use offset))
-            )
-          )
-      #f)
+            ;; replace has positive len variable while insert has 0 len
+            (if (> len 0)
+                (filter-bypass-replace fb offset len string (style-to-use offset))
+                (filter-bypass-insert fb offset string (style-to-use offset))
+                )
+            #f)
+          ; for component insertion, pass on to default filters
+          #t))
 
     ;; =========================
     ;;  Document listeners
@@ -1167,8 +1165,12 @@
              (lambda (self) (clear-dirty!)))
     (obj-put this-obj 'set-track-links!
              (lambda (self m) (set-track-links! m)))
+    (obj-put this-obj 'set-track-dirty!
+             (lambda (self m) (set-track-dirty! m)))
     (obj-put this-obj 'set-track-undoable-edits!
              (lambda (self m) (set-track-undoable-edits! m)))
+    (obj-put this-obj 'track-undoable-edits?
+             (lambda (self) track-undoable-edits))
     (obj-put this-obj 'getselstart
              (lambda (self) (getselstart)))
     (obj-put this-obj 'getselend

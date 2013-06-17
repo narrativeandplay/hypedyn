@@ -37,7 +37,9 @@
                set-attribute-data get-attribute-data get-attribute-data-pos
                get-cursor-pos get-selection-end set-cursor-pos
                get-change-length get-change-offset get-font-height
-               textpane-insert textpane-remove)
+               textpane-replace-selection
+               textpane-insert textpane-remove
+               textpane-insert-component)
                
 ;;
 ;; text
@@ -228,7 +230,7 @@
     (invoke the-caret 'moveDot in-selend)))
 
 ;; if there's no text select then it is an insert
-(define-private (replace-selection in-pane :: <javax.swing.JTextPane>
+(define (textpane-replace-selection in-pane :: <javax.swing.JTextPane>
                            str)
   (invoke in-pane 'replace-selection str))
 
@@ -238,13 +240,13 @@
                          #!optional attr ;; :: <javax.swing.text.AttributeSet>
                          )
   (set-text-selection in-pane offset offset) ;; no selection
-  (replace-selection in-pane str))
+  (textpane-replace-selection in-pane str))
 
 (define (textpane-remove in-pane :: <javax.swing.JTextPane>
                          offset :: <int>
                          length :: <int>)
   (set-text-selection in-pane offset (+ offset length)) ;; no selection
-  (replace-selection in-pane ""))
+  (textpane-replace-selection in-pane ""))
 
 ; translate from view x,y position to position in model
 (define (get-text-position-from-point in-text :: <javax.swing.text.JTextComponent> x :: <int> y :: <int>)
@@ -325,3 +327,11 @@
 ; get height of font
 (define (get-font-height fm :: <java.awt.FontMetrics>)
   (invoke fm 'getHeight))
+
+;;
+;; new stuff
+;; 
+
+(define (textpane-insert-component in-textpane :: <javax.swing.JTextPane>
+                                   in-component :: <java.awt.Component>)
+  (in-textpane:insertComponent in-component))
