@@ -763,9 +763,6 @@
         raw-y)))
 
 (define (convert-2.2-to-2.3-nodes nodeID node-obj y-offset)
-  (format #t "convert-2.2-to-2.3-nodes, nodeID ~a, node-obj: ~a~%~!" nodeID node-obj)
-
-  ;; convert standard node
   (let* ((ruleID (ask node-obj 'rule))
          (anywhere? (ask node-obj 'anywhere?)))
     ; shift anywhere nodes down below the rest of the nodes

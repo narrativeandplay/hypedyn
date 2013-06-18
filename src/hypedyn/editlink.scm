@@ -160,10 +160,12 @@
     (add-component editlink-panel-top (create-actions-main-panel))
     
     ;; reset combobox to contain all action-type-list
-    (let ((edited-node (get 'nodes in-edited-nodeID)))
-      (if (ask edited-node 'anywhere?)
-          (reset-action-type-choice 'anywhere-node-link)
-          (reset-action-type-choice 'link)))
+;;    (let ((edited-node (get 'nodes in-edited-nodeID)))
+;;      (if (ask edited-node 'anywhere?)
+;;          (reset-action-type-choice 'anywhere-node-link)
+          (reset-action-type-choice 'link)
+;;          )
+;;      )
     
     (populate-rule-editor in-ruleID))
 
@@ -1057,10 +1059,10 @@
 ;                                        (ask (get 'nodes link-dest1) 'name)
 ;                                        ))
                     )
-               (set! node-choice-combobox (create-node-choice link-dest1 #t -1))
+               (set! node-choice-combobox (create-node-choice link-dest1 #f -1))
                
                )
-             (set! node-choice-combobox (create-node-choice #f #t -1)))
+             (set! node-choice-combobox (create-node-choice #f #f -1)))
          
          (add-actionlistener
           node-choice-combobox
@@ -1093,8 +1095,8 @@
         
         ((equal? action-type "show in popup")
          (if (= (length args-lst) 1)
-             (set! node-choice-combobox2 (create-node-choice (car args-lst) #t -1))
-             (set! node-choice-combobox2 (create-node-choice #f #t -1)))
+             (set! node-choice-combobox2 (create-node-choice (car args-lst) #f -1))
+             (set! node-choice-combobox2 (create-node-choice #f #f -1)))
          (add-actionlistener
           node-choice-combobox2
           (make-actionlistener
