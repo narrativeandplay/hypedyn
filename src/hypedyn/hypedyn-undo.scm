@@ -253,6 +253,10 @@
         ;; remove the extra ruleID that was added to the-obj 
         ;; when the create-typed-rule2 in sexpr was run 
         (ask the-obj 'remove-last-rule))
+      
+      ; check whether node is an anywhere node after editing the rule
+      (if (eq? type 'node)
+          (update-anywhere-flag obj-ID))
       )
     (lambda () ;; redo
       (case type
@@ -273,6 +277,10 @@
                        ((link) (get 'links obj-ID))
                        ((node) (get 'nodes obj-ID)))))
         (ask the-obj 'remove-last-rule))
+
+      ; check whether node is an anywhere node after editing the rule
+      (if (eq? type 'node)
+          (update-anywhere-flag obj-ID))
       )
     ))
   

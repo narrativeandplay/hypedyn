@@ -69,6 +69,7 @@
                remove-show-popup-rule-display
                add-follow-link-rule-display
                add-show-popup-rule-display
+               update-anywhere-flag
                
                delete-action ;; just for ht-editor.scm's dodelnode
                
@@ -217,9 +218,10 @@
     (set-dialog-title editlink-dialog (string-append "Edit rule for node: " node-name))
 
     ;; reset combobox to contain all action-type-list
-    (if (ask edited-node 'anywhere?)
+;;    (if (ask edited-node 'anywhere?)
         (reset-action-type-choice 'anywhere-node)
-        (reset-action-type-choice 'node))
+;;        (reset-action-type-choice 'node)
+;;        )
     )
 
   (populate-rule-editor in-ruleID)
@@ -771,6 +773,10 @@
                  ) ;; end of action-type cond
            ) (action-panel-list))
 
+    ; check whether node is an anywhere node after editing the rule
+    (if (eq? edit-mode 'node)
+        (update-anywhere-flag edited-nodeID))
+
     ;; cache the information of the edited link in the form of a lambda object
     (after-edit-rule edited-ruleID)
 
@@ -788,7 +794,7 @@
         (add-follow-link-rule-display edited-ruleID))
     (if (eq? edit-mode 'link)
         (add-show-popup-rule-display edited-ruleID))
-
+    
     ;;===============
     ;; End of Actions
     ;;===============
@@ -800,6 +806,28 @@
     (set-component-visible editlink-dialog #f)
     (reset-rule-editor)
     ))
+
+; helper to check whether a node is an anywhere node after editing a rule
+(define (update-anywhere-flag thisnode-ID)
+  (let* ((thisnode-obj (get 'nodes thisnode-ID))
+         (thisnode-rules (ask thisnode-obj 'rule-lst))
+         (has-anywhere-link #f))
+    
+    ; go through the rules and see if any have anywhere link actions
+    (map (lambda (thisrule)
+           (let* ((thisrule-obj (get 'rules thisrule))
+                  (thisrule-actions (ask thisrule-obj 'actions)))
+             (map (lambda (thisaction)
+                    (let* ((thisaction-obj (get 'actions thisaction))
+                           (thisaction-expr (ask thisaction-obj 'expr))
+                           (thisaction-type (car thisaction-expr)))
+                      (set! has-anywhere-link 
+                            (or has-anywhere-link
+                                (equal? 'add-anywhere-link thisaction-type)))))
+                  thisrule-actions)))
+           thisnode-rules)
+    (format #t "After editing rule, nodeID:~a, anywhere:~a~%~!" thisnode-ID has-anywhere-link)
+    (ask thisnode-obj 'set-anywhere! has-anywhere-link)))
 
 ; reset the rule editor
 (define (reset-rule-editor)

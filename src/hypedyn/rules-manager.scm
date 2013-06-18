@@ -534,6 +534,10 @@
                                       edited-obj-ID))
                ) deleted-ID-lst)
         
+        ; update whether or not the node is an anywhere node
+        (if (eq? edit-mode 'node)
+            (update-anywhere-flag edited-obj-ID))
+
         ;; the last panel does not disappear even after we do remove-component thus we do this
         (component-update rmgr-rules-list-panel)
 
@@ -564,6 +568,10 @@
                          (add-show-popup-rule-display ruleID)
                          ))
                    ) deleted-ID-lst)
+
+            ; update whether or not the node is an anywhere node
+            (if (eq? edit-mode 'node)
+                (update-anywhere-flag edited-obj-ID))
             )
           (lambda () ;; redo
             (rmgr-edit curr-edit-mode edited-obj-ID)
@@ -579,6 +587,10 @@
                                       edited-obj-ID))
                    ) deleted-ID-lst)
             (component-update rmgr-rules-list-panel)
+
+            ; update whether or not the node is an anywhere node
+            (if (eq? edit-mode 'node)
+                (update-anywhere-flag edited-obj-ID))
             ))))))
 
 ;; used by the external rule button (as opposed to the rule button on the panel)

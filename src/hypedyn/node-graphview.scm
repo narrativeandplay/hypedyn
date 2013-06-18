@@ -191,7 +191,7 @@
 
                 ;; draw node square
                 (drawnodesquare dc #t x y width height
-                                (if is-anywhere dark-grey-color default-node-color))
+                                (if is-anywhere dark-grey-color grey-color))
                 ))
             )
           
