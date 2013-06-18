@@ -726,9 +726,9 @@
   
   ; then do any conversion necessary from 2.2 to 2.3
   (table-map 'links convert-2.2-to-2.3-links)
-  (table-map 'nodes convert-2.2-to-2.3-nodes)
-  )
-
+  (let ((y-offset (get-max-node-y)))
+    (table-map 'nodes (lambda (nodeID node-obj)
+                        (convert-2.2-to-2.3-nodes nodeID node-obj y-offset)))))
 
 ;; use with care
 ;; assumes whatever is inside the data table are all pre 2.2
@@ -748,19 +748,21 @@
   (let ((max-y 0))
     (table-map 'nodes
                (lambda (nodeID node-obj)
-                 (let ((this-node-y (ask node-obj 'get-y)))
-                   (if (> this-node-y max-y)
+                 (let ((this-node-y (ask node-obj 'get-y))
+                       (is-anywhere (ask node-obj 'anywhere?)))
+                   (if (and (> this-node-y max-y)
+                            (not is-anywhere))
                        (set! max-y this-node-y)))))
     max-y))
 
 ; calculate the new y position
-(define (calc-new-node-y)
-  (let ((raw-y (+ (get-max-node-y) initial-y)))
+(define (calc-new-node-y old-y y-offset)
+  (let ((raw-y (+ y-offset old-y initial-y)))
     (if (snap-to-grid?)
         (* initial-y (round (div raw-y initial-y)))
         raw-y)))
 
-(define (convert-2.2-to-2.3-nodes nodeID node-obj)
+(define (convert-2.2-to-2.3-nodes nodeID node-obj y-offset)
   (format #t "convert-2.2-to-2.3-nodes, nodeID ~a, node-obj: ~a~%~!" nodeID node-obj)
 
   ;; convert standard node
@@ -768,10 +770,7 @@
          (anywhere? (ask node-obj 'anywhere?)))
     ; shift anywhere nodes down below the rest of the nodes
     (if anywhere?
-        (ask node-obj 'set-y! (+ (ask node-obj 'get-y) (calc-new-node-y))))
-
-  )
-)
+        (ask node-obj 'set-y! (calc-new-node-y (ask node-obj 'get-y) y-offset)))))
   
 (define (convert-2.2-to-2.3-links linkID link-obj)
   ; nothing yet

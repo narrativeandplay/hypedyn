@@ -135,12 +135,6 @@
              (is-anywhere (ask the-node 'anywhere?))
              (editor (ask parent-obj 'get-graph-editor)))
 
-        ; add the node
-;        (ask editor 'node-add
-;             (number->string new-nodeID)
-;             (make-displayname the-node)
-;             x y the-style)
-        
         ;; our custom create-node
         (create-graph-node (number->string new-nodeID) (make-displayname the-node) x y the-style)
 
@@ -149,7 +143,6 @@
           (let-values (((width height) (ask new-node 'get-size)))
             (set! tab-in (ask new-node 'custom-tab-incr x y 'in custom-tab-draw))
             (set! tab-out (ask new-node 'custom-tab-incr x y 'out custom-tab-draw)))
-          
           
           ; set custom drawing
           (ask new-node 'set-custom-node-draw
@@ -350,15 +343,10 @@
         (if the-nodes
             (map (lambda (n)
                    (let* ((thisnodeID (car n))
-                          (thisnode (cdr n))
-;;                          (anywhere (ask thisnode 'anywhere?))
-                          )
-;;                     (if (eq? anywhere is-anywhere)
+                          (thisnode (cdr n)))
                          (let ((graph-node (ask (ask parent-obj 'get-graph-editor) 'node-get-by-data (number->string thisnodeID))))
                            (set! max-x (max max-x (ask graph-node 'get-x)))
-                           (set! max-y (max max-y (ask graph-node 'get-y))))
-;;                         )
-                     ))
+                           (set! max-y (max max-y (ask graph-node 'get-y))))))
                  the-nodes))
         (values (+ max-x node-width)
                 (+ max-y node-height))))
@@ -374,14 +362,8 @@
         (if the-nodes
             (map (lambda (n)
                    (let* ((thisnode (cdr n))
-                          (thisnode-ID (ask thisnode 'ID))
-;;                          (thisnode-anywhere (ask thisnode 'anywhere?))
-                          )
-;;                     (if (eq? thisnode-anywhere is-anywhere)
-                         ; force the node to refresh its name
-                         (ask parent-obj 'rename-node thisnode-ID)
-;;                         )
-                     ))
+                          (thisnode-ID (ask thisnode 'ID)))
+                     (ask parent-obj 'rename-node thisnode-ID)))
                  the-nodes))
 
         ; go through all links and refresh name (mainly for updating show ID)
