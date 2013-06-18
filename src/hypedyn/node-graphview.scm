@@ -86,12 +86,10 @@
             (map (lambda (n)
                    (let* ((thisnode (cdr n))
                           (thisnode-name (ask thisnode 'name))
-                          (thisnode-ID (ask thisnode 'ID))
-                          (thisnode-anywhere (ask thisnode 'anywhere?)))
-                     ;(display "drawing nodes ")(display nodeID)(newline)
-                     (if (eq? thisnode-anywhere is-anywhere)
-                         (add-node thisnode-ID (make-displayname thisnode)
-                                   (ask thisnode 'get-x) (ask thisnode 'get-y)))))
+                          (thisnode-ID (ask thisnode 'ID)))
+                     (add-node thisnode-ID (make-displayname thisnode)
+                               (ask thisnode 'get-x) (ask thisnode 'get-y))
+                     ))
                  the-nodes))
 
         ; go through all links and create the lines
@@ -134,6 +132,7 @@
                             '(alt hidden-tabs)
                             '(hidden-tabs)))
              (the-node (get 'nodes new-nodeID))
+             (is-anywhere (ask the-node 'anywhere?))
              (editor (ask parent-obj 'get-graph-editor)))
 
         ; add the node
@@ -156,7 +155,7 @@
           (ask new-node 'set-custom-node-draw
                (lambda (dc x y bg-color selected? data)
                  ;; truncate the node name 
-                 (draw-node new-node dc x y bg-color selected? data ))
+                 (draw-node new-node dc x y bg-color selected? data is-anywhere))
                  )
         
          ;; override the text drawing behavior of graph-editor
@@ -181,7 +180,7 @@
         (update-node-emphasis new-nodeID)))
     
     ;; custom drawing of nodes
-          (define (draw-node this-node dc x y bg-color selected? data)
+          (define (draw-node this-node dc x y bg-color selected? data is-anywhere)
             (let ((color #f))
               (let-values (((width height) (ask this-node 'get-size)))
                 
@@ -198,12 +197,13 @@
                                 color 'solid)
 
                 ;; draw node square
-                (drawnodesquare dc #t x y width height)
+                (drawnodesquare dc #t x y width height
+                                (if is-anywhere dark-grey-color default-node-color))
                 ))
             )
           
           ; draw node square helper 
-          (define (drawnodesquare dc show? bx by width height)
+          (define (drawnodesquare dc show? bx by width height in-colour)
                                         ; draw the node square
                                         ; draw boundary border
             (if show?
@@ -212,7 +212,7 @@
                                 (- by (/ height 2.0))
                                 (+ bx (/ width 2.0))
                                 (+ by (/ height 2.0))
-                                default-node-color 'solid) ;dark-grey-color 'solid)
+                                in-colour 'solid)
                 (rectangle-fill dc
                                 (- bx (/ width 2.0))
                                 (- by (/ height 2.0))
@@ -351,11 +351,14 @@
             (map (lambda (n)
                    (let* ((thisnodeID (car n))
                           (thisnode (cdr n))
-                          (anywhere (ask thisnode 'anywhere?)))
-                     (if (eq? anywhere is-anywhere)
+;;                          (anywhere (ask thisnode 'anywhere?))
+                          )
+;;                     (if (eq? anywhere is-anywhere)
                          (let ((graph-node (ask (ask parent-obj 'get-graph-editor) 'node-get-by-data (number->string thisnodeID))))
                            (set! max-x (max max-x (ask graph-node 'get-x)))
-                           (set! max-y (max max-y (ask graph-node 'get-y)))))))
+                           (set! max-y (max max-y (ask graph-node 'get-y))))
+;;                         )
+                     ))
                  the-nodes))
         (values (+ max-x node-width)
                 (+ max-y node-height))))
@@ -372,10 +375,13 @@
             (map (lambda (n)
                    (let* ((thisnode (cdr n))
                           (thisnode-ID (ask thisnode 'ID))
-                          (thisnode-anywhere (ask thisnode 'anywhere?)))
-                     (if (eq? thisnode-anywhere is-anywhere)
+;;                          (thisnode-anywhere (ask thisnode 'anywhere?))
+                          )
+;;                     (if (eq? thisnode-anywhere is-anywhere)
                          ; force the node to refresh its name
-                         (ask parent-obj 'rename-node thisnode-ID))))
+                         (ask parent-obj 'rename-node thisnode-ID)
+;;                         )
+                     ))
                  the-nodes))
 
         ; go through all links and refresh name (mainly for updating show ID)

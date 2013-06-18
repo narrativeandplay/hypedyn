@@ -55,7 +55,7 @@
                dosave-wrapper confirm-save ht-save-to-file
                ht-build-sexpr-from-object-with-rule ht-build-sexpr-from-rule
                clear-loaded-file-version ;; used by clear-data in hteditor.scm
-               loaded-file-version obj-conversion-2.2
+               loaded-file-version
                get-hypedyn-folder-file get-hypedyn-folder-string check-hypedyn-folder hd-autosave
                )
 
@@ -215,7 +215,8 @@
                    (if load-file-result
                        (begin
                          (add-recent-file newfilename)  ;; add to recent menu
-                         (obj-conversion-2.2)           ;; if loading pre 2.2 objects convert to post 2.2 format
+                         (if (not (= (get-fileformat-version) file-version-number)) ; convert file format if necessary
+                             (obj-conversion-2.3))
                          (populate-display)             ;; populate the display (important to convert first)
                          ))
                    )))
@@ -305,7 +306,7 @@
                           (set-conversion-flag! #f)
                           
                           ;; convert the imported data
-                          (obj-conversion-2.2)           ;; if loading pre 2.2 objects convert to post 2.2 format
+                          (obj-conversion-2.3)
                           )
                         (begin
                           (set! import-result (import-from-file newfilename))))
@@ -718,6 +719,17 @@
 ;;;; pre 2.2 save file conversion
 ;;  ==============================
 
+(define (obj-conversion-2.3)
+  ;; if loading pre 2.2 objects convert to 2.2 format
+  (if (< (get-fileformat-version) 2.2)
+      (obj-conversion-2.2))
+  
+  ; then do any conversion necessary from 2.2 to 2.3
+  (table-map 'links convert-2.2-to-2.3-links)
+  (table-map 'nodes convert-2.2-to-2.3-nodes)
+  )
+
+
 ;; use with care
 ;; assumes whatever is inside the data table are all pre 2.2
 ;; since there is no clear way to differentiate between pre 2.2 and post 2.2 
@@ -731,6 +743,41 @@
   (table-map 'nodes convert-pre-2.2-nodes)
   )
 
+; calculate max y position from data table (can't use get-max-node-positions as its in graph editor and nodes aren't drawn yet)
+(define (get-max-node-y)
+  (let ((max-y 0))
+    (table-map 'nodes
+               (lambda (nodeID node-obj)
+                 (let ((this-node-y (ask node-obj 'get-y)))
+                   (if (> this-node-y max-y)
+                       (set! max-y this-node-y)))))
+    max-y))
+
+; calculate the new y position
+(define (calc-new-node-y)
+  (let ((raw-y (+ (get-max-node-y) initial-y)))
+    (if (snap-to-grid?)
+        (* initial-y (round (div raw-y initial-y)))
+        raw-y)))
+
+(define (convert-2.2-to-2.3-nodes nodeID node-obj)
+  (format #t "convert-2.2-to-2.3-nodes, nodeID ~a, node-obj: ~a~%~!" nodeID node-obj)
+
+  ;; convert standard node
+  (let* ((ruleID (ask node-obj 'rule))
+         (anywhere? (ask node-obj 'anywhere?)))
+    ; shift anywhere nodes down below the rest of the nodes
+    (if anywhere?
+        (ask node-obj 'set-y! (+ (ask node-obj 'get-y) (calc-new-node-y))))
+
+  )
+)
+  
+(define (convert-2.2-to-2.3-links linkID link-obj)
+  ; nothing yet
+  'continue
+)
+  
 (define (convert-pre-2.2-nodes nodeID node-obj)
 
   ;; convert standard node

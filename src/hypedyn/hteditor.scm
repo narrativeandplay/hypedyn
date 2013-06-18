@@ -67,7 +67,7 @@
 (module-export close-hteditor-subwindows update-node-emphasis do-selectnode-list do-selectnode-graph
                clear-data clear-display populate-display add-recent-file update-dirty-state
                exceeded-node-limit?
-               store-node-positions get-max-node-positions use-hteditor-ui
+               store-node-positions get-max-node-positions initial-x initial-y use-hteditor-ui
                check-init-sculptural
                
                ;; needed by hypedyn-undo.scm
@@ -508,11 +508,12 @@
     (ask node-graph 'init)
 
     (let ((the-scrollpane (make-scrollpane (ask node-graph 'get-component))))
-      (if (not (is-basic-mode?))
-          ; for advanced version, add the anywhere nodes graph using a splitpane
-          (add-splitpane-component maps-panel the-scrollpane #t)
+;;      (if (not (is-basic-mode?))
+;;          ; for advanced version, add the anywhere nodes graph using a splitpane
+;;          (add-splitpane-component maps-panel the-scrollpane #t)
           ; for basic version, just add the regular nodes graph
-          (add-splitpane-component f-panel the-scrollpane #f))
+          (add-splitpane-component f-panel the-scrollpane #f)
+;;          )
       (scroll-set-horizontal-unit-increment the-scrollpane 20)
       (scroll-set-vertical-unit-increment the-scrollpane 20))
 
@@ -894,9 +895,11 @@
   (let-values (((max-x max-y max-anywhere-x max-anywhere-y)
                 (get-max-node-positions)))
     ; clamp to grid if necessary
-    (let ((raw-x (if in-anywhere
-                     (+ max-anywhere-x initial-x)
-                     (+ max-x initial-x))))
+    (let ((raw-x 
+;;           (if in-anywhere
+;;                     (+ max-anywhere-x initial-x)
+                     (+ max-x initial-x)))
+;;      )
       (if (snap-to-grid?)
           (* initial-x (round (div raw-x initial-x)))
           raw-x))))
@@ -913,7 +916,7 @@
         (begin
           ; create the node
           (define newnode-x (calc-new-node-x anywhere))
-          (define newnode-y initial-y) ;(if anywhere (+ max-anywhere-y initial-y) (+ max-y initial-y)))
+          (define newnode-y initial-y)
           (define newnode-ID
             (create-node new-nodename ""
                          newnode-x newnode-y
@@ -956,13 +959,16 @@
 ; update node displays
 (define (update-display-nodes new-nodeID name x y anywhere)
   (ask node-list 'add-node new-nodeID name)
-  (if anywhere
-      (begin
-        (ask anywhere-graph 'add-node new-nodeID name x y)
-        (ask anywhere-graph 'handle-resize))
-      (begin
+;;  (if anywhere
+;;      (begin
+;;        (ask anywhere-graph 'add-node new-nodeID name x y)
+;;        (ask anywhere-graph 'handle-resize))
+;;      (begin
         (ask node-graph 'add-node new-nodeID name x y)
-        (ask node-graph 'handle-resize)))) ;; anywhere)))
+        (ask node-graph 'handle-resize)
+;;        ))
+  
+  )
 
 ; edit a node
 (define (doeditnode)
@@ -994,9 +1000,10 @@
   (ask node-list 'select-node remember-selected-nodeID) ; make sure we don't lose the selection
 
   ; and in graph
-  (if (ask target-node 'anywhere?)
-      (ask anywhere-graph 'rename-node nodeID)
-      (ask node-graph 'rename-node nodeID)))
+;;  (if (ask target-node 'anywhere?)
+;;      (ask anywhere-graph 'rename-node nodeID)
+      (ask node-graph 'rename-node nodeID))
+;;)
 
 ;; add the undoable edit for rename node
 (define (post-rename-node-undoable-event nodeID oldname newname)
@@ -1087,7 +1094,8 @@
   (define node-sexpr (ask node-to-del 'to-save-sexpr))
   
   ; store the position
-  (ask (if node-anywhere anywhere-graph node-graph) 'store-node-position cached-nodeID node-to-del)
+  (ask node-graph 'store-node-position cached-nodeID node-to-del)
+  ;(ask (if node-anywhere anywhere-graph node-graph) 'store-node-position cached-nodeID node-to-del)
   (define actual-x (ask node-to-del 'get-x))
   (define actual-y (ask node-to-del 'get-y))
   
@@ -1184,7 +1192,8 @@
           (ask node-list 'populate-nodes-list)
 
           ; also delete from graph - node name in graph is now nodeName not nodeID
-          (let ((the-graph (if (ask thenode 'anywhere?) anywhere-graph node-graph)))
+          (let ((the-graph node-graph))
+          ;(let ((the-graph (if (ask thenode 'anywhere?) anywhere-graph node-graph)))
             (ask the-graph 'del-node nodeID))))))
 
 ;;
@@ -1250,20 +1259,21 @@
 (define (do-selectnode-list nodeID)
   (if (not (null? nodeID))
       (let* ((thenode (get 'nodes nodeID))
-             (anywhere (ask thenode 'anywhere?))
-             (the-graph (if anywhere anywhere-graph node-graph))
-             (the-othergraph (if anywhere node-graph anywhere-graph)))
+;;             (anywhere (ask thenode 'anywhere?))
+             (the-graph node-graph)
+;;             (the-othergraph (if anywhere node-graph anywhere-graph))
+             )
         (selectnode nodeID)
         ; make sure no nodes are selected in the other graph view
-        (if (not (is-basic-mode?))
-            (ask the-othergraph 'select-node -1))
+;;        (if (not (is-basic-mode?))
+;;            (ask the-othergraph 'select-node -1))
         (ask the-graph 'select-node nodeID))
       (begin
         ; deselected a node in the list
         (deselectnode)
         ; make sure graph views are also deselected
-        (if (not (is-basic-mode?))
-            (ask anywhere-graph 'select-node -1))
+;;        (if (not (is-basic-mode?))
+;;            (ask anywhere-graph 'select-node -1))
         (ask node-graph 'select-node -1))))
 
 ; mouse event in node list - for double-clicking
@@ -1452,7 +1462,7 @@
   (let* ((current-zoom (ask node-graph 'get-zoomfactor))
          (new-zoom (min min-zoom (* current-zoom zoom-delta))))
     (ask node-graph 'set-zoomfactor! new-zoom)
-    (ask anywhere-graph 'set-zoomfactor! new-zoom)
+;;    (ask anywhere-graph 'set-zoomfactor! new-zoom)
     (enable-zoom)))
     
 ; zoom out
@@ -1460,13 +1470,13 @@
   (let* ((current-zoom (ask node-graph 'get-zoomfactor))
          (new-zoom (max max-zoom (/ current-zoom zoom-delta))))
     (ask node-graph 'set-zoomfactor! new-zoom)
-    (ask anywhere-graph 'set-zoomfactor! new-zoom)
+;;    (ask anywhere-graph 'set-zoomfactor! new-zoom)
     (enable-zoom)))
 
 ; zoom reset
 (define (dozoomreset)
   (ask node-graph 'set-zoomfactor! default-zoom)
-  (ask anywhere-graph 'set-zoomfactor! default-zoom)
+;;  (ask anywhere-graph 'set-zoomfactor! default-zoom)
   (enable-zoom))
 
 ; update zoom menuitem state
@@ -1500,8 +1510,8 @@
     ; and set in graphs
     (ask node-graph 'set-allow-overlap! new-state)
     (ask node-graph 'layout-all)
-    (ask anywhere-graph 'set-allow-overlap! new-state)
-    (ask anywhere-graph 'layout-all)
+;;    (ask anywhere-graph 'set-allow-overlap! new-state)
+;;    (ask anywhere-graph 'layout-all)
     
     ; update menu item
     (set-checkbox-menu-item m-view-allow-overlap new-state)))
@@ -1514,7 +1524,7 @@
     
     ; and set in graphs
     (ask node-graph 'set-snap-to-grid! new-state)
-    (ask anywhere-graph 'set-snap-to-grid! new-state)
+;;    (ask anywhere-graph 'set-snap-to-grid! new-state)
     
     ; enable layout menu item
     (set-component-enabled m-view-layout new-state)
@@ -1525,7 +1535,8 @@
 ; force layout
 (define (dolayout)
   (ask node-graph 'layout-all)
-  (ask anywhere-graph 'layout-all))
+;;  (ask anywhere-graph 'layout-all)
+  )
 
 ;;
 ;;;; fact list
@@ -1626,14 +1637,16 @@
 ; selected a node in the graph
 (define (do-selectnode-graph nodeID)
   (let* ((thenode (get 'nodes nodeID))
-         (anywhere (ask thenode 'anywhere?))
-         (the-othergraph (if anywhere node-graph anywhere-graph)))
+;;         (anywhere (ask thenode 'anywhere?))
+;;         (the-othergraph (if anywhere node-graph anywhere-graph))
+         )
     (selectnode nodeID)
     (ask node-list 'select-node nodeID)
 
     ; make sure no nodes are selected in the other graph view
-    (if (not (is-basic-mode?))
-        (ask the-othergraph 'select-node -1))))
+;;    (if (not (is-basic-mode?))
+;;        (ask the-othergraph 'select-node -1))
+    ))
 
 ; deselected a node in the graph
 (define (do-deselectnode-graph nodeID)
@@ -1642,33 +1655,25 @@
 
 ; store the node positions for saving
 (define (store-node-positions)
-  (ask node-graph 'store-node-positions)
-  (ask anywhere-graph 'store-node-positions))
+  (ask node-graph 'store-node-positions))
 
 ; update the emphasis height for a node
 (define use-emph #f) ; disable emphasis for NM3222
 (define (update-node-emphasis thisnodeID)
   (let ((thisnode (get 'nodes thisnodeID)))
     (if thisnode
-        (let ((anywhere (ask thisnode 'anywhere?)))
-          (if anywhere
-              (ask anywhere-graph 'update-node-emphasis thisnodeID)
-              (ask node-graph 'update-node-emphasis thisnodeID))))))
+        (ask node-graph 'update-node-emphasis thisnodeID))))
 
 ; update the style for a node
 (define (update-node-style thisnodeID)
   (let ((thisnode (get 'nodes thisnodeID)))
     (if thisnode
-        (let ((anywhere (ask thisnode 'anywhere?)))
-          (if anywhere
-              (ask anywhere-graph 'update-node-style thisnodeID)
-              (ask node-graph 'update-node-style thisnodeID))))))
+        (ask node-graph 'update-node-style thisnodeID))))
 
 ; get maximum node positions, used for importing
 (define (get-max-node-positions)
-  (let-values (((max-x max-y) (ask node-graph 'get-max-node-positions))
-               ((max-anywhere-x max-anywhere-y) (ask anywhere-graph 'get-max-node-positions)))
-    (values max-x max-y max-anywhere-x max-anywhere-y)))
+  (let-values (((max-x max-y) (ask node-graph 'get-max-node-positions)))
+    (values max-x max-y max-x max-y))) ;; TODO remove anywhere parameters
 
 ;; 
 ;;;;  file I/O
@@ -1724,8 +1729,9 @@
 ; clear graphs
 (define (clear-graphs)
   (ask node-graph 'clear)
-  (if (not (is-basic-mode?))
-      (ask anywhere-graph 'clear)))
+;;  (if (not (is-basic-mode?))
+;;      (ask anywhere-graph 'clear))
+  )
 
 ; clear lists
 (define (clear-lists)
@@ -1736,8 +1742,9 @@
 ; refresh graphs: just regenerates the names
 (define (refresh-graphs)
   (ask node-graph 'refresh-display)
-  (if (not (is-basic-mode?))
-      (ask anywhere-graph 'refresh-display)))
+;;  (if (not (is-basic-mode?))
+;;      (ask anywhere-graph 'refresh-display))
+  )
 
 ;;;; populate  
 
@@ -1750,8 +1757,9 @@
 ; populate graphs
 (define (populate-graphs)
   (ask node-graph 'populate-graph)
-  (if (not (is-basic-mode?))
-      (ask anywhere-graph 'populate-graph)))
+;;  (if (not (is-basic-mode?))
+;;      (ask anywhere-graph 'populate-graph))
+  )
   
 ; populate the display
 (define (populate-display)
@@ -1963,7 +1971,7 @@
                #f
                #f)
   
-  (set-fileformat-version! 2.2)
+  (set-fileformat-version! 2.3)
   (set-fileformat-type! 'htfe)
   
   (set-get-prefs-callback! get-hteditor-prefs)
