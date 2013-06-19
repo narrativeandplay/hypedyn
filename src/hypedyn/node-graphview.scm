@@ -132,7 +132,6 @@
                             '(alt hidden-tabs)
                             '(hidden-tabs)))
              (the-node (get 'nodes new-nodeID))
-             (is-anywhere (ask the-node 'anywhere?))
              (editor (ask parent-obj 'get-graph-editor)))
 
         ;; our custom create-node
@@ -148,7 +147,7 @@
           (ask new-node 'set-custom-node-draw
                (lambda (dc x y bg-color selected? data)
                  ;; truncate the node name 
-                 (draw-node new-node dc x y bg-color selected? data is-anywhere))
+                 (draw-node new-node dc x y bg-color selected? data (ask the-node 'anywhere?)))
                  )
         
          ;; override the text drawing behavior of graph-editor

@@ -786,6 +786,12 @@
                       (ask self 'draw visible? is-selected?)
                       (ask editor 'my-refresh)))
 
+                  ; refresh a node
+                  (define (refresh-node self)
+                    (begin
+                      (ask self 'draw visible? is-selected?)
+                      (ask editor 'my-refresh)))
+
                   ;; initialize
 
                   (define (init self)
@@ -947,6 +953,7 @@
                              ))
                   (obj-put this-obj 'set-node-color set-node-color)
                   (obj-put this-obj 'set-text-color set-text-color)
+                  (obj-put this-obj 'refresh-node refresh-node)
                   (obj-put this-obj 'set-size
                            (lambda (self newwidth newheight)
                              (set! width newwidth)

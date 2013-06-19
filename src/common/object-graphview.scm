@@ -240,6 +240,12 @@
         (if this-node
             (ask this-node 'set-node-color in-colour))))
     
+    ; refresh a node
+    (define (refresh-node in-nodeID)
+      (let ((this-node (ask c 'node-get-by-data (number->string in-nodeID))))
+        (if this-node
+            (ask this-node 'refresh-node))))
+    
     ; store the node positions for saving
     (define (store-node-positions)
       (let ((the-nodes (get-list tableID)))
@@ -322,6 +328,9 @@
     (obj-put this-obj 'set-node-colour
              (lambda (self in-nodeID in-colour)
                (set-node-colour in-nodeID in-colour)))
+    (obj-put this-obj 'refresh-node
+             (lambda (self in-nodeID)
+               (refresh-node in-nodeID)))
     (obj-put this-obj 'clear
              (lambda (self) (if c (ask c 'clear))))
     (obj-put this-obj 'populate-graph
