@@ -134,8 +134,8 @@
         (enable-link-buttons #f)
         (enable-newlink-button #f)
 
-        ; if this is the start node or an anywhere node, disable "set start node" button and menu item
-        (if (or (= in-nodeID (get-start-node)) anywhere)
+        ; if this is the start node, disable "set start node" button and menu item
+        (if (= in-nodeID (get-start-node))
             (begin
               (set-button nodeeditor-toolbar-button-setstartnode #f)
               (set-menuitem-component m-edit1-setstartnode #f))
