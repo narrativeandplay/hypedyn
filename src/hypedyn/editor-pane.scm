@@ -25,6 +25,7 @@
   (require "../kawa/ui/panel.scm")
   (require "../kawa/ui/text.scm")
   (require "../kawa/color.scm")
+  (require "../kawa/strings.scm")
   (require "../common/objects.scm")
   (require "../common/datatable.scm") ;; get
   (require "../common/hypertextpane.scm") ;; parent class
@@ -103,24 +104,100 @@
         ; add default text
         (set! new-pane (make-embedded-pane (get-doc-text the-doc start-index end-index)))
         (add-component new-panel new-pane)
-
-        ; need to get the list of alternative text from the rule in the link
-        ; do it now or when the text is expanded?
+        (set-textpane-tooltip new-pane "default")
+        
+        ; get the alternative text from the rules
         (let ((the-rules (ask this-link 'rule-lst)))
           (map (lambda (thisrule)
                  (let* ((thisrule-obj (get 'rules thisrule))
-                        (thisrule-actions (ask thisrule-obj 'actions)))
+                        (thisrule-actions (ask thisrule-obj 'actions))
+                        (thisrule-conditions (ask thisrule-obj 'conditions))
+                        (if-not (if (ask thisrule-obj 'negate?) "not if" "if"))
+                        (and-or (cond ((equal? (ask thisrule-obj 'and-or) 'and) "all are true:")
+                                      ((equal? (ask thisrule-obj 'and-or) 'or) "any are true:")))
+                        (fall-through  (if (ask thisrule-obj 'fall-through?) "continue" "stop"))
+                        (thisrule-tooltip (string-append "<html>" if-not " " and-or "<br>")))
+                   (map (lambda (thiscondition)
+                          (let* ((thiscondition-obj (get 'conditions thiscondition))
+                                 (condition-type (ask thiscondition-obj 'type))
+                                 (condition-operator (ask thiscondition-obj 'operator))
+                                 (func-target-id (ask thiscondition-obj 'targetID))
+                                 (func-target-name (ask (get (case (ask thiscondition-obj 'type)
+                                                               ((0) 'nodes)
+                                                               ((1) 'links)
+                                                               ((2) 'facts)
+                                                               ((3) 'facts))
+                                                             func-target-id)
+                                                        'name))
+                                 (negate (case condition-operator
+                                           ((0) "true")
+                                           ((1) "false")
+                                           ((2) "false")
+                                           ((3) "true")
+                                           (else "false")
+                                           )))
+                            (case condition-type
+                              ((0) (set! thisrule-tooltip (string-append thisrule-tooltip 
+                                                                         "node \"" func-target-name "\" "
+                                                                         (case condition-operator
+                                                                           ((0) "visited")
+                                                                           ((1) "not visited")
+                                                                           ((2) "is previous")
+                                                                           ((3) "is not previous")
+                                                                           (else ""))
+                                                                         "<br>"
+                                                                         )))
+                              ((1) (set! thisrule-tooltip (string-append thisrule-tooltip
+                                                                         "link \"" func-target-name "\" "
+                                                                         (case condition-operator
+                                                                           ((0) "followed")
+                                                                           ((1) "not followed")
+                                                                           (else ""))
+                                                                         "<br>")))
+                              ((2) (set! thisrule-tooltip (string-append thisrule-tooltip 
+                                                                         "[true/false fact \"" func-target-name "\"] "
+                                                                         (case condition-operator
+                                                                           ((0) "true")
+                                                                           ((1) "false")
+                                                                           (else ""))
+                                                                         "<br>")))
+                              ((3) (set! thisrule-tooltip (string-append thisrule-tooltip
+                                                                         "[number fact \"" func-target-name "\"] "
+                                                                         (let* ((args-lst (ask thiscondition-obj 'numfact-args))
+                                                                                (comparator (car args-lst))
+                                                                                (operand-type (cadr args-lst))
+                                                                                (operand-choice (caddr args-lst)))
+                                                                           (string-append (cond
+                                                                                           ((equal? comparator "<") "&lt")
+                                                                                           ((equal? comparator ">") "&gt")
+                                                                                           ((equal? comparator "<=") "&le")
+                                                                                           ((equal? comparator ">=") "&ge")
+                                                                                           (else comparator))
+                                                                                           " "
+                                                                                          (if (equal? operand-type "Input")
+                                                                                              operand-choice
+                                                                                              (string-append "[number fact \""
+                                                                                                             (ask (get 'facts (string->number operand-choice)) 'name)
+                                                                                                             "\"]"))))
+                                                                         "<br>"))))))
+                        thisrule-conditions)
+                   (set! thisrule-tooltip (string-append thisrule-tooltip fall-through "</html>"))
                    (map (lambda (thisaction)
                           (let* ((thisaction-obj (get 'actions thisaction))
                                  (thisaction-expr (ask thisaction-obj 'expr))
                                  (thisaction-type (car thisaction-expr)))
                             (if (equal? 'replace-link-text thisaction-type)
                                 ; text replacement, so extract the text (only alt text for now, not facts)
-                                (if (eq? "alternative text" (list-ref thisaction-expr 1))
-                                    (begin
+                                (begin
+                                  (if (eq? "alternative text" (list-ref thisaction-expr 1))
                                       (set! new-pane (make-embedded-pane (list-ref thisaction-expr 2)))
-                                      (add-component new-panel new-pane)
-                                      )))))
+                                      (set! new-pane (make-embedded-pane (string-append "[text fact \""
+                                                                                        (ask (get 'facts
+                                                                                                  (list-ref thisaction-expr 2))
+                                                                                             'name)
+                                                                                        "\"]"))))
+                                  (add-component new-panel new-pane)
+                                  (set-textpane-tooltip new-pane thisrule-tooltip)))))
                         thisrule-actions)))
                the-rules))
 
