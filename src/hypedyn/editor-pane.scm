@@ -29,9 +29,9 @@
   (require "../common/objects.scm")
   (require "../common/datatable.scm") ;; get
   (require "../common/hypertextpane.scm") ;; parent class
-  
+
   (require "datastructure.scm")
-)
+  )
 
 ; export
 (module-export make-editor-pane)
@@ -64,7 +64,7 @@
       ; init the parent object
       (ask htpane-obj 'init)
       )
-    
+
 
     ; flags
 
@@ -73,7 +73,8 @@
       (set! inserting-component m))
 
     ; override
-    ; add a link in the editor as an underline
+    ; add a link as an expandable list of alternative texts
+    ; TODO make sure it doesn't delete the links
     (define (addlink thislink)
       (format #t "**** addlink in editor-pane ****~%~!")
       ;; cache the value of track-undoable-edits and set it back later
@@ -105,18 +106,20 @@
         (set! new-pane (make-embedded-pane (get-doc-text the-doc start-index end-index)))
         (add-component new-panel new-pane)
         (set-textpane-tooltip new-pane "default")
-        
+
         ; get the alternative text from the rules
         (let ((the-rules (ask this-link 'rule-lst)))
           (map (lambda (thisrule)
-                 (let* ((thisrule-obj (get 'rules thisrule))
+                 (let* ((has-alt-text? #f)
+                        (thisrule-obj (get 'rules thisrule))
                         (thisrule-actions (ask thisrule-obj 'actions))
                         (thisrule-conditions (ask thisrule-obj 'conditions))
                         (if-not (if (ask thisrule-obj 'negate?) "not if" "if"))
                         (and-or (cond ((equal? (ask thisrule-obj 'and-or) 'and) "all are true:")
                                       ((equal? (ask thisrule-obj 'and-or) 'or) "any are true:")))
                         (fall-through  (if (ask thisrule-obj 'fall-through?) "continue" "stop"))
-                        (thisrule-tooltip (string-append "<html>" if-not " " and-or "<br>")))
+                        (thisrule-tooltip (string-append "<html>" if-not " " and-or "<br>"))
+                        (thisrule-text "[no alternative text]"))
                    (map (lambda (thiscondition)
                           (let* ((thiscondition-obj (get 'conditions thiscondition))
                                  (condition-type (ask thiscondition-obj 'type))
@@ -137,7 +140,7 @@
                                            (else "false")
                                            )))
                             (case condition-type
-                              ((0) (set! thisrule-tooltip (string-append thisrule-tooltip 
+                              ((0) (set! thisrule-tooltip (string-append thisrule-tooltip
                                                                          "node \"" func-target-name "\" "
                                                                          (case condition-operator
                                                                            ((0) "visited")
@@ -154,7 +157,7 @@
                                                                            ((1) "not followed")
                                                                            (else ""))
                                                                          "<br>")))
-                              ((2) (set! thisrule-tooltip (string-append thisrule-tooltip 
+                              ((2) (set! thisrule-tooltip (string-append thisrule-tooltip
                                                                          "[true/false fact \"" func-target-name "\"] "
                                                                          (case condition-operator
                                                                            ((0) "true")
@@ -173,7 +176,7 @@
                                                                                            ((equal? comparator "<=") "&le")
                                                                                            ((equal? comparator ">=") "&ge")
                                                                                            (else comparator))
-                                                                                           " "
+                                                                                          " "
                                                                                           (if (equal? operand-type "Input")
                                                                                               operand-choice
                                                                                               (string-append "[number fact \""
@@ -181,24 +184,41 @@
                                                                                                              "\"]"))))
                                                                          "<br>"))))))
                         thisrule-conditions)
-                   (set! thisrule-tooltip (string-append thisrule-tooltip fall-through "</html>"))
+                   
+                   (set! thisrule-tooltip (string-append thisrule-tooltip "then do:<br>"))
                    (map (lambda (thisaction)
                           (let* ((thisaction-obj (get 'actions thisaction))
                                  (thisaction-expr (ask thisaction-obj 'expr))
                                  (thisaction-type (car thisaction-expr)))
-                            (if (equal? 'replace-link-text thisaction-type)
-                                ; text replacement, so extract the text (only alt text for now, not facts)
-                                (begin
-                                  (if (eq? "alternative text" (list-ref thisaction-expr 1))
-                                      (set! new-pane (make-embedded-pane (list-ref thisaction-expr 2)))
-                                      (set! new-pane (make-embedded-pane (string-append "[text fact \""
-                                                                                        (ask (get 'facts
-                                                                                                  (list-ref thisaction-expr 2))
-                                                                                             'name)
-                                                                                        "\"]"))))
-                                  (add-component new-panel new-pane)
-                                  (set-textpane-tooltip new-pane thisrule-tooltip)))))
-                        thisrule-actions)))
+                            (cond
+                             ((equal? 'replace-link-text thisaction-type)
+                              ; text replacement, so extract the text
+                              (if (eq? "alternative text" (list-ref thisaction-expr 1))
+                                  (set! thisrule-text (list-ref thisaction-expr 2))
+                                  (set! thisrule-text (string-append "[text fact \""
+                                                                     (ask (get 'facts
+                                                                               (list-ref thisaction-expr 2))
+                                                                          'name)
+                                                                     "\"]")))
+                              (set! thisrule-tooltip (string-append thisrule-tooltip (symbol->string thisaction-type) "<br> "))
+                              (set! has-alt-text? #t))
+                             (else
+                              ; TODO need to fill in details for other actions
+                              (set! thisrule-tooltip (string-append thisrule-tooltip (symbol->string thisaction-type) "<br> ")))
+                             )))
+                        thisrule-actions)
+                   
+                   ; close the tooltip
+                   (set! thisrule-tooltip (string-append thisrule-tooltip fall-through "</html>"))
+                   
+                   ; now set the text - only show if there's a replace text action
+                   (if has-alt-text?
+                       (begin
+                         (set! new-pane (make-embedded-pane thisrule-text))
+                         (add-component new-panel new-pane)
+                         ; and add the tooltip
+                         (set-textpane-tooltip new-pane thisrule-tooltip)))
+                   ))
                the-rules))
 
         ; insert the component
@@ -220,44 +240,9 @@
         (set-background-color new-pane (get-lightgray-javacolor))
         new-pane))
 
-    ;;=============================
-    ;; Document filter handlers
-    ;;=============================
-    ; note: these are called BEFORE the document is changed, and its safe to
-    ; use the filter bypass to make changes to the document
-
-    ; handle replace (called when we do inserts or replaces operations)
-    ; note: extra parameter (callback) is added when doc filter is created
-    (define (document-filter-replace-handler fb offset len string attr)
-      (if (not inserting-component)
-          (begin
-            (start-compound-undoable-event "Typing") ;(replace) compound") ; start compound event
-            (if (or (not undo-manager)
-                    (not (compoundundomanager-locked? undo-manager)))
-                (after-delete offset len))
-            (set! replace-event #t) ;; hack to get replace to work properly
-            (set! insert-cache (list offset string (string-length string)))
-            (define string-removed (substring (get-text the-editor) offset (+ offset len)))
-            (set! remove-cache (list offset string-removed len))
-
-            ;; replace has positive len variable while insert has 0 len
-            (if (> len 0)
-                (filter-bypass-replace fb offset len string (style-to-use offset))
-                (begin
-;;            (set-text-style the-doc test-cast
-;;                            ;(- (invoke the-doc 'get-length) 6)'
-;;                            0
-;;                            (invoke the-doc 'get-length) #t)
-                  (filter-bypass-insert fb offset string (style-to-use offset))
-                  )
-                )
-;;      inserting-component)
-            #f)
-          #t))
-    
     ; message handling                  
     (obj-put this-obj 'init
-             (lambda (self) 
+             (lambda (self)
                (init)))
     (obj-put this-obj 'addlink
              (lambda (self in-link)
