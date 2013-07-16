@@ -115,10 +115,11 @@
                         (thisrule-actions (ask thisrule-obj 'actions))
                         (thisrule-conditions (ask thisrule-obj 'conditions))
                         (if-not (if (ask thisrule-obj 'negate?) "not if" "if"))
-                        (and-or (cond ((equal? (ask thisrule-obj 'and-or) 'and) "all are true:")
-                                      ((equal? (ask thisrule-obj 'and-or) 'or) "any are true:")))
+                        (and-or (cond ((equal? (ask thisrule-obj 'and-or) 'and) "all")
+                                      ((equal? (ask thisrule-obj 'and-or) 'or) "any")))
                         (fall-through  (if (ask thisrule-obj 'fall-through?) "continue" "stop"))
-                        (thisrule-tooltip (string-append "<html>" if-not " " and-or "<br>"))
+                        (thisrule-tooltip (string-append "<html>" if-not " " and-or 
+                                                         " of the following conditions are true:<br>"))
                         (thisrule-text "[no alternative text]"))
                    (map (lambda (thiscondition)
                           (let* ((thiscondition-obj (get 'conditions thiscondition))
@@ -131,37 +132,33 @@
                                                                ((2) 'facts)
                                                                ((3) 'facts))
                                                              func-target-id)
-                                                        'name))
-                                 (negate (case condition-operator
-                                           ((0) "true")
-                                           ((1) "false")
-                                           ((2) "false")
-                                           ((3) "true")
-                                           (else "false")
-                                           )))
+                                                        'name)))
+                            (begin
+                              (format #t "**** condition-type: ~a, condition-operator: ~a ****~%~!" condition-type condition-operator)
+                              (set! thisrule-tooltip (string-append thisrule-tooltip "&nbsp;&nbsp;"))
                             (case condition-type
                               ((0) (set! thisrule-tooltip (string-append thisrule-tooltip
-                                                                         "node \"" func-target-name "\" "
+                                                                         "[node \"" func-target-name "\"] "
                                                                          (case condition-operator
-                                                                           ((0) "visited")
-                                                                           ((1) "not visited")
-                                                                           ((2) "is previous")
-                                                                           ((3) "is not previous")
+                                                                           ((0) "not visited")
+                                                                           ((1) "visited") 
+                                                                           ((2) "previous")
+                                                                           ((3) "is not previous") ; is this used?
                                                                            (else ""))
                                                                          "<br>"
                                                                          )))
                               ((1) (set! thisrule-tooltip (string-append thisrule-tooltip
-                                                                         "link \"" func-target-name "\" "
+                                                                         "[link \"" func-target-name "\"] "
                                                                          (case condition-operator
-                                                                           ((0) "followed")
-                                                                           ((1) "not followed")
+                                                                           ((0) "not followed")
+                                                                           ((1) "followed")
                                                                            (else ""))
                                                                          "<br>")))
                               ((2) (set! thisrule-tooltip (string-append thisrule-tooltip
                                                                          "[true/false fact \"" func-target-name "\"] "
                                                                          (case condition-operator
-                                                                           ((0) "true")
-                                                                           ((1) "false")
+                                                                           ((0) "false")
+                                                                           ((1) "true")
                                                                            (else ""))
                                                                          "<br>")))
                               ((3) (set! thisrule-tooltip (string-append thisrule-tooltip
@@ -182,15 +179,20 @@
                                                                                               (string-append "[number fact \""
                                                                                                              (ask (get 'facts (string->number operand-choice)) 'name)
                                                                                                              "\"]"))))
-                                                                         "<br>"))))))
+                                                                         "<br>"))))
+                            )
+                            
+                            ))
                         thisrule-conditions)
                    
-                   (set! thisrule-tooltip (string-append thisrule-tooltip "then do:<br>"))
+                   (set! thisrule-tooltip (string-append thisrule-tooltip "then perform the following actions:<br>"))
                    (map (lambda (thisaction)
                           (let* ((thisaction-obj (get 'actions thisaction))
                                  (thisaction-expr (ask thisaction-obj 'expr))
                                  (thisaction-type (car thisaction-expr)))
-                            (cond
+                            (begin
+                              (set! thisrule-tooltip (string-append thisrule-tooltip "&nbsp;&nbsp;"))
+                              (cond
                              ((equal? 'replace-link-text thisaction-type)
                               ; text replacement, so extract the text
                               (if (eq? "alternative text" (list-ref thisaction-expr 1))
@@ -205,11 +207,11 @@
                              (else
                               ; TODO need to fill in details for other actions
                               (set! thisrule-tooltip (string-append thisrule-tooltip (symbol->string thisaction-type) "<br> ")))
-                             )))
+                             ))))
                         thisrule-actions)
                    
                    ; close the tooltip
-                   (set! thisrule-tooltip (string-append thisrule-tooltip fall-through "</html>"))
+                   (set! thisrule-tooltip (string-append thisrule-tooltip "&nbsp;&nbsp;" fall-through "</html>"))
                    
                    ; now set the text - only show if there's a replace text action
                    (if has-alt-text?
