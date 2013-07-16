@@ -24,6 +24,8 @@
   (require "../kawa/ui/container.scm")
   (require "../kawa/ui/panel.scm")
   (require "../kawa/ui/text.scm")
+  (require "../kawa/ui/button.scm")
+  (require "../kawa/ui/events.scm")
   (require "../kawa/color.scm")
   (require "../kawa/strings.scm")
   (require "../common/objects.scm")
@@ -92,21 +94,47 @@
              (old-selstart (ask this-obj 'getselstart))
              (old-selend (ask this-obj 'getselend))
              (this-linkID (ask thislink 'ID))
-             (new-panel (make-panel))
+             (text-panel (make-panel))
              (new-pane #f)
-             (this-link (get 'links this-linkID)))
+             (expand-button (make-button "+"))
+             (first-panel (make-panel))
+             (rest-panel (make-panel))
+             (this-link (get 'links this-linkID))
+             (button-action #f))
         (ask this-obj 'setselection start-index end-index)
 
         ; formatting the panel
-        (set-align-y new-panel 0.75)
-        (set-border new-panel black-border)
-        (set-container-layout new-panel 'vertical)
+        (set-align-y text-panel 0.75)
+        (set-border text-panel black-border)
+        (set-container-layout text-panel 'vertical)
 
         ; add default text
+        (set-container-layout first-panel 'horizontal)
         (set! new-pane (make-embedded-pane (get-doc-text the-doc start-index end-index)))
-        (add-component new-panel new-pane)
-        (set-textpane-tooltip new-pane "default")
-
+        (add-component first-panel new-pane)
+        (add-component text-panel first-panel)
+        ;(set-textpane-tooltip new-pane "default")
+        
+        ; expand action
+        (define (expand-button-action)
+          (set-button-label expand-button "-")
+          (add-component text-panel rest-panel)
+          (set! button-action collapse-button-action))
+        ; collapse action
+        (define (collapse-button-action)
+          (set-button-label expand-button "+")
+          (remove-component text-panel rest-panel)
+          (set! button-action expand-button-action))
+        ; add actions
+        (add-actionlistener expand-button
+                            (make-actionlistener (lambda (source)
+                                                   (button-action))))
+        (set! button-action expand-button-action)
+        (set-component-non-resizable-size expand-button 20 20)
+        
+        ; panel for the rest of the text
+        (set-container-layout rest-panel 'vertical)
+        
         ; get the alternative text from the rules
         (let ((the-rules (ask this-link 'rule-lst)))
           (map (lambda (thisrule)
@@ -217,14 +245,19 @@
                    (if has-alt-text?
                        (begin
                          (set! new-pane (make-embedded-pane thisrule-text))
-                         (add-component new-panel new-pane)
+                         (set-text-component new-pane #f #f)
+                         (add-component rest-panel new-pane)
                          ; and add the tooltip
                          (set-textpane-tooltip new-pane thisrule-tooltip)))
                    ))
                the-rules))
 
+        ; if there are any alternative text panels in the rest panel, then add the expand button
+        (if (not (null? (get-container-children rest-panel)))
+            (add-component first-panel expand-button))
+        
         ; insert the component
-        (textpane-insert-component the-editor new-panel)
+        (textpane-insert-component the-editor text-panel)
 
         ;(setselection old-selstart old-selend)
         )
