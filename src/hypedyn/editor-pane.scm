@@ -31,7 +31,8 @@
   (require "../common/objects.scm")
   (require "../common/datatable.scm") ;; get
   (require "../common/hypertextpane.scm") ;; parent class
-
+  (require "../common/stringprocessing.scm")
+  
   (require "datastructure.scm")
   )
 
@@ -220,23 +221,129 @@
                                  (thisaction-expr (ask thisaction-obj 'expr))
                                  (thisaction-type (car thisaction-expr)))
                             (set! thisrule-tooltip (string-append thisrule-tooltip "&nbsp;&nbsp;"))
-                            (cond
-                             ; alternative text
-                             ((equal? 'replace-link-text thisaction-type)
-                              (if (eq? "alternative text" (list-ref thisaction-expr 1))
-                                  ; text replacement
-                                  (set! thisrule-text (list-ref thisaction-expr 2))
-                                  ; text fact replacement
-                                  (set! thisrule-text (string-append "[text fact \""
-                                                                     (ask (get 'facts
-                                                                               (list-ref thisaction-expr 2))
-                                                                          'name)
-                                                                     "\"]")))
-                              (set! thisrule-tooltip (string-append thisrule-tooltip (symbol->string thisaction-type) "<br> "))
-                              (set! has-alt-text? #t))
-                             (else
-                              ; TODO need to fill in details for other actions
-                              (set! thisrule-tooltip (string-append thisrule-tooltip (symbol->string thisaction-type) "<br> "))))))
+                            
+                            (case thisaction-type
+                              ; follow link
+                              ((follow-link)
+                               (set! thisrule-tooltip (string-append thisrule-tooltip
+                                                                     "Follow link to [node "
+                                                                     (quote-nest (ask (get 'nodes (list-ref thisaction-expr 4)) 'name))
+                                                                     "]<br>")))
+                              ; assert
+                              ((assert)
+                               (set! thisrule-tooltip (string-append thisrule-tooltip
+                                                                     "Set [true/false fact "
+                                                                     (quote-nest (ask (get 'facts (list-ref thisaction-expr 1)) 'name))
+                                                                     "] to true<br>")))
+                              ; retract
+                              ((retract)
+                               (set! thisrule-tooltip (string-append thisrule-tooltip
+                                                                     "Set [true/false fact ["
+                                                                     (quote-nest (ask (get 'facts (list-ref thisaction-expr 1)) 'name))
+                                                                     "] to false<br>")))
+                              ; set value
+                              ((set-value!)
+                               (set! thisrule-tooltip (string-append thisrule-tooltip
+                                                                     "Set [text fact "
+                                                                     (quote-nest (ask (get 'facts (list-ref thisaction-expr 1)) 'name))
+                                                                     "] to "
+                                                                     (quote-nest (list-ref thisaction-expr 2)) "<br>")))
+                              ; add anywhere link
+                              ((add-anywhere-link)
+                               (set! thisrule-tooltip (string-append thisrule-tooltip
+                                                                     "Add anywhere link to node ["
+                                                                     (to-string (list-ref thisaction-expr 1)) "]<br>"))) ;; TODO add anywhere link not implemented
+                              ; replace link text
+                              ((replace-link-text)
+                               (let ((replace-type (list-ref thisaction-expr 1))
+                                     (replace-value (list-ref thisaction-expr 2)))
+                                 (set! thisrule-tooltip (string-append thisrule-tooltip
+                                                                       "Update text using "
+                                                                       replace-type
+                                                                       "<br>"))
+
+                                 ;; differentiate between fact text or just alt text
+                                 (if (eq? "alternative text" replace-type)
+                                     ; alternative text
+                                     (set! thisrule-text replace-value)
+                                     ; text (or number?) fact replacement
+                                     (set! thisrule-text (string-append "["
+                                                                        (list-ref thisaction-expr 1)
+                                                                        " "
+                                                                        (quote-nest (ask (get 'facts
+                                                                                              (list-ref thisaction-expr 2))
+                                                                                         'name))
+                                                                        "]"))))
+
+                               ; remember we have alt text
+                               (set! has-alt-text? #t))
+                              ((show-in-popup)
+                               (set! thisrule-tooltip (string-append thisrule-tooltip
+                                                                     "Show in popup [node " 
+                                                                     (quote-nest (ask (get 'nodes (list-ref thisaction-expr 1)) 'name))
+                                                                     "]<br>")))
+                              ; set number fact
+                              ((set-number-fact)
+                               (define target-factID (list-ref thisaction-expr 1))
+                               (define num-fact-mode (list-ref thisaction-expr 2))
+                               (define fact-value
+                                 (case num-fact-mode
+                                   (("Input") (to-string (list-ref thisaction-expr 3)))
+                                   (("Fact") (string-append "[number fact "
+                                                            (quote-nest (ask (get 'facts (list-ref thisaction-expr 3)) 'name))
+                                                            "]" ))
+                                   (("Math")
+                                    ;; (list op opr1 opr1-type opr2 opr2-type)
+                                    (let* ((op            (list-ref (list-ref thisaction-expr 3) 0))
+                                           (operand1      (list-ref (list-ref thisaction-expr 3) 1))
+                                           (operand1-type (list-ref (list-ref thisaction-expr 3) 2))
+                                           (operand2      (list-ref (list-ref thisaction-expr 3) 3))
+                                           (operand2-type (list-ref (list-ref thisaction-expr 3) 4)))
+
+                                      (string-append (if (eq? operand1-type "Input")
+                                                         operand1
+                                                         (string-append "[number fact "
+                                                                        (quote-nest (ask (get 'facts (string->number operand1)) 'name))
+                                                                        "]"))
+                                                     " " op " "
+                                                     (if (eq? operand2-type "Input")
+                                                         operand2
+                                                         (string-append "[number fact "
+                                                                        (quote-nest (ask (get 'facts (string->number operand2)) 'name))
+                                                                        "]"))
+                                                     ))
+                                    )
+                                   (("Random")
+                                    ;; (list opr1 opr1-type opr2 opr2-type)
+                                    (let* ((operand1      (list-ref (list-ref thisaction-expr 3) 0))
+                                           (operand1-type (list-ref (list-ref thisaction-expr 3) 1))
+                                           (operand2      (list-ref (list-ref thisaction-expr 3) 2))
+                                           (operand2-type (list-ref (list-ref thisaction-expr 3) 3)))
+
+                                      (string-append "a random number between "
+                                                     (if (eq? operand1-type "Input")
+                                                         operand1
+                                                         (string-append "[number fact "
+                                                                        (quote-nest (ask (get 'facts (string->number operand1)) 'name))
+                                                                        "]"))
+                                                     " and "
+                                                     (if (eq? operand2-type "Input")
+                                                         operand2
+                                                         (string-append "[number fact "
+                                                                        (quote-nest (ask (get 'facts (string->number operand2)) 'name))
+                                                                        "]"))
+                                                     ))
+                                    )
+                                   ))
+                               (set! thisrule-tooltip (string-append thisrule-tooltip
+                                                                     "Set [number fact "
+                                                                     (quote-nest (ask (get 'facts target-factID) 'name))
+                                                                     "] to "
+                                                                     fact-value
+                                                                     "<br>"))
+                               )
+                              )
+                            ))
                         thisrule-actions)
                    
                    ; close the tooltip
@@ -266,6 +373,9 @@
       ;; set back original value
       (ask this-obj 'set-track-undoable-edits! original-track-undoable-edits))
 
+    (define (quote-nest str)
+      (string-append "\"" str "\""))
+    
     (define (make-embedded-pane the-text)
       (let ((new-pane (make-textpane)))
         (textpane-replace-selection new-pane the-text)
