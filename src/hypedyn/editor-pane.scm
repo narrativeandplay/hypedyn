@@ -18,7 +18,7 @@
 ;; 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 ; editor pane
-; subclass of hypertextpane (for now), implementing hypedyn 2.3 changes
+; subclass of hypertextpane implementing hypedyn 2.3 changes
 (begin
   (require "../kawa/ui/component.scm")
   (require "../kawa/ui/container.scm")
@@ -67,18 +67,17 @@
       (ask htpane-obj 'init)
       )
 
-
     ; flags
 
     ; enable/disable inserting component
     (define (set-inserting-component! m)
       (set! inserting-component m))
 
-    ; override
+    ; override hypertextpane functions
+    
     ; add a link as an expandable list of alternative texts
     ; TODO make sure it doesn't delete the links
     (define (addlink thislink)
-      (format #t "**** addlink in editor-pane ****~%~!")
       ;; cache the value of track-undoable-edits and set it back later
       (define original-track-undoable-edits (ask this-obj 'track-undoable-edits?))
       (ask this-obj 'set-track-undoable-edits! #f)
@@ -135,7 +134,7 @@
         ; panel for the rest of the text
         (set-container-layout rest-panel 'vertical)
         
-        ; get the alternative text from the rules
+        ; go through the rules and extract the conditions and actions
         (let ((the-rules (ask this-link 'rule-lst)))
           (map (lambda (thisrule)
                  (let* ((has-alt-text? #f)
@@ -149,6 +148,8 @@
                         (thisrule-tooltip (string-append "<html>" if-not " " and-or 
                                                          " of the following conditions are true:<br>"))
                         (thisrule-text "[no alternative text]"))
+                   
+                   ; conditions
                    (map (lambda (thiscondition)
                           (let* ((thiscondition-obj (get 'conditions thiscondition))
                                  (condition-type (ask thiscondition-obj 'type))
@@ -161,34 +162,36 @@
                                                                ((3) 'facts))
                                                              func-target-id)
                                                         'name)))
-                            (begin
-                              (format #t "**** condition-type: ~a, condition-operator: ~a ****~%~!" condition-type condition-operator)
-                              (set! thisrule-tooltip (string-append thisrule-tooltip "&nbsp;&nbsp;"))
+                            (set! thisrule-tooltip (string-append thisrule-tooltip "&nbsp;&nbsp;"))
                             (case condition-type
+                              ; node
                               ((0) (set! thisrule-tooltip (string-append thisrule-tooltip
-                                                                         "[node \"" func-target-name "\"] "
+                                                                         "[node \"" func-target-name "\"] is "
                                                                          (case condition-operator
                                                                            ((0) "not visited")
                                                                            ((1) "visited") 
                                                                            ((2) "previous")
-                                                                           ((3) "is not previous") ; is this used?
+                                                                           ((3) "not previous")
                                                                            (else ""))
                                                                          "<br>"
                                                                          )))
+                              ; link
                               ((1) (set! thisrule-tooltip (string-append thisrule-tooltip
-                                                                         "[link \"" func-target-name "\"] "
+                                                                         "[link \"" func-target-name "\"] is "
                                                                          (case condition-operator
                                                                            ((0) "not followed")
                                                                            ((1) "followed")
                                                                            (else ""))
                                                                          "<br>")))
+                              ; true/false fact
                               ((2) (set! thisrule-tooltip (string-append thisrule-tooltip
-                                                                         "[true/false fact \"" func-target-name "\"] "
+                                                                         "[true/false fact \"" func-target-name "\"] is "
                                                                          (case condition-operator
                                                                            ((0) "false")
                                                                            ((1) "true")
                                                                            (else ""))
                                                                          "<br>")))
+                              ; number fact
                               ((3) (set! thisrule-tooltip (string-append thisrule-tooltip
                                                                          "[number fact \"" func-target-name "\"] "
                                                                          (let* ((args-lst (ask thiscondition-obj 'numfact-args))
@@ -207,24 +210,23 @@
                                                                                               (string-append "[number fact \""
                                                                                                              (ask (get 'facts (string->number operand-choice)) 'name)
                                                                                                              "\"]"))))
-                                                                         "<br>"))))
-                            )
-                            
-                            ))
+                                                                         "<br>"))))))
                         thisrule-conditions)
                    
+                   ; actions
                    (set! thisrule-tooltip (string-append thisrule-tooltip "then perform the following actions:<br>"))
                    (map (lambda (thisaction)
                           (let* ((thisaction-obj (get 'actions thisaction))
                                  (thisaction-expr (ask thisaction-obj 'expr))
                                  (thisaction-type (car thisaction-expr)))
-                            (begin
-                              (set! thisrule-tooltip (string-append thisrule-tooltip "&nbsp;&nbsp;"))
-                              (cond
+                            (set! thisrule-tooltip (string-append thisrule-tooltip "&nbsp;&nbsp;"))
+                            (cond
+                             ; alternative text
                              ((equal? 'replace-link-text thisaction-type)
-                              ; text replacement, so extract the text
                               (if (eq? "alternative text" (list-ref thisaction-expr 1))
+                                  ; text replacement
                                   (set! thisrule-text (list-ref thisaction-expr 2))
+                                  ; text fact replacement
                                   (set! thisrule-text (string-append "[text fact \""
                                                                      (ask (get 'facts
                                                                                (list-ref thisaction-expr 2))
@@ -234,8 +236,7 @@
                               (set! has-alt-text? #t))
                              (else
                               ; TODO need to fill in details for other actions
-                              (set! thisrule-tooltip (string-append thisrule-tooltip (symbol->string thisaction-type) "<br> ")))
-                             ))))
+                              (set! thisrule-tooltip (string-append thisrule-tooltip (symbol->string thisaction-type) "<br> "))))))
                         thisrule-actions)
                    
                    ; close the tooltip
@@ -257,10 +258,7 @@
             (add-component first-panel expand-button))
         
         ; insert the component
-        (textpane-insert-component the-editor text-panel)
-
-        ;(setselection old-selstart old-selend)
-        )
+        (textpane-insert-component the-editor text-panel))
 
       (set-inserting-component! #f)
       (ask this-obj 'set-track-links! #t)

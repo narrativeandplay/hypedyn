@@ -360,6 +360,7 @@
     
     ; adjust links after deleting
     ; returns #t if need to manually clean up after link deletion
+    ; (I think this has been changed, no longer returns a value?)
     (define (adjust-links-delete start len)
       (let ((edited-node (get nodelist-name the-nodeID))
             (deleted-link-bound '()))
@@ -390,7 +391,8 @@
     
 
     ; adjust one link after deletion
-    ; returns #t if need to manually clean up after link deletion
+    ; returns #t if need to manually clean up after link deletion 
+    ; (I think this has been changed to return a list containing the releted start and end points - alex)
     (define (adjust-one-link-delete del-start del-len linkID)
       (let ((link-deleted '())
             (thislink (get 'links linkID)))
@@ -834,7 +836,9 @@
       (define string-removed (substring (get-text the-editor) offset (+ offset len)))
       (set! remove-cache (list offset string-removed len))
       
-      (if (not attr) ; not sure if this test is safe, when is attr not null?
+      ; test whether we're inserting a component or something else
+      (if (not (equal? (get-attribute-data attr "$ename")
+                       "component"))
           (begin
             ;; replace has positive len variable while insert has 0 len
             (if (> len 0)
