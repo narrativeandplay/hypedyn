@@ -465,16 +465,6 @@
                      (set! link-deleted '())
                      ;(set! link-deleted 0)
                      )
-                    ((and (<= del-start link-start) ;; Case 3; del-start link-start link-end del-end (eg a[aBB]aa, a[aBBa]a, aa[BBa]a, aa[BB]aa)
-                          (<= link-end del-end))
-                     (display " delete case 3 ")(newline)
-                     ;; Entire link is inside deletion, (delete link)
-                     ;(set! link-deleted (- link-end link-start))
-                     (set! link-deleted (list link-start link-end))
-                     ; Delete the link
-                     ;; readonly pane does not have deletelink-callback
-                     (if (procedure? deletelink-callback)
-                         (deletelink-callback linkID)))
                     ((and (<= del-end link-end)         ;; Case 4; link-start del-start del-end link-end (eg aaB[B]a, aa[B]Baa, aaB[B]Baa) 
                           (<= link-start del-start))    ;; makes sure not the whole link 
                      ;; Entire deletion is inside link but not encompassing it, (shorten link by length of deletion)
@@ -486,6 +476,16 @@
                      ;(set! link-deleted del-len)
                      (set! link-deleted (list del-start del-end))
                      )
+                    ((and (<= del-start link-start) ;; Case 3; del-start link-start link-end del-end (eg a[aBB]aa, a[aBBa]a, aa[BBa]a, aa[BB]aa)
+                          (<= link-end del-end))
+                     (display " delete case 3 ")(newline)
+                     ;; Entire link is inside deletion, (delete link)
+                     ;(set! link-deleted (- link-end link-start))
+                     (set! link-deleted (list link-start link-end))
+                     ; Delete the link
+                     ;; readonly pane does not have deletelink-callback
+                     (if (procedure? deletelink-callback)
+                         (deletelink-callback linkID)))
                     ((and (< del-start link-start)  ;; Case 5; del-start link-start del-end link-end (eg a[aB]Baa)
                           (< link-start del-end)    ;; link boundaries does not coincides with deletion boundary    
                           (< del-end link-end))

@@ -34,6 +34,7 @@
   (require "../common/stringprocessing.scm")
   
   (require "datastructure.scm")
+  (require "config-options.scm")
   )
 
 ; export
@@ -110,6 +111,7 @@
 
         ; add default text
         (set-container-layout first-panel 'horizontal)
+        ;(set! new-pane (make-embedded-pane (ask this-obj 'gettextselection start-index end-index)))
         (set! new-pane (make-embedded-pane (get-doc-text the-doc start-index end-index)))
         (add-component first-panel new-pane)
         (add-component text-panel first-panel)
@@ -310,9 +312,7 @@
                                                          operand2
                                                          (string-append "[number fact "
                                                                         (quote-nest (ask (get 'facts (string->number operand2)) 'name))
-                                                                        "]"))
-                                                     ))
-                                    )
+                                                                        "]")))))
                                    (("Random")
                                     ;; (list opr1 opr1-type opr2 opr2-type)
                                     (let* ((operand1      (list-ref (list-ref thisaction-expr 3) 0))
@@ -332,32 +332,26 @@
                                                          (string-append "[number fact "
                                                                         (quote-nest (ask (get 'facts (string->number operand2)) 'name))
                                                                         "]"))
-                                                     ))
-                                    )
-                                   ))
+                                                     )))))
                                (set! thisrule-tooltip (string-append thisrule-tooltip
                                                                      "Set [number fact "
                                                                      (quote-nest (ask (get 'facts target-factID) 'name))
                                                                      "] to "
                                                                      fact-value
-                                                                     "<br>"))
-                               )
-                              )
-                            ))
+                                                                     "<br>"))))))
                         thisrule-actions)
                    
                    ; close the tooltip
                    (set! thisrule-tooltip (string-append thisrule-tooltip "&nbsp;&nbsp;" fall-through "</html>"))
                    
                    ; now set the text - only show if there's a replace text action
-                   (if has-alt-text?
+                   (if (or has-alt-text? (show-all-rules?))
                        (begin
                          (set! new-pane (make-embedded-pane thisrule-text))
                          (set-text-component new-pane #f #f)
                          (add-component rest-panel new-pane)
                          ; and add the tooltip
-                         (set-textpane-tooltip new-pane thisrule-tooltip)))
-                   ))
+                         (set-textpane-tooltip new-pane thisrule-tooltip)))))
                the-rules))
 
         ; if there are any alternative text panels in the rest panel, then add the expand button
