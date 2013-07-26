@@ -21,6 +21,7 @@
 (begin
   (require "../kawa/miscutils.scm")
   (require "../kawa/ui/component.scm")
+  (require "../kawa/ui/container.scm")
   (require "../kawa/ui/events.scm")
   (require "../kawa/ui/text.scm")
   (require "../kawa/ui/cursor.scm")
@@ -28,6 +29,7 @@
   (require "../kawa/ui/undo.scm")
   (require "../kawa/color.scm")
   (require "../kawa/graphics-kawa.scm") ; for open-image-file
+  (require "../kawa/strings.scm")
   
   (require "objects.scm")
   (require "datatable.scm") ;; get
@@ -190,6 +192,82 @@
       (clear-dirty!))
         
     ;; links in editor text
+    
+    
+    
+    ;; TODO: alt text
+    ;; 1) fix link position - should cover the length of the component
+    ;; 2) make sure the component has linkID attribute (and clickback?)
+    ;; 3) update link start/end in datastructure when saving (currently its constantly updated, is this a problem?)
+    
+    
+    ; parse a document to find the components
+    (define (parse-document)
+      (let* ((the-editor (ask this-obj 'getcomponent))
+             (the-doc (ask this-obj 'getdocument))
+             (the-text (get-text the-editor))
+             (link-offset 0)
+             (iterator (<javax.swing.text.ElementIterator> the-doc)))
+        
+        ; helper function to walk the document
+        (define (walk-document element :: <javax.swing.text.Element>)
+          (if (not (is-null? element))
+              (begin
+                (display element)
+                (let* ((as :: <javax.swing.text.AttributeSet> (element:getAttributes))
+                       (this-linkID (get-attribute-linkID as)))
+                  (format #t "element attributes: ~a [~a]~%~!" as  this-linkID)
+                  ; is it a link? (element is a panel, and has a linkID)
+                  (if (and
+                       (as:containsAttribute
+                        javax.swing.text.AbstractDocument:ElementNameAttribute
+                        javax.swing.text.StyleConstants:ComponentElementName)
+                       (not (is-null? this-linkID)))
+                      (let* ((the-component :: <javax.swing.JComponent> (javax.swing.text.StyleConstants:getComponent as))
+                             (the-component-class (the-component:getClass)))
+                        (format #t "component: ~a~%~!" the-component-class)
+                        (if (instance? the-component javax.swing.JPanel)
+                            (let* ((children (get-container-children the-component))
+                                   (first-panel (list-ref children 0))
+                                   (first-panel-children (get-container-children first-panel))
+                                   (the-text-pane :: <javax.swing.JTextPane> (list-ref first-panel-children 0))
+                                   (this-link (get 'links this-linkID))
+                                   (link-text (the-text-pane:getText))
+                                   (link-text-len (string-length link-text))
+                                   (offset-link-start (+ (element:getStartOffset) link-offset))
+                                   (offset-link-end (+ (element:getEndOffset) link-offset))
+                                   (doc-link-len (- offset-link-end offset-link-start)))
+                                   (format #t "the-text-pane: ~a~%~!" (the-text-pane:getText))
+                              
+                              ; insert link text into the extracted document content
+                              (set! the-text (string-replace the-text
+                                                             link-text
+                                                             offset-link-start
+                                                             offset-link-end))
+                              
+                              ; update the link positions
+                              (if (not (is-null? this-link))
+                                  (begin
+                                    (ask this-link 'set-start-index! offset-link-start)
+                                    (ask this-link 'set-end-index! (+ offset-link-start link-text-len))))
+                              
+                              ; update the link offset
+                              (set! link-offset (+ link-offset (- link-text-len doc-link-len)))
+
+                              (format #t "doc text after insert (link-offset: ~a): ~a~%~!" link-offset the-text)
+                              )))))
+                (walk-document (iterator:next)))))
+
+        (format #t "doc text: ~a~%~!" the-text)
+        (walk-document (iterator:next))
+        (display "end\n")
+        
+        ; return the text
+        the-text))
+    
+    
+    
+    
     
     ; clickback for links
     (define (clickback this-linkID)
@@ -689,7 +767,9 @@
 
      ; get the hypertextnode's text
     (define (gettext)
-      (get-text the-editor))
+      ;(get-text the-editor)
+      (parse-document)
+      )
     
     ; get a section of the text
     (define (gettextsection in-start in-end)
@@ -1161,6 +1241,9 @@
     (obj-put this-obj 'init
              (lambda (self) 
                (init)))
+    (obj-put this-obj 'parse-document
+             (lambda (self)
+               (parse-document)))
     (obj-put this-obj 'dirty?
              (lambda (self) (dirty?)))
     (obj-put this-obj 'set-dirty!
@@ -1251,12 +1334,16 @@
              (lambda (self proc)
                (set! htp-endupdate proc)
                ))
+    (obj-put this-obj 'set-clickback
+             (lambda (self this-linkID start-index len)
+               (set-clickback this-linkID start-index len)
+               ))
     ;; based on the selection, determine whether to enable newlink button
     (obj-put this-obj 'selection-newlink-check
              (lambda (self)
                (check-links-overlap (getselstart) (getselend))))
     this-obj))
-
+    
 ; read-only hypertextpane
 (define (make-hypertextpane-readonly
          w h

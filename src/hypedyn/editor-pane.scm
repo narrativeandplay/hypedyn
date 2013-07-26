@@ -28,10 +28,12 @@
   (require "../kawa/ui/events.scm")
   (require "../kawa/color.scm")
   (require "../kawa/strings.scm")
+  (require "../kawa/miscutils.scm")
   (require "../common/objects.scm")
   (require "../common/datatable.scm") ;; get
   (require "../common/hypertextpane.scm") ;; parent class
   (require "../common/stringprocessing.scm")
+  (require "../common/links.scm")
   
   (require "datastructure.scm")
   (require "config-options.scm")
@@ -59,8 +61,6 @@
                                          getlinks-method
                                          nodelist-name))
          (this-obj (new-object htpane-obj))
-
-         (inserting-component #f) ; alex - rename this?
          )
 
     ; initialize the reader-pane
@@ -68,13 +68,7 @@
       ; init the parent object
       (ask htpane-obj 'init)
       )
-
-    ; flags
-
-    ; enable/disable inserting component
-    (define (set-inserting-component! m)
-      (set! inserting-component m))
-
+    
     ; override hypertextpane functions
     
     ; add a link as an expandable list of alternative texts
@@ -83,9 +77,9 @@
       ;; cache the value of track-undoable-edits and set it back later
       (define original-track-undoable-edits (ask this-obj 'track-undoable-edits?))
       (ask this-obj 'set-track-undoable-edits! #f)
+      
       ;(ask this-obj 'set-track-links! #f)
       (ask this-obj 'set-track-dirty! #f)
-      (set-inserting-component! #t)
 
       (let* ((the-editor (ask this-obj 'getcomponent))
              (the-doc (ask this-obj 'getdocument))
@@ -357,13 +351,17 @@
         ; if there are any alternative text panels in the rest panel, then add the expand button
         (if (not (null? (get-container-children rest-panel)))
             (add-component first-panel expand-button))
-        
-        ; insert the component
-        (textpane-insert-component the-editor text-panel))
 
-      (set-inserting-component! #f)
+        ; insert the component
+        (textpane-insert-component the-editor text-panel)
+
+        ; and set clickback: this is used for the ID, not the action, maybe remove the action?
+        (ask this-obj 'set-clickback this-linkID start-index 1) ; len is 1
+        )
+
       (ask this-obj 'set-track-links! #t)
       (ask this-obj 'set-track-dirty! #t)
+      
       ;; set back original value
       (ask this-obj 'set-track-undoable-edits! original-track-undoable-edits))
 

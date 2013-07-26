@@ -201,6 +201,7 @@
         (content (ask node-editor 'gettext))
         (dirty (nodeeditor-dirty?))
         )
+    
 ;    (display "content len in nodeeditor-save ")(display (string-length content))(newline)
 ;    (display "content during nodeeditor-save ")(display content)(newline)
       (if (and ;dirty 
