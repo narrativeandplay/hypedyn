@@ -72,7 +72,6 @@
     ; override hypertextpane functions
     
     ; add a link as an expandable list of alternative texts
-    ; TODO make sure it doesn't delete the links
     (define (addlink thislink)
       ;; cache the value of track-undoable-edits and set it back later
       (define original-track-undoable-edits (ask this-obj 'track-undoable-edits?))

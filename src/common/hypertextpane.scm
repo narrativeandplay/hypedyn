@@ -196,10 +196,13 @@
     
     
     ;; TODO: alt text
-    ;; 1) fix link position - should cover the length of the component
-    ;; 2) make sure the component has linkID attribute (and clickback?)
     ;; 3) update link start/end in datastructure when saving (currently its constantly updated, is this a problem?)
-    
+    ;; all this seems ok except positions are wrong when selecting because datastructure is updated in conflicting ways
+    ;; a) only update when 
+    ;; 4) make sure shifting works ok when typing in the doc
+    ;; some bugs with deleting text right after the component
+    ;; 5) handle add/insert/delete links
+    ;; 6) fix undo, which is currently messed up    
     
     ; parse a document to find the components
     (define (parse-document)
