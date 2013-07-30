@@ -1,9 +1,9 @@
-(begin (make-hypertext (quote htfe) 2.2) (set-card-shark! (quote #f)) (begin
+(begin (make-hypertext (quote htfe) 2.3) (set-card-shark! (quote #f)) (begin
 (create-node "start"
 "This is the story of a girl named Little Red Riding Hood, which she was called because of the red hood that she often wore.\n\nOne day she was walking through the forest.\n"
 400.0 45.0 false false 1) (begin (create-typed-rule3 "initialize" (quote node)
 (quote and) #f 1 fixedID: 72 fall-through?: #t) (create-action "start" (quote
-entered-node) (list (quote set-number-fact) 73 "Input" "3") 72 121))) (begin
+entered-node) (list (quote set-number-fact) 73 "Input" "3") 72 73))) (begin
 (create-node "forest"
 "In the forest, Red came across a young man with a nasty smile.\n\n\"Where are you going, little girl?\" he asked. \n\n\"I'm off to see my sick granny,\" she said.\n\nWell, you can probably guess what happened next.\n\nwhichEnding? = dummy"
 80.0 225.0 false false 2) (begin (create-typed-rule3 "choose ending" (quote
