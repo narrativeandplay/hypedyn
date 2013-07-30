@@ -50,7 +50,7 @@
   (set-text-component about-editor #f #t)
   (set-text about-editor 
             "HypeDyn hypertext fiction editor 
-Version 2.2.0 rev 302, 8 June 2013\n
+Version 2.3a rev 321, 30 July 2013\n
 Copyright (C) 2008-2013
 National Univeristy of Singapore\n
 This program is free software; you can redistribute it and/or 
