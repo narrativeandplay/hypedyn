@@ -1,11 +1,11 @@
-(begin (make-hypertext (quote htfe) 2.2) (set-card-shark! (quote #f)) (begin
+(begin (make-hypertext (quote htfe) 2.3) (set-card-shark! (quote #f)) (begin
 (create-node "start"
 "This is the story of a girl named Little Red Riding Hood, which she was called because of the red hood that she often wore.\n\nOne day she was walking through the forest."
 240.0 45.0 false false 1)) (begin (create-node "forest"
 "In the forest, Red came across a young man with a nasty smile.\n\n\"Where are you going, little girl?\" he asked. \n\n\"I'm off to see my sick granny,\" she said.\n\nWell, you can probably guess what happened next."
 240.0 135.0 false false 2)) (begin (create-node "summary"
 "The story has begun.\nRed's character has been decided. \nRed has met the wolf. \nThe end."
-80 45 true false 66) (begin (create-typed-rule3 "Add Anywhere Link" (quote
+80 315.0 true false 66) (begin (create-typed-rule3 "Add Anywhere Link" (quote
 node) (quote and) #f 66 fixedID: 67 fall-through?: #t) (create-action
 "Enable Link" (quote anywhere-check) (list (quote add-anywhere-link) 66) 67
 68))) (begin (create-node "end 1"
@@ -24,10 +24,10 @@ fixedID: 74 numfact-args: #f) (create-action "Next" (quote clicked-link) (list
 (create-typed-rule3 "to end 1" (quote link) (quote and) #f 10 fixedID: 11
 fall-through?: #f) (create-typed-condition2 "to end 1" 1 27 1 11 fixedID: 69
 numfact-args: #f) (create-action "to the end" (quote clicked-link) (list (quote
-follow-link) 10 11 (list (quote quote) (quote default)) 3) 11 70)) (begin
+follow-link) 10 11 (list (quote quote) (quote default)) 3) 11 76)) (begin
 (create-typed-rule3 "to end 2" (quote link) (quote and) #f 10 fixedID: 54
 fall-through?: #t) (create-action "to the end" (quote clicked-link) (list
-(quote follow-link) 10 54 (list (quote quote) (quote default)) 49) 54 72)))
+(quote follow-link) 10 54 (list (quote quote) (quote default)) 49) 54 77)))
 (begin (create-link "character" 66 -1 21 54 false false false -1 "" false 78)
 (begin (create-typed-rule3 "character" (quote link) (quote and) #f 78 fixedID:
 79 fall-through?: #t) (create-typed-condition2 "character" 1 27 0 79 fixedID:
@@ -38,38 +38,39 @@ numfact-args: #f) (create-action "character" (quote displayed-node) (list
 (create-typed-rule3 "forest" (quote link) (quote and) #f 81 fixedID: 82
 fall-through?: #t) (create-typed-condition2 "forest" 0 2 0 82 fixedID: 83
 numfact-args: #f) (create-action "forest" (quote displayed-node) (list (quote
-replace-link-text) "alternative text" "" 81) 82 84))) (begin (create-link "end"
+replace-link-text) "alternative text" "" 81) 82 93))) (begin (create-link "end"
 66 -1 79 87 false false false -1 "" false 85) (begin (create-typed-rule3 "end"
 (quote link) (quote and) #f 85 fixedID: 86 fall-through?: #t)
 (create-typed-condition2 "end" 0 3 0 86 fixedID: 87 numfact-args: #f)
 (create-typed-condition2 "end" 0 49 0 86 fixedID: 88 numfact-args: #f)
 (create-action "end" (quote displayed-node) (list (quote replace-link-text)
-"alternative text" "" 85) 86 89))) (begin (create-link "naive" 26 -1 7 12 false
+"alternative text" "" 85) 86 94))) (begin (create-link "naive" 26 -1 7 12 false
 false false -1 "" false 27) (begin (create-typed-rule3 "naive" (quote link)
 (quote and) #f 27 fixedID: 28 fall-through?: #t) (create-typed-condition2
 "naive" 1 27 0 28 fixedID: 46 numfact-args: #f) (create-typed-condition2
 "naive" 1 30 0 28 fixedID: 47 numfact-args: #f) (create-action "naive" (quote
 clicked-link) (list (quote follow-link) 27 28 (list (quote quote) (quote
-default)) 1) 28 48))) (begin (create-link "street-smart" 26 -1 16 28 false
+default)) 1) 28 95))) (begin (create-link "street-smart" 26 -1 16 28 false
 false false -1 "" false 30) (begin (create-typed-rule3 "street-smart" (quote
 link) (quote and) #f 30 fixedID: 31 fall-through?: #t) (create-typed-condition2
 "street-smart" 1 27 0 31 fixedID: 38 numfact-args: #f) (create-typed-condition2
 "street-smart" 1 30 0 31 fixedID: 39 numfact-args: #f) (create-action
 "street-smart" (quote clicked-link) (list (quote follow-link) 30 31 (list
-(quote quote) (quote default)) 1) 31 40))) (begin (create-link
+(quote quote) (quote default)) 1) 31 96))) (begin (create-link
 "Red's character" 1 -1 34 56 false false false -1 "" false 41) (begin
 (create-typed-rule3 "choose" (quote link) (quote and) #f 41 fixedID: 42
 fall-through?: #t) (create-typed-condition2 "choose" 1 27 0 42 fixedID: 43
 numfact-args: #f) (create-typed-condition2 "choose" 1 30 0 42 fixedID: 44
 numfact-args: #f) (create-action "Red's character" (quote clicked-link) (list
-(quote follow-link) 41 42 (list (quote quote) (quote default)) 26) 42 45)))
+(quote follow-link) 41 42 (list (quote quote) (quote default)) 26) 42 97)))
 (begin (create-link "response" 2 -1 112 144 false false false -1 "" false 62)
 (begin (create-typed-rule3 "street-smart" (quote link) (quote and) #f 62
 fixedID: 63 fall-through?: #t) (create-typed-condition2 "street-smart" 1 30 1
 63 fixedID: 76 numfact-args: #f) (create-action "response" (quote
 displayed-node) (list (quote replace-link-text) "alternative text"
-"\"I'm not supposed to talk to strangers,\"" 62) 63 77))) (set-start-node! 1)
+"\"I'm not supposed to talk to strangers,\"" 62) 63 98))) (set-start-node! 1)
 (set-disable-restart-button! #f) (set-disable-back-button! #f)
 (set-disable-pagebreak! #f) (set-disable-page-resize! #f)
 (set-fixed-page-width! 800) (set-fixed-page-height! 600) (set-css-type! (quote
-default)) (set-custom-css-location! "") (set-custom-css-location2! ""))
+default)) (set-custom-css-location! "") (set-custom-css-location2! "")
+(set-author-name! "") (set-story-title! "") (set-story-comment! ""))

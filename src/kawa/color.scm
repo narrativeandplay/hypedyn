@@ -89,7 +89,7 @@
 ;; should move to a separate file
 (define white-color (list 255 255 255 255))
 (define black-color (list 0 0 0 255))
-(define grey-color (list 200 200 200 255))
+(define grey-color (list 180 180 180 255))
 (define light-grey-color (list 220 220 220 255))
 (define white-smoke-color (list 245 245 245))
 (define floral-white-color (list 255 250 240))
