@@ -54,7 +54,6 @@
 (require "node-graphview.scm") ;; generate-link-name
 (require "hypedyn-undo.scm") ;; hd-postedit, hd-begin-update, hd-end-update
 (require "editlink.scm") ;; remove-link-display, get-edited-linkID
-(require "editor-pane.scm") ; overrides hypertextpane
 
 ; export
 (module-export update-nodeeditor-frame-title
@@ -134,7 +133,7 @@
         (enable-link-buttons #f)
         (enable-newlink-button #f)
 
-        ; if this is the start node, disable "set start node" button and menu item
+        ; if this is the start node or an anywhere node, disable "set start node" button and menu item
         (if (= in-nodeID (get-start-node))
             (begin
               (set-button nodeeditor-toolbar-button-setstartnode #f)
@@ -201,7 +200,6 @@
         (content (ask node-editor 'gettext))
         (dirty (nodeeditor-dirty?))
         )
-    
 ;    (display "content len in nodeeditor-save ")(display (string-length content))(newline)
 ;    (display "content during nodeeditor-save ")(display content)(newline)
       (if (and ;dirty 
@@ -441,31 +439,30 @@
   ; create editor (with links)
   ; pass in callback for when a link is selected and deleted, to enable the new
   ; link button, and the method for getting links from the associated pattern
-  (let ((editor-proc (if (new-link-style?) make-editor-pane make-hypertextpane)))
-    (set! node-editor
-          (editor-proc 400 300
-                       (lambda (linkID)
-                         (if linkID
-                             (ask link-list 'select-link linkID)
-                             (begin
-                               ; handle deselecting a link
-                               (ask link-list 'deselect-link)
+  (set! node-editor
+        (make-hypertextpane 400 300
+                            (lambda (linkID)
+                              (if linkID
+                                  (ask link-list 'select-link linkID)
+                                  (begin
+                                        ; handle deselecting a link
+                                    (ask link-list 'deselect-link)
 
-                               ; forget selected link
-                               (set! selected-linkID '())
+                                        ; forget selected link
+                                    (set! selected-linkID '())
 
-                               ; disable delete link buttons and menu items
-                               (enable-link-buttons #f)
-                               )))
-                       (lambda (del-linkID)
-                         (delete-link del-linkID
-                                      #f
-                                      node-graph
-                                      update-node-style-callback))
-                       enable-newlink-button
-                       'content
-                       'links
-                       'nodes)))
+                                    ; disable delete link buttons and menu items
+                                    (enable-link-buttons #f)
+                                    )))
+                            (lambda (del-linkID)
+                              (delete-link del-linkID
+                                           #f
+                                           node-graph
+                                           update-node-style-callback))
+                            enable-newlink-button
+                            'content
+                            'links
+                            'nodes))
   (ask node-editor 'init)
   (ask node-editor 'set-update-dirty-callback update-dirty-state)
   (ask node-editor 'set-postedit-proc! hd-postedit)
