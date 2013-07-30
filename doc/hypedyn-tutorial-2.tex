@@ -22,10 +22,9 @@ In this tutorial, we will introduce some new features to HypeDyn:
   \item links with \textit{multiple rules}, which allows for different actions
   to be taken depending on which conditions are satisfied;
   \item \textit{conditional text}, which can be displayed \textit{instead of}
-  the original text in a link; and
-  \item \textit{anywhere nodes}, which are nodes that don't form part of the
-  main hypertext, but are automatically added as links at the bottom of all regular
-  nodes.
+  the original text in a link; and \item \textit{anywhere nodes}, which are
+  nodes that can be linked to from any other nodes in the story based on
+  conditions.
 \end{itemize}
 
 In this tutorial, we will be creating a variation of the ``Little Red Riding
@@ -36,22 +35,16 @@ also cause some of the text in the story to change. We will also add a
 ``summary'' node, reachable from all other nodes, which shows an up-to-date
 summary of the story so far.
 
-% \textit{Note: For users of Ariadne, you will find most of the functionality of
-% HypeDyn familiar. You may, however, want to quickly run through tutorial 1, as
-% this tutorial assumes that you have a HypeDyn version of the original Little
-% Red Riding Hood story.}
-
 \begin{figure}[h]
   \centering
-  \includegraphics[width=10cm]{images/hypedyn-tutorial-2-figure-1}
+  \includegraphics[width=11cm]{images/hypedyn-tutorial-2-figure-1}
   \caption{\textit{The completed ``Little Red Riding Hood'' story.}}
   \label{fig:tut2:completed}
 \end{figure} 
 
 The nodes and links in the final story are shown in Figure \ref{fig:tut2:completed}.
 
-\textit{Note:  HypeDyn is a work-in-progress, so there are some features that are still
-not completed, and there may be bugs. If you encounter any errors, please
+\textit{Note:  HypeDyn is a work-in-progress. If you encounter any errors, please
 report them as bugs on our Launchpad site: \url{https://launchpad.net/hypedyn}.}
 
 \section{Getting started}
@@ -448,9 +441,11 @@ node.
 
 \begin{enumerate}
   \item Click on ``New anywhere node'', and name the new node ``summary''.
-  Notice that the new node appears in the lower half of the map view - this is
-  where ``anywhere'' nodes, which aren't part of the main hypertext, will
-  appear.
+  Notice that the new node is a darker grey that regular nodes. The difference
+  in colour is used to indicate anywhere nodes. Note that an anywhere node is 
+  almost the same as a regular node, with the exception of a special action that
+  is added automatically to the ``node rules''. Removing this action turns an
+  anywhere node into a regular node. We will discuss node rules in Tutorial 3.
 
   \item Edit the node by selecting it and clicking on ``Edit node'', as with a
   regular node.
@@ -492,10 +487,6 @@ using conditional text, as shown in the previous section.
   to \textit{remove} the text. Add an ``update text using'' action, and leave
   the text blank. This will blank out the link text when this rule's conditions
   are met.
-  
-  Notice that for an anywhere node, there is no ``follow link to'' action. This
-  is because anywhere nodes are considered to be separate from the main space
-  of the story -- they cannot have links either to or from them.
   
   \item Now we want to set the conditions for when the text is blanked. Since we
   want the first line to show after the reader has chosen Red's character, we
@@ -543,20 +534,14 @@ whether she is naive or street-smart. You could also customize the summary of
 the story depending on which personality the reader chose. One way of adding
 these enhancements can be found in \textsc{LRRH3.dyn}.
 
-There is also one other feature that has been added to HypeDyn: conditions can be
-set, not just for ``visited'' or ``not visited'' nodes, but also for ``previous''
-nodes, meaning you can specify what node the reader should just have come from.
-This can be used to, for example, set the reader down a specific path based on
-their earlier decisions.
-
 \section{Conclusion}
 
 In this tutorial, we have created a simple hypertext fiction which includes a
-choice for the reader regarding Red Riding Hood's character. We have seen how
-to make use of multiple rules and conditional text to adapt the story to the
-reader's choice. This funcitonality provides the basis for moving from stories
-which make use of predetermined content and branches, towards more procedural
-hypertext. In tutorial 3, we explore more extensive use of procedural
+choice for the reader regarding Red Riding Hood's character. We have seen how to
+make use of multiple rules and conditional text to adapt the story to the
+reader's choice. This funcitonality provides the basis for moving away from
+stories which make use of predetermined content and branches, towards more
+procedural hypertext. In tutorial 3, we explore more extensive use of procedural
 hypertext, introducing ``node rules'' and ``facts''.
 
 \end{document}
