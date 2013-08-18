@@ -321,6 +321,7 @@
   
   ; toolbar buttons
   (set! button-panel (make-toolbar "Control")) ; panel for button
+  (set-toolbar-floatable button-panel #f)
   (set! button-run (make-button "Run")) ; run button
   (set! button-step (make-button "Step")) ; step button
   (set! button-stop (make-button "Stop")) ; stop button

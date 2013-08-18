@@ -232,9 +232,11 @@
         (lists-panel-lower (make-panel))
         
         ; the node list
+        (n-list-label (make-label))
         (n-list (make-node-listview do-selectnode-list nodelist-onmouse))
         
         ; the fact list
+        (a-list-label (make-label))
         (a-list (make-fact-listview do-selectfact-list factlist-onmouse))
         
         ; panel to hold graphs
@@ -479,6 +481,8 @@
         (add-splitpane-component f-panel lists-panel-upper #t))
         
     ; make a list for nodes
+    (set-text n-list-label "Nodes")
+    (add-component lists-panel-upper n-list-label)
     (ask n-list 'init)
     (add-component lists-panel-upper (ask n-list 'get-component))
 
@@ -488,6 +492,8 @@
     (add-splitpane-component lists-panel lists-panel-lower #f)
     
     ; make a list for facts
+    (set-text a-list-label "Facts")
+    (add-component lists-panel-lower a-list-label)
     (ask a-list 'init)
     (add-component lists-panel-lower (ask a-list 'get-component))
 

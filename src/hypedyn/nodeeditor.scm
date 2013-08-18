@@ -29,6 +29,8 @@
 (require "../kawa/ui/events.scm")
 (require "../kawa/ui/dialog.scm")
 (require "../kawa/ui/panel.scm")
+(require "../kawa/ui/label.scm")
+(require "../kawa/ui/text.scm")
 (require "../kawa/ui/scrollpane.scm")
 (require "../kawa/ui/button.scm")
 (require "../kawa/ui/splitpane.scm")
@@ -254,6 +256,7 @@
 (define nodeeditor-toolbar-button-editnoderule #f)
 (define nodeeditor-frame-panel #f)
 (define nodeeditor-lists-panel #f)
+(define link-list-label #f)
 (define link-list #f)
 (define node-editor #f)
 (define node-highlighter #f)
@@ -339,7 +342,7 @@
   (set-menuitem-component m-edit1-setstartnode #f)
 
   ; set edit rule menu item
-  (set! m-edit1-editnoderule (make-menu-item "Edit node rule"))
+  (set! m-edit1-editnoderule (make-menu-item "Edit node rules"))
   (if (show-noderule?)
       (begin
         (add-component m-edit1 m-edit1-editnoderule)
@@ -403,7 +406,7 @@
                       (make-actionlistener (lambda (source) (dosetstartnode (get-edited-nodeID) populate-nodes-list-callback))))
 
   ;; button to edit node rule
-  (set! nodeeditor-toolbar-button-editnoderule (make-button "Edit node rule"))
+  (set! nodeeditor-toolbar-button-editnoderule (make-button "Edit node rules"))
   (if (show-noderule?)
       (begin
         (add-component nodeeditor-toolbar-panel nodeeditor-toolbar-button-editnoderule)
@@ -430,6 +433,9 @@
   (add-splitpane-component nodeeditor-frame-panel nodeeditor-lists-panel #t)
 
   ;; make a list for links
+  (set! link-list-label (make-label))
+  (set-text link-list-label "Links")
+  (add-component nodeeditor-lists-panel link-list-label)
   (set! link-list (make-link-listview do-selectlink 
                                       (lambda (e)
                                         (linklist-onmouse e))))
