@@ -10,10 +10,10 @@
     <ROW Property="ARPPRODUCTICON" Value="hypedyn.exe" Type="8"/>
     <ROW Property="ARPURLINFOABOUT" Value="http://www.partechgroup.org/hypedyn"/>
     <ROW Property="Manufacturer" Value="NUS" ValueLocId="*"/>
-    <ROW Property="ProductCode" Value="1033:{638D25BF-5148-4F19-A84B-4892445E17D1} " Type="16"/>
+    <ROW Property="ProductCode" Value="1033:{682A855A-C318-418C-9164-D418FAF20338} " Type="16"/>
     <ROW Property="ProductLanguage" Value="1033"/>
     <ROW Property="ProductName" Value="HypeDyn" ValueLocId="*"/>
-    <ROW Property="ProductVersion" Value="2.3.0.326" Type="32"/>
+    <ROW Property="ProductVersion" Value="2.3.0.328" Type="32"/>
     <ROW Property="SecureCustomProperties" Value="OLDPRODUCTS;AI_NEWERPRODUCTFOUND"/>
     <ROW Property="UpgradeCode" Value="{4A49B042-B355-40B9-8DA5-F9E45E2ED511}"/>
   </COMPONENT>
