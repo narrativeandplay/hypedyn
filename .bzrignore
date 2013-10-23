@@ -18,3 +18,5 @@ autosave
 tmp
 *.synctex.gz
 _notes
+*.bbl
+*.blg

@@ -1273,7 +1273,8 @@
                  ((set-value!)
                   (string-append "["
                                  (to-string (list-ref expr 1)) ", "
-                                 (quote-nest (list-ref expr 2)) "]"))
+                                 (quote-nest (escape-special (list-ref expr 2))) ;; remember to escape the text
+                                 "]"))
                  ((add-anywhere-link)
                   (string-append "[" (to-string (list-ref expr 1)) "]")) ;; TODO add anywhere link not implemented
                  ((replace-link-text)
