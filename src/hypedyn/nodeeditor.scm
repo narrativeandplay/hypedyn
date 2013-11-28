@@ -310,23 +310,23 @@
         (add-menu-action m-edit1 redo-action)
         (add-component m-edit1 (make-separator))))
   
-;;  ; default edit actions
-;;  (set! m-edit1-cut (make-cut-menuitem cut-text))
-;;  (add-component m-edit1 m-edit1-cut)
-;;  
-;;  ; working on this one - alex
-;;  (define custom-copy-action (make-custom-copy-action copy-text #f))
-;;  (set! m-edit1-copy (make-menu-item-from-action
-;;                      custom-copy-action))
-;;  (set-menu-item-text m-edit1-copy "Copy")
-;;  (set-menu-item-mnemonic m-edit1-copy #\C)
-;;  (set-menu-item-accelerator m-edit1-copy #\C)
-;;  ; need to add to the keymapping in editor as well
-;;  (add-component m-edit1 m-edit1-copy)
-;;  
-;;  (set! m-edit1-paste (make-paste-menuitem paste-text-pre paste-text-post))
-;;  (add-component m-edit1 m-edit1-paste)
-;;  (add-component m-edit1 (make-separator))
+  ; default edit actions
+  (set! m-edit1-cut (make-cut-menuitem cut-text))
+  (add-component m-edit1 m-edit1-cut)
+  
+  ; working on this one - alex
+  (define custom-copy-action (make-custom-copy-action copy-text #f))
+  (set! m-edit1-copy (make-menu-item-from-action
+                      custom-copy-action))
+  (set-menu-item-text m-edit1-copy "Copy")
+  (set-menu-item-mnemonic m-edit1-copy #\C)
+  (set-menu-item-accelerator m-edit1-copy #\C)
+  ; need to add to the keymapping in editor as well
+  (add-component m-edit1 m-edit1-copy)
+  
+  (set! m-edit1-paste (make-paste-menuitem paste-text-pre paste-text-post))
+  (add-component m-edit1 m-edit1-paste)
+  (add-component m-edit1 (make-separator))
   
   (set! m-link (make-menu "Link"))
   (add-component m-bar1 m-link)
@@ -977,8 +977,8 @@
   (map (lambda (linkID)
          (let* ((link-obj (get 'links linkID))
                 (name (ask link-obj 'name))
-                (start-index (ask link-obj 'start-index))
-                (end-index (ask link-obj 'end-index))
+                (start-index (- (ask link-obj 'start-index) selstart))
+                (end-index (- (ask link-obj 'end-index) selstart))
                 (rule-lst (ask link-obj 'rule-lst)))
            ; copy one link
            ; note: don't want to actually create yet, instead get the s-expr - use make-link
@@ -1040,9 +1040,14 @@
          (set! copied-links (append copied-links (list (list copied-link copied-rules))))))
        contained-links))
 
+(define paste-selstart 0)
+
 (define (paste-text-pre e)
   (format #t "paste text pre~%~!")
   
+  ; remember start of selection before pasting
+  (set! paste-selstart (ask node-editor 'getselstart))  
+
   ; return true so that normal paste action is executed afterwards
   #t)
   
@@ -1055,7 +1060,7 @@
   ; still need to shift the link location: when copy, subtract the selstart; when paste, add the selstart
   ; still need to update display (list and formatting)
   ; haven't tested undo...
-
+  
   (let-values (((max-x max-y max-anywhere-x max-anywhere-y)
                 (get-max-node-positions)))
     (let-values (((dup-offset-ID dup-offset-x dup-offset-anywhere-x)
@@ -1091,7 +1096,7 @@
                         (map (lambda (copied-action)
                                ; paste the actions
                                (format #t "pasting action: ~a~%~!" (ask copied-action 'to-save-sexpr))
-                               (paste-action copied-action (+ dup-offset-ID (ask copied-action 'ID)) new-ruleID dup-offset-ID))
+                               (paste-action copied-action (+ dup-offset-ID (ask copied-action 'ID)) new-ruleID new-linkID))
                              copied-actions)
                              
                         ;; update graph view 
@@ -1103,8 +1108,8 @@
 
 (define (paste-link link-obj linkID parentID)
   (let* ((name (ask link-obj 'name))
-         (start-index (ask link-obj 'start-index))
-         (end-index (ask link-obj 'end-index)))
+         (start-index (+ paste-selstart (ask link-obj 'start-index)))
+         (end-index (+ paste-selstart (ask link-obj 'end-index))))
     (create-link name parentID -1
                  start-index end-index
                  #f -1 #f -1
@@ -1133,23 +1138,23 @@
                              numfact-args: numfact-args)
     ))
 
-(define (paste-action action-obj actionID parentID dup-offset-ID)
+(define (paste-action action-obj actionID parentID new-linkID)
   (let* ((name (ask action-obj 'name))
          (type (ask action-obj 'type))
          (expr (ask action-obj 'expr)))
     
-    ;; replace text action should point to new duplicated link
+    ;; replace text action should point to newly pasted link
     (if (equal? (car expr) 'replace-link-text)
         (begin
-          (set! expr (list-replace expr 3 (+ (list-ref expr 3) dup-offset-ID)))
+          (set! expr (list-replace expr 3 new-linkID))
           ))
          
-    ;; add anywhere link action should point to new duplicated node - not sure if this will be a problem or not - alex
+    ;; add anywhere link action should point to current node
     (if (equal? (car expr) 'add-anywhere-link)
         (begin
-          (set! expr (list-replace expr 1 (+ (list-ref expr 1) dup-offset-ID)))
+          (set! expr (list-replace expr 1 edited-nodeID))
           ))
-;;         
+         
     (create-action name type expr parentID actionID)
     ))
 
