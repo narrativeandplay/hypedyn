@@ -311,22 +311,24 @@
         (add-component m-edit1 (make-separator))))
   
   ; default edit actions
-  (set! m-edit1-cut (make-cut-menuitem cut-text))
-  (add-component m-edit1 m-edit1-cut)
+;;  (set! m-edit1-cut (make-cut-menuitem cut-text))
+;;  (add-component m-edit1 m-edit1-cut)
   
   ; working on this one - alex
-  (define custom-copy-action (make-custom-copy-action copy-text #f))
-  (set! m-edit1-copy (make-menu-item-from-action
-                      custom-copy-action))
-  (set-menu-item-text m-edit1-copy "Copy")
-  (set-menu-item-mnemonic m-edit1-copy #\C)
-  (set-menu-item-accelerator m-edit1-copy #\C)
-  ; need to add to the keymapping in editor as well
-  (add-component m-edit1 m-edit1-copy)
+;;  (define custom-copy-action (make-custom-copy-action copy-text #f))
+;;  (set! m-edit1-copy (make-menu-item-from-action
+;;                      custom-copy-action))
+;;  (set-menu-item-text m-edit1-copy "Copy")
+;;  (set-menu-item-mnemonic m-edit1-copy #\C)
+;;  (set-menu-item-accelerator m-edit1-copy #\C)
+;;  ; need to add to the keymapping in editor as well
+;;  (add-component m-edit1 m-edit1-copy)
   
-  (set! m-edit1-paste (make-paste-menuitem paste-text-pre paste-text-post))
-  (add-component m-edit1 m-edit1-paste)
-  (add-component m-edit1 (make-separator))
+;;  (set! m-edit1-copy (make-copy-menuitem copy-text #f))
+;;  (add-component m-edit1 m-edit1-copy)
+;;  (set! m-edit1-paste (make-paste-menuitem paste-text-pre paste-text-post))
+;;  (add-component m-edit1 m-edit1-paste)
+;;  (add-component m-edit1 (make-separator))
   
   (set! m-link (make-menu "Link"))
   (add-component m-bar1 m-link)
@@ -366,6 +368,14 @@
                                                                        update-node-style-callback))))
   (set-menu-item-accelerator m-edit1-dellink #\D)
   (set-menuitem-component m-edit1-dellink #f)
+  
+  (add-component m-link (make-separator))
+  (set! m-edit1-copy (make-copy-menuitem copy-text #f))
+  (set-menu-item-text m-edit1-copy "Copy link")
+  (add-component m-link m-edit1-copy)
+  (set! m-edit1-paste (make-paste-menuitem paste-text-pre paste-text-post))
+  (add-component m-link m-edit1-paste)
+  (set-menu-item-text m-edit1-paste "Paste link")
 
   ; set start node menu item
   (set! m-edit1-setstartnode (make-menu-item "Set start node"))
@@ -1103,7 +1113,16 @@
                         (add-follow-link-rule-display new-ruleID)
                         (add-show-popup-rule-display new-ruleID)
                         ))
-                    copied-rules)))
+                    copied-rules)
+                                       
+               ; add link to editor
+               (define new-link (get 'links new-linkID))
+               (ask node-editor 'addlink new-link)
+
+               ; add to link list
+               (ask link-list 'add-link new-linkID (ask new-link 'name))
+               ))
+           
            copied-links))))
 
 (define (paste-link link-obj linkID parentID)
