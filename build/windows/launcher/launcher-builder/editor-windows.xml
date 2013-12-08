@@ -20,12 +20,12 @@
     <jdkPreference>preferJre</jdkPreference>
   </jre>
   <versionInfo>
-    <fileVersion>2.3.0.326</fileVersion>
-    <txtFileVersion>2.3b rev 326 15 August 2013</txtFileVersion>
+    <fileVersion>2.3.0.333</fileVersion>
+    <txtFileVersion>2.3b rev 333 28 November 2013</txtFileVersion>
     <fileDescription>HypeDyn version 2.3b</fileDescription>
     <copyright>2008-2013 National University of Singapore</copyright>
-    <productVersion>2.3.0.326</productVersion>
-    <txtProductVersion>2.3b rev 326 15 August 2013</txtProductVersion>
+    <productVersion>2.3.0.333</productVersion>
+    <txtProductVersion>2.3b rev 333 28 November 2013</txtProductVersion>
     <productName>HypeDyn</productName>
     <companyName>National University of Singapore</companyName>
     <internalName>HypeDyn</internalName>
