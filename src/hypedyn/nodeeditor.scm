@@ -46,6 +46,7 @@
 (require "../common/evaluator.scm")
 (require "../common/window-menu.scm")
 (require "../common/main-ui.scm")
+(require "../common/list-helpers.scm") ;list-replace
 (require "config-options.scm")
 (require "datastructure.scm")
 (require "hteditor.scm")
@@ -240,6 +241,10 @@
 (define nodeeditor-frame #!null)
 (define m-bar1 #f)
 (define m-edit1 #f)
+(define m-edit1-cut #f)
+(define m-edit1-copy #f)
+(define m-edit1-paste #f)
+(define m-link #f)
 (define m-edit1-newlink #f)
 (define m-edit1-editlink #f)
 (define m-edit1-renamelink #f)
@@ -298,9 +303,39 @@
   (set! m-edit1 (make-menu "Edit"))
   (add-component m-bar1 m-edit1)
 
+  ; undo menu items
+  (if (is-undo-enabled?)
+      (begin
+        (add-menu-action m-edit1 undo-action)
+        (add-menu-action m-edit1 redo-action)
+        (add-component m-edit1 (make-separator))))
+  
+  ; default edit actions
+;;  (set! m-edit1-cut (make-cut-menuitem cut-text))
+;;  (add-component m-edit1 m-edit1-cut)
+  
+  ; working on this one - alex
+;;  (define custom-copy-action (make-custom-copy-action copy-text #f))
+;;  (set! m-edit1-copy (make-menu-item-from-action
+;;                      custom-copy-action))
+;;  (set-menu-item-text m-edit1-copy "Copy")
+;;  (set-menu-item-mnemonic m-edit1-copy #\C)
+;;  (set-menu-item-accelerator m-edit1-copy #\C)
+;;  ; need to add to the keymapping in editor as well
+;;  (add-component m-edit1 m-edit1-copy)
+  
+;;  (set! m-edit1-copy (make-copy-menuitem copy-text #f))
+;;  (add-component m-edit1 m-edit1-copy)
+;;  (set! m-edit1-paste (make-paste-menuitem paste-text-pre paste-text-post))
+;;  (add-component m-edit1 m-edit1-paste)
+;;  (add-component m-edit1 (make-separator))
+  
+  (set! m-link (make-menu "Link"))
+  (add-component m-bar1 m-link)
+
   ; new link menu item
   (set! m-edit1-newlink (make-menu-item "New link"))
-  (add-component m-edit1 m-edit1-newlink)
+  (add-component m-link m-edit1-newlink)
   (add-actionlistener m-edit1-newlink
                       (make-actionlistener 
                        (lambda (source) (donewlink node-graph update-node-style-callback))))
@@ -309,7 +344,7 @@
 
   ; edit link menu item
   (set! m-edit1-editlink (make-menu-item "Edit link"))
-  (add-component m-edit1 m-edit1-editlink)
+  (add-component m-link m-edit1-editlink)
   (add-actionlistener m-edit1-editlink
                       (make-actionlistener (lambda (source)
                                              (rmgr-edit 'link selected-linkID)
@@ -319,7 +354,7 @@
 
   ; rename link menu item
   (set! m-edit1-renamelink (make-menu-item "Rename link"))
-  (add-component m-edit1 m-edit1-renamelink)
+  (add-component m-link m-edit1-renamelink)
   (add-actionlistener m-edit1-renamelink
                       (make-actionlistener (lambda (source) (dorenamelink rename-line-callback))))
   (set-menu-item-accelerator m-edit1-renamelink #\R)
@@ -327,12 +362,20 @@
 
   ; delete link menu item
   (set! m-edit1-dellink (make-menu-item "Delete link"))
-  (add-component m-edit1 m-edit1-dellink)
+  (add-component m-link m-edit1-dellink)
   (add-actionlistener m-edit1-dellink
                       (make-actionlistener (lambda (source) (dodellink node-graph
                                                                        update-node-style-callback))))
   (set-menu-item-accelerator m-edit1-dellink #\D)
   (set-menuitem-component m-edit1-dellink #f)
+  
+  (add-component m-link (make-separator))
+  (set! m-edit1-copy (make-copy-menuitem copy-text #f))
+  (set-menu-item-text m-edit1-copy "Copy link")
+  (add-component m-link m-edit1-copy)
+  (set! m-edit1-paste (make-paste-menuitem paste-text-pre paste-text-post))
+  (add-component m-link m-edit1-paste)
+  (set-menu-item-text m-edit1-paste "Paste link")
 
   ; set start node menu item
   (set! m-edit1-setstartnode (make-menu-item "Set start node"))
@@ -358,11 +401,6 @@
   
   ; window menu
   (add-component m-bar1 (add-window-menu nodeeditor-frame))
-  
-  (if (is-undo-enabled?)
-      (begin
-        (add-menu-action m-edit1 undo-action)
-        (add-menu-action m-edit1 redo-action)))
   
   ;; Add a horizontal panel to the frame, with centering, to hold toolbar buttons
   (set! nodeeditor-toolbar-panel (make-toolbar "Toolbar"))
@@ -478,6 +516,22 @@
   (add-splitpane-component nodeeditor-frame-panel
                            (make-scrollpane
                             (ask node-editor 'getcomponent)) #f)
+  
+  ; working on keymapping, not sure why its not working... - alex
+;;  (define the-text-component (ask node-editor 'getcomponent))
+;;  (define the-keymap
+;;    (invoke (as <javax.swing.text.JTextComponent> the-text-component)
+;;            'addKeymap "mykeymap"
+;;            (invoke (as <javax.swing.text.JTextComponent> the-text-component)
+;;                    'getKeymap)))
+;;  (invoke (as <javax.swing.text.Keymap> the-keymap)
+;;          'addActionForKeyStroke
+;;          (<javax.swing.KeyStroke>:getKeyStroke (as <int> (char->integer #\C))
+;;                                                (invoke (<java.awt.Toolkit>:getDefaultToolkit)
+;;                                                        'getMenuShortcutKeyMask))
+;;          (as <javax.swing.AbstractAction> custom-copy-action))
+          
+
   
   ; tell the editor about our undo manager
   (ask node-editor 'set-undo-manager! undo-manager undo-action redo-action nodeeditor-edit)
@@ -889,3 +943,239 @@
   (display "node editor set contents ")(newline)
   (ask node-editor 'clear-content!)
   (ask node-editor 'set-node! selected-node))
+
+
+;;
+;; handle cut, copy and paste of editor content
+;; 
+
+(define (cut-text e)
+  (format #t "cut text~%~!")
+  (copy-with-links)
+  
+  ; return true so that normal cut action is executed afterwards
+  #t)
+
+(define (copy-text e)
+  (format #t "copy text~%~!")
+  (copy-with-links)
+  
+  ; return true so that normal copy action is executed afterwards
+  #t)
+  
+(define copied-text #f) ; plain text
+(define copied-links '()) ; ((link (rule (conditions ...) (actions ...)) ...) ...)
+  
+  ; need to 1) check if there are any links in the text, and 
+  ; 2) store those links so they can be duplicated/pasted
+  
+  ; strategy for duplicating:
+  ; 1) make a copy but don't add to data structure
+  ; 2) on paste, duplicate then shift the copy
+  
+(define (copy-with-links)
+  ; remember copied text
+  (set! copied-text (ask node-editor 'getselectedtext))
+  (format #t "copied text: ~a~%~!" copied-text)
+  
+  ; copy all the links
+  (define selstart (ask node-editor 'getselstart)) 
+  (define selend (ask node-editor 'getselend)) 
+  (define contained-links (ask node-editor 'get-contained-links selstart selend))
+  (format #t "contained links: ~a~%~!" contained-links)
+  (set! copied-links '())
+  (map (lambda (linkID)
+         (let* ((link-obj (get 'links linkID))
+                (name (ask link-obj 'name))
+                (start-index (- (ask link-obj 'start-index) selstart))
+                (end-index (- (ask link-obj 'end-index) selstart))
+                (rule-lst (ask link-obj 'rule-lst)))
+           ; copy one link
+           ; note: don't want to actually create yet, instead get the s-expr - use make-link
+           (define copied-link
+             (make-link name -1 -1 start-index end-index
+                        #f -1 #f -1
+                        "" linkID))
+           (format #t "copied link: ~a ~a~%~!" linkID (ask copied-link 'to-save-sexpr))
+           
+           ;; copy the rules on this link
+           (define copied-rules '())
+           (map (lambda (ruleID)
+                  (let* ((rule-obj (get 'rules ruleID))
+                         (name (ask rule-obj 'name))
+                         (type (ask rule-obj 'type))
+                         (and-or (ask rule-obj 'and-or))
+                         (negate? (ask rule-obj 'negate?))
+                         (fall-through? (ask rule-obj 'fall-through?)))
+                    ; copy this rule
+                    (define copied-rule
+                      (make-rule3 name type and-or negate? linkID
+                                  fixedID: ruleID
+                                  fall-through?: fall-through?))
+                    (format #t "copied rule: ~a, sexpr: ~a~%~!" ruleID (ask copied-rule 'to-save-sexpr))
+                    
+                    ;; duplicate the conditions 
+                    (define copied-conditions '())
+                    (map (lambda (condID)
+                           (let* ((cond-obj (get 'conditions condID))
+                                  (name (ask cond-obj 'name))
+                                  (type (ask cond-obj 'type))
+                                  (targetID (ask cond-obj 'targetID))
+                                  (operator (ask cond-obj 'operator))
+                                  (numfact-args (ask cond-obj 'numfact-args)))
+                             (define copied-condition
+                               (make-condition2 name type targetID operator ruleID fixedID: condID
+                                                numfact-args: numfact-args))
+                             (format #t "copied condition: ~a, sexpr: ~a~%~!" condID (ask copied-condition 'to-save-sexpr))
+                             (set! copied-conditions (append copied-conditions (list copied-condition)))))
+                         (ask rule-obj 'conditions))
+                    
+                    ;; duplicate the actions 
+                    (define copied-actions '())
+                    (map (lambda (actionID)
+                           (let* ((action-obj (get 'actions actionID))
+                                  (name (ask action-obj 'name))
+                                  (type (ask action-obj 'type))
+                                  (expr (ask action-obj 'expr)))
+
+                             (define copied-action
+                               (make-action name type expr ruleID actionID))
+                             (format #t "copied action: ~a, sexpr: ~a~%~!" actionID (ask copied-action 'to-save-sexpr))
+                             (set! copied-actions (append copied-actions (list copied-action))))) 
+                         (ask rule-obj 'actions))
+                    
+                    (set! copied-rules (append copied-rules (list (list copied-rule copied-conditions copied-actions))))))
+                rule-lst)
+         
+         (set! copied-links (append copied-links (list (list copied-link copied-rules))))))
+       contained-links))
+
+(define paste-selstart 0)
+
+(define (paste-text-pre e)
+  (format #t "paste text pre~%~!")
+  
+  ; remember start of selection before pasting
+  (set! paste-selstart (ask node-editor 'getselstart))  
+
+  ; return true so that normal paste action is executed afterwards
+  #t)
+  
+
+(define (paste-text-post e)
+  (format #t "paste text post~%~!")
+
+  ; need to check if there are any stored links and duplicate them
+  ; note: need to do this AFTER the default paste action!
+  ; still need to shift the link location: when copy, subtract the selstart; when paste, add the selstart
+  ; still need to update display (list and formatting)
+  ; haven't tested undo...
+  
+  (let-values (((max-x max-y max-anywhere-x max-anywhere-y)
+                (get-max-node-positions)))
+    (let-values (((dup-offset-ID dup-offset-x dup-offset-anywhere-x)
+                  (get-duplicate-offsets max-x max-y
+                                         max-anywhere-x max-anywhere-y)))
+      ; run through the links
+      (map (lambda (c)
+             (let ((copied-link (car c))
+                   (copied-rules (cadr c)))
+               ; paste the link
+               (define new-linkID (+ dup-offset-ID (ask copied-link 'ID)))
+               (format #t "pasting link: ~a~%~!" (ask copied-link 'to-save-sexpr))
+               (paste-link copied-link new-linkID edited-nodeID) 
+
+               ; run through the rules
+               (map (lambda (r)
+                      (let ((copied-rule (car r))
+                            (copied-conditions (cadr r))
+                            (copied-actions (caddr r)))
+                        ; paste the rule
+                        (define new-ruleID (+ dup-offset-ID (ask copied-rule 'ID)))
+                        (format #t "pasting rule: ~a~%~!" (ask copied-rule 'to-save-sexpr))
+                        (paste-rule copied-rule new-ruleID new-linkID)
+
+                        ; run through the conditions
+                        (map (lambda (copied-condition)
+                               ; paste the condition
+                               (format #t "pasting condition: ~a~%~!" (ask copied-condition 'to-save-sexpr))
+                               (paste-condition copied-condition (+ dup-offset-ID (ask copied-condition 'ID)) new-ruleID))
+                             copied-conditions)
+
+                        ; run through the actions
+                        (map (lambda (copied-action)
+                               ; paste the actions
+                               (format #t "pasting action: ~a~%~!" (ask copied-action 'to-save-sexpr))
+                               (paste-action copied-action (+ dup-offset-ID (ask copied-action 'ID)) new-ruleID new-linkID))
+                             copied-actions)
+                             
+                        ;; update graph view 
+                        (add-follow-link-rule-display new-ruleID)
+                        (add-show-popup-rule-display new-ruleID)
+                        ))
+                    copied-rules)
+                                       
+               ; add link to editor
+               (define new-link (get 'links new-linkID))
+               (ask node-editor 'addlink new-link)
+
+               ; add to link list
+               (ask link-list 'add-link new-linkID (ask new-link 'name))
+               ))
+           
+           copied-links))))
+
+(define (paste-link link-obj linkID parentID)
+  (let* ((name (ask link-obj 'name))
+         (start-index (+ paste-selstart (ask link-obj 'start-index)))
+         (end-index (+ paste-selstart (ask link-obj 'end-index))))
+    (create-link name parentID -1
+                 start-index end-index
+                 #f -1 #f -1
+                 "" #f linkID)))
+
+(define (paste-rule rule-obj ruleID parentID)
+  (let* ((name (ask rule-obj 'name))
+         (type (ask rule-obj 'type))
+         (and-or (ask rule-obj 'and-or))
+         (negate? (ask rule-obj 'negate?))
+         (fall-through? (ask rule-obj 'fall-through?)))
+
+    (create-typed-rule3 name type and-or negate? parentID 
+                        fixedID: ruleID 
+                        fall-through?: fall-through?)
+))
+
+(define (paste-condition cond-obj condID parentID)
+  (let* ((name (ask cond-obj 'name))
+         (type (ask cond-obj 'type))
+         (targetID (ask cond-obj 'targetID))
+         (operator (ask cond-obj 'operator))
+         (numfact-args (ask cond-obj 'numfact-args)))
+    (create-typed-condition2 name type targetID operator parentID 
+                             fixedID: condID
+                             numfact-args: numfact-args)
+    ))
+
+(define (paste-action action-obj actionID parentID new-linkID)
+  (let* ((name (ask action-obj 'name))
+         (type (ask action-obj 'type))
+         (expr (ask action-obj 'expr)))
+    
+    ;; replace text action should point to newly pasted link
+    (if (equal? (car expr) 'replace-link-text)
+        (begin
+          (set! expr (list-replace expr 3 new-linkID))
+          ))
+         
+    ;; add anywhere link action should point to current node
+    (if (equal? (car expr) 'add-anywhere-link)
+        (begin
+          (set! expr (list-replace expr 1 edited-nodeID))
+          ))
+         
+    (create-action name type expr parentID actionID)
+    ))
+
+
+

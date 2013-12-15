@@ -10,10 +10,10 @@
     <ROW Property="ARPPRODUCTICON" Value="hypedyn.exe" Type="8"/>
     <ROW Property="ARPURLINFOABOUT" Value="http://www.partechgroup.org/hypedyn"/>
     <ROW Property="Manufacturer" Value="NUS" ValueLocId="*"/>
-    <ROW Property="ProductCode" Value="1033:{682A855A-C318-418C-9164-D418FAF20338} " Type="16"/>
+    <ROW Property="ProductCode" Value="1033:{9B6AD1D1-D278-4DDB-A746-8C0272BD1379} " Type="16"/>
     <ROW Property="ProductLanguage" Value="1033"/>
     <ROW Property="ProductName" Value="HypeDyn" ValueLocId="*"/>
-    <ROW Property="ProductVersion" Value="2.3.0.328" Type="32"/>
+    <ROW Property="ProductVersion" Value="2.3.0.333" Type="32"/>
     <ROW Property="SecureCustomProperties" Value="OLDPRODUCTS;AI_NEWERPRODUCTFOUND"/>
     <ROW Property="UpgradeCode" Value="{4A49B042-B355-40B9-8DA5-F9E45E2ED511}"/>
   </COMPONENT>
@@ -37,7 +37,7 @@
     <ROW Component="README.txt" ComponentId="{72A9936E-BBBC-4279-AAEC-CB8B4D1F5A10}" Directory_="APPDIR" Attributes="0" KeyPath="README.txt" Type="0"/>
     <ROW Component="SHORTCUTDIR" ComponentId="{7C14D11E-7F0B-401E-9890-6AFEE198C659}" Directory_="SHORTCUTDIR" Attributes="0"/>
     <ROW Component="actions.jpg" ComponentId="{2646A586-CD69-4C4A-A1E0-6990714F9B06}" Directory_="images_Dir" Attributes="0" KeyPath="actions.jpg" Type="0"/>
-    <ROW Component="anywhere_nodes.html" ComponentId="{922709AA-71B8-4C4B-85E2-326AB14830F5}" Directory_="help_Dir" Attributes="0" KeyPath="anywhere_nodes.html" Type="0"/>
+    <ROW Component="anywhere_nodes.html" ComponentId="{922709AA-71B8-4C4B-85E2-333AB14830F5}" Directory_="help_Dir" Attributes="0" KeyPath="anywhere_nodes.html" Type="0"/>
     <ROW Component="choicebutton.js" ComponentId="{4E977154-3190-4A09-869D-369937B174BC}" Directory_="js_Dir" Attributes="0" KeyPath="choicebutton.js" Type="0"/>
     <ROW Component="hypedyn.exe" ComponentId="{EA8E8F65-628E-45CE-A889-FF8169A62565}" Directory_="APPDIR" Attributes="0" KeyPath="hypedyn.exe"/>
     <ROW Component="hypedyn.jar" ComponentId="{C1C4CFD5-09FC-42B4-B14F-C44ADEE5DB97}" Directory_="lib_DIR" Attributes="0" KeyPath="hypedyn.jar" Type="0"/>

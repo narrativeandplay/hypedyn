@@ -17,11 +17,13 @@
 ;; with this program; if not, write to the Free Software Foundation, Inc.,
 ;; 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-(module-export make-menu-bar make-menu make-menu-item set-menu-item-accelerator set-menu-mnemonic set-menu-item-mnemonic
+(module-export make-menu-bar make-menu make-menu-item make-menu-item-from-action
+               set-menu-item-accelerator set-menu-mnemonic set-menu-item-mnemonic
                set-menu-item-text
                make-checkbox-menu-item set-checkbox-menu-item get-checkbox-menu-item make-separator make-popup-menu
-               set-menuitem-component add-menu-bar add-menuitem-at remove-menuitem-at get-menu-component-count
-               add-menu-action)
+               set-menuitem-component add-menu-bar add-menuitem add-menuitem-at remove-menuitem-at get-menu-component-count
+               add-menu-action make-cut-menuitem make-copy-menuitem make-paste-menuitem
+               make-custom-cut-action make-custom-copy-action make-custom-paste-action)
 
 ;;
 ;; menus
@@ -38,6 +40,10 @@
 ; make a menu item
 (define (make-menu-item title :: <java.lang.String>)
   (<javax.swing.JMenuItem> title))
+
+; make a menu item from action
+(define (make-menu-item-from-action in-action :: <javax.swing.AbstractAction>)
+  (<javax.swing.JMenuItem> in-action))
 
 ; set menuitem accelerator
 ; parameters:
@@ -105,6 +111,11 @@
                       bar :: <javax.swing.JMenuBar>)
   (invoke (as <javax.swing.JFrame> frame) 'setJMenuBar bar))
 
+; add a menu item
+(define (add-menuitem in-menu :: <javax.swing.JMenu>
+                      in-item :: <javax.swing.JComponent>)
+  (invoke in-menu 'add in-item))
+
 ; add a menu item at a specific index
 (define (add-menuitem-at in-menu :: <javax.swing.JMenu>
                          in-item :: <javax.swing.JComponent>
@@ -125,3 +136,83 @@
 ; add an action to a menu
 (define (add-menu-action in-menu :: <javax.swing.JMenu> in-action :: <javax.swing.AbstractAction>)
   (invoke in-menu 'add in-action))
+
+;; 
+;; cut/copy/paste
+;; 
+
+;; TODO: need to hook into the jtextcomponent's keymappings
+
+(define (make-cut-menuitem #!optional pre-action post-action)
+  (define cut-menuitem (make-menu-item-from-action
+                        (if pre-action
+                            (make-custom-cut-action pre-action post-action)
+                            (<javax.swing.text.DefaultEditorKit$CutAction>))))
+  (set-menu-item-text cut-menuitem "Cut")
+  (set-menu-item-mnemonic cut-menuitem #\X)
+  (set-menu-item-accelerator cut-menuitem #\X)
+  cut-menuitem)
+  
+(define (make-copy-menuitem #!optional pre-action post-action)
+  (define copy-menuitem (make-menu-item-from-action
+                         (if pre-action
+                             (make-custom-copy-action pre-action post-action)
+                             (<javax.swing.text.DefaultEditorKit$CopyAction>))))
+  (set-menu-item-text copy-menuitem "Copy")
+  (set-menu-item-mnemonic copy-menuitem #\C)
+  (set-menu-item-accelerator copy-menuitem #\C)
+  copy-menuitem)
+  
+(define (make-paste-menuitem #!optional pre-action post-action)
+  (define paste-menuitem (make-menu-item-from-action
+                          (if pre-action
+                              (make-custom-paste-action pre-action post-action)
+                              (<javax.swing.text.DefaultEditorKit$PasteAction>))))
+  (set-menu-item-text paste-menuitem "Paste")
+  (set-menu-item-mnemonic paste-menuitem #\V)
+  (set-menu-item-accelerator paste-menuitem #\V)
+  paste-menuitem)
+
+;;
+;; custom cut/copy/paste action handlers
+;; 
+
+; note: if in-action returns #t, then perform the default action
+
+(define (make-custom-cut-action pre-action post-action)
+  (object (<javax.swing.text.DefaultEditorKit$CutAction>)
+    ((actionPerformed e :: <java.awt.event.ActionEvent>) :: <void>
+     (format #t "*** custom cut action~%~!")
+     (let ((do-default #t))
+       (if (procedure? pre-action)
+           (set! do-default (pre-action e)))
+       (if do-default
+           (invoke-special <javax.swing.text.DefaultEditorKit$CutAction> (this) 'actionPerformed e))
+       (if (procedure? post-action)
+           (post-action e))))))
+
+(define (make-custom-copy-action pre-action post-action)
+  (object (<javax.swing.text.DefaultEditorKit$CopyAction>)
+    ((actionPerformed e :: <java.awt.event.ActionEvent>) :: <void>
+     (format #t "*** custom copy action~%~!")
+     (let ((do-default #t))
+       (if (procedure? pre-action)
+           (set! do-default (pre-action e)))
+       (if do-default
+           (invoke-special <javax.swing.text.DefaultEditorKit$CopyAction> (this) 'actionPerformed e))
+       (if (procedure? post-action)
+           (post-action e))))))
+
+(define (make-custom-paste-action pre-action post-action)
+  (object (<javax.swing.text.DefaultEditorKit$PasteAction>)
+    ((actionPerformed e :: <java.awt.event.ActionEvent>) :: <void>
+     (format #t "*** custom paste action~%~!")
+     (let ((do-default #t))
+       (if (procedure? pre-action)
+           (set! do-default (pre-action e)))
+       (if do-default
+           (invoke-special <javax.swing.text.DefaultEditorKit$PasteAction> (this) 'actionPerformed e))
+       (if (procedure? post-action)
+           (post-action e))))))
+
+

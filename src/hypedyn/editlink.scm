@@ -713,7 +713,9 @@
                               
                               ;; conversion of visual to actual programming function
                               (if (equal? operator "x")
-                                  (set! operator "*"))
+                                  (begin
+                                  (set! operator "*")
+                                  (display "x -> * \n")))
 
                               (define new-fact-value-expr
                                 (list operator
@@ -2645,7 +2647,7 @@
   math-panel)
 
 (define (set-math-panel math-panel val-lst)
-  (display "set math panel ")(display val-lst)(newline)
+  ;;(display "set math panel ")(display val-lst)(newline)
   (let ((op (list-ref val-lst 0))
         (opr1      (list-ref val-lst 1))
         (opr1-type (list-ref val-lst 2))
@@ -2656,6 +2658,9 @@
     (let ((opr1-cb (list-ref comp-lst 0))
           (op-cb   (list-ref comp-lst 1))
           (opr2-cb (list-ref comp-lst 2)))
+
+      (if (equal? "*" op)
+          (set! op "x"))
 
       (set-combobox-selection-object op-cb (create-combobox-string-item op))
       (set-operand-choice opr1-cb opr1 opr1-type 'action)

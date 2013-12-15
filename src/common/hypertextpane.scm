@@ -557,19 +557,32 @@
 
     ; after editing position is set, determine whether new link is allowed
     ; (may need to check this after insert/delete separately)
+    (define (check-enable-newlink sel-start sel-end)
+      (if (or (check-links-overlap sel-start sel-end)
+              (= sel-start sel-end))
+          (begin
+            (if (procedure? enable-newlink-button-callback)
+                (enable-newlink-button-callback #f)))
+          (begin
+            (if (procedure? enable-newlink-button-callback)
+                (enable-newlink-button-callback #t)))))
+    
+    ; run through all links and check for overlap
     (define (check-links-overlap sel-start sel-end)
       (let ((edited-node (get nodelist-name the-nodeID)))
-        ; run through each link and adjust
-        (let ((overlaps (any (lambda (l)
-                               (check-link-overlap sel-start sel-end l))
-                             (ask edited-node getlinks-method))))
-          (if (or overlaps (= sel-start sel-end))
-              (begin
-                (if (procedure? enable-newlink-button-callback)
-                    (enable-newlink-button-callback #f)))
-              (begin
-                (if (procedure? enable-newlink-button-callback)
-                    (enable-newlink-button-callback #t)))))))
+        (any (lambda (l)
+               (check-link-overlap sel-start sel-end l))
+             (ask edited-node getlinks-method))))
+
+    ; run through all links and return list of links within given selection
+    (define (get-contained-links sel-start sel-end)
+      (let ((edited-node (get nodelist-name the-nodeID))
+            (the-link-list '()))
+        (map (lambda (l)
+               (if (check-link-overlap sel-start sel-end l)
+                   (set! the-link-list (append the-link-list (list l)))))
+             (ask edited-node getlinks-method))
+        the-link-list))
 
     ; check if selection overlaps with given link, returns #t if overlaps
     ; doesn't overlap:  if (sel-end < link-start or sel-start > link-end))
@@ -1009,7 +1022,7 @@
 
     ; after-set-position
     (define (after-set-position sel-start sel-end)
-      (if track-links (check-links-overlap sel-start sel-end)))
+      (if track-links (check-enable-newlink sel-start sel-end)))
 
     ;;
     ;; define mouse listener
@@ -1248,7 +1261,11 @@
     ;; based on the selection, determine whether to enable newlink button
     (obj-put this-obj 'selection-newlink-check
              (lambda (self)
-               (check-links-overlap (getselstart) (getselend))))
+               (check-enable-newlink (getselstart) (getselend))))
+    ; get list of links contained in given selection
+    (obj-put this-obj 'get-contained-links
+             (lambda (self in-selstart in-selend)
+               (get-contained-links in-selstart in-selend)))
     this-obj))
 
 ; read-only hypertextpane

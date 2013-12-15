@@ -37,9 +37,10 @@
                set-nodecount-display-callback! reset-node-count inc-node-count dec-node-count get-node-count
                set-import-offsets!
                create-node deletenode
-               create-link create-action create-fact
-               create-rule create-typed-rule create-typed-rule2 create-typed-rule3
-               create-condition create-typed-condition  create-typed-condition2
+               create-link make-link
+               create-action create-fact make-action
+               create-rule create-typed-rule create-typed-rule2 create-typed-rule3 make-rule3
+               create-condition create-typed-condition  create-typed-condition2 make-condition2
                ;;dup-offset-ID dup-offset-x dup-offset-anywhere-x 
                get-duplicate-offsets
                conversion-flag set-conversion-flag!
@@ -197,10 +198,10 @@
                              (set! convert-flag new-flag)))
                   this-obj))
 
-;; link
+;; link - note this was private, should it stay private??? - alex
 ;; overloaded to allow passing in of a predetermined uniqueID, for loading from file
 ;; need to set dirty bit for set-*, perhaps also need flag?
-(define-private (make-link name source destination start-index end-index use-destination
+(define (make-link name source destination start-index end-index use-destination
                            use-alt-destination use-alt-text alt-destination alt-text . args)
                 (let* ((uniqueID-obj (make-uniqueID-object name (if (pair? args) (car args))))
                        (rule-container (rule-containing-object))
@@ -320,7 +321,7 @@
                   this-obj))
 
 ;; this has the ability to initialize fall-through? on rule creation
-(define-private (make-rule3 name type and-or negate? parentID #!key fixedID fall-through?)
+(define (make-rule3 name type and-or negate? parentID #!key fixedID fall-through?)
                 (define parent-rule (make-rule2 name type and-or negate? parentID fixedID))
                 (define this-obj (new-object parent-rule))
 
@@ -565,7 +566,7 @@
                   this-obj))
 
 ;; make-condition2 adds support to number fact comparing
-(define-private (make-condition2 name type targetID operator ruleID #!key fixedID numfact-args)
+(define (make-condition2 name type targetID operator ruleID #!key fixedID numfact-args)
                 (define parent-rule (make-condition name type targetID operator ruleID fixedID))
                 (define this-obj (new-object parent-rule))
 
@@ -635,7 +636,7 @@
 ;; type is now the type of event that is relevant to this action
 ;; eg. follow link action has type 'clicked-link 
 ;;     replace-link-text has type 'displayed-node
-(define-private (make-action name type expr ruleID . args)
+(define (make-action name type expr ruleID . args)
                 (let* ((uniqueID-obj (make-uniqueID-object name (if (pair? args) (car args))))
                        (this-obj (new-object uniqueID-obj))
                        (imported? (importing?))
