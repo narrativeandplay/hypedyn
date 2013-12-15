@@ -177,6 +177,7 @@ function findReplaceText(linkID) {
 }
 
 var activated_anywhere_nodes = [];
+var inactive_anywhere_nodes = [];
 var activated_anywhere_buttons = [];
 function get_activated_anywhere_node ( nodeID ) {
 	function hasMatchingID ( node ) {
@@ -198,6 +199,25 @@ function addAnywhereLink(anywhereNodeID) {
 	
 	disp("pushing anywhere node "+ nodelist[anywhereNodeID] );
 	activated_anywhere_nodes.push( nodelist[anywhereNodeID] );
+}
+
+// show inactive anywhere nodes if necessary
+function addInactiveAnywhereLink(anywhereNodeID) {
+	if (anywhereNodeID == currNodeID)
+		return; // don't add this node when we're already there
+	for ( i in activated_anywhere_nodes) {
+		if (activated_anywhere_nodes[i].id == anywhereNodeID) {
+			return; // break to prevent last line from running
+		}
+	}
+	for ( i in inactive_anywhere_nodes) {
+		if (inactive_anywhere_nodes[i].id == anywhereNodeID) {
+			return; // break to prevent last line from running
+		}
+	}
+	
+	disp("pushing inactive anywhere node "+ nodelist[anywhereNodeID] );
+	inactive_anywhere_nodes.push( nodelist[anywhereNodeID] );
 }
 
 function addAnywhereButton(anywhereNodeID) {
@@ -229,6 +249,14 @@ function update_anywhere_visibility () {
 		if (nodelist[i].anywhere == true)
 			// triggering the rule with the addAnywhereLink action to fire if condition true
 			eventTrigger("anywhereCheck", nodelist[i]); 
+	}
+	
+	// do the same for disabled-but-displayed anywhere nodes
+	inactive_anywhere_nodes = [];  // reset
+	for ( i in nodelist ) {
+		if (nodelist[i].anywhere == true)
+			// triggering the rule with the showDisabledAnywhereLink action to fire if condition true
+			eventTrigger("disabledAnywhereCheck", nodelist[i]); 
 	}
 }
 
@@ -373,7 +401,7 @@ function refreshNode(node) {
     }
 		
     // regenerate the node text
-    var new_html_code = node_to_html( node, activated_anywhere_nodes, false );
+    var new_html_code = node_to_html( node, activated_anywhere_nodes, inactive_anywhere_nodes, false );
     $("pages").innerHTML = new_html_code;
 
 	if (page_flipping_mode)

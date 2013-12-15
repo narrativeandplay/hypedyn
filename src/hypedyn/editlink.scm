@@ -770,6 +770,12 @@
                                (list 'add-anywhere-link edited-nodeID)
                                edited-ruleID))
                  
+                 ;; no parameter from the ui
+                 ((equal? action-type "show disabled anywhere links")
+                  (create-action "Show Disabled Link" 'disabled-anywhere-check
+                               (list 'show-disabled-anywhere-link edited-nodeID)
+                               edited-ruleID))
+                 
                  ) ;; end of action-type cond
            ) (action-panel-list))
 
@@ -1010,6 +1016,7 @@
     (("update text using") (update-text-using-panel-valid? panel))
     (("show in popup") (show-in-popup-panel-valid? panel))
     (("enable links to this node from anywhere") #t)
+    (("show disabled anywhere links") #t)
     (else (display "[action panel valid?] new type ")(display (get-action-panel-type panel))(newline) #f))
   )
 
@@ -1121,6 +1128,9 @@
          ))
         
         ((equal? action-type "enable links to this node from anywhere")
+         #f)
+        
+        ((equal? action-type "show disabled anywhere links")
          #f)
         
         ((equal? action-type "show in popup")
@@ -1415,10 +1425,10 @@
 ;; kept to ensure some actions are only added once
 (define action-type-list-link (list "update text using" "follow link to" "update fact" "show in popup"))
 (define action-type-list-node (list "update fact"))
-(define action-type-list-anywhere-node (list "update fact" "enable links to this node from anywhere"))
+(define action-type-list-anywhere-node (list "update fact" "enable links to this node from anywhere" "show disabled anywhere links"))
 (define action-type-list-anywhere-node-link (list "update text using" "update fact"))
 
-(define-constant unique-choices (list "update text using" "follow link to" "show in popup" "enable links to this node from anywhere")) ;; choices that shouldnt be duplicated
+(define-constant unique-choices (list "update text using" "follow link to" "show in popup" "enable links to this node from anywhere" "show disabled anywhere links")) ;; choices that shouldnt be duplicated
 
 
 ;; an instance of the action type selector panel
@@ -1524,6 +1534,9 @@
                  )
                 ((equal? 'add-anywhere-link (car action-sexpr))
                  (add-component action-list-panel (create-action-panel "enable links to this node from anywhere"))
+                 )
+                ((equal? 'show-disabled-anywhere-link (car action-sexpr))
+                 (add-component action-list-panel (create-action-panel "show disabled anywhere links"))
                  )
                 ((equal? 'show-in-popup (car action-sexpr))
                  (define target-nodeID (list-ref action-sexpr 1))
