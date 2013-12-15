@@ -78,7 +78,7 @@ function escape_special( str ) {
 	return str;
 }
 
-function node_to_html( node, activated_anywhere_nodes, plain_only ) {
+function node_to_html( node, activated_anywhere_nodes, inactive_anywhere_nodes, plain_only ) {
 	var node_content = node.content;
 	var links = clone_arr( node.links );
 	
@@ -222,7 +222,8 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 		return tg_arr;
 	} // end of assign_html_tag
 
-	function generate_anywhere_tg ( activated_anywhere_nodes ) {
+	// include inactive anywhere nodes
+	function generate_anywhere_tg ( active_anywhere_nodes, inactive_anywhere_nodes ) {
 		var anywhere_tg_arr = [];
 		
 		// double <br>
@@ -232,25 +233,37 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 		br_tg.end_tag = "";
 		anywhere_tg_arr.push( br_tg );
 		
-		disp("activated anywhere nodes "+activated_anywhere_nodes);
-		disp("len "+ activated_anywhere_nodes.length);
-		disp("null? "+ ( activated_anywhere_nodes === null));
+		disp("active anywhere nodes "+active_anywhere_nodes);
+		disp("len "+ active_anywhere_nodes.length);
+		disp("null? "+ ( active_anywhere_nodes === null));
 		
+		disp("inactive anywhere nodes "+inactive_anywhere_nodes);
+		disp("len "+ inactive_anywhere_nodes.length);
+		disp("null? "+ ( inactive_anywhere_nodes === null));
 		
-		for ( var j in activated_anywhere_nodes ) {
-			var anywherenode = activated_anywhere_nodes[j];
+		// active
+		for ( var j in active_anywhere_nodes ) {
+			var anywherenode = active_anywhere_nodes[j];
 			disp("anywhere node "+anywherenode);
 			var anywhere_tg = [];
             // need to escape the content in case name contains special characters
-			anywhere_tg.content = escape_special(anywherenode.name);
+			anywhere_tg.content = escape_special(anywherenode.label); //escape_special(anywherenode.name);
 			anywhere_tg.start_tag = "<a href='javascript:void(0)' class='anywhere' onMouseUp='clickedLink(" 
 									+ anywherenode.id + ")'>";
 			anywhere_tg.end_tag = "</a><br>";
 			anywhere_tg_arr.push( anywhere_tg );
-			//retval += "<a href='javascript:void(0)' class='anywhere' onMouseUp='clickedLink(" 
-			//		+ anywherenode.id + ")'>"
-			//		+ anywherenode.name + "</a>"
-			//		+ "<br>";
+		}
+		
+		// inactive
+		for ( var j in inactive_anywhere_nodes ) {
+			var anywherenode = inactive_anywhere_nodes[j];
+			disp("anywhere node "+anywherenode);
+			var anywhere_tg = [];
+            // need to escape the content in case name contains special characters
+			anywhere_tg.content = escape_special(anywherenode.label); //escape_special(anywherenode.name);
+			anywhere_tg.start_tag = "<b class='anywhere'>";
+			anywhere_tg.end_tag = "</b><br>";
+			anywhere_tg_arr.push( anywhere_tg );
 		}
 		return anywhere_tg_arr;
 	}
@@ -445,7 +458,8 @@ function node_to_html( node, activated_anywhere_nodes, plain_only ) {
 	// plain text is assigned tag for plaintext
 	tg_arr = assign_html_tag( tg_arr );
 
-	var anywhere_tg_arr = generate_anywhere_tg( activated_anywhere_nodes );
+	// anywhere nodes
+	var anywhere_tg_arr = generate_anywhere_tg( activated_anywhere_nodes, inactive_anywhere_nodes );
 	tg_arr = tg_arr.concat( anywhere_tg_arr );
     
     // process newlines

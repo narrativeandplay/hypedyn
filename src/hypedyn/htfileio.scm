@@ -1245,6 +1245,7 @@
                        ((entered-node displayed-node) "enteredNode")
                        ((clicked-link) "clickedLink")
                        ((anywhere-check) "anywhereCheck")
+                       ((disabled-anywhere-check) "disabledAnywhereCheck")
                        (else "ERROR EVENT")))
          (parent-rule-id (ask action 'ruleID))
          
@@ -1257,6 +1258,7 @@
                  ((set-value! assert retract) "setFact")
                  ((set-number-fact) "setNumberFact")
                  ((add-anywhere-link) "addAnywhereLink")
+                 ((show-disabled-anywhere-link) "addInactiveAnywhereLink")
                  ((show-in-popup) "popup")
                  ))
          
@@ -1276,6 +1278,8 @@
                                  (quote-nest (escape-special (list-ref expr 2))) ;; remember to escape the text
                                  "]"))
                  ((add-anywhere-link)
+                  (string-append "[" (to-string (list-ref expr 1)) "]")) ;; TODO add anywhere link not implemented
+                 ((show-disabled-anywhere-link)
                   (string-append "[" (to-string (list-ref expr 1)) "]")) ;; TODO add anywhere link not implemented
                  ((replace-link-text)
                   (string-append

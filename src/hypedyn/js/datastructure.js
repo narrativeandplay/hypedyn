@@ -38,6 +38,8 @@ function createNode (name, content, anywhere, id ) {
 	newNode.links = [];
 	newNode.rules = [];
 	newNode.clinks = [];
+	newNode.label = name;  // allow setting of label when anywhere node
+	newNode.showDisabled;  // when an anywhere node, does it show if disabled?
 	
 	// only for anywhere node (activated the anywhere link)
 	newNode.activated = false; 

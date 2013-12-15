@@ -669,7 +669,8 @@
                                        ((or (equal? (car expr) 'set-value!)
                                             (equal? (car expr) 'assert)
                                             (equal? (car expr) 'retract)
-                                            (equal? (car expr) 'add-anywhere-link))
+                                            (equal? (car expr) 'add-anywhere-link)
+                                            (equal? (car expr) 'show-disabled-anywhere-link))
                                         ;; import offset for target linkID's for replace-link-text action
                                         ;;(replace-link-text text-type value linkID)
                                         (ask self 'set-expr!
