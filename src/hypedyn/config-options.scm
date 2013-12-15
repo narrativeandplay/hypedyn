@@ -53,6 +53,7 @@
                java-reader? set-java-reader!
                get-temp-dir set-temp-dir! get-local-port set-local-port!
                node-name-limit choice-name-limit rule-name-limit
+               enable-autosave? set-enable-autosave!
                )
 
 ; enable/disable undo
@@ -394,3 +395,10 @@
 (define node-name-limit 20)
 (define choice-name-limit 20)
 (define rule-name-limit 40)
+
+; enable/disable autoasve
+(define-private enable-autosave #f)
+(define (enable-autosave?)
+  enable-autosave)
+(define (set-enable-autosave! in-flag)
+  (set! enable-autosave in-flag))

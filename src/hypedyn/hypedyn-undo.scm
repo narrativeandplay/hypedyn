@@ -25,6 +25,7 @@
 (require "htfileio.scm") ;; ht-build-sexpr-from-object-with-rule, update-dirty-state, hd-autosave
 (require "editlink.scm") ;; update-nodegraph-display, remove-link-display, add-link-display
 (require "rules-manager.scm") ;; rmgr-close
+(require "config-options.scm") ;; enable-autosave?
 (require 'list-lib) ;; list-copy
 
 (module-export delete-link-action
@@ -320,7 +321,8 @@
   ;;   we might have postedit and compound edits (with start-update, end-update) within packed 
   ;;   as a single edit using a start-update/end-update pair on the outer most level
   ;; every x number of compound postedit, auto save 
-  (if (and (= (compoundundomanager-updatelevel undo-mgr) 0)
+  (if (and (enable-autosave?)
+           (= (compoundundomanager-updatelevel undo-mgr) 0)
            (= (modulo (get-save-point-offset undo-mgr) 10) 0))
       (hd-autosave))
   )
