@@ -168,7 +168,7 @@
         ;; TODO: this should refresh when show id just got selected
         (set! rule-name (get-rule-name ruleID))
         
-        (set! rule-name-label (make-label-with-title rule-name))
+        (set! rule-name-label (make-label-with-title (to-string rule-name)))
   
         ;; set initial state of the fall-checkbox
         (set-checkbox-value fall-checkbox (not rule-fall-through?))

@@ -28,8 +28,10 @@
   (<javax.swing.JLabel>))
 
 ; make a label with title 
-(define (make-label-with-title title :: <java.lang.String>)
+(define (make-label-with-title title :: <java.lang.String> )
   (<javax.swing.JLabel> title))
+;;(define (make-label-with-title title :: <gnu.lists.FString>) ;:: <java.lang.String>
+;;  (<javax.swing.JLabel> title))
 
 ;;JLabel has bold as default already (so only useful for unbolding it)
 (define (bold-label in-label :: <javax.swing.JLabel>
