@@ -1068,7 +1068,8 @@
   (define node-to-del (get 'nodes cached-nodeID))
   (define nodename (ask node-to-del 'name))
   (define node-anywhere (ask node-to-del 'anywhere?))
-  (define node-sexpr (ask node-to-del 'to-save-sexpr))
+  ;(define node-sexpr (ask node-to-del 'to-save-sexpr))
+  (define node-sexpr (ht-build-sexpr-from-object-with-rule node-to-del))
   
   ; store the position
   (ask node-graph 'store-node-position cached-nodeID node-to-del)
