@@ -398,7 +398,6 @@
             (let ((link-start (ask thislink 'start-index))
                   (link-end (ask thislink 'end-index))
                   (del-end (+ del-start del-len)))
-              (display "adjust one link delete ")(display (list del-start del-end link-start link-end))(newline)
 
               ;; making sure I dont leave out any conditions and 
               ;; there is not conflicts/overlap between conditions
@@ -451,7 +450,6 @@
                      )
                     ((<= del-end link-start) ;; Case 1; del-start del-end link-start link-end (eg [a]aBBaa, [aa]BBaa) 0123
                      ; Entire deletion is before link (shift link)
-                     (display " delete case 1 ")(newline)
                      (shift-link-boundary linkID 'start (- link-start del-len))
                      (shift-link-boundary linkID 'end (- link-end del-len))
                      ;(set! link-deleted 0)
@@ -459,13 +457,11 @@
                      )
                     ((<= link-end del-start) ;; Case 2; link-start link-end del-start del-end (eg aaBB[a]a, aaBBa[a]) 2301
                      ;; Entire deletion after link (DO NOTHING to this link)
-                     (display " delete case 2 ")(newline)
                      (set! link-deleted '())
                      ;(set! link-deleted 0)
                      )
                     ((and (<= del-start link-start) ;; Case 3; del-start link-start link-end del-end (eg a[aBB]aa, a[aBBa]a, aa[BBa]a, aa[BB]aa)
                           (<= link-end del-end))
-                     (display " delete case 3 ")(newline)
                      ;; Entire link is inside deletion, (delete link)
                      ;(set! link-deleted (- link-end link-start))
                      (set! link-deleted (list link-start link-end))
@@ -476,18 +472,14 @@
                     ((and (<= del-end link-end)         ;; Case 4; link-start del-start del-end link-end (eg aaB[B]a, aa[B]Baa, aaB[B]Baa) 
                           (<= link-start del-start))    ;; makes sure not the whole link 
                      ;; Entire deletion is inside link but not encompassing it, (shorten link by length of deletion)
-                     (display " delete case 4 ")(newline)
                      (post-clickback-resize-undoable linkID)
                      (shift-link-boundary linkID 'end (- link-end del-len) #t)
-                     (display "link start ")(display link-start)(newline)
-                     (display "new link end ")(display (- link-end del-len))(newline)
                      ;(set! link-deleted del-len)
                      (set! link-deleted (list del-start del-end))
                      )
                     ((and (< del-start link-start)  ;; Case 5; del-start link-start del-end link-end (eg a[aB]Baa)
                           (< link-start del-end)    ;; link boundaries does not coincides with deletion boundary    
                           (< del-end link-end))
-                     (display " delete case 5 ")(newline)
                      ; a portion of the link at the head is deleted (shift link and shorten)
                      (post-clickback-resize-undoable linkID)
                      (shift-link-boundary linkID 'start del-start #t)
@@ -497,7 +489,6 @@
                     ((and (< link-start del-start)   ;; Case 6; link-start del-start link-end del-end  (eg aaB[Ba]a)
                           (< del-start link-end)     ;; link boundaries does not coincides with deletion boundary
                           (< link-end del-end))
-                     (display " delete case 6 ")(newline)
                      ;; cut off an end portion of link (shift link-end)
                      (post-clickback-resize-undoable linkID)
                      (shift-link-boundary linkID 'end del-start #t)
@@ -505,7 +496,6 @@
                      (set! link-deleted (list del-start link-end))
                      ))
               ))
-        (display "end of adjust one link delete ")(newline)
         link-deleted))
     
     ; adjust links after inserting
@@ -519,7 +509,6 @@
     ; adjust one link after insertion
     ; Note: if extend-len is more than 0, extend the end of link 
     (define (adjust-one-link-insert ins-start ins-len linkID break-link)
-      (display "adjust one link insert ")(newline)
       (let ((thislink (get 'links linkID)))
         (if thislink
             (let ((link-start (ask thislink 'start-index))
@@ -527,12 +516,8 @@
                   (ins-end (+ ins-start ins-len)))
 ;              (display "ins len ")(display ins-len)(newline)
 ;              (display "in adjust one link insert ")(display (list link-start link-end))(newline)
-              (display "ins-start ins-end ")(display (list ins-start ins-end))(newline)
-              (display "link-start link-end ")(display (list link-start link-end))(newline)
   
               (cond ((and (<= ins-start link-start) ) ;; Case 1 : ins before link (eg aa[i]LLLaa, a[i]aLLLaa)
-                     (display "insert case 1 insert before link (just shift link) ")(newline)
-                     (display "link start end ")(display (list link-start link-end))(newline)
                      ;; just shift link without changing length
                      ;(ask thislink 'set-start-index! (+ link-start ins-len))
                      ;(ask thislink 'set-end-index! (+ link-end ins-len))
@@ -540,18 +525,15 @@
                      (shift-link-boundary linkID 'end (+ link-end ins-len))
                      )
                     ((and (< link-start ins-start) (< ins-start link-end) ) ;; Case 2 : ins within link (eg aaL[i]LLaa)
-                     (display "insert case 2 (within link) ")(newline)
                      (shift-link-boundary linkID 'end (+ link-end ins-len))
                      )
                     ((= link-end ins-start)   ;; Case 3b : ins RIGHT after link end (eg aaLLL[i]aa)
-                     (display "insert case 3 (ins right after link) ")(newline)
                      (if (not break-link) ;; used by insert-blank-space (custom call that does not extend link len ie extend-len is 0)
                                           ;(ask thislink 'set-end-index! (+ link-end ins-len))
                          (shift-link-boundary linkID 'end (+ link-end ins-len))
                          )) ;; lengthen link by ins-len
 
                     ((< link-end ins-start) ;; Case 3a: ins after link (do nothing) (eg aaLLLa[i]a)
-                     (display "INSERT AFTER LINK")(newline)
                      #f)))
               )))
 

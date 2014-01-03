@@ -223,14 +223,12 @@
                   (obj-put this-obj 'start-index (lambda (self) start-index))
                   (obj-put this-obj 'set-start-index!
                            (lambda (self new-start-index)
-                             (display "[setting start index] ")(display new-start-index)(newline)
                              (set! start-index new-start-index)
                              ;(ht-set-dirty!)
                              ))
                   (obj-put this-obj 'end-index (lambda (self) end-index))
                   (obj-put this-obj 'set-end-index!
                            (lambda (self new-end-index)
-                             (display "[setting end index] ")(display new-end-index)(newline)
                              (set! end-index new-end-index)
                              ;(ht-set-dirty!)
                              ))

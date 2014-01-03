@@ -27,6 +27,7 @@
   (require "preferences.scm")
   (require "evaluator.scm")
   (require "../kawa/miscutils.scm")
+  (require "../kawa/strings.scm") ;; to-string
   (require "../kawa/file.scm")
   (require "../kawa/system.scm")
   (require "../kawa/ui/dialog.scm")
@@ -269,7 +270,9 @@
                     (if safetoproceed
                         (begin
                           (format #t "writing~%~!")
-                          (write mysexpr output-port)
+                          ;(write mysexpr output-port)
+                          (write-simple mysexpr output-port)
+                          (display "write finished")(newline)
                           (close-output-port output-port)
                           #t)
                         #f)))
