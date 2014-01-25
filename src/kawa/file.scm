@@ -201,6 +201,7 @@
          (local-frame (<javax.swing.JFrame>)))
     
     ; select directory?
+    ;; testing fix
     (if select-dir
         (begin
           (invoke fchooser 'setFileSelectionMode <javax.swing.JFileChooser>:DIRECTORIES_ONLY)
@@ -253,13 +254,18 @@
         (if (equal? prop-name javax.swing.JFileChooser:SELECTED_FILE_CHANGED_PROPERTY)
             (if (not (equal? #!null selected-file))
                 ;; get the name of the file/folder selected
-                (let* ((file-path-str (to-string selected-file))
-                       (folder-lst (array-to-list2 (invoke file-path-str 'split "\\\\" )))
-                       (fchoose-ui (invoke fchooser 'getUI)))
-                  ;; set-file-name only available on BasicFileChooserUI
+;;                (let* ((file-path-str (to-string selected-file))
+;;                       (folder-lst (array-to-list2 (invoke file-path-str 'split "\\\\" )))
+;;                       (fchoose-ui (invoke fchooser 'getUI)))
+;;                  ;; set-file-name only available on BasicFileChooserUI
+;;                  (if (javax.swing.plaf.basic.BasicFileChooserUI? fchoose-ui)
+;;                      (invoke fchoose-ui 'set-file-name
+;;                              (list-ref folder-lst (- (length folder-lst) 1)))))
+                ;; updated with a cleaner way of getting folder name
+                (let ((file-path-str (invoke selected-file 'get-name))
+                      (fchoose-ui (invoke fchooser 'getUI)))
                   (if (javax.swing.plaf.basic.BasicFileChooserUI? fchoose-ui)
-                      (invoke fchoose-ui 'set-file-name
-                              (list-ref folder-lst (- (length folder-lst) 1)))))
+                      (invoke fchoose-ui 'set-file-name file-path-str)))
                 ))
         )))
     
