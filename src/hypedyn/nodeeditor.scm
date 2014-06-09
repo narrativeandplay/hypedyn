@@ -244,6 +244,8 @@
 (define m-edit1-cut #f)
 (define m-edit1-copy #f)
 (define m-edit1-paste #f)
+(define m-edit1-copylink #f)
+(define m-edit1-pastelink #f)
 (define m-link #f)
 (define m-edit1-newlink #f)
 (define m-edit1-editlink #f)
@@ -311,24 +313,12 @@
         (add-component m-edit1 (make-separator))))
   
   ; default edit actions
-;;  (set! m-edit1-cut (make-cut-menuitem cut-text))
-;;  (add-component m-edit1 m-edit1-cut)
-  
-  ; working on this one - alex
-;;  (define custom-copy-action (make-custom-copy-action copy-text #f))
-;;  (set! m-edit1-copy (make-menu-item-from-action
-;;                      custom-copy-action))
-;;  (set-menu-item-text m-edit1-copy "Copy")
-;;  (set-menu-item-mnemonic m-edit1-copy #\C)
-;;  (set-menu-item-accelerator m-edit1-copy #\C)
-;;  ; need to add to the keymapping in editor as well
-;;  (add-component m-edit1 m-edit1-copy)
-  
-;;  (set! m-edit1-copy (make-copy-menuitem copy-text #f))
-;;  (add-component m-edit1 m-edit1-copy)
-;;  (set! m-edit1-paste (make-paste-menuitem paste-text-pre paste-text-post))
-;;  (add-component m-edit1 m-edit1-paste)
-;;  (add-component m-edit1 (make-separator))
+  (set! m-edit1-cut (make-cut-menuitem))
+  (add-component m-edit1 m-edit1-cut)
+  (set! m-edit1-copy (make-copy-menuitem))
+  (add-component m-edit1 m-edit1-copy)
+  (set! m-edit1-paste (make-paste-menuitem))
+  (add-component m-edit1 m-edit1-paste)
   
   (set! m-link (make-menu "Link"))
   (add-component m-bar1 m-link)
@@ -370,13 +360,17 @@
   (set-menuitem-component m-edit1-dellink #f)
   
   (add-component m-link (make-separator))
-  (set! m-edit1-copy (make-copy-menuitem copy-text #f))
-  (set-menu-item-text m-edit1-copy "Copy link")
-  (add-component m-link m-edit1-copy)
-  (set! m-edit1-paste (make-paste-menuitem paste-text-pre paste-text-post))
-  (add-component m-link m-edit1-paste)
-  (set-menu-item-text m-edit1-paste "Paste link")
-
+  (set! m-edit1-copylink (make-copy-menuitem copy-link #f))
+  (set-menu-item-text m-edit1-copylink "Copy link")
+  (set-menu-item-mnemonic m-edit1-copylink #\J)
+  (set-menu-item-accelerator m-edit1-copylink #\J)
+  (add-component m-link m-edit1-copylink)
+  (set! m-edit1-pastelink (make-paste-menuitem paste-link-pre paste-link-post))
+  (add-component m-link m-edit1-pastelink)
+  (set-menu-item-text m-edit1-pastelink "Paste link")
+  (set-menu-item-mnemonic m-edit1-pastelink #\K)
+  (set-menu-item-accelerator m-edit1-pastelink #\K)
+  
   ; set start node menu item
   (set! m-edit1-setstartnode (make-menu-item "Set start node"))
   (add-component m-edit1 m-edit1-setstartnode)
@@ -551,6 +545,7 @@
   (set-button nodeeditor-toolbar-button-editlink newstate)
   (set-button nodeeditor-toolbar-button-dellink newstate)
   (set-button nodeeditor-toolbar-button-renamelink newstate)
+;;  (set-menuitem-component m-edit1-copylink newstate)
   (set-menuitem-component m-edit1-editlink newstate)
   (set-menuitem-component m-edit1-dellink newstate)
   (set-menuitem-component m-edit1-renamelink newstate))
@@ -558,6 +553,7 @@
 ; enable/disable new link button
 (define (enable-newlink-button newstate)
   (set-button nodeeditor-toolbar-button-newlink newstate)
+;;  (set-menuitem-component m-edit1-pastelink newstate)
   (set-menuitem-component m-edit1-newlink newstate))
 
 ; enable/disable setstartnode button and menu item state
@@ -946,17 +942,10 @@
 
 
 ;;
-;; handle cut, copy and paste of editor content
+;; handle copy and paste of links
 ;; 
 
-(define (cut-text e)
-  (format #t "cut text~%~!")
-  (copy-with-links)
-  
-  ; return true so that normal cut action is executed afterwards
-  #t)
-
-(define (copy-text e)
+(define (copy-link e)
   (format #t "copy text~%~!")
   (copy-with-links)
   
@@ -1052,8 +1041,8 @@
 
 (define paste-selstart 0)
 
-(define (paste-text-pre e)
-  (format #t "paste text pre~%~!")
+(define (paste-link-pre e)
+  (format #t "paste link pre~%~!")
   
   ; remember start of selection before pasting
   (set! paste-selstart (ask node-editor 'getselstart))  
@@ -1062,8 +1051,8 @@
   #t)
   
 
-(define (paste-text-post e)
-  (format #t "paste text post~%~!")
+(define (paste-link-post e)
+  (format #t "paste link post~%~!")
 
   ; need to check if there are any stored links and duplicate them
   ; note: need to do this AFTER the default paste action!
