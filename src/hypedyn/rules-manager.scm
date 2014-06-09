@@ -887,6 +887,7 @@
      ) 
     ((node)
      (nodeeditor-edit obj-ID)))
+  (center-frame-in-parent rules-manager-main-dialog (get-nodeeditor-frame))
   (set-component-visible rules-manager-main-dialog #t))
 
 (define (rmgr-close)
