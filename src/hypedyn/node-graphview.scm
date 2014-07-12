@@ -159,7 +159,38 @@
                            name))
                  (let-values
                      (((tw1 th1 td1 ta1) (get-text-extent dc name text-height)))
-                   (drawtext dc (- x (* tw1 0.5)) (+ y (* th1 0.5)) text-color bg-color name))
+                   (drawtext dc (- x (* tw1 0.5)) (+ (- y 55.0) (* th1 0.5)) text-color bg-color name))
+                 (let-values
+                         (((tw1 th1 td1 ta1) (get-text-extent dc name text-height)))
+                     (let-values (((width height) (ask new-node 'get-size)))
+                         (define (str-split str ch)
+                             (let ((len (string-length str)))
+                                 (letrec
+                                         ((split
+                                              (lambda (a b)
+                                                  (cond
+                                                      ((>= b len) (if (= a b) '("") (cons (substring str a b) '())))
+                                                      ((char=? ch (string-ref str b)) (if (= a b)
+                                                                                          (cons "" (split (+ 1 a) (+ 1 b)))
+                                                                                          (cons (substring str a b) (split (+ 1 b) (+ 1 b)))))
+                                                      (else (split a (+ 1 b)))))))
+                                     (split 0 0))))
+                         ;;;  mapi: similar to standard map in Scheme, but function has index of elements as parameter.
+                         ;;;
+                         (define (mapi p l)
+                             (let loop ((l l) (i 0) (r '()))
+                                 (if (pair? l)
+                                     (loop (cdr l) (+ i 1) (cons (p (car l) i) r))
+                                     (reverse r))))
+                         (mapi (lambda (line i)
+                                  (drawtext dc
+                                            (- x (* (/ width 2.0) 0.9))
+                                            (+ (- y 25.0) (* th1 0.5) (* i ta1))
+                                            text-color
+                                            bg-color
+                                            line))
+                              (str-split (ask the-node 'content) #\x000A)))
+                         )
                  ))
           
           ;; draw the new node selected
@@ -177,6 +208,8 @@
               (let-values (((width height) (ask this-node 'get-size)))
                 
                 (define node-name (ask this-node 'get-name))
+                ;(set! width (+ width 70.0))
+                ;(set! height (+ height 100.0))
                 ;; draw or undraw selected square
                 (if selected?
                     (set! color red-color)
@@ -238,6 +271,14 @@
                       (- by (/ height 2.0))
                       (+ bx (/ width 2.0))
                       (- (+ by (/ height 2.0)) 1.0)
+                      black-color 'solid)
+
+            ; Draw line under node title
+            (drawline dc
+                      (- bx (/ width 2.0))
+                      (- by (/ height 3.5))
+                      (+ bx (/ width 2.0))
+                      (- by (/ height 3.5))
                       black-color 'solid)
             )
 

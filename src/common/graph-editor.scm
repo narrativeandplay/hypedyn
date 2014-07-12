@@ -878,7 +878,7 @@
                            (lambda (self) (values x y)))
                   (obj-put this-obj 'get-size
                            (lambda (self)
-                             (values width height)))
+                             (values (+ width 70.0) (+ height 100.0))))
                   (obj-put this-obj 'tab-in-count
                            (lambda (self)
                              (hash-table-count tab-in)))
