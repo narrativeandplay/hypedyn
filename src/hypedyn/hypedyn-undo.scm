@@ -98,7 +98,9 @@
         (enable-link-buttons #f)
 
         ; update node style, in case this was an alt-text link
-        (update-node-style-callback from-nodeID)
+        ; added check just in case it was passed in as null (in which case ignore it)
+        (if (procedure? update-node-style-callback)
+            (update-node-style-callback from-nodeID))
         ))
 
   ; delete link from data-table

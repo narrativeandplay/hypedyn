@@ -982,7 +982,7 @@
            ; copy one link
            ; note: don't want to actually create yet, instead get the s-expr - use make-link
            (define copied-link
-             (make-link name -1 -1 start-index end-index
+             (make-link (string-append name " copy") -1 -1 start-index end-index
                         #f -1 #f -1
                         "" linkID))
            (format #t "copied link: ~a ~a~%~!" linkID (ask copied-link 'to-save-sexpr))
@@ -1046,6 +1046,9 @@
   
   ; remember start of selection before pasting
   (set! paste-selstart (ask node-editor 'getselstart))  
+  
+  ;; wrap paste link in one operation
+  (hd-begin-update undo-manager)
 
   ; return true so that normal paste action is executed afterwards
   #t)
@@ -1056,68 +1059,108 @@
 
   ; need to check if there are any stored links and duplicate them
   ; note: need to do this AFTER the default paste action!
-  ; still need to shift the link location: when copy, subtract the selstart; when paste, add the selstart
-  ; still need to update display (list and formatting)
-  ; haven't tested undo...
-  
+
   (let-values (((max-x max-y max-anywhere-x max-anywhere-y)
                 (get-max-node-positions)))
     (let-values (((dup-offset-ID dup-offset-x dup-offset-anywhere-x)
                   (get-duplicate-offsets max-x max-y
                                          max-anywhere-x max-anywhere-y)))
-      ; run through the links
-      (map (lambda (c)
-             (let ((copied-link (car c))
-                   (copied-rules (cadr c)))
-               ; paste the link
-               (define new-linkID (+ dup-offset-ID (ask copied-link 'ID)))
-               (format #t "pasting link: ~a~%~!" (ask copied-link 'to-save-sexpr))
-               (paste-link copied-link new-linkID edited-nodeID) 
+      (let ((this-paste-selstart paste-selstart)
+            (this-copied-links copied-links)) ; this is the current problem - when to cache this correctly?
+        (define (actual-paste-links)
 
-               ; run through the rules
-               (map (lambda (r)
-                      (let ((copied-rule (car r))
-                            (copied-conditions (cadr r))
-                            (copied-actions (caddr r)))
-                        ; paste the rule
-                        (define new-ruleID (+ dup-offset-ID (ask copied-rule 'ID)))
-                        (format #t "pasting rule: ~a~%~!" (ask copied-rule 'to-save-sexpr))
-                        (paste-rule copied-rule new-ruleID new-linkID)
+          (format #t "actual-paste-links: paste-selstart=~a, this-paste-selstart=~a~%~!" paste-selstart this-paste-selstart)
 
-                        ; run through the conditions
-                        (map (lambda (copied-condition)
-                               ; paste the condition
-                               (format #t "pasting condition: ~a~%~!" (ask copied-condition 'to-save-sexpr))
-                               (paste-condition copied-condition (+ dup-offset-ID (ask copied-condition 'ID)) new-ruleID))
-                             copied-conditions)
+          ; run through the links
+          (map (lambda (c)
+                 (let ((copied-link (car c))
+                       (copied-rules (cadr c)))
+                   ; paste the link
+                   (define new-linkID (+ dup-offset-ID (ask copied-link 'ID)))
+                   (format #t "pasting link: ~a~%~!" (ask copied-link 'to-save-sexpr))
+                   (paste-link this-paste-selstart copied-link new-linkID edited-nodeID)
 
-                        ; run through the actions
-                        (map (lambda (copied-action)
-                               ; paste the actions
-                               (format #t "pasting action: ~a~%~!" (ask copied-action 'to-save-sexpr))
-                               (paste-action copied-action (+ dup-offset-ID (ask copied-action 'ID)) new-ruleID new-linkID))
-                             copied-actions)
-                             
-                        ;; update graph view 
-                        (add-follow-link-rule-display new-ruleID)
-                        (add-show-popup-rule-display new-ruleID)
-                        ))
-                    copied-rules)
-                                       
-               ; add link to editor
-               (define new-link (get 'links new-linkID))
-               (ask node-editor 'addlink new-link)
+                   ; run through the rules
+                   (map (lambda (r)
+                          (let ((copied-rule (car r))
+                                (copied-conditions (cadr r))
+                                (copied-actions (caddr r)))
+                            ; paste the rule
+                            (define new-ruleID (+ dup-offset-ID (ask copied-rule 'ID)))
+                            (format #t "pasting rule: ~a~%~!" (ask copied-rule 'to-save-sexpr))
+                            (paste-rule copied-rule new-ruleID new-linkID)
 
-               ; add to link list
-               (ask link-list 'add-link new-linkID (ask new-link 'name))
-               ))
-           
-           copied-links))))
+                            ; run through the conditions
+                            (map (lambda (copied-condition)
+                                   ; paste the condition
+                                   (format #t "pasting condition: ~a~%~!" (ask copied-condition 'to-save-sexpr))
+                                   (paste-condition copied-condition (+ dup-offset-ID (ask copied-condition 'ID)) new-ruleID))
+                                 copied-conditions)
 
-(define (paste-link link-obj linkID parentID)
+                            ; run through the actions
+                            (map (lambda (copied-action)
+                                   ; paste the actions
+                                   (format #t "pasting action: ~a~%~!" (ask copied-action 'to-save-sexpr))
+                                   (paste-action copied-action (+ dup-offset-ID (ask copied-action 'ID)) new-ruleID new-linkID))
+                                 copied-actions)
+
+                            ;; update graph view 
+                            (add-follow-link-rule-display new-ruleID)
+                            (add-show-popup-rule-display new-ruleID)
+                            ))
+                        copied-rules)
+
+                   ; add link to editor
+                   (define new-link (get 'links new-linkID))
+                   (ask node-editor 'addlink new-link)
+
+                   ; add to link list
+                   (ask link-list 'add-link new-linkID (ask new-link 'name))))
+
+               this-copied-links))
+
+        (define (undo-paste-links)
+          (format #t "undo-paste-links~%~!")
+          ; run through the links and delete them (undoing the paste)
+          (map (lambda (c)
+                 (let ((copied-link (car c))
+                       (copied-rules (cadr c)))
+                   ; delete the link
+                   (define new-linkID (+ dup-offset-ID (ask copied-link 'ID)))
+                   (format #t "deleting link: ~a~%~!" (ask copied-link 'to-save-sexpr))
+                   ; delete the link; rules, conditions and actions should be deleted automatically
+                   (delete-link-action new-linkID edited-nodeID #f #f)))
+               this-copied-links))
+
+        ; actually paste the links
+        (actual-paste-links)
+
+        ;; add the undoable edit
+        (hd-postedit
+         undo-manager
+         (make-undoable-edit
+          "Paste Link"
+          (lambda () ;; undo
+            ;; here we need to delete the text (and hopefully automatically any links)
+            ;; in the range where we pasted (selstart and selend *after* pasting*)
+            (display "undoing paste link")(newline)
+            (undo-paste-links)
+            )
+          (lambda () ;; redo
+            (display "redoing paste link")(newline)
+
+            ;; here we need to redo the paste, by wrapping all the above code in a function
+            (actual-paste-links)
+            )))
+
+        ;; end the undoable paste links action
+        (hd-end-update undo-manager undo-action redo-action)))))
+
+
+(define (paste-link in-paste-selstart link-obj linkID parentID)
   (let* ((name (ask link-obj 'name))
-         (start-index (+ paste-selstart (ask link-obj 'start-index)))
-         (end-index (+ paste-selstart (ask link-obj 'end-index))))
+         (start-index (+ in-paste-selstart (ask link-obj 'start-index)))
+         (end-index (+ in-paste-selstart (ask link-obj 'end-index))))
     (create-link name parentID -1
                  start-index end-index
                  #f -1 #f -1
