@@ -163,6 +163,8 @@
                  (let-values
                          (((tw1 th1 td1 ta1) (get-text-extent dc name text-height)))
                      (let-values (((width height) (ask new-node 'get-size)))
+                         ; because kawa doesn't have a string-split
+                         ; from http://schemecookbook.org/Cookbook/StringSplit
                          (define (str-split str ch)
                              (let ((len (string-length str)))
                                  (letrec
@@ -176,20 +178,44 @@
                                                       (else (split a (+ 1 b)))))))
                                      (split 0 0))))
                          ;;;  mapi: similar to standard map in Scheme, but function has index of elements as parameter.
-                         ;;;
-                         (define (mapi p l)
+                         ;;; from http://www.dzone.com/snippets/mapi-similar-standard-map
+                         (define (map-with-index p l)
                              (let loop ((l l) (i 0) (r '()))
                                  (if (pair? l)
                                      (loop (cdr l) (+ i 1) (cons (p (car l) i) r))
                                      (reverse r))))
-                         (mapi (lambda (line i)
-                                  (drawtext dc
-                                            (- x (* (/ width 2.0) 0.9))
-                                            (+ (- y 25.0) (* th1 0.5) (* i ta1))
-                                            text-color
-                                            bg-color
-                                            line))
-                              (str-split (ask the-node 'content) #\x000A)))
+                         ; because kawa didn't implement this
+                         (define (take lst n)
+                             (cond ((= n 0) '())
+                                   ((> n (length lst)) lst)
+                                   (else (cons (car lst)
+                                               (take (cdr lst) (- n 1))))))
+                         (define line-length-limit 18)
+                         (define line-count-limit 8)
+                         (define (word-wrap string n)
+                             (cond ((<= n 0) '(""))
+                                   ((< (string-length string) n) (list string))
+                                   (else (cons (substring string 0 n)
+                                               (word-wrap (substring string n (string-length string)) n)))))
+                         ; once again, kawa does not define flatten
+                         ; from http://rosettacode.org/wiki/Flatten_a_list#Scheme
+                         (define (flatten x)
+                             (cond ((null? x) '())
+                                   ((not (pair? x)) (list x))
+                                   (else (append (flatten (car x))
+                                                 (flatten (cdr x))))))
+                         ; renamed from http://www.dzone.com/snippets/mapi-similar-standard-map
+                         (map-with-index (lambda (line i)
+                                             (drawtext dc
+                                                       (- x (* (/ width 2.0) 0.9))
+                                                       (+ (- y 30.0) (* th1 0.5) (* i ta1))
+                                                       text-color
+                                                       bg-color
+                                                       line))
+                                         (take (flatten (map (lambda (line)
+                                                                 (word-wrap line line-length-limit))
+                                                             (str-split (ask the-node 'content) #\newline)))
+                                               line-count-limit)))
                          )
                  ))
           
