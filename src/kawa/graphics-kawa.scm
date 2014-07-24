@@ -172,6 +172,18 @@
         (invoke (as <java.awt.Graphics> buffer) 'drawLine x-p1 y-p1 x-p2 y-p2))
     ))
 
+(define (draw-arc buffer :: <java.awt.Graphics> start-pt end-pt ctrl-pt1 ctrl-pt2 col style . args)
+    (let ((the-colour (make-colour-from-list col)))
+        (set-colour buffer the-colour style (if (pair? args) (car args)))
+        (let ((curve (java.awt.geom.GeneralPath)))
+            (curve:moveTo (car start-pt) (cdr start-pt))
+            (curve:curveTo (car ctrl-pt1)
+                           (cdr ctrl-pt1)
+                           (car ctrl-pt2)
+                           (cdr ctrl-pt2)
+                           (car end-pt)
+                           (cdr end-pt))
+            (invoke (as <java.awt.Graphics2D> buffer) 'draw curve))))
 
 ;draws dashed line
 (define (draw-dashed-line buffer :: <java.awt.Graphics> x-p1 y-p1 x-p2 y-p2 col . stroke-thickness)

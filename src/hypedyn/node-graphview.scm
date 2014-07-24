@@ -204,7 +204,6 @@
                                    ((not (pair? x)) (list x))
                                    (else (append (flatten (car x))
                                                  (flatten (cdr x))))))
-                         ; renamed from http://www.dzone.com/snippets/mapi-similar-standard-map
                          (map-with-index (lambda (line i)
                                              (drawtext dc
                                                        (- x (* (/ width 2.0) 0.9))
