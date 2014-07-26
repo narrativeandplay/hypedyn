@@ -982,7 +982,8 @@
            ; copy one link
            ; note: don't want to actually create yet, instead get the s-expr - use make-link
            (define copied-link
-             (make-link (string-append name " copy") -1 -1 start-index end-index
+;             (make-link (string-append name " copy") -1 -1 start-index end-index
+             (make-link name -1 -1 start-index end-index
                         #f -1 #f -1
                         "" linkID))
            (format #t "copied link: ~a ~a~%~!" linkID (ask copied-link 'to-save-sexpr))
@@ -1066,7 +1067,8 @@
                   (get-duplicate-offsets max-x max-y
                                          max-anywhere-x max-anywhere-y)))
       (let ((this-paste-selstart paste-selstart)
-            (this-copied-links copied-links)) ; this is the current problem - when to cache this correctly?
+            (this-copied-links copied-links)
+            (this-nodeID (get-edited-nodeID))) 
         (define (actual-paste-links)
 
           (format #t "actual-paste-links: paste-selstart=~a, this-paste-selstart=~a~%~!" paste-selstart this-paste-selstart)
@@ -1121,6 +1123,10 @@
 
         (define (undo-paste-links)
           (format #t "undo-paste-links~%~!")
+          
+          ; make sure we're editing the correct node
+          (nodeeditor-edit this-nodeID)
+          
           ; run through the links and delete them (undoing the paste)
           (map (lambda (c)
                  (let ((copied-link (car c))
