@@ -313,7 +313,7 @@
         (add-component m-edit1 (make-separator))))
   
   ; default edit actions
-  (set! m-edit1-cut (make-cut-menuitem))
+  (set! m-edit1-cut (make-cut-menuitem cut-link #f))
   (add-component m-edit1 m-edit1-cut)
   (set! m-edit1-copy (make-copy-menuitem copy-link #f))
   (add-component m-edit1 m-edit1-copy)
@@ -528,6 +528,7 @@
     (invoke (as <javax.swing.InputMap> scroll-keymap)
             'put the-keyStroke "none"))
   (delete-keymap #\C)
+  (delete-keymap #\X)
   (delete-keymap #\V)
   
   ; tell the editor about our undo manager
@@ -945,11 +946,18 @@
 
 
 ;;
-;; handle copy and paste of links
+;; handle cut, copy and paste of links
 ;; 
 
+(define (cut-link e)
+  (format #t "cut link~%~!")
+  (copy-with-links)
+  
+  ; return true so that normal cut action is executed afterwards
+  #t)
+  
 (define (copy-link e)
-  (format #t "copy text~%~!")
+  (format #t "copy link~%~!")
   (copy-with-links)
   
   ; return true so that normal copy action is executed afterwards
