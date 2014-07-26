@@ -244,13 +244,13 @@
 (define m-edit1-cut #f)
 (define m-edit1-copy #f)
 (define m-edit1-paste #f)
-(define m-edit1-copylink #f)
-(define m-edit1-pastelink #f)
+(define m-edit1-pastespecial #f)
 (define m-link #f)
 (define m-edit1-newlink #f)
 (define m-edit1-editlink #f)
 (define m-edit1-renamelink #f)
 (define m-edit1-dellink #f)
+(define m-node #f)
 (define m-edit1-setstartnode #f)
 (define m-edit1-editnoderule #f)
 (define nodeeditor-toolbar-panel #f)
@@ -315,10 +315,17 @@
   ; default edit actions
   (set! m-edit1-cut (make-cut-menuitem))
   (add-component m-edit1 m-edit1-cut)
-  (set! m-edit1-copy (make-copy-menuitem))
+  (set! m-edit1-copy (make-copy-menuitem copy-link #f))
   (add-component m-edit1 m-edit1-copy)
-  (set! m-edit1-paste (make-paste-menuitem))
+  ; paste with link
+  (set! m-edit1-paste (make-paste-menuitem paste-link-pre paste-link-post))
   (add-component m-edit1 m-edit1-paste)
+  ; paste plain text
+  (set! m-edit1-pastespecial (make-paste-menuitem))
+  (add-component m-edit1 m-edit1-pastespecial)
+  (set-menu-item-text m-edit1-pastespecial "Paste text")
+  (set-menu-item-mnemonic m-edit1-pastespecial #\K)
+  (set-menu-item-accelerator m-edit1-pastespecial #\K)
   
   (set! m-link (make-menu "Link"))
   (add-component m-bar1 m-link)
@@ -359,21 +366,12 @@
   (set-menu-item-accelerator m-edit1-dellink #\D)
   (set-menuitem-component m-edit1-dellink #f)
   
-  (add-component m-link (make-separator))
-  (set! m-edit1-copylink (make-copy-menuitem copy-link #f))
-  (set-menu-item-text m-edit1-copylink "Copy link")
-  (set-menu-item-mnemonic m-edit1-copylink #\J)
-  (set-menu-item-accelerator m-edit1-copylink #\J)
-  (add-component m-link m-edit1-copylink)
-  (set! m-edit1-pastelink (make-paste-menuitem paste-link-pre paste-link-post))
-  (add-component m-link m-edit1-pastelink)
-  (set-menu-item-text m-edit1-pastelink "Paste link")
-  (set-menu-item-mnemonic m-edit1-pastelink #\K)
-  (set-menu-item-accelerator m-edit1-pastelink #\K)
-  
+  (set! m-node (make-menu "Node"))
+  (add-component m-bar1 m-node)
+
   ; set start node menu item
   (set! m-edit1-setstartnode (make-menu-item "Set start node"))
-  (add-component m-edit1 m-edit1-setstartnode)
+  (add-component m-node m-edit1-setstartnode)
   (add-actionlistener m-edit1-setstartnode
                       (make-actionlistener (lambda (source) (dosetstartnode (get-edited-nodeID) populate-nodes-list-callback))))
   (set-menuitem-component m-edit1-setstartnode #f)
@@ -382,7 +380,7 @@
   (set! m-edit1-editnoderule (make-menu-item "Edit node rules"))
   (if (show-noderule?)
       (begin
-        (add-component m-edit1 m-edit1-editnoderule)
+        (add-component m-node m-edit1-editnoderule)
         (add-actionlistener m-edit1-editnoderule
                             (make-actionlistener (lambda (source) 
                                                    (rmgr-edit 'node (get-edited-nodeID))
@@ -507,25 +505,30 @@
   (ask node-editor 'set-beginupdate-proc! hd-begin-update)
   (ask node-editor 'set-endupdate-proc! hd-end-update)
   
+  (define the-splitpane-component (make-scrollpane
+                            (ask node-editor 'getcomponent)))
   (add-splitpane-component nodeeditor-frame-panel
-                           (make-scrollpane
-                            (ask node-editor 'getcomponent)) #f)
+                            the-splitpane-component
+                            #f)
   
-  ; working on keymapping, not sure why its not working... - alex
-;;  (define the-text-component (ask node-editor 'getcomponent))
-;;  (define the-keymap
-;;    (invoke (as <javax.swing.text.JTextComponent> the-text-component)
-;;            'addKeymap "mykeymap"
-;;            (invoke (as <javax.swing.text.JTextComponent> the-text-component)
-;;                    'getKeymap)))
-;;  (invoke (as <javax.swing.text.Keymap> the-keymap)
-;;          'addActionForKeyStroke
-;;          (<javax.swing.KeyStroke>:getKeyStroke (as <int> (char->integer #\C))
-;;                                                (invoke (<java.awt.Toolkit>:getDefaultToolkit)
-;;                                                        'getMenuShortcutKeyMask))
-;;          (as <javax.swing.AbstractAction> custom-copy-action))
-          
-
+  ; working on keymapping - alex
+  (define (delete-keymap in-key)
+    (define the-text-component (ask node-editor 'getcomponent))
+    (define text-keymap
+      (invoke (as <javax.swing.text.JTextComponent> the-text-component)
+              'getInputMap))
+    (define scroll-keymap
+      (invoke (as <javax.swing.JScrollPane> the-splitpane-component)
+              'getInputMap))
+    (define the-keyStroke (<javax.swing.KeyStroke>:getKeyStroke (as <int> (char->integer in-key))
+                                                                (invoke (<java.awt.Toolkit>:getDefaultToolkit)
+                                                                        'getMenuShortcutKeyMask)))
+    (invoke (as <javax.swing.InputMap> text-keymap)
+            'put the-keyStroke "none")
+    (invoke (as <javax.swing.InputMap> scroll-keymap)
+            'put the-keyStroke "none"))
+  (delete-keymap #\C)
+  (delete-keymap #\V)
   
   ; tell the editor about our undo manager
   (ask node-editor 'set-undo-manager! undo-manager undo-action redo-action nodeeditor-edit)
@@ -1145,7 +1148,7 @@
         (hd-postedit
          undo-manager
          (make-undoable-edit
-          "Paste Link"
+          "Paste"
           (lambda () ;; undo
             ;; here we need to delete the text (and hopefully automatically any links)
             ;; in the range where we pasted (selstart and selend *after* pasting*)
