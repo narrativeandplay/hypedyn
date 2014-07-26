@@ -172,7 +172,7 @@
         (invoke (as <java.awt.Graphics> buffer) 'drawLine x-p1 y-p1 x-p2 y-p2))
     ))
 
-(define (draw-arc buffer :: <java.awt.Graphics> start-pt end-pt ctrl-pt1 ctrl-pt2 col style . args)
+(define (draw-bezier-curve buffer :: <java.awt.Graphics> start-pt end-pt ctrl-pt1 ctrl-pt2 col style . args)
     (let ((the-colour (make-colour-from-list col)))
         (set-colour buffer the-colour style (if (pair? args) (car args)))
         (let ((curve (java.awt.geom.GeneralPath)))
