@@ -46,6 +46,10 @@
                remove-index-from-list
                list-count-equal
                insert-sorted
+               
+               safe-take
+               flatten
+               map-with-index
                )
 
 (module-static 'init-run)
@@ -269,3 +273,28 @@
         (list-insert lst obj index)
     ))
   (helper 0))
+
+; because kawa didn't implement this
+; actually it did, but it doesn't handle n > length!!! - alex
+(define (safe-take lst n)
+  (cond ((= n 0) '())
+        ((> n (length lst)) lst)
+        (else (cons (car lst)
+                    (take (cdr lst) (- n 1))))))
+
+; once again, kawa does not define flatten
+; from http://rosettacode.org/wiki/Flatten_a_list#Scheme
+(define (flatten x)
+  (cond ((null? x) '())
+        ((not (pair? x)) (list x))
+        (else (append (flatten (car x))
+                      (flatten (cdr x))))))
+
+;;;  mapi: similar to standard map in Scheme, but function has index of elements as parameter.
+; renamed from http://www.dzone.com/snippets/mapi-similar-standard-map
+(define (map-with-index p l)
+  (let loop ((l l) (i 0) (r '()))
+    (if (pair? l)
+        (loop (cdr l) (+ i 1) (cons (p (car l) i) r))
+        (reverse r))))
+

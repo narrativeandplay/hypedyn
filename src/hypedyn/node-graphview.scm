@@ -21,6 +21,7 @@
 (require "../common/object-graphview.scm")
 (require "../common/objects.scm")
 (require "../common/datatable.scm") ;; get 
+(require "../common/list-helpers.scm") ;; flatten, take, map-with-index
 (require "../kawa/graphics-kawa.scm")
 (require "../kawa/color.scm")
 (require "config-options.scm") ;; node-name-limit
@@ -125,7 +126,22 @@
     ;; dont draw anything for tab
     (define (custom-tab-draw dc type show?)
       #t)
-    
+
+    ; because kawa doesn't have a string-split
+    ; from http://schemecookbook.org/Cookbook/StringSplit
+    (define (str-split str ch)
+      (let ((len (string-length str)))
+        (letrec
+            ((split
+              (lambda (a b)
+                (cond
+                 ((>= b len) (if (= a b) '("") (cons (substring str a b) '())))
+                 ((char=? ch (string-ref str b)) (if (= a b)
+                                                     (cons "" (split (+ 1 a) (+ 1 b)))
+                                                     (cons (substring str a b) (split (+ 1 b) (+ 1 b)))))
+                 (else (split a (+ 1 b)))))))
+          (split 0 0))))
+
     ; update node display in graph view
     (define (add-node new-nodeID name x y)
       (let* ((the-style (if (has-alt-text? new-nodeID)
@@ -146,21 +162,12 @@
           ; set custom drawing
           (ask new-node 'set-custom-node-draw
                (lambda (dc x y bg-color selected? data)
-                 ;; truncate the node name 
-                 (draw-node new-node dc x y bg-color selected? data (ask the-node 'anywhere?)))
-                 )
+                 (draw-node new-node dc x y bg-color selected? data (ask the-node 'anywhere?))))
         
-         ;; override the text drawing behavior of graph-editor
+          ;; override the text drawing behavior of graph-editor
           (ask new-node 'set-custom-node-text-draw
                (lambda (dc x y tw th td ta text-color bg-color name text-height)
-                 (set! name
-                       (if (> (string-length name) node-name-limit)
-                           (string-append (substring name 0 node-name-limit) "...")
-                           name))
-                 (let-values
-                     (((tw1 th1 td1 ta1) (get-text-extent dc name text-height)))
-                   (drawtext dc (- x (* tw1 0.5)) (+ y (* th1 0.5)) text-color bg-color name))
-                 ))
+                 (draw-node-text new-node the-node dc x y tw th td ta text-color bg-color name text-height)))
           
           ;; draw the new node selected
           (ask new-node 'show #t)
@@ -172,74 +179,124 @@
         (update-node-emphasis new-nodeID)))
     
     ;; custom drawing of nodes
-          (define (draw-node this-node dc x y bg-color selected? data is-anywhere)
-            (let ((color #f))
-              (let-values (((width height) (ask this-node 'get-size)))
-                
-                (define node-name (ask this-node 'get-name))
-                ;; draw or undraw selected square
-                (if selected?
-                    (set! color red-color)
-                    (set! color bg-color))
-                (rectangle-fill dc
-                                (- x (/ width 2.0) 4)
-                                (- y (/ height 2.0) 4)
-                                (+ x (/ width 2.0) 5)
-                                (+ y (/ height 2.0) 5)
-                                color 'solid)
+    (define (draw-node this-node dc x y bg-color selected? data is-anywhere)
+      (let ((color #f))
+        (let-values (((width height) (ask this-node 'get-size)))
 
-                ;; draw node square
-                (drawnodesquare dc #t x y width height
-                                (if is-anywhere dark-grey-color grey-color))
-                ))
+          ;(set! width (+ width 70.0))
+          ;(set! height (+ height 100.0))
+          ;; draw or undraw selected square
+          (if selected?
+              (set! color red-color)
+              (set! color bg-color))
+          (rectangle-fill dc
+                          (- x (/ width 2.0) 4)
+                          (- y (/ height 2.0) 4)
+                          (+ x (/ width 2.0) 5)
+                          (+ y (/ height 2.0) 5)
+                          color 'solid)
+
+          ;; draw node square
+          (drawnodesquare dc #t x y width height
+                          (if is-anywhere dark-grey-color grey-color))
+          ))
+      )
+
+    ; draw node square helper 
+    (define (drawnodesquare dc show? bx by width height in-colour)
+      ; draw the node square
+      ; draw boundary border
+      (if show?
+          (begin
+          (rectangle-fill dc
+                          (- bx (/ width 2.0))
+                          (- by (/ height 2.0))
+                          (+ bx (/ width 2.0))
+                          (- by (/ height 3.5))
+                          in-colour 'solid)
+          (rectangle-fill dc
+                          (- bx (/ width 2.0))
+                          (- by (/ height 3.5))
+                          (+ bx (/ width 2.0))
+                          (+ by (/ height 2.0))
+                          white-smoke-color 'solid)
             )
-          
-          ; draw node square helper 
-          (define (drawnodesquare dc show? bx by width height in-colour)
-                                        ; draw the node square
-                                        ; draw boundary border
-            (if show?
-                (rectangle-fill dc
-                                (- bx (/ width 2.0))
-                                (- by (/ height 2.0))
-                                (+ bx (/ width 2.0))
-                                (+ by (/ height 2.0))
-                                in-colour 'solid)
-                (rectangle-fill dc
-                                (- bx (/ width 2.0))
-                                (- by (/ height 2.0))
-                                (+ bx (/ width 2.0))
-                                (+ by (/ height 2.0))
-                                white-color 'solid))
+          (rectangle-fill dc
+                          (- bx (/ width 2.0))
+                          (- by (/ height 2.0))
+                          (+ bx (/ width 2.0))
+                          (+ by (/ height 2.0))
+                          white-color 'solid))
 
-                                        ; draw a white line on top and left
-            (drawline dc
-                      (- bx (/ width 2.0))
-                      (- by (/ height 2.0))
-                      (- bx (/ width 2.0))
-                      (+ by (/ height 2.0))
-                      white-color 'solid)
-            (drawline dc
-                      (- bx (/ width 2.0))
-                      (- by (/ height 2.0))
-                      (+ bx (/ width 2.0))
-                      (- by (/ height 2.0))
-                      white-color 'solid)
+      ; draw a white line on top and left
+      (drawline dc
+                (- bx (/ width 2.0))
+                (- by (/ height 2.0))
+                (- bx (/ width 2.0))
+                (+ by (/ height 2.0))
+                white-color 'solid)
+      (drawline dc
+                (- bx (/ width 2.0))
+                (- by (/ height 2.0))
+                (+ bx (/ width 2.0))
+                (- by (/ height 2.0))
+                white-color 'solid)
 
-                                        ; draw a black line on bottom and right
-            (drawline dc
-                      (- bx (/ width 2.0))
-                      (- (+ by (/ height 2.0)) 1.0)
-                      (+ bx (/ width 2.0))
-                      (- (+ by (/ height 2.0)) 1.0)
-                      black-color 'solid)
-            (drawline dc
-                      (+ bx (/ width 2.0))
-                      (- by (/ height 2.0))
-                      (+ bx (/ width 2.0))
-                      (- (+ by (/ height 2.0)) 1.0)
-                      black-color 'solid)
-            )
+      ; draw a black line on bottom and right
+      (drawline dc
+                (- bx (/ width 2.0))
+                (- (+ by (/ height 2.0)) 1.0)
+                (+ bx (/ width 2.0))
+                (- (+ by (/ height 2.0)) 1.0)
+                black-color 'solid)
+      (drawline dc
+                (+ bx (/ width 2.0))
+                (- by (/ height 2.0))
+                (+ bx (/ width 2.0))
+                (- (+ by (/ height 2.0)) 1.0)
+                black-color 'solid)
+
+      ; Draw line under node title
+      (drawline dc
+                (- bx (/ width 2.0))
+                (- by (/ height 3.5))
+                (+ bx (/ width 2.0))
+                (- by (/ height 3.5))
+                black-color 'solid)
+      )
+    
+    ; custom drawing of node text
+    (define (draw-node-text new-node the-node dc x y tw th td ta text-color bg-color name text-height)
+      (set! name
+            (if (> (string-length name) node-name-limit)
+                (string-append (substring name 0 node-name-limit) "...")
+                name))
+      (let-values
+          (((tw1 th1 td1 ta1) (get-text-extent dc name text-height)))
+        (drawtext dc (- x (* tw1 0.5)) (+ (- y 55.0) (* th1 0.5)) text-color bg-color name))
+      (let-values
+          (((tw1 th1 td1 ta1) (get-text-extent dc name text-height)))
+        (let-values (((width height) (ask new-node 'get-size)))
+          (define line-length-limit 18)
+          (define line-count-limit 8)
+          (define (word-wrap string n)
+            (cond ((<= n 0) '(""))
+                  ((< (string-length string) n) (list string))
+                  (else (cons (substring string 0 n)
+                              (word-wrap (substring string n (string-length string)) n)))))
+          (map-with-index (lambda (line i)
+                            (drawtext dc
+                                      (- x (* (/ width 2.0) 0.9))
+                                      (+ (- y 30.0) (* th1 0.5) (* i ta1))
+                                      dark-grey-color
+                                      bg-color
+                                      line))
+                          (safe-take (flatten (map (lambda (line)
+                                                     (word-wrap line line-length-limit))
+                                                   (str-split (ask the-node 'content) #\newline)))
+                                     line-count-limit)))
+        )
+      )
 
      ;; TODO: subclass of node should be able to override 
     ;; 1) truncating name behavior without putting in callbacks
