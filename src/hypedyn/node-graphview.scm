@@ -22,6 +22,7 @@
 (require "../common/objects.scm")
 (require "../common/datatable.scm") ;; get 
 (require "../common/list-helpers.scm") ;; flatten, take, map-with-index
+(require "../kawa/strings.scm") ;; string-lastindexof
 (require "../kawa/graphics-kawa.scm")
 (require "../kawa/color.scm")
 (require "config-options.scm") ;; node-name-limit
@@ -277,13 +278,22 @@
       (let-values
           (((tw1 th1 td1 ta1) (get-text-extent dc name text-height)))
         (let-values (((width height) (ask new-node 'get-size)))
-          (define line-length-limit 18)
+          (define line-length-limit 20)
           (define line-count-limit 8)
           (define (word-wrap string n)
             (cond ((<= n 0) '(""))
                   ((< (string-length string) n) (list string))
-                  (else (cons (substring string 0 n)
-                              (word-wrap (substring string n (string-length string)) n)))))
+                  (else
+                   (let* ((raw-line (substring string 0 n))
+                          (end-index (string-lastindexof raw-line " "))
+                          (line-end (if (= -1 end-index)
+                                        n
+                                        end-index))
+                          (next-start (if (= -1 end-index)
+                                          n
+                                          (+ 1 end-index))))
+                     (cons (substring string 0 line-end)
+                           (word-wrap (substring string next-start (string-length string)) n))))))
           (map-with-index (lambda (line i)
                             (drawtext dc
                                       (- x (* (/ width 2.0) 0.9))

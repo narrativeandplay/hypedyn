@@ -77,9 +77,9 @@
 
 (define tab-width 16.0) ;changed to be bigger (previously 10) for ioblocks
 (define tab-height 16.0) ;ioblocks
-(define node-width 60.0)
-(define node-height 25.0)
-(define node-buffer 5.0)
+(define node-width 5.0)  ; this is just used for grid size
+(define node-height 5.0) ; this is just used for grid size
+(define node-buffer 5.0) ; this is just used for grid spacing
 (define text-height 12.0)
 
 ; use our object system, replace send with ask
