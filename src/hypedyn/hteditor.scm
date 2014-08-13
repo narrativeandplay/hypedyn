@@ -878,8 +878,8 @@
             
 
 ; starting position for first node in the story
-(define-constant initial-x 80)
-(define-constant initial-y 45)
+(define-constant initial-x 50)
+(define-constant initial-y 125)
 
 ; calculate the new x position
 (define (calc-new-node-x in-anywhere)
@@ -887,10 +887,11 @@
   (let-values (((max-x max-y max-anywhere-x max-anywhere-y)
                 (get-max-node-positions)))
     ; clamp to grid if necessary
-    (let ((raw-x (+ max-x initial-x)))
-      (if (snap-to-grid?)
-          (* initial-x (round (div raw-x initial-x)))
-          raw-x))))
+    (let ((raw-x (+ max-x (* initial-x 3))))
+;      (if (snap-to-grid?)
+;          (* initial-x (round (div raw-x initial-x)))
+;          raw-x))))
+        raw-x)))
 
 ; create a new node
 (define (donewnode anywhere)
