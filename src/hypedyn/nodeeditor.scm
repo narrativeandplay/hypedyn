@@ -313,9 +313,9 @@
         (add-component m-edit1 (make-separator))))
   
   ; default edit actions
-  (set! m-edit1-cut (make-cut-menuitem cut-link #f))
+  (set! m-edit1-cut (make-cut-menuitem cut-link-pre cut-link-post))
   (add-component m-edit1 m-edit1-cut)
-  (set! m-edit1-copy (make-copy-menuitem copy-link #f))
+  (set! m-edit1-copy (make-copy-menuitem copy-link-pre copy-link-post))
   (add-component m-edit1 m-edit1-copy)
   ; paste with link
   (set! m-edit1-paste (make-paste-menuitem paste-link-pre paste-link-post))
@@ -947,36 +947,43 @@
 
 ;;
 ;; handle cut, copy and paste of links
-;; 
+;;
+;; need to 1) check if there are any links in the text, and
+;; 2) store those links so they can be duplicated/pasted
+;;
+;; strategy for duplicating:
+;; 1) make a copy but don't add to data structure
+;; 2) on paste, duplicate then shift the copy
+;;
 
-(define (cut-link e)
+(define copied-text #f) ; plain text
+(define copied-links '()) ; ((link (rule (conditions ...) (actions ...)) ...) ...)
+(define copied-transferable #!null) ; store the transferable from clipboard, for comparison (is this safe?)
+
+(define (cut-link-pre e)
   (format #t "cut link~%~!")
   (copy-with-links)
   
   ; return true so that normal cut action is executed afterwards
   #t)
-  
-(define (copy-link e)
+
+(define (cut-link-post e)
+    (format #t "after cut link~%~!")
+    (copy-with-links-post))
+
+(define (copy-link-pre e)
   (format #t "copy link~%~!")
-  (copy-with-links)
+  (copy-with-links-pre)
   
   ; return true so that normal copy action is executed afterwards
   #t)
 
-; need to identify whether copied text is the same as clipboard contents,
-; and if not, clear the link list and just paste as plain text
+(define (copy-link-post e)
+    (format #t "after copy link~%~!")
+    (copy-with-links-post))
 
-(define copied-text #f) ; plain text
-(define copied-links '()) ; ((link (rule (conditions ...) (actions ...)) ...) ...)
-
-  ; need to 1) check if there are any links in the text, and
-  ; 2) store those links so they can be duplicated/pasted
-  
-  ; strategy for duplicating:
-  ; 1) make a copy but don't add to data structure
-  ; 2) on paste, duplicate then shift the copy
-
-(define (copy-with-links)
+; before the copy, grab the text and the list of links
+(define (copy-with-links-pre)
   ; remember copied text
   (set! copied-text (ask node-editor 'getselectedtext))
   (format #t "copied text: ~a~%~!" copied-text)
@@ -1052,21 +1059,53 @@
                 rule-lst)
          
          (set! copied-links (append copied-links (list (list copied-link copied-rules))))))
-       contained-links)
+       contained-links))
 
-  ; handling the clipboard
-;  (define clipboard (invoke (<java.awt.Toolkit>:getDefaultToolkit)
-;                            'getSystemClipboard))
+(define (copy-with-links-post)
+    (format #t "copy-with-links post~%~!")
+
+    ; handling the clipboard
+;    (define clipboard (invoke (<java.awt.Toolkit>:getDefaultToolkit)
+;                              'getSystemClipboard))
 ;
-;  (define stringSelection (<java.awt.datatransfer.StringSelection> (list->string copied-links)))
+;    (define stringSelection (<java.awt.datatransfer.StringSelection> (list->string copied-links)))
 ;
-;  (invoke (as <java.awt.datatransfer.Clipboard> clipboard)
-;          'setContents stringSelection stringSelection)
-;  (format #t "stored on clipboard: ~a~%~!" (list->string copied-links))
+;    (invoke (as <java.awt.datatransfer.Clipboard> clipboard)
+;            'setContents stringSelection stringSelection)
+;    (format #t "stored on clipboard: ~a~%~!" (list->string copied-links))
 
 
-  ; idea - set an optional data flavour (link), and check it before pasting
-  )
+    ; idea - set an optional data flavour (link), and check it before pasting
+
+    (define clipboard (invoke (<java.awt.Toolkit>:getDefaultToolkit)
+                              'getSystemClipboard))
+    (define transferable (invoke (as <java.awt.datatransfer.Clipboard> clipboard)
+                                 'getContents clipboard))
+    (if (not (is-null? transferable))
+        (try-catch
+            (if (invoke (as <java.awt.datatransfer.Transferable> transferable)
+                        'isDataFlavorSupported <java.awt.datatransfer.DataFlavor>:stringFlavor)
+                (set! clip-string (invoke (as <java.awt.datatransfer.Transferable> transferable)
+                                          'getTransferData <java.awt.datatransfer.DataFlavor>:stringFlavor)))
+            (ex <java.awt.datatransfer.UnsupportedFlavorException>
+                (begin
+                    (display (*:toString ex))(newline)
+                    (*:printStackTrace ex)))
+            (ex <java.io.IOException>
+                (begin
+                    (display (*:toString ex))(newline)
+                    (*:printStackTrace ex)))
+            ))
+
+    (format #t "got clipboard contents: ~a, ~a, stored clip: ~a~%~!" transferable clip-string copied-text)
+
+    ; store the transferable for comparison
+    (set! copied-transferable transferable))
+
+
+; for paste, need to identify whether copied text is the same as clipboard contents,
+; and if not, clear the link list and just paste as plain text
+
 
 (define paste-selstart 0)
 
@@ -1094,7 +1133,6 @@
                             'getSystemClipboard))
   (define transferable (invoke (as <java.awt.datatransfer.Clipboard> clipboard)
                                'getContents clipboard))
-  (define clip-string "")
   (if (not (is-null? transferable))
       (try-catch
           (if (invoke (as <java.awt.datatransfer.Transferable> transferable)
@@ -1114,8 +1152,9 @@
   (format #t "got clipboard contents: ~a, ~a, stored clip: ~a~%~!" transferable clip-string copied-text)
 
   ; check if the clipboard is still the same
-  (if (string=? clip-string copied-text)
-      ; yes, so paste the links
+  ;(if (string=? clip-string copied-text)
+  (if (eq? transferable copied-transferable)
+          ; yes, so paste the links
       (let-values (((max-x max-y max-anywhere-x max-anywhere-y)
                     (get-max-node-positions)))
         (let-values (((dup-offset-ID dup-offset-x dup-offset-anywhere-x)
@@ -1212,15 +1251,16 @@
 
                 ;; here we need to redo the paste, by wrapping all the above code in a function
                 (actual-paste-links)
-                )))
-
-            ;; end the undoable paste links action
-            (hd-end-update undo-manager undo-action redo-action))))
+                ))))))
       ; clipboard has changed, so clear the stored links
       (begin
           (format #t "clipboard has changed!~%~!")
           (set! copied-links '())
-          (set! copied-text ""))))
+          (set! copied-text "")
+          (set! copied-transferable #!null)))
+
+  ;; end the undoable paste links action
+  (hd-end-update undo-manager undo-action redo-action))
 
 
 (define (paste-link in-paste-selstart link-obj linkID parentID)
