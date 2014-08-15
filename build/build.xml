@@ -379,14 +379,34 @@
                  icon="${mac.package.dir}/hypedyn.icns"
                  mainclassname="runhypedyn"
                  signature="Dyn1"
-                 copyright="Copyright © 2008-2014 National University of Singapore and National University of Singapore. All rights reserved.">
+                 copyright="Copyright © 2008-2014 National University of Singapore and National University of Singapore. All rights reserved."
+                 version="28 November 2013">
           <runtime dir="${env.JAVA_HOME}"/>
           <classpath file="${build.hypedyn.jar}"/>
           <classpath file="${build.kawa.jar}"/>
           <option value="-Djava.library.path=$APP_ROOT/Contents/Java/" />
+          <bundledocument extensions="dyn"
+                          icon="dyn.icns"
+                          name="HypeDyn Source File"
+                          role="Editor">
+          </bundledocument>
+          <!-- Workaround since the icon parameter for bundleapp doesn't work -->
+          <option value="-Xdock:icon=${mac.package.dir}/hypedyn.icns"/>
+          <option value="-Dapple.laf.useScreenMenuBar=true"/>
+          <option value="-Dcom.apple.macos.use-file-dialog-packages=true"/>
+          <option value="-Dcom.apple.macos.useScreenMenuBar=true"/>
+          <option value="-Dcom.apple.mrj.application.apple.menu.about.name=HypeDyn"/>
+          <option value="-Dcom.apple.smallTabs=true"/>
+          <option value="-Dfile.encoding=UTF-8"/>
+          <option value="-Xmx1024M" name="Xmx"/>
       </bundleapp>
 
-	<!-- copy the help files -->
+      <!-- copy the document icon as this fails with appbundler -->
+      <copy todir="${dist.editor.package}/Contents/Resources">
+          <fileset file="${mac.package.dir}/dyn.icns"/>
+      </copy>
+
+      <!-- copy the help files -->
 	<copy todir="${dist.editor.package.javadir}/help">
 	  	<fileset dir="${src.dir}/help"/>
 	</copy>
