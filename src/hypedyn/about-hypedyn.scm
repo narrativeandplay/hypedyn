@@ -1,6 +1,6 @@
 ;; Part of the HypeDyn project - http://www.partechgroup.org/hypedyn
 ;; 
-;; Copyright (C) 2008-2013
+;; Copyright (C) 2008-2014
 ;; National University of Singapore
 ;;
 ;; This program is free software; you can redistribute it and/or modify
@@ -50,8 +50,8 @@
   (set-text-component about-editor #f #t)
   (set-text about-editor 
             "HypeDyn hypertext fiction editor 
-Version 2.3b rev 333, 28 November 2013\n
-Copyright (C) 2008-2013
+Version 2.3b2 rev 357, 15 August 2014\n
+Copyright (C) 2008-2014
 National Univeristy of Singapore\n
 This program is free software; you can redistribute it and/or 
 modify it under the terms of the GNU General Public License as 
@@ -89,7 +89,7 @@ The following libraries are bundled with the software:
 AppleJavaExtensions\n
 Credits\n
 Programming:
-Ruchi Bajoria, Chuah Teong Leong, Alex Mitchell and
+Ruchi Bajoria, Benedict Lee, Chuah Teong Leong, Alex Mitchell and
 Zeng Qiang\n
 Testing:
 Ruchi Bajoria, Zeng Qiang, Alex Mitchell,
@@ -104,7 +104,9 @@ theory of interactive digital media\", NUS AcRF Grant
 R-124-000-024-112.\n
 This work was funded in part under a Singapore-MIT GAMBIT 
 Game Lab research grant, \"Tools for Telling: How Game 
-Development Systems Shape Interactive Storytelling.\"")
+Development Systems Shape Interactive Storytelling.\"\n
+This work was funded in part under a Faculty of Arts
+and Social Sciences, NUS, startup grant.")
   (let(( about-editor-scroll (make-scrollpane about-editor)))
     (add-component about-window-frame about-editor-scroll))
   (pack-frame about-window-frame))

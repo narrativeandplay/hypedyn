@@ -9,10 +9,13 @@
 	
   <!-- Give the user a chance to override the defaults. -->
   <property file="build.properties"/>
-  
-  <property name="version.release" value="2.3.0.333"/>
-  <property name="version.local" value=""/>
-  <property name="version" value="${version.release}${version.local}"/>
+
+  <property name="appname" value="HypeDyn"/>
+  <property name="version.release" value="2.3b2"/>
+  <property name="version.local" value="357"/>
+  <property name="version" value="${version.release} rev ${version.local}"/>
+  <property name="copyright" value="Copyright © 2008-2014 National University of Singapore and National University of Singapore. All rights reserved."/>
+  <property name="versiondate" value="15 August 2014"/>
   
   <property name="kawa.dir"      value="/usr/local/bin/"/>
 
@@ -269,23 +272,23 @@
 
   <target name="dist-editor-macosx" if="macosx" depends="initappbundler">
       <bundleapp outputdirectory="${dist.dir}"
-                 name="HypeDyn"
-                 displayname="HypeDyn"
+                 name="${appname}"
+                 displayname="${appname}"
                  identifier="org.narrativeandplay.hypedyn"
-                 shortversion="2.3b rev 333"
+                 shortversion="${version}"
                  applicationCategory="public.app-category.developer-tools"
                  icon="${mac.package.dir}/hypedyn.icns"
                  mainclassname="runhypedyn"
                  signature="Dyn1"
-                 copyright="Copyright © 2008-2014 National University of Singapore and National University of Singapore. All rights reserved."
-                 version="28 November 2013">
+                 copyright="${copyright}"
+                 version="${versiondate}">
           <runtime dir="${env.JAVA_HOME}"/>
           <classpath file="${build.hypedyn.jar}"/>
           <classpath file="${build.kawa.jar}"/>
           <option value="-Djava.library.path=$APP_ROOT/Contents/Java/" />
           <bundledocument extensions="dyn"
                           icon="dyn.icns"
-                          name="HypeDyn Source File"
+                          name="${appname} Source File"
                           role="Editor">
           </bundledocument>
           <!-- Workaround since the icon parameter for bundleapp doesn't work -->
@@ -293,7 +296,7 @@
           <option value="-Dapple.laf.useScreenMenuBar=true"/>
           <option value="-Dcom.apple.macos.use-file-dialog-packages=true"/>
           <option value="-Dcom.apple.macos.useScreenMenuBar=true"/>
-          <option value="-Dcom.apple.mrj.application.apple.menu.about.name=HypeDyn"/>
+          <option value="-Dcom.apple.mrj.application.apple.menu.about.name=${appname}"/>
           <option value="-Dcom.apple.smallTabs=true"/>
           <option value="-Dfile.encoding=UTF-8"/>
           <option value="-Xmx1024M" name="Xmx"/>

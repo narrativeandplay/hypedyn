@@ -1,6 +1,6 @@
 ;; Part of the HypeDyn project - http://www.partechgroup.org/hypedyn
 ;; 
-;; Copyright (C) 2008-2013
+;; Copyright (C) 2008-2014
 ;; National University of Singapore
 ;;
 ;; This program is free software; you can redistribute it and/or modify
@@ -431,7 +431,7 @@
 ;                special 0 = 2
 ;                special 3 = 1
 ;              
-;              2013 case 4 ;; whole deletion within link
+;              2014 case 4 ;; whole deletion within link
 ;                special 2 = 0  
 ;                special 1 = 3  
               ;; possible conflict with case 3 is when 
