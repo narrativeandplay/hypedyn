@@ -50,10 +50,10 @@
             (make-directory (get-temp-dir))
 
             ; start the server - disabled as doesn't seem to work in app bundle with Java 7 on MacOS X (not needed yet anyway)
-            (if (not (is-mac-os?))
-                (begin
-                    (gnu.kawa.servlet.KawaHttpHandler:addAutoHandler "/" (get-temp-dir))
-                    (gnu.kawa.servlet.KawaHttpHandler:startServer (get-local-port))))
+;            (if (not (is-mac-os?))
+;                (begin
+;                    (gnu.kawa.servlet.KawaHttpHandler:addAutoHandler "/" (get-temp-dir))
+;                    (gnu.kawa.servlet.KawaHttpHandler:startServer (get-local-port))))
         )
         (ex <java.lang.Throwable>
             (begin
@@ -62,8 +62,7 @@
               (make-error-dialog (get-main-ui-frame)
                                  "Hypedyn Error"
                                  (string-append
-                                  "Unable to start HypeDyn.\nQuit any other copies of HypeDyn\nthat may be running and try again."
-                                  (*:toString ex)))
+                                  "Unable to start HypeDyn.\nQuit any other copies of HypeDyn\nthat may be running and try again."))
               (exit)
               )))
       )

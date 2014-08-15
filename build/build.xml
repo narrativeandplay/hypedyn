@@ -71,10 +71,6 @@
      <include name="*.class"/>
   </fileset>
 
-  <!-- for app bundler -->
-  <property environment="env"/>
-  <taskdef name="bundleapp" classname="com.oracle.appbundler.AppBundlerTask"/>
-
   <!-- targets -->
   
   <!-- top most parent task -->
@@ -92,7 +88,7 @@
   <!-- <target name="dist" depends="dist-editor, dist-reader, dist-applet" /> -->
 	
   <!-- note clean-dist and dist-common is only done once -->
-  <target name="dist-editor" depends="dist-common, dist-editor-windows, dist-editor-linux, dist-editor-macosx-new" />
+  <target name="dist-editor" depends="dist-common, dist-editor-windows, dist-editor-linux, dist-editor-macosx" />
   <target name="dist-reader" depends="dist-reader-windows, dist-reader-linux, dist-reader-macosx" />
   <target name="dist-applet" depends="dist-applet-common" />
    
@@ -362,10 +358,18 @@
   	<!-- copy the readme file -->
   	<copy file="${build.dir}/windows/README.txt" todir="${dist.editor.package}" />
   </target>
-  		
-  <!-- Distribute Editor Mac -->
 
-  <target name="dist-editor-macosx-new" if="macosx">
+    <!-- for app bundler -->
+    <property environment="env"/>
+
+    <target name="initappbundler">
+        <taskdef name="bundleapp" classname="com.oracle.appbundler.AppBundlerTask"/>
+    </target>
+
+
+    <!-- Distribute Editor Mac -->
+
+  <target name="dist-editor-macosx" if="macosx" depends="initappbundler">
       <bundleapp outputdirectory="${dist.dir}"
                  name="HypeDyn"
                  displayname="HypeDyn"

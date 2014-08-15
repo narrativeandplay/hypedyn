@@ -371,9 +371,4 @@
         (let ((libpath  (get-system-property "java.library.path")))
           (if (not (is-null? libpath))
               (set! the-path libpath))))
-
-;    (make-confirm-dialogbox
-;        #!null 3
-;        (string-append "Path: " the-path)
-;        "get-content-file")
     (make-file (string-append the-path "/" in-name))))
