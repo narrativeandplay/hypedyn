@@ -1790,7 +1790,7 @@
 ; temporarily disable loading from local web server, as this is broken on MacOS using Java 7
 ;                  (<java.net.URI> (string-append "http://localhost:" (number->string (get-local-port))
 ;                                                 "/temp" (number->string file-suffix) "/index.html")))
-                   (<java.net.URI> (string-append "file://" the-tmp-filename "/index.html")))
+                   (get-file-URI (make-file (string-append the-tmp-filename "/index.html"))))
           (set-runstate #f)))))
 
 ; stop reading when stop button in main-ui is pressed
