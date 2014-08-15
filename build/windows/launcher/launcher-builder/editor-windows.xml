@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <launch4jConfig>
   <dontWrapJar>true</dontWrapJar>
   <headerType>gui</headerType>
@@ -9,23 +10,24 @@
   <priority>normal</priority>
   <downloadUrl>http://java.com/download</downloadUrl>
   <supportUrl></supportUrl>
-  <customProcName>false</customProcName>
   <stayAlive>false</stayAlive>
   <manifest></manifest>
   <icon>hypedyn.ico</icon>
   <jre>
     <path>path</path>
+    <bundledJre64Bit>false</bundledJre64Bit>
     <minVersion>1.7.0</minVersion>
     <maxVersion></maxVersion>
     <jdkPreference>preferJre</jdkPreference>
+    <runtimeBits>64/32</runtimeBits>
   </jre>
   <versionInfo>
-    <fileVersion>2.3.2.333</fileVersion>
-    <txtFileVersion>2.3b2 rev 333 15 August 2014</txtFileVersion>
+    <fileVersion>2.3.2.357</fileVersion>
+    <txtFileVersion>2.3b2 rev 357 15 August 2014</txtFileVersion>
     <fileDescription>HypeDyn version 2.3b2</fileDescription>
     <copyright>2008-2014 National University of Singapore</copyright>
-    <productVersion>2.3.2.333</productVersion>
-    <txtProductVersion>2.3b2 rev 333 15 August 2014</txtProductVersion>
+    <productVersion>2.3.2.357</productVersion>
+    <txtProductVersion>2.3b2 rev 357 15 August 2014</txtProductVersion>
     <productName>HypeDyn</productName>
     <companyName>National University of Singapore</companyName>
     <internalName>HypeDyn</internalName>

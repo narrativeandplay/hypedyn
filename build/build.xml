@@ -263,7 +263,7 @@
     <!-- for app bundler -->
     <property environment="env"/>
 
-    <target name="initappbundler">
+    <target name="initappbundler" if="macosx">
         <taskdef name="bundleapp" classname="com.oracle.appbundler.AppBundlerTask"/>
     </target>
 
