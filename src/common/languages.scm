@@ -100,7 +100,7 @@
                                              (lambda (source)
                                                (begin
                                                  (set-language! menuitem langname
-                                                                langfilename helpfilename initproc))))))))
+                                                                langfilename helpfilename initproc #f))))))))
        lang-info))
 
 ; load the language specified in the preferences file, if any
@@ -113,7 +113,7 @@
               ( langfilename (list-ref pref-langinfo 1))
               ( helpfilename (list-ref pref-langinfo 2))
               ( initproc (list-ref pref-langinfo 3)))
-          (set-language! #f langname langfilename helpfilename initproc))
+          (set-language! #f langname langfilename helpfilename initproc #f))
         (begin
           (display "no preferred language found.\n")
           (no-language-set)))))

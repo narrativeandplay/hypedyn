@@ -40,6 +40,7 @@
 (require "../common/fileio.scm")
 (require "../common/main-ui.scm")
 (require "htfileio.scm")
+(require "config-options.scm") ; mac-testing?
 
 (module-export get-last-exported-dir set-last-exported-dir! update-last-exported-dir!
                export-web export-standalone
@@ -113,7 +114,7 @@
           (update-last-exported-dir! export-folder)
 
           ; Note: put try-catch around this and cleanup on failure
-          (let* ((source-folder-string (path-file (get-content-file export-web-folder))))
+          (let* ((source-folder-string (path-file (get-content-file export-web-folder (mac-testing?)))))
             ; copy relevant files into folder
             ; note, copy-file-nio requires java.lang.File
             (display "source-folder-string ")(display source-folder-string)(newline)
@@ -313,7 +314,7 @@
   ; copy relevant files into folder
   ; try my own copy proc as the kawa one chokes on big files
   ; Note: put try-catch around this and cleanup on failure
-  (let* ((source-folder-string (path-file (get-content-file export-standalone-folder)))
+  (let* ((source-folder-string (path-file (get-content-file export-standalone-folder (mac-testing?))))
          ; note, copy-file-nio requires java.lang.File
          (app-filename (cond ((= export-platform export-standalone-macos)
                               export-standalone-macos-app-filename)

@@ -497,7 +497,7 @@
   (toggle-frame-maximized frame))
 
 ; set current language
-(define (set-language! langmenuitem langname langfilename helpfilename initproc)
+(define (set-language! langmenuitem langname langfilename helpfilename initproc in-mac-testing)
 ;  (with-handlers 
 ;  ([exn:fail? (lambda (exn) (showstatus (exn-message exn)))])
   ; close any inspectors
@@ -566,7 +566,7 @@
 ;    (add-languages lang-info set-language!))
 
   ; set the help file
-  (set-helpfile! helpfilename)
+  (set-helpfile! helpfilename in-mac-testing)
   
   ; update help and about menu item labels
   (set-menu-item-text m-help-language (string-append langname " Help"))

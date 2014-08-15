@@ -14,7 +14,7 @@
   <property name="version.local" value=""/>
   <property name="version" value="${version.release}${version.local}"/>
   
-  <property name="kawa.dir"      value="/usr/local/share/java/"/>
+  <property name="kawa.dir"      value="/usr/local/bin/"/>
 
   <property name="mac.javavm.framework"     value="/System/Library/Frameworks/JavaVM.framework/"/>
 
@@ -34,7 +34,7 @@
   <property name="reader-mainclass" value="${src.dir}/htreader.scm"/>
   <property name="applet-mainclass" value="${src.dir}/htapplet.scm"/>
 
-  <property name="base.kawa.jar" value="kawa.jar"/>
+  <property name="base.kawa.jar" value="kawa-1.14.jar"/>
 	
   <property name="base.hypedyn.jar" value="hypedyn.jar"/>
   <property name="base.htapplet.jar" value="htapplet.jar"/>
@@ -70,7 +70,11 @@
   <fileset id="build.classes" dir="${temp.dir}">
      <include name="*.class"/>
   </fileset>
-  
+
+  <!-- for app bundler -->
+  <property environment="env"/>
+  <taskdef name="bundleapp" classname="com.oracle.appbundler.AppBundlerTask"/>
+
   <!-- targets -->
   
   <!-- top most parent task -->
@@ -88,7 +92,7 @@
   <!-- <target name="dist" depends="dist-editor, dist-reader, dist-applet" /> -->
 	
   <!-- note clean-dist and dist-common is only done once -->
-  <target name="dist-editor" depends="dist-common, dist-editor-windows, dist-editor-linux, dist-editor-macosx" />
+  <target name="dist-editor" depends="dist-common, dist-editor-windows, dist-editor-linux, dist-editor-macosx-new" />
   <target name="dist-reader" depends="dist-reader-windows, dist-reader-linux, dist-reader-macosx" />
   <target name="dist-applet" depends="dist-applet-common" />
    
@@ -136,7 +140,7 @@
 	 <property name="src.reader.standalone.package" value="${mac.package.dir}/HypeDynReader-standalone_package.app" />
  	
  	<!-- only used in macosx -->
-     <condition property="dist.editor.package.javadir" value="${dist.editor.package}/Contents/Resources/Java" >
+     <condition property="dist.editor.package.javadir" value="${dist.editor.package}/Contents/Java" >
      	<istrue value="${macosx}"/> 
      </condition>
  	<condition property="dist.reader.package.javadir" value="${dist.reader.package}/Contents/Resources/Java" >
@@ -360,20 +364,23 @@
   </target>
   		
   <!-- Distribute Editor Mac -->
-	
-  <target name="dist-editor-macosx" if="macosx">
-  		  		  	      		
-  	<!-- copy the jar files to the mac bundle -->
-  	<copy file="${build.hypedyn.jar}" todir="${dist.editor.package.javadir}"/>
-   	<copy file="${build.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar"/>
-	<!-- rename to kawa.jar -->
-  	<!-- <move file="${dist.editor.package.javadir}/${base.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar" /> -->
-  	
-  	<!-- copy the mac bundle skeleton -->
-  	<copy todir="${dist.editor.package}">
-  	   <fileset dir="${src.editor.package}"/>
-  	</copy>
-	<chmod file="${dist.editor.package.appstub}" perm="a+x"/>
+
+  <target name="dist-editor-macosx-new" if="macosx">
+      <bundleapp outputdirectory="${dist.dir}"
+                 name="HypeDyn"
+                 displayname="HypeDyn"
+                 identifier="org.narrativeandplay.hypedyn"
+                 shortversion="2.3b rev 333"
+                 applicationCategory="public.app-category.developer-tools"
+                 icon="${mac.package.dir}/hypedyn.icns"
+                 mainclassname="runhypedyn"
+                 signature="Dyn1"
+                 copyright="Copyright © 2008-2014 National University of Singapore and National University of Singapore. All rights reserved.">
+          <runtime dir="${env.JAVA_HOME}"/>
+          <classpath file="${build.hypedyn.jar}"/>
+          <classpath file="${build.kawa.jar}"/>
+          <option value="-Djava.library.path=$APP_ROOT/Contents/Java/" />
+      </bundleapp>
 
 	<!-- copy the help files -->
 	<copy todir="${dist.editor.package.javadir}/help">

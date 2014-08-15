@@ -364,13 +364,16 @@
 
 ; helper, adapted from Processing, for getting file relative to the app
 ; http://code.google.com/p/processing/source/browse/trunk/processing/app/src/processing/app/Base.java?r=7522
-(define (get-content-file in-name)
+(define (get-content-file in-name in-mac-testing)
   (let ((the-path (get-system-property "user.dir")))
     ; Get a path to somewhere inside the .app folder
-    (if (is-mac-os?) 
-;      <key>javaroot</key>
-;      <string>$JAVAROOT</string>
-        (let ((javaroot (get-system-property "javaroot")))
-          (if (not (is-null? javaroot))
-              (set! the-path javaroot))))
+    (if (and (is-mac-os?) (not in-mac-testing))
+        (let ((libpath  (get-system-property "java.library.path")))
+          (if (not (is-null? libpath))
+              (set! the-path libpath))))
+
+;    (make-confirm-dialogbox
+;        #!null 3
+;        (string-append "Path: " the-path)
+;        "get-content-file")
     (make-file (string-append the-path "/" in-name))))

@@ -49,9 +49,12 @@
             (set-temp-dir! (string-append (system-tmpdir) "/hypedyn" (number->string (get-current-time))))
             (make-directory (get-temp-dir))
 
-            ; start the server
-            (gnu.kawa.servlet.KawaHttpHandler:addAutoHandler "/" (get-temp-dir))
-            (gnu.kawa.servlet.KawaHttpHandler:startServer (get-local-port)))
+            ; start the server - disabled as doesn't seem to work in app bundle with Java 7 on MacOS X (not needed yet anyway)
+            (if (not (is-mac-os?))
+                (begin
+                    (gnu.kawa.servlet.KawaHttpHandler:addAutoHandler "/" (get-temp-dir))
+                    (gnu.kawa.servlet.KawaHttpHandler:startServer (get-local-port))))
+        )
         (ex <java.lang.Throwable>
             (begin
               (display (*:toString ex))(newline)
@@ -59,7 +62,8 @@
               (make-error-dialog (get-main-ui-frame)
                                  "Hypedyn Error"
                                  (string-append
-                                  "Unable to start HypeDyn.\nQuit any other copies of HypeDyn\nthat may be running and try again."))
+                                  "Unable to start HypeDyn.\nQuit any other copies of HypeDyn\nthat may be running and try again."
+                                  (*:toString ex)))
               (exit)
               )))
       )

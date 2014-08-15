@@ -1134,15 +1134,15 @@
   (if safetoproceed
   (try-catch
       (begin
-        (define source-folder (get-content-file "js"))
+        (define source-folder (get-content-file "js" (mac-testing?)))
         (recursively-copy-directory source-folder
                                     export-folder)
 
         ;; copy css files
         (define styling-css-file
           (case (get-css-type) ;(get-stylesheet-choice)
-            ((default) (get-content-file "css/styling.css"))
-            ((fancy) (get-content-file "css/styling2.css"))
+            ((default) (get-content-file "css/styling.css" (mac-testing?)))
+            ((fancy) (get-content-file "css/styling2.css" (mac-testing?)))
             ((custom) (make-file (get-custom-css-location) ))))
 
         (copy-file-nio styling-css-file (make-file (string-append (to-string export-folder) "/styling.css")))
@@ -1159,7 +1159,7 @@
           (make-error-dialog
            (get-main-ui-frame)
            "Error"
-           "Unable to export: failed to copy export files.")
+           (*:toString ex))
 
                                         ;(*:printStackTrace ex)
           )))))

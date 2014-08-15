@@ -43,8 +43,8 @@
   (invoke (java.awt.Desktop:getDesktop) 'browse help-file-URI))
 
 ; set the help file
-(define (set-helpfile! in-help-filename)
+(define (set-helpfile! in-help-filename in-mac-testing)
   (format #t "set-helpfile!: ~a ~%~!" in-help-filename)
-  (let ((file (get-content-file in-help-filename)))
+  (let ((file (get-content-file in-help-filename in-mac-testing)))
     (if (check-file-exists file)
         (set! help-file-URI (get-file-URI file)))))

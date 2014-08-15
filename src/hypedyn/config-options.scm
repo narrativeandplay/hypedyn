@@ -54,6 +54,7 @@
                get-temp-dir set-temp-dir! get-local-port set-local-port!
                node-name-limit choice-name-limit rule-name-limit
                enable-autosave? set-enable-autosave!
+               mac-testing? set-mac-testing!
                )
 
 ; enable/disable undo
@@ -402,3 +403,10 @@
   enable-autosave)
 (define (set-enable-autosave! in-flag)
   (set! enable-autosave in-flag))
+
+; hack for testing on mac
+(define-private mac-testing #f)
+(define (mac-testing?)
+    mac-testing)
+(define (set-mac-testing! in-flag)
+    (set! mac-testing in-flag))

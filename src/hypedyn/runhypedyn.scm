@@ -43,6 +43,8 @@
          (set-sculptural-version!))
         ((equal? "-undo" arg)
          (set-undo-enabled! #t))
+        ((equal? "-testing" arg)
+         (set-mac-testing! #t))
         ((equal? "-no-java-reader" arg)
          (set-java-reader! #f))
         ((equal? "-java-reader" arg)
@@ -70,7 +72,8 @@
                "HypeDyn" ; name of language to appear in main window titlebar
                "hypedyn.scm" ; name of main file to run language
                "help/index.html" ; name of help text file
-               starthypedyn)
+               starthypedyn
+               (mac-testing?))
 
 ; remove language, control and examples menus
 (remove-menu (get-language-menu))
