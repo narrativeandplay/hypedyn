@@ -1,5 +1,0 @@
-#!/bin/sh
-
-APPDIR=$(dirname "$0")
-cd "$APPDIR"
-java  -Djava.library.path="$APPDIR" -cp "$APPDIR/Java/hypedyn-reader.jar:$APPDIR/Java/kawa.jar" htreader $APPDIR/Java/story.dyn

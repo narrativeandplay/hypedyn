@@ -1,5 +1,0 @@
-(begin (make-hypertext (quote htfe) 2.1) (set-card-shark! (quote #f))
-(create-node "start" "This story begins with a ...\n\n\"A long long time ago\""
-80.0 45.0 false false 1) (create-node "end" "The End." 80.0 135.0 false false
-4) (begin (create-link "toend" 1 4 31 51 true false false -1 "" false 2) (begin
-(create-typed-rule "toend" (quote link) (quote and) 2 5))) (set-start-node! 1))

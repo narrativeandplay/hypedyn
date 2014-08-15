@@ -31,19 +31,12 @@
   <property name="mac.package.dir" value="${basedir}/macosx/" />
 
   <property name="editor-mainclass" value="${src.dir}/runhypedyn.scm"/>
-  <property name="reader-mainclass" value="${src.dir}/htreader.scm"/>
-  <property name="applet-mainclass" value="${src.dir}/htapplet.scm"/>
 
   <property name="base.kawa.jar" value="kawa-1.14.jar"/>
 	
   <property name="base.hypedyn.jar" value="hypedyn.jar"/>
-  <property name="base.htapplet.jar" value="htapplet.jar"/>
-  <property name="base.htreader.jar" value="hypedyn-reader.jar"/>
-  <property name="base.appletkawa.jar" value="kawa-applet.jar"/>
-  
+
   <property name="build.hypedyn.jar"    value="${temp.dir}/${base.hypedyn.jar}"/>
-  <property name="build.htreader.jar"    value="${temp.dir}/${base.htreader.jar}"/>
-  <property name="build.htapplet.jar"    value="${temp.dir}/${base.htapplet.jar}"/>
   <property name="build.kawa.jar"    value="${kawa.dir}/${base.kawa.jar}"/>
 	
   <condition property="windows"><os family="windows" /> </condition>
@@ -78,9 +71,7 @@
   <target name="all" depends="init, editor" />
   
   <target name="editor" depends="build-editor, dist-editor" />
-  <target name="reader" depends="build-reader, dist-reader" />
-  <target name="applet" depends="build-applet, dist-applet" />
-	
+
   <!-- build -->   
   <!-- <target name="build" depends="build-editor, build-reader, build-applet" /> -->
 
@@ -89,9 +80,7 @@
 	
   <!-- note clean-dist and dist-common is only done once -->
   <target name="dist-editor" depends="dist-common, dist-editor-windows, dist-editor-linux, dist-editor-macosx" />
-  <target name="dist-reader" depends="dist-reader-windows, dist-reader-linux, dist-reader-macosx" />
-  <target name="dist-applet" depends="dist-applet-common" />
-   
+
   <!-- INIT -->
   <target name="init">
   	
@@ -124,25 +113,13 @@
     	<istrue value="${macosx}"/> 
     </condition>
   	
-  	<property name="dist.applet.package" value="${dist.dir}/HypeDyn-applet" />
-  	 
-     <!-- only used in macosx -->
- 	<condition property="dist.reader.package" value="${dist.dir}/HypeDynReader.app">
- 		<istrue value="${macosx}"/> 
-     </condition>
- 	
   	 <property name="src.editor.package"  value="${mac.package.dir}/HypeDyn_package.app"/>
- 	 <property name="src.reader.package" value="${mac.package.dir}/HypeDynReader_package.app" />
-	 <property name="src.reader.standalone.package" value="${mac.package.dir}/HypeDynReader-standalone_package.app" />
- 	
+
  	<!-- only used in macosx -->
      <condition property="dist.editor.package.javadir" value="${dist.editor.package}/Contents/Java" >
      	<istrue value="${macosx}"/> 
      </condition>
- 	<condition property="dist.reader.package.javadir" value="${dist.reader.package}/Contents/Resources/Java" >
- 		<istrue value="${macosx}"/>
- 	</condition>
- 	
+
  	<condition property="dist.editor.package.javadir" value="${dist.editor.package}/Java">
  	    <or> 
  	    	<istrue value="${windows}"/>
@@ -150,33 +127,10 @@
  	   </or>
  	</condition>
   	
-  	<!-- reader and editor in linux and windows just share the same Java folder -->
-  	<condition property="dist.reader.package.javadir" value="${dist.editor.package}/Java">
-  	 	    <or> 
-  	 	    	<istrue value="${windows}"/>
-  	 			<istrue value="${linux}"/>
-  	 	   </or>
-  	</condition>
-
    <condition property="dist.editor.package.appstub" value="${dist.editor.package}/Contents/MacOS/JavaApplicationStub" >
       <istrue value="${macosx}"/>
    </condition>
-   <condition property="dist.reader.package.appstub" value="${dist.reader.package}/Contents/MacOS/JavaApplicationStub" >
-      <istrue value="${macosx}"/>
-   </condition>
-  	
-  	<!-- determine where to place export folder -->
-  	<condition property="export.dir" value="${dist.editor.package.javadir}/export/" >
-  		<istrue value="${macosx}"/>
-  	</condition>
-  	
-  	<condition property="export.dir" value="${dist.editor.package}/export/" >
-  		<or> 
-  	 	    <istrue value="${windows}"/>
-  	 		<istrue value="${linux}"/>
-  	 	</or>
-  	</condition>
-  	
+
   <!-- show user the settings -->
     <echo>
         version=${version}
@@ -215,64 +169,8 @@
 	</jar>
   </target>
 
-  <target name="build-reader" >
-  	
-  	<antcall target="clean-build" />
-  	
-  	<java failonerror="true"
-  		    classname="kawa.repl"
-  	        classpath="${build.kawa.jar};${appletlib.dir}/AppleJavaExtensions.jar">
-  	      <arg line="-d ${temp.dir} --warn-invoke-unknown-method --warn-undefined-variable --main -C ${reader-mainclass}"/>
-  	    </java>
-  		<!-- put into jar file -->
-  		<jar jarfile="${build.htreader.jar}"
-  	    	 basedir="${temp.dir}"
-  			 excludes="${base.htreader.jar}"
-  	    	 manifest="${build.dir}/manifest/Manifest.reader"/>
-  </target>
-	
-  <target name="build-applet" >
-  	
-  	<antcall target="clean-build" />
-  	
-  	    <!-- use kawa-applet.jar instead of ${base.kawa.jar} to compile our applet -->
-	    <java failonerror="true"
-		    classname="kawa.repl"
-	        classpath="${appletlib.dir}/${base.appletkawa.jar};${appletlib.dir}/AppleJavaExtensions.jar">
-	      <arg line="-d ${temp.dir} --warn-invoke-unknown-method --warn-undefined-variable --applet -C ${applet-mainclass}"/>
-	    </java>
-		
-		<!-- put into jar file -->
-		<jar jarfile="${build.htapplet.jar}"
-	    	 basedir="${temp.dir}"
-			 excludes="${base.htapplet.jar}"
-	    	 manifest="${build.dir}/manifest/empty.txt"/>
-	</target>
-
   <!-- DISTTRIBUTE -->
 
-<target name="assemble-export-lib" >
-	
-	<!-- copy whole of applet folder here -->
-	<copy todir="${export.dir}">
-  		<fileset dir="${dist.applet.package}"/>
-  	</copy>
-	<!-- copy windows standalone -->
-	<copy file="${launcher.windows.dir}/hypedyn-reader-standalone.exe" tofile="${export.dir}/hypedyn-reader.exe"/>
-
-	<!-- copy linux standalone -->
-	<copy file="${launcher.linux.dir}/hypedyn-reader-standalone" tofile="${export.dir}/hypedyn-reader"/>
-
-	<!-- copy mac standalone -->
-	<copy todir="${export.dir}/HypeDynReader.app">
-	  		<fileset dir="${mac.package.dir}/HypeDynReader-standalone_package.app"/>
-	</copy>
-
-	<!-- copy kawa.jar and hypedyn-reader.jar -->
-	<copy file="${dist.editor.package.javadir}/kawa.jar" todir="${export.dir}"/>
-	<copy file="${dist.reader.package.javadir}/hypedyn-reader.jar" todir="${export.dir}"/>
-</target>
-	
 <target name="dist-common" >
 	<!-- copy the examples and tutorials -->
 	<copy todir="${dist.dir}/examples/">
@@ -422,58 +320,7 @@
   	<!-- copy the readme file -->
   	<copy file="${build.dir}/macosx/README.txt" todir="${dist.dir}" />
   </target>
-  	
-	<!-- Distribute Reader Linux -->
-	
-  <target name="dist-reader-linux" if="linux" >
-  	<copy file="${build.htreader.jar}" todir="${dist.editor.package.javadir}"/>
-  	<copy file="${build.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar"/>
-	<!-- rename to kawa.jar -->
-  	<!-- <move file="${dist.editor.package.javadir}/${base.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar" /> -->
-	<copy file="${appletlib.dir}/AppleJavaExtensions.jar" todir="${dist.editor.package.javadir}" />
-  		
-  	<copy file="${launcher.linux.dir}/hypedyn-reader" todir="${dist.editor.package}" />
-	<chmod file="${dist.editor.package}/hypedyn-reader" perm="a+x"/>
-  </target>
-  	      	
-	<!-- Distribute Reader Windows -->
-	
-  <target name="dist-reader-windows" if="windows" >
-    <copy file="${build.htreader.jar}" todir="${dist.editor.package.javadir}"/>
-  	<copy file="${build.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar"/>
-	<!-- rename to kawa.jar -->
-  	<!-- <move file="${dist.editor.package.javadir}/${base.kawa.jar}" tofile="${dist.editor.package.javadir}/kawa.jar" /> -->
-	<copy file="${appletlib.dir}/AppleJavaExtensions.jar" todir="${dist.editor.package.javadir}" />
-    	
-  	<copy file="${launcher.windows.dir}/reader.exe" todir="${dist.editor.package}" />
-  </target>
-  	
-	<!-- Distribute Reader Mac -->
-	
-  <target name="dist-reader-macosx" depends="" if="macosx" >
-  	<!-- copy the jar files to the mac bundle -->
-  	<copy file="${build.htreader.jar}" todir="${dist.reader.package.javadir}"/>
-  	<copy file="${build.kawa.jar}" tofile="${dist.reader.package.javadir}/kawa.jar"/>
-  	
-  	<!-- rename to kawa.jar -->
-  	<!-- <move file="${dist.reader.package.javadir}/${base.kawa.jar}" tofile="${dist.reader.package.javadir}/kawa.jar" /> -->
-  	  	
-  	<!-- copy the mac bundle skeleton -->
-  	<copy todir="${dist.reader.package}">
-  	   <fileset dir="${src.reader.package}"/>
-  	</copy>
-        <chmod file="${dist.reader.package.appstub}" perm="a+x"/>
-  </target>
-	
-	<!-- Distribute Applet Common (not os dependent) -->
-	<target name="dist-applet-common" >
-		<copy file="${build.htapplet.jar}" todir="${dist.applet.package}" />
-		<copy file="${appletlib.dir}/${base.appletkawa.jar}" todir="${dist.applet.package}" />
-		<copy file="${appletlib.dir}/AppleJavaExtensions.jar" todir="${dist.applet.package}" />
-		<copy file="${shared.dir}/htapplet.html" todir="${dist.applet.package}" />
-		<copy file="${shared.dir}/story.dyn" todir="${dist.applet.package}" />
-	</target>
-  
+
   <!-- clean -->
   	  	
   <target name="clean-build">
