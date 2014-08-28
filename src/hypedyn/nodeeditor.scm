@@ -962,8 +962,8 @@
 
 (define (cut-link-pre e)
   (format #t "cut link~%~!")
-  (copy-with-links)
-  
+  (copy-with-links-pre)
+
   ; return true so that normal cut action is executed afterwards
   #t)
 
