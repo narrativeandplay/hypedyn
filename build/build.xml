@@ -35,12 +35,13 @@
 
   <property name="editor-mainclass" value="${src.dir}/runhypedyn.scm"/>
 
-  <property name="base.kawa.jar" value="kawa-1.14.jar"/>
+  <property name="base.kawa.jar" value="kawa-2.0.1.jar"/>
 	
   <property name="base.hypedyn.jar" value="hypedyn.jar"/>
 
   <property name="build.hypedyn.jar"    value="${temp.dir}/${base.hypedyn.jar}"/>
   <property name="build.kawa.jar"    value="${kawa.dir}/${base.kawa.jar}"/>
+  <property name="build.appbundler.classpath" value=""/>
 	
   <condition property="windows"><os family="windows" /> </condition>
   
@@ -264,7 +265,11 @@
     <property environment="env"/>
 
     <target name="initappbundler" if="macosx">
-        <taskdef name="bundleapp" classname="com.oracle.appbundler.AppBundlerTask"/>
+        <taskdef name="bundleapp" classname="com.oracle.appbundler.AppBundlerTask">
+			<classpath>
+				<pathelement location="${build.appbundler.classpath}/appbundler/bin/appbundler-1.0ea.jar"/>
+			</classpath>
+		</taskdef>
     </target>
 
 
