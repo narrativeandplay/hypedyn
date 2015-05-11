@@ -35,7 +35,7 @@
 
   <property name="editor-mainclass" value="${src.dir}/runhypedyn.scm"/>
 
-  <property name="base.kawa.jar" value="kawa-2.0.1.jar"/>
+  <property name="base.kawa.jar" value="kawa-2.0.jar"/>
 	
   <property name="base.hypedyn.jar" value="hypedyn.jar"/>
 
