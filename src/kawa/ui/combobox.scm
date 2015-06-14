@@ -234,13 +234,15 @@
   (define-class combobox-string-item (java.lang.Object)
     ((toString) :: <java.lang.String>
      str-obj)
-    ((equals obj :: <java.lang.Object>) 
-;     (display "equals ")(newline)
-;     (display "obj ")(display obj)(newline)
-;     (display "str-obj ")(display str-obj)(newline)
-     (if (equal? #!null obj)
-         #f
-         (equal? (invoke obj 'to-string) (invoke str-obj 'to-string)))))
+    ; this seems to be the cause of bug #22, why was this added? (13 Jan 2012 by Teong Leong) - alex
+    ;((equals obj :: <java.lang.Object>)
+    ; (display "equals ")(newline)
+    ; (display "obj ")(display obj)(newline)
+    ; (display "str-obj ")(display str-obj)(newline)
+    ; (if (equal? #!null obj)
+    ;     #f
+    ;     (equal? (invoke obj 'to-string) (invoke str-obj 'to-string))))
+    )
   
   (make combobox-string-item))
   
