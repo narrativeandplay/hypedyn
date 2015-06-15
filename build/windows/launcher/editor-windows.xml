@@ -3,7 +3,7 @@
   <dontWrapJar>true</dontWrapJar>
   <headerType>gui</headerType>
   <jar>Java\hypedyn.jar</jar>
-  <outfile>..\hypedyn.exe</outfile>
+  <outfile>hypedyn.exe</outfile>
   <errTitle></errTitle>
   <cmdLine></cmdLine>
   <chdir>.</chdir>

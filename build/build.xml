@@ -42,7 +42,9 @@
   <property name="build.hypedyn.jar"    value="${temp.dir}/${base.hypedyn.jar}"/>
   <property name="build.kawa.jar"    value="${kawa.dir}/${base.kawa.jar}"/>
   <property name="build.appbundler.classpath" value=""/>
-	
+
+  <property name="launch4j.dir" location="/opt/launch4j" />
+
   <condition property="windows"><os family="windows" /> </condition>
   
   	<condition property="linux">
@@ -230,10 +232,17 @@
   </target>
 
 
+	<!-- build the launcher -->
+	<taskdef name="launch4j"
+			 classname="net.sf.launch4j.ant.Launch4jTask"
+			 classpath="${launch4j.dir}/launch4j.jar:${launch4j.dir}/lib/xstream.jar" />
+
 	<!-- Distribute Editor Windows -->
-	
+
   <target name="dist-editor-windows" if="windows">
-  	
+    <!-- build the executable -->
+    <launch4j configFile="${launcher.windows.dir}/editor-windows.xml" />
+
 	<!-- copy the executable -->
   	<copy file="${launcher.windows.dir}/hypedyn.exe" todir="${dist.editor.package}" />
   		  	      		
