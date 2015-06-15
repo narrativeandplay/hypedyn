@@ -1,3 +1,5 @@
+# use this file (rename it as build.properties) to override properties in build.xml
+
 # set the name of your kawa jar file here, default is kawa.jar
 # base.kawa.jar=kawa-2.0.jar
 
