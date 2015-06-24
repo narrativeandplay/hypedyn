@@ -1188,7 +1188,7 @@
   (display "add action! ")(newline)
   
     ;; get the selected type
-  (define selected-action-type (get-combobox-selecteditem action-type-choice))
+  (define selected-action-type (to-string (get-combobox-selecteditem action-type-choice)))
   (define new-action-panel (create-action-panel selected-action-type))
   
   (if (= (length (get-selected-action-panel)) 0)
