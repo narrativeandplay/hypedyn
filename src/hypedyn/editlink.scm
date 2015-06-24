@@ -2726,7 +2726,7 @@
     (add-component top-panel the-type-choice)
     
     ;; choose the fact type index
-    (define (fact-type-index)
+    (define fact-type-index
       (cond ((or (equal? 'assert fact-type)
                  (equal? 'retract fact-type)) "True/False")
             ((equal? 'set-value! fact-type) "Text")
@@ -2738,9 +2738,9 @@
     
     ; set type choice
     ;(set-combobox-selection the-type-choice (fact-type-index))
-    (set-combobox-selection-object the-type-choice (create-combobox-string-item (fact-type-index)))
+    (set-combobox-selection-object the-type-choice (create-combobox-string-item fact-type-index)) ; alex is this the problem?
     
-    (case (fact-type-index)
+    (case fact-type-index
       (("True/False")
        (add-component top-panel the-fact-list-boolean)
        (add-component top-panel the-boolean-choice))

@@ -235,13 +235,13 @@
     ((toString) :: <java.lang.String>
      str-obj)
     ; this seems to be the cause of bug #22, why was this added? (13 Jan 2012 by Teong Leong) - alex
-    ;((equals obj :: <java.lang.Object>)
-    ; (display "equals ")(newline)
-    ; (display "obj ")(display obj)(newline)
-    ; (display "str-obj ")(display str-obj)(newline)
-    ; (if (equal? #!null obj)
-    ;     #f
-    ;     (equal? (invoke obj 'to-string) (invoke str-obj 'to-string))))
+    ((equals obj :: <java.lang.Object>)
+     (display "+++ equals ")(newline)
+     (display "obj ")(display obj)(newline)
+     (display "str-obj ")(display str-obj)(newline)
+     (if (equal? #!null obj)
+         #f
+         (equal? (invoke obj 'to-string) (invoke str-obj 'to-string))))
     )
   
   (make combobox-string-item))
