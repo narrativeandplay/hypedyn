@@ -184,8 +184,6 @@
       (let ((color #f))
         (let-values (((width height) (ask this-node 'get-size)))
 
-          ;(set! width (+ width 70.0))
-          ;(set! height (+ height 100.0))
           ;; draw or undraw selected square
           (if selected?
               (set! color red-color)
@@ -349,11 +347,12 @@
                    (lambda (self)
                      ;; get the default width and height and override it
                      (let-values (((old-width old-height) (ask in-node 'get-size)))
-                       
-                       (values (if (> (string-length (ask in-node 'name)) node-name-limit)
-                                   150
-                                   old-width)
-                               old-height))))
+                         (let ((adjusted-width (+ old-width 70))
+                               (adjusted-height (+ old-height 100)))
+                             (values (if (> (string-length (ask in-node 'name)) node-name-limit)
+                                         150
+                                         adjusted-width)
+                                     adjusted-height)))))
                      )) ;; end of wrapper
 ;      
 ;      (define create-node-wrapper 
