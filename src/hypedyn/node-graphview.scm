@@ -382,7 +382,7 @@
               has-alt)
             #f)))
 
-    ; refresh graph (just redraw the bitmap)
+    ; refresh graph
     (define (refresh-graph)
         (ask parent-obj 'refresh))
 

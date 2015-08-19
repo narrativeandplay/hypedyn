@@ -1605,7 +1605,7 @@
 (define (store-node-positions)
   (ask node-graph 'store-node-positions))
 
-; refresh graph (just redraw bitmap)
+; refresh graph
 (define (refresh-graph)
     (ask node-graph 'refresh))
 

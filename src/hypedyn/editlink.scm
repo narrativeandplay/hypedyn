@@ -836,7 +836,8 @@
            thisnode-rules)
     (format #t "After editing rule, nodeID:~a, anywhere:~a~%~!" thisnode-ID has-anywhere-link)
     (ask thisnode-obj 'set-anywhere! has-anywhere-link)
-    (ask node-graph 'refresh-node thisnode-ID))
+    ;(ask node-graph 'refresh-node thisnode-ID)
+    (ask node-graph 'refresh)) ; is this going to lag eventually? - alex
   )
 
 ; reset the rule editor
