@@ -212,7 +212,8 @@
             (ask edited-node 'set-content! content)
             (nodeeditor-clear-dirty!)
             ; update node emphasis height - need to make this a callback - alex xxx
-            (update-node-emphasis edited-nodeID)))
+            (update-node-emphasis edited-nodeID)
+            (refresh-node edited-nodeID)))
     ))
 
 ;window callback ; future work
