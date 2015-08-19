@@ -213,7 +213,7 @@
             (nodeeditor-clear-dirty!)
             ; update node emphasis height - need to make this a callback - alex xxx
             (update-node-emphasis edited-nodeID)
-            (refresh-node edited-nodeID)))
+            (refresh-graph)))
     ))
 
 ;window callback ; future work

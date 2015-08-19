@@ -64,7 +64,7 @@
 (require "stats.scm") ;; display-stats
 
 ; export
-(module-export close-hteditor-subwindows refresh-node update-node-emphasis do-selectnode-list do-selectnode-graph
+(module-export close-hteditor-subwindows refresh-graph update-node-emphasis do-selectnode-list do-selectnode-graph
                clear-data clear-display populate-display add-recent-file update-dirty-state
                exceeded-node-limit?
                store-node-positions get-max-node-positions initial-x initial-y use-hteditor-ui
@@ -1605,11 +1605,9 @@
 (define (store-node-positions)
   (ask node-graph 'store-node-positions))
 
-; refresh a node
-(define (refresh-node thisnodeID)
-    (let ((thisnode (get 'nodes thisnodeID)))
-        (if thisnode
-            (ask node-graph 'refresh-node thisnodeID))))
+; refresh graph (just redraw bitmap)
+(define (refresh-graph)
+    (ask node-graph 'refresh))
 
 ; update the emphasis height for a node
 (define use-emph #f) ; disable emphasis for NM3222

@@ -382,12 +382,9 @@
               has-alt)
             #f)))
 
-    ; refresh a node
-    (define (refresh-node thisnodeID)
-        (let ((thisnode (get 'nodes thisnodeID)))
-            (if thisnode
-                (let* ((graph-node (ask (ask parent-obj 'get-graph-editor) 'node-get-by-data (number->string thisnodeID))))
-                    (ask graph-node 'refresh-node)))))
+    ; refresh graph (just redraw the bitmap)
+    (define (refresh-graph)
+        (ask parent-obj 'refresh))
 
     ; update node style
     ;; TODO: to get back to this, unsure what this is doing
@@ -474,9 +471,9 @@
     (obj-put this-obj 'add-node
              (lambda (self new-nodeID name x y)
                (add-node new-nodeID name x y)))
-    (obj-put this-obj 'refresh-node
-             (lambda (self nodeID)
-                 (refresh-node nodeID)))
+    (obj-put this-obj 'refresh-graph
+             (lambda (self)
+                 (refresh-graph)))
     (obj-put this-obj 'update-node-style
              (lambda (self nodeID)
                (update-node-style nodeID)))
