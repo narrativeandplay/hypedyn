@@ -280,16 +280,19 @@
 ; add a string to a combobox with data
 ; this is a workaround to avoid duplicate display of item
 ; selections, see http://download.oracle.com/javase/1,5.0/docs/api/javax/swing/JComboBox.html#addItem%28java.lang.Object%29
+; Note: for combobox with data, we don't use create-combobox-string-item as we are selecting based on data,
+; whereas for regular combobox we need to be able to match the strings (which may be invalidating the fix, but
+; for now I don't care, as long as it works) - Alex
 (define (add-comboboxwithdata-string in-combo :: <comboboxwithdata>
                                      in-item :: <String>
                                      in-data :: <object>)
   (invoke in-combo 'addItem
-;          (begin
-;            (define-class myObject (java.lang.Object)
-;              ((toString) :: <java.lang.String>
-;               in-item))
-;            (make myObject))
-          (create-combobox-string-item in-item)
+          (begin
+            (define-class myObject (java.lang.Object)
+              ((toString) :: <java.lang.String>
+               in-item))
+            (make myObject))
+          ;(create-combobox-string-item in-item)
           in-data))
 
 ; as above but insert at a specific index
@@ -298,12 +301,12 @@
                                            in-data :: <object>
                                            in-index :: <int>)
   (invoke in-combo 'insertItemAt
-;          (begin
-;            (define-class myObject2 (java.lang.Object)
-;              ((toString) :: <java.lang.String>
-;               in-item))
-;            (make myObject2))
-          (create-combobox-string-item in-item)
+          (begin
+            (define-class myObject2 (java.lang.Object)
+              ((toString) :: <java.lang.String>
+               in-item))
+            (make myObject2))
+          ;(create-combobox-string-item in-item)
           in-data
           in-index))
 
