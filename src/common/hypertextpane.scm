@@ -716,9 +716,10 @@
       (set-track-dirty! #t)
       (clear-dirty!))
 
-    ; set selection
+    ; set selection, but only if we're not in the middle of handling link selection
     (define (setselection in-selstart in-selend)
-      (set-text-selection the-editor in-selstart in-selend))
+        (if (not handling-link-selection)
+            (set-text-selection the-editor in-selstart in-selend)))
     
     ; set links (no need for this anymore since when doing filter-bypass
     ;; we always check which style we should use for the text)
@@ -735,7 +736,7 @@
     ; cursor position may be > selection end (unlike mred)
     (define (cursor-handler e)
         (let ((selstart (get-cursor-pos e))
-          (selend (get-selection-end e)))
+              (selend (get-selection-end e)))
             (after-set-position (min selstart selend) (max selstart selend))))
 
     ; handle key press
@@ -1001,18 +1002,16 @@
             (adjust-links-insert start len)
             )))
 
+    ; make sure we don't do this recursively
+    (define handling-link-selection #f)
+
     ; after-set-position
     (define (after-set-position selstart selend)
-        (format #t "cursor-handler: (~a, ~a)~%~!" selstart selend)
-        (format #t "start-of-link? ~a~%~!" (start-of-link? selstart))
-        (format #t "end-of-link? ~a~%~!" (end-of-link? selend))
-        (format #t "ID-1: ~a~%~!" (get-attribute-linkID-pos the-doc selstart))
-        (format #t "ID-2: ~a~%~!" (get-attribute-linkID-pos the-doc (- selend 1)))
       (if track-links
           (begin
-              (set-track-links! #f)
+              (set! handling-link-selection #t)
               (handle-link-selection (is-link-range? selstart selend) selstart)
-              (set-track-links! #t)
+              (set! handling-link-selection #f)
               (check-enable-newlink selstart selend))))
 
     ;;
