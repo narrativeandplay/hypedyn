@@ -515,7 +515,15 @@
     (let ((the-scrollpane (make-scrollpane (ask node-graph 'get-component))))
       (add-splitpane-component f-panel the-scrollpane #f)
       (scroll-set-horizontal-unit-increment the-scrollpane 20)
-      (scroll-set-vertical-unit-increment the-scrollpane 20))
+      (scroll-set-vertical-unit-increment the-scrollpane 20)
+      ; trigger a resize event in the graph editor when scrollpane resizes to
+      ; force canvas to shrink if no nodes are outside the viewport, thereby
+      ; avoiding unnecessary scrollbars
+      (add-componentlistener the-scrollpane (make-componentlistener (lambda (e) 'ok) ;hidden
+                                                                (lambda (e) 'ok) ;moved
+                                                                (lambda (e) (ask (ask node-graph 'get-graph-editor) 'on-size)) ; resize
+                                                                (lambda (e) 'ok) ;shown
+                                                                )))
 
     ; set node display callback
     (set-nodecount-display-callback!
