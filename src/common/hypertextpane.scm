@@ -1023,18 +1023,43 @@
                                                 (get-mouseevent-y e)))
              (event-type (get-mouseevent-type e))
              (isLink (is-link? pos)))
+          (format #t "the-mousecallback: (~a, ~a, ~a)~%~!" pos event-type isLink)
         (cond
          ((eq? event-type 'left-clicked)
           (if isLink
               ; link selected, so retrieve link action
               (let ((the-linkAction (get-attribute-linkAction-pos
                                      the-doc pos)))
-                ;(display "action: ")(display the-linkAction)(newline)
+                (display "action: ")(display the-linkAction)(newline)
                 (if (not (is-null? the-linkAction))
                     (the-linkAction)))
               ; no link selected, so call selectlink-callback with #f
               (if (procedure? selectlink-callback)
                   (selectlink-callback #f))))
+         ((eq? event-type 'left-up)
+          ; need to handle drag selection, which may or result in link selection
+          (let ((selstart (get-text-selstart the-editor))
+                (selend (get-text-selend the-editor)))
+              (format #t "left-up: (~a, ~a)~%~!" selstart selend)
+              (format #t "start-of-link? ~a~%~!" (start-of-link? selstart))
+              (format #t "end-of-link? ~a~%~!" (end-of-link? selend))
+              (format #t "start-ID: ~a~%~!" (get-attribute-linkID-pos the-doc selstart))
+              (format #t "end-ID: ~a~%~!" (get-attribute-linkID-pos the-doc (- selend 1)))
+              (if (and (and (start-of-link? selstart)
+                            (end-of-link? selend))
+                       (equal? (get-attribute-linkID-pos the-doc selstart)
+                              (get-attribute-linkID-pos the-doc (- selend 1))))
+                              ; drag selected a single link, so retrieve link action
+                              (let ((the-linkAction (get-attribute-linkAction-pos
+                                                        the-doc selstart)))
+                                  (format #t "selected a link, so trigger action: ~a~%~!" the-linkAction)
+                                  (if (not (is-null? the-linkAction))
+                                      (the-linkAction)))
+                       ; no link selected, so call selectlink-callback with #f
+                       (if (procedure? selectlink-callback)
+                          (selectlink-callback #f)))))
+
+
          ((eq? event-type 'motion)
           ; call mouseover action, if any
           (if (procedure? mouseover-callback)
