@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<DOCUMENT Type="Advanced Installer" CreateVersion="7.2" version="11.4.1" Modules="simple" RootPath="." Language="en" Id="{444A7B1E-FE11-4894-B116-12A004422260}">
+<DOCUMENT Type="Advanced Installer" CreateVersion="7.2" version="12.2" Modules="simple" RootPath="." Language="en" Id="{444A7B1E-FE11-4894-B116-12A004422260}">
   <COMPONENT cid="caphyon.advinst.msicomp.MsiValidationComponent">
-    <ROW Table="File" Column="Sequence" MinValue="1" MaxValue="32767" Description="Sequence with respect to the media images; order must track cabinet order." Options="0" ColumnType="2" ColumnIndex="7" ColumnSize="2" MsiKey="File#Sequence"/>
-    <ROW Table="Media" Column="LastSequence" MinValue="0" MaxValue="32767" Description="File sequence number for the last file for this media." Options="0" ColumnType="2" ColumnIndex="1" ColumnSize="2" MsiKey="Media#LastSequence"/>
+    <ROW Table="File" Column="Sequence" MinValue="1" MaxValue="2147483647" Description="Sequence with respect to the media images; order must track cabinet order." Options="0" ColumnType="3" ColumnIndex="7" ColumnSize="4" MsiKey="File#Sequence"/>
+    <ROW Table="Media" Column="LastSequence" MinValue="0" MaxValue="2147483647" Description="File sequence number for the last file for this media." Options="0" ColumnType="3" ColumnIndex="1" ColumnSize="4" MsiKey="Media#LastSequence"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiPropsComponent">
     <ROW Property="AI_BITMAP_DISPLAY_MODE" Value="0"/>
@@ -11,10 +11,10 @@
     <ROW Property="ARPPRODUCTICON" Value="hypedyn.exe" Type="8"/>
     <ROW Property="ARPURLINFOABOUT" Value="http://www.narrativeandplay.org/hypedyn"/>
     <ROW Property="Manufacturer" Value="NUS" ValueLocId="*"/>
-    <ROW Property="ProductCode" Value="1033:{C211C1E4-7BFD-4EFD-A7E6-C1B89DADD2D1} " Type="16"/>
+    <ROW Property="ProductCode" Value="1033:{59FD9F33-5413-4049-9937-C8A2213C0A35} " Type="16"/>
     <ROW Property="ProductLanguage" Value="1033"/>
     <ROW Property="ProductName" Value="HypeDyn" ValueLocId="*"/>
-    <ROW Property="ProductVersion" Value="2.3.2.357" Type="32"/>
+    <ROW Property="ProductVersion" Value="2.3.0.0" Type="32"/>
     <ROW Property="SecureCustomProperties" Value="OLDPRODUCTS;AI_NEWERPRODUCTFOUND"/>
     <ROW Property="UpgradeCode" Value="{4A49B042-B355-40B9-8DA5-F9E45E2ED511}"/>
     <ROW Property="WindowsType9X" MultiBuildValue="DefaultBuild:Windows 9x/ME" ValueLocId="-"/>
