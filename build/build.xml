@@ -11,11 +11,11 @@
   <property file="build.properties"/>
 
   <property name="appname" value="HypeDyn"/>
-  <property name="version.release" value="2.3b2"/>
-  <property name="version.local" value="357"/>
-  <property name="version" value="${version.release} rev ${version.local}"/>
-  <property name="copyright" value="Copyright © 2008-2014 National University of Singapore and National University of Singapore. All rights reserved."/>
-  <property name="versiondate" value="15 August 2014"/>
+  <property name="version.release" value="2.3"/>
+  <property name="version.local" value="0"/>
+  <property name="version" value="${version.release}.${version.local}"/>
+  <property name="copyright" value="Copyright © 2008-2015 National University of Singapore and National University of Singapore. All rights reserved."/>
+  <property name="versiondate" value="23 August 2015"/>
   
   <property name="kawa.dir"      value="/usr/local/bin/"/>
 
@@ -42,7 +42,9 @@
   <property name="build.hypedyn.jar"    value="${temp.dir}/${base.hypedyn.jar}"/>
   <property name="build.kawa.jar"    value="${kawa.dir}/${base.kawa.jar}"/>
   <property name="build.appbundler.classpath" value=""/>
-	
+
+  <property name="launch4j.dir" location="/opt/launch4j" />
+
   <condition property="windows"><os family="windows" /> </condition>
   
   	<condition property="linux">
@@ -230,10 +232,17 @@
   </target>
 
 
+	<!-- build the launcher -->
+	<taskdef name="launch4j"
+			 classname="net.sf.launch4j.ant.Launch4jTask"
+			 classpath="${launch4j.dir}/launch4j.jar:${launch4j.dir}/lib/xstream.jar" />
+
 	<!-- Distribute Editor Windows -->
-	
+
   <target name="dist-editor-windows" if="windows">
-  	
+    <!-- build the executable -->
+    <launch4j configFile="${launcher.windows.dir}/editor-windows.xml" />
+
 	<!-- copy the executable -->
   	<copy file="${launcher.windows.dir}/hypedyn.exe" todir="${dist.editor.package}" />
   		  	      		

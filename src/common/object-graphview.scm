@@ -1,6 +1,6 @@
 ;; Part of the HypeDyn project - http://www.partechgroup.org/hypedyn
 ;; 
-;; Copyright (C) 2008-2014
+;; Copyright (C) 2008-2015
 ;; National University of Singapore
 ;;
 ;; This program is free software; you can redistribute it and/or modify
@@ -84,9 +84,11 @@
     ;; custom line drawing
     ;; return a line-draw with dotted? parameterized
     (define (return-line-draw-proc line-dashed?)
-      (define (line-draw dc source target selected? show? data)
-        (let ((src-node (ask source 'get-node))
-              (dst-node (ask target 'get-node)))
+      (define (line-draw dc source target in-selected? show? data)
+        (let* ((src-node (ask source 'get-node))
+               (dst-node (ask target 'get-node))
+               (selected? (ask src-node 'get-selected?))
+               (line-color (if selected? red-color black-color)))
           (let-values
               (((sx sy) (ask src-node 'get-position))
                ((tx ty) (ask dst-node 'get-position))
@@ -127,10 +129,10 @@
             
             (if line-dashed?
                 (if show? 
-                    (draw-dashed-line dc sx sy tx ty black-color)
+                    (draw-dashed-line dc sx sy tx ty line-color)
                     (draw-dashed-line dc sx sy tx ty white-color))
                 (if show?
-                    (drawline dc sx sy tx ty black-color 'solid)
+                    (drawline dc sx sy tx ty line-color 'solid)
                     (drawline dc sx sy tx ty white-color 'solid)))
 
                                         ; arrowhead
@@ -145,7 +147,7 @@
                    (y2 ty)
                    (x3 (round (+ basex (* width (Cosine (+ angle 90.0))))))
                    (y3 (round (+ basey (* width (Sine (+ angle 90.0)))))))
-              (drawfilledtriangle dc x1 y1 x2 y2 x3 y3 black-color))))
+              (drawfilledtriangle dc x1 y1 x2 y2 x3 y3 line-color))))
 
         ;;drawing the data--name of line
         (let-values

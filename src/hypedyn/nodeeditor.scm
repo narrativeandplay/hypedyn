@@ -1,6 +1,6 @@
 ;; Part of the HypeDyn project - http://www.partechgroup.org/hypedyn
 ;; 
-;; Copyright (C) 2008-2014
+;; Copyright (C) 2008-2015
 ;; National University of Singapore
 ;;
 ;; This program is free software; you can redistribute it and/or modify
@@ -212,7 +212,8 @@
             (ask edited-node 'set-content! content)
             (nodeeditor-clear-dirty!)
             ; update node emphasis height - need to make this a callback - alex xxx
-            (update-node-emphasis edited-nodeID)))
+            (update-node-emphasis edited-nodeID)
+            (refresh-graph)))
     ))
 
 ;window callback ; future work

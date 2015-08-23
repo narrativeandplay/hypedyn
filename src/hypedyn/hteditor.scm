@@ -1,6 +1,6 @@
 ;; Part of the HypeDyn project - http://www.partechgroup.org/hypedyn
 ;; 
-;; Copyright (C) 2008-2014
+;; Copyright (C) 2008-2015
 ;; National University of Singapore
 ;;
 ;; This program is free software; you can redistribute it and/or modify
@@ -64,7 +64,7 @@
 (require "stats.scm") ;; display-stats
 
 ; export
-(module-export close-hteditor-subwindows update-node-emphasis do-selectnode-list do-selectnode-graph
+(module-export close-hteditor-subwindows refresh-graph update-node-emphasis do-selectnode-list do-selectnode-graph
                clear-data clear-display populate-display add-recent-file update-dirty-state
                exceeded-node-limit?
                store-node-positions get-max-node-positions initial-x initial-y use-hteditor-ui
@@ -515,7 +515,15 @@
     (let ((the-scrollpane (make-scrollpane (ask node-graph 'get-component))))
       (add-splitpane-component f-panel the-scrollpane #f)
       (scroll-set-horizontal-unit-increment the-scrollpane 20)
-      (scroll-set-vertical-unit-increment the-scrollpane 20))
+      (scroll-set-vertical-unit-increment the-scrollpane 20)
+      ; trigger a resize event in the graph editor when scrollpane resizes to
+      ; force canvas to shrink if no nodes are outside the viewport, thereby
+      ; avoiding unnecessary scrollbars
+      (add-componentlistener the-scrollpane (make-componentlistener (lambda (e) 'ok) ;hidden
+                                                                (lambda (e) 'ok) ;moved
+                                                                (lambda (e) (ask (ask node-graph 'get-graph-editor) 'on-size)) ; resize
+                                                                (lambda (e) 'ok) ;shown
+                                                                )))
 
     ; set node display callback
     (set-nodecount-display-callback!
@@ -1605,6 +1613,10 @@
 (define (store-node-positions)
   (ask node-graph 'store-node-positions))
 
+; refresh graph
+(define (refresh-graph)
+    (ask node-graph 'refresh))
+
 ; update the emphasis height for a node
 (define use-emph #f) ; disable emphasis for NM3222
 (define (update-node-emphasis thisnodeID)
@@ -1787,10 +1799,8 @@
         (let ((the-tmp-filename (string-append (get-temp-dir) "/temp" (number->string file-suffix))))
           (copy-js-framework-to-folder (make-file the-tmp-filename))
           (invoke (java.awt.Desktop:getDesktop) 'browse
-; temporarily disable loading from local web server, as this is broken on MacOS using Java 7
-;                  (<java.net.URI> (string-append "http://localhost:" (number->string (get-local-port))
-;                                                 "/temp" (number->string file-suffix) "/index.html")))
-                   (get-file-URI (make-file (string-append the-tmp-filename "/index.html"))))
+                  (<java.net.URI> (string-append "http://localhost:" (number->string (get-local-port))
+                                                 "/temp" (number->string file-suffix) "/index.html")))
           (set-runstate #f)))))
 
 ; stop reading when stop button in main-ui is pressed

@@ -1,6 +1,6 @@
 ;; Part of the HypeDyn project - http://www.partechgroup.org/hypedyn
 ;; 
-;; Copyright (C) 2008-2014
+;; Copyright (C) 2008-2015
 ;; National University of Singapore
 ;;
 ;; This program is free software; you can redistribute it and/or modify
@@ -836,7 +836,8 @@
            thisnode-rules)
     (format #t "After editing rule, nodeID:~a, anywhere:~a~%~!" thisnode-ID has-anywhere-link)
     (ask thisnode-obj 'set-anywhere! has-anywhere-link)
-    (ask node-graph 'refresh-node thisnode-ID))
+    ;(ask node-graph 'refresh-node thisnode-ID)
+    (ask node-graph 'refresh)) ; is this going to lag eventually? - alex
   )
 
 ; reset the rule editor
@@ -1188,7 +1189,7 @@
   (display "add action! ")(newline)
   
     ;; get the selected type
-  (define selected-action-type (get-combobox-selecteditem action-type-choice))
+  (define selected-action-type (to-string (get-combobox-selecteditem action-type-choice)))
   (define new-action-panel (create-action-panel selected-action-type))
   
   (if (= (length (get-selected-action-panel)) 0)
@@ -2726,7 +2727,7 @@
     (add-component top-panel the-type-choice)
     
     ;; choose the fact type index
-    (define (fact-type-index)
+    (define fact-type-index
       (cond ((or (equal? 'assert fact-type)
                  (equal? 'retract fact-type)) "True/False")
             ((equal? 'set-value! fact-type) "Text")
@@ -2738,9 +2739,9 @@
     
     ; set type choice
     ;(set-combobox-selection the-type-choice (fact-type-index))
-    (set-combobox-selection-object the-type-choice (create-combobox-string-item (fact-type-index)))
+    (set-combobox-selection-object the-type-choice (create-combobox-string-item fact-type-index)) ; alex is this the problem?
     
-    (case (fact-type-index)
+    (case fact-type-index
       (("True/False")
        (add-component top-panel the-fact-list-boolean)
        (add-component top-panel the-boolean-choice))

@@ -1,6 +1,6 @@
 ;; Part of the HypeDyn project - http://www.partechgroup.org/hypedyn
 ;; 
-;; Copyright (C) 2008-2014
+;; Copyright (C) 2008-2015
 ;; National University of Singapore
 ;;
 ;; This program is free software; you can redistribute it and/or modify
@@ -716,9 +716,10 @@
       (set-track-dirty! #t)
       (clear-dirty!))
 
-    ; set selection
+    ; set selection, but only if we're not in the middle of handling link selection
     (define (setselection in-selstart in-selend)
-      (set-text-selection the-editor in-selstart in-selend))
+        (if (not handling-link-selection)
+            (set-text-selection the-editor in-selstart in-selend)))
     
     ; set links (no need for this anymore since when doing filter-bypass
     ;; we always check which style we should use for the text)
@@ -734,10 +735,9 @@
     ; and selection end is the other, anchored end, so 
     ; cursor position may be > selection end (unlike mred)
     (define (cursor-handler e)
-      (begin
-        (let((selstart (get-cursor-pos e))
-             (selend (get-selection-end e)))
-          (after-set-position (min selstart selend) (max selstart selend)))))
+        (let ((selstart (get-cursor-pos e))
+              (selend (get-selection-end e)))
+            (after-set-position (min selstart selend) (max selstart selend))))
 
     ; handle key press
     (define (key-press-handler e)
@@ -1002,9 +1002,17 @@
             (adjust-links-insert start len)
             )))
 
+    ; make sure we don't do this recursively
+    (define handling-link-selection #f)
+
     ; after-set-position
-    (define (after-set-position sel-start sel-end)
-      (if track-links (check-enable-newlink sel-start sel-end)))
+    (define (after-set-position selstart selend)
+      (if track-links
+          (begin
+              (set! handling-link-selection #t)
+              (handle-link-selection (is-link-range? selstart selend) selstart)
+              (set! handling-link-selection #f)
+              (check-enable-newlink selstart selend))))
 
     ;;
     ;; define mouse listener
@@ -1016,6 +1024,13 @@
        (check-has-attributes the-doc pos style-followed-link)
        (check-has-attributes the-doc pos style-link)))
 
+    ; is the given range a link?
+    (define (is-link-range? selstart selend)
+        (and (and (start-of-link? selstart)
+                  (end-of-link? selend))
+             (equal? (get-attribute-linkID-pos the-doc selstart)
+                     (get-attribute-linkID-pos the-doc (- selend 1)))))
+
     ; handle mouse events for hypertextpane
     (define (the-mousecallback e)
       (let* ((pos (get-text-position-from-point the-editor
@@ -1023,18 +1038,10 @@
                                                 (get-mouseevent-y e)))
              (event-type (get-mouseevent-type e))
              (isLink (is-link? pos)))
+          (format #t "the-mousecallback: (~a, ~a, ~a)~%~!" pos event-type isLink)
         (cond
          ((eq? event-type 'left-clicked)
-          (if isLink
-              ; link selected, so retrieve link action
-              (let ((the-linkAction (get-attribute-linkAction-pos
-                                     the-doc pos)))
-                ;(display "action: ")(display the-linkAction)(newline)
-                (if (not (is-null? the-linkAction))
-                    (the-linkAction)))
-              ; no link selected, so call selectlink-callback with #f
-              (if (procedure? selectlink-callback)
-                  (selectlink-callback #f))))
+          (handle-link-selection isLink pos))
          ((eq? event-type 'motion)
           ; call mouseover action, if any
           (if (procedure? mouseover-callback)
@@ -1042,7 +1049,19 @@
                 (if isLink (set! lastmousemove (get-mouseevent-rawevent e)))
                 (mouseover-callback isLink
                                     (get-attribute-linkID-pos the-doc pos))))))))
-    
+
+    ; handle link selection
+    (define (handle-link-selection isLink pos)
+        (if isLink
+            ; drag selected a single link, so retrieve link action
+            (let ((the-linkAction (get-attribute-linkAction-pos
+                                      the-doc pos)))
+                (if (not (is-null? the-linkAction))
+                    (the-linkAction)))
+            ; no link selected, so call selectlink-callback with #f
+            (if (procedure? selectlink-callback)
+                (selectlink-callback #f))))
+
     ; set mouseover callback
     ; takes 2 parameters: 
     ;   boolean, true if over link

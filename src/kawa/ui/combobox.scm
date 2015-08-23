@@ -1,6 +1,6 @@
 ;; Part of the HypeDyn project - http://www.partechgroup.org/hypedyn
 ;; 
-;; Copyright (C) 2008-2014
+;; Copyright (C) 2008-2015
 ;; National University of Singapore
 ;;
 ;; This program is free software; you can redistribute it and/or modify
@@ -234,13 +234,12 @@
   (define-class combobox-string-item (java.lang.Object)
     ((toString) :: <java.lang.String>
      str-obj)
-    ((equals obj :: <java.lang.Object>) 
-;     (display "equals ")(newline)
-;     (display "obj ")(display obj)(newline)
-;     (display "str-obj ")(display str-obj)(newline)
+    ; this seems to be the cause of bug #22, why was this added? (13 Jan 2012 by Teong Leong) - alex
+    ((equals obj :: <java.lang.Object>)
      (if (equal? #!null obj)
          #f
-         (equal? (invoke obj 'to-string) (invoke str-obj 'to-string)))))
+         (equal? (invoke obj 'to-string) (invoke str-obj 'to-string))))
+    )
   
   (make combobox-string-item))
   
@@ -278,16 +277,19 @@
 ; add a string to a combobox with data
 ; this is a workaround to avoid duplicate display of item
 ; selections, see http://download.oracle.com/javase/1,5.0/docs/api/javax/swing/JComboBox.html#addItem%28java.lang.Object%29
+; Note: for combobox with data, we don't use create-combobox-string-item as we are selecting based on data,
+; whereas for regular combobox we need to be able to match the strings (which may be invalidating the fix, but
+; for now I don't care, as long as it works) - Alex
 (define (add-comboboxwithdata-string in-combo :: <comboboxwithdata>
                                      in-item :: <String>
                                      in-data :: <object>)
   (invoke in-combo 'addItem
-;          (begin
-;            (define-class myObject (java.lang.Object)
-;              ((toString) :: <java.lang.String>
-;               in-item))
-;            (make myObject))
-          (create-combobox-string-item in-item)
+          (begin
+            (define-class myObject (java.lang.Object)
+              ((toString) :: <java.lang.String>
+               in-item))
+            (make myObject))
+          ;(create-combobox-string-item in-item)
           in-data))
 
 ; as above but insert at a specific index
@@ -296,12 +298,12 @@
                                            in-data :: <object>
                                            in-index :: <int>)
   (invoke in-combo 'insertItemAt
-;          (begin
-;            (define-class myObject2 (java.lang.Object)
-;              ((toString) :: <java.lang.String>
-;               in-item))
-;            (make myObject2))
-          (create-combobox-string-item in-item)
+          (begin
+            (define-class myObject2 (java.lang.Object)
+              ((toString) :: <java.lang.String>
+               in-item))
+            (make myObject2))
+          ;(create-combobox-string-item in-item)
           in-data
           in-index))
 

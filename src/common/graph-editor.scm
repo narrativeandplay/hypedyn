@@ -1,6 +1,6 @@
 ;; Part of the HypeDyn project - http://www.partechgroup.org/hypedyn
 ;; 
-;; Copyright (C) 2008-2014
+;; Copyright (C) 2008-2015
 ;; National University of Singapore
 ;;
 ;; This program is free software; you can redistribute it and/or modify
@@ -878,7 +878,7 @@
                            (lambda (self) (values x y)))
                   (obj-put this-obj 'get-size
                            (lambda (self)
-                             (values (+ width 70.0) (+ height 100.0))))
+                             (values width height))) ;(+ width 70.0) (+ height 100.0))))
                   (obj-put this-obj 'tab-in-count
                            (lambda (self)
                              (hash-table-count tab-in)))
