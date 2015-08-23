@@ -11,11 +11,11 @@
   <property file="build.properties"/>
 
   <property name="appname" value="HypeDyn"/>
-  <property name="version.release" value="2.3b2"/>
-  <property name="version.local" value="357"/>
-  <property name="version" value="${version.release} rev ${version.local}"/>
-  <property name="copyright" value="Copyright © 2008-2014 National University of Singapore and National University of Singapore. All rights reserved."/>
-  <property name="versiondate" value="15 August 2014"/>
+  <property name="version.release" value="2.3"/>
+  <property name="version.local" value="0"/>
+  <property name="version" value="${version.release}.${version.local}"/>
+  <property name="copyright" value="Copyright © 2008-2015 National University of Singapore and National University of Singapore. All rights reserved."/>
+  <property name="versiondate" value="23 August 2015"/>
   
   <property name="kawa.dir"      value="/usr/local/bin/"/>
 
