@@ -1,6 +1,6 @@
-/* Part of the HypeDyn project - http://www.partechgroup.org/hypedyn
+/* Part of the HypeDyn project - http://www.narrativeandplay.org/hypedyn
  * 
- * Copyright (C) 2008-2015
+ * Copyright (C) 2008-2016
  * National University of Singapore
  *
  * This program is free software; you can redistribute it and/or modify

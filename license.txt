@@ -1,6 +1,6 @@
-License for the HypeDyn project - http://www.partechgroup.org/hypedyn
+License for the HypeDyn project - http://www.narrativeandplay.org/hypedyn
 
-Copyright (C) 2008-2015
+Copyright (C) 2008-2016
 National University of Singapore
 
 HypeDyn is distributed under the GNU GPL v 2. 
