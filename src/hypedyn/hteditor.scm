@@ -115,6 +115,7 @@
 (define m-file-export-standalone #f)
 (define m-file-export-text #f)
 (define m-file-export-js #f)
+(define m-file-export-hypedyn2 #f)
 (define m-file-separator #f)
 (define m-edit-docrule #f)
 (define m-view-zoomin #f)
@@ -170,7 +171,8 @@
         (mf-export-standalone (make-menu-item "Export Standalone..."))
         (mf-export-js (make-menu-item "Export for Web..."))
         (mf-export-text (make-menu-item "Export as Text..."))
-        
+        (mf-export-hypedyn2 (make-menu-item "Export for HypeDyn 2..."))
+
         (mf-properties (make-menu-item "Properties"))
         
         ; edit menu
@@ -277,6 +279,10 @@
           (add-actionlistener mf-export-js (make-actionlistener
                                             (lambda (source)
                                               (doexport-js))))
+          (add-component m-file mf-export-hypedyn2)
+          (add-actionlistener mf-export-hypedyn2 (make-actionlistener
+                                               (lambda (source)
+                                                   (export-hypedyn2))))
     (add-component m-file mf-export-text)
     (add-actionlistener mf-export-text (make-actionlistener
                                        (lambda (source)
@@ -578,6 +584,8 @@
     (set! m-file-export-web mf-export-web)
     (set! m-file-export-standalone mf-export-standalone)
     (set! m-file-export-js mf-export-js)
+    (set! m-file-export-web mf-export-web)
+    (set! m-file-export-hypedyn2 mf-export-hypedyn2)
     (set! m-file-separator mf-separator)
     (set! m-file-openrecent mf-openrecent)
     (set! m-edit-menu m-edit)

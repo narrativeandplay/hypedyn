@@ -45,6 +45,10 @@
   (require "export.scm")
   ;(require "editlink.scm") ;; obj-convertion-2.2
   (require 'list-lib) ;; list-ref
+
+  (require "json-r7rs/json.scm") ;; for export-to-hypedyn2
+  (import (macduffie json))
+  (require 'hash-table) ;; for export-to-hypedyn2
   )
 
 ; export
@@ -57,6 +61,7 @@
                clear-loaded-file-version ;; used by clear-data in hteditor.scm
                loaded-file-version
                get-hypedyn-folder-file get-hypedyn-folder-string check-hypedyn-folder hd-autosave
+               export-hypedyn2
                )
 
 ; set fileformat version and type
@@ -1584,3 +1589,109 @@
 
     (ht-save-to-file (path (string-append autosave-folder-string "/autosave.dyn")) #t))
   )
+
+;;
+;; export to HypeDyn 2 - put this here for now, later make it a standalone app
+;;
+
+; first run through the data structure and create a hashtable that corresponds to the HypeDyn 2 format, then
+; write to a json file using https://notabug.org/PangolinTurtle/json-r7rs
+
+
+(define (export-hypedyn2)
+    (easy-try-catch
+        (lambda ()
+            ;; assuming .dyn is always appended to the filename get-filename-callback returns
+            (define file-name
+                (let ((tmp (get-saved-filename-string)))
+                    (if (not tmp)
+                        (set! tmp "Untitled.dyn"))
+                    ;; add "2" to the extension
+                    (string-append tmp "2")
+                    ))
+            (let ((exportfilename (get-safe-new-filename (get-last-saved-dir) #f (list ".dyn2") file-name "dyn2")))
+                (if (not (eq? #f exportfilename))
+                    (begin
+                        (if (file-exists? exportfilename)
+                            (delete-file exportfilename))
+
+                        ; build the json
+                        (let ((the-nodes (get-list 'nodes))
+                              (the-links (get-list 'links))
+                              (the-facts (get-list 'facts))
+                              (the-hash (make-hash-table)))
+                            ; story
+                            (hash-table-set! the-hash 'story
+                                             (let ((the-story (make-hash-table)))
+                                                 (hash-table-set! the-story 'title (get-story-title))
+                                                 (hash-table-set! the-story 'author (get-author-name))
+                                                 (hash-table-set! the-story 'description "")
+                                                 (hash-table-set! the-story 'metadata
+                                                                  (let ((the-metadata (make-hash-table)))
+                                                                      (hash-table-set! the-metadata 'comments (get-story-comment))
+                                                                      (let ((css-type (get-css-type)))
+                                                                          (cond
+                                                                              ((eq? css-type 'default)
+                                                                               (hash-table-set! the-metadata 'readerStyle "standard"))
+                                                                              ))
+                                                                      ; also need to put in the location of the css file, if required
+                                                                      (hash-table-set! the-metadata 'backDisabled (disable-back-button?))
+                                                                      (hash-table-set! the-metadata 'restartDisabled (disable-restart-button?))
+                                                                      the-metadata))
+
+                                                 ; nodes
+                                                 (hash-table-set! the-story 'nodes '())
+
+                                                 ; facts
+                                                 (hash-table-set! the-story 'facts '())
+
+                                                 ; rules
+                                                 (hash-table-set! the-story 'rules '())
+
+                                                 the-story))
+
+                            ; plugins
+                            (hash-table-set! the-hash 'plugins
+                                             (let ((the-plugins (make-hash-table)))
+                                                 (hash-table-set! the-plugins (string->symbol "Default Story Viewer")
+                                                                  (let ((default-story-viewer (make-hash-table)))
+                                                                      (hash-table-set! default-story-viewer 'nodes
+                                                                                       (let ((the-node-positions '()))
+                                                                                           the-node-positions))
+                                                                      (hash-table-set! default-story-viewer 'zoomLevel 1.0)
+                                                                      default-story-viewer))
+                                                 the-plugins))
+
+                            (format #t "export-to-hypedyn2 hashtable: ~a  ~%~!" the-hash)
+                            (define jstring (json-write-string the-hash #t))
+                            (format #t "export-to-hypedyn2 json: ~a  ~%~!" jstring)
+
+                            ; write to file
+                            (json-write-file the-hash exportfilename #t))))))))
+
+
+
+;
+;
+;
+;            ; run through all nodes and generate sexpr
+;            (ht-build-sexpr-from-objectlist-with-rules the-nodes)
+;
+;            ; then run through all the links and generate sexpr
+;            (ht-build-sexpr-from-objectlist-with-rules the-links)
+;
+;            ; record start node, if any
+;            (if (get-start-node)
+;                (list
+;                    (list 'set-start-node! (get-start-node)))
+;                '())
+;
+;            ; run through all facts and generate sexpr
+;            (ht-build-sexpr-from-objectlist the-facts)
+;
+;            ; save document rule, if any
+;        (if (has-document-rule?)
+;            (list (ht-build-sexpr-from-rule (get-document-ruleID)))
+;            '())
+;
+;        ; plugin data
