@@ -1597,6 +1597,36 @@
 ; first run through the data structure and create a hashtable that corresponds to the HypeDyn 2 format, then
 ; write to a json file using https://notabug.org/PangolinTurtle/json-r7rs
 
+(define (build-node-hash the-node)
+    (let ((the-node-hash (make-hash-table)))
+        (hash-table-set! the-node-hash 'id (ask the-node 'ID))
+        (hash-table-set! the-node-hash 'name (ask the-node 'name))
+
+        ; content (text and links)
+        (hash-table-set! the-node-hash 'content
+                         (let ((the-content-hash (make-hash-table)))
+                             (hash-table-set! the-content-hash 'text (ask the-node 'content))
+                             (hash-table-set! the-content-hash 'rulesets '())
+                             the-content-hash))
+
+        ; node rules
+        (hash-table-set! the-node-hash 'rules '())
+
+        ; is it the start node?
+        (hash-table-set! the-node-hash 'isStart (eq? (get-start-node) (ask the-node 'ID)))
+
+        the-node-hash))
+
+(define (build-fact-hash the-fact)
+    '())
+
+(define (build-node-position-hash the-node)
+    (let ((the-node-hash (make-hash-table)))
+        (hash-table-set! the-node-hash 'id (ask the-node 'ID))
+        (hash-table-set! the-node-hash 'x (ask the-node 'get-x))
+        (hash-table-set! the-node-hash 'y (ask the-node 'get-y))
+
+        the-node-hash))
 
 (define (export-hypedyn2)
     (easy-try-catch
@@ -1640,12 +1670,22 @@
                                                                       the-metadata))
 
                                                  ; nodes
-                                                 (hash-table-set! the-story 'nodes '())
+                                                 (hash-table-set! the-story 'nodes
+                                                                  (if the-nodes
+                                                                      (map (lambda (this-node)
+                                                                               (build-node-hash (cdr this-node)))
+                                                                           the-nodes)
+                                                                      '()))
 
                                                  ; facts
-                                                 (hash-table-set! the-story 'facts '())
+                                                 (hash-table-set! the-story 'facts
+                                                                  (if the-facts
+                                                                     (map (lambda (this-fact)
+                                                                              (build-fact-hash (cdr this-fact)))
+                                                                          the-facts)
+                                                                     '()))
 
-                                                 ; rules
+                                                 ; rules - there aren't any document rules in HypeDyn 1 so this will always be empty
                                                  (hash-table-set! the-story 'rules '())
 
                                                  the-story))
@@ -1656,8 +1696,11 @@
                                                  (hash-table-set! the-plugins (string->symbol "Default Story Viewer")
                                                                   (let ((default-story-viewer (make-hash-table)))
                                                                       (hash-table-set! default-story-viewer 'nodes
-                                                                                       (let ((the-node-positions '()))
-                                                                                           the-node-positions))
+                                                                                       (if the-nodes
+                                                                                               (map (lambda (this-node)
+                                                                                                        (build-node-position-hash (cdr this-node)))
+                                                                                                    the-nodes)
+                                                                                               '()))
                                                                       (hash-table-set! default-story-viewer 'zoomLevel 1.0)
                                                                       default-story-viewer))
                                                  the-plugins))
