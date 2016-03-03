@@ -1618,7 +1618,25 @@
         the-node-hash))
 
 (define (build-fact-hash the-fact)
-    '())
+    (let ((the-fact-hash (make-hash-table)))
+        (hash-table-set! the-fact-hash 'id (ask the-fact 'ID))
+        (hash-table-set! the-fact-hash 'name (ask the-fact 'name))
+        (let ((fact-type (ask the-fact 'type)))
+            (cond
+                ((eq? fact-type 'boolean)
+                 (begin
+                     (hash-table-set! the-fact-hash 'type "bool")
+                     (hash-table-set! the-fact-hash 'initialValue #f)))
+                ((eq? fact-type 'string)
+                 (begin
+                     (hash-table-set! the-fact-hash 'type "string")
+                     (hash-table-set! the-fact-hash 'initialValue "")))
+                ((eq? fact-type 'number)
+                 (begin
+                     (hash-table-set! the-fact-hash 'type "int")
+                     (hash-table-set! the-fact-hash 'initialValue 0)))))
+
+        the-fact-hash))
 
 (define (build-node-position-hash the-node)
     (let ((the-node-hash (make-hash-table)))
