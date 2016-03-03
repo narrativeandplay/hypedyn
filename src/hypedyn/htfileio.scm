@@ -1606,16 +1606,53 @@
         (hash-table-set! the-node-hash 'content
                          (let ((the-content-hash (make-hash-table)))
                              (hash-table-set! the-content-hash 'text (ask the-node 'content))
-                             (hash-table-set! the-content-hash 'rulesets '())
+                             (hash-table-set! the-content-hash 'rulesets
+                                              (let ((the-links (ask the-node 'links)))
+                                                  (if the-links
+                                                      (map (lambda (this-linkID)
+                                                               (build-ruleset-hash this-linkID))
+                                                           the-links)
+                                                      '())))
                              the-content-hash))
 
         ; node rules
-        (hash-table-set! the-node-hash 'rules '())
+        (hash-table-set! the-node-hash 'rules (build-rules-hashlist the-node))
 
         ; is it the start node?
         (hash-table-set! the-node-hash 'isStart (eq? (get-start-node) (ask the-node 'ID)))
 
         the-node-hash))
+
+(define (build-ruleset-hash the-linkID)
+    (let ((the-link (get 'links the-linkID))
+          (the-ruleset-hash (make-hash-table)))
+        (hash-table-set! the-ruleset-hash 'id the-linkID)
+        (hash-table-set! the-ruleset-hash 'name (ask the-link 'name))
+        (hash-table-set! the-ruleset-hash 'start (ask the-link 'start-index))
+        (hash-table-set! the-ruleset-hash 'end (ask the-link 'end-index))
+        (hash-table-set! the-ruleset-hash 'rules (build-rules-hashlist the-link))
+
+        the-ruleset-hash))
+
+(define (build-rules-hashlist the-rule-container)
+    (let ((the-rules (ask the-rule-container 'rule-lst)))
+        (if the-rules
+            (map (lambda (this-ruleID)
+                     (build-rule-hash this-ruleID))
+                 the-rules)
+            '())))
+
+(define (build-rule-hash the-ruleID)
+    (let ((the-rule (get 'rules the-ruleID))
+          (the-rule-hash (make-hash-table)))
+        (hash-table-set! the-rule-hash 'id the-ruleID)
+        (hash-table-set! the-rule-hash 'name (ask the-rule 'name))
+        (hash-table-set! the-rule-hash 'stopIfTrue (ask the-rule 'fall-through?))
+        (hash-table-set! the-rule-hash 'conditionsOp (symbol->string (ask the-rule 'and-or)))
+        (hash-table-set! the-rule-hash 'conditions '())
+        (hash-table-set! the-rule-hash 'actions '())
+
+        the-rule-hash))
 
 (define (build-fact-hash the-fact)
     (let ((the-fact-hash (make-hash-table)))
