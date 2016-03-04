@@ -1605,7 +1605,7 @@
         ; content (text and links)
         (hash-table-set! the-node-hash 'content
                          (let ((the-content-hash (make-hash-table)))
-                             (hash-table-set! the-content-hash 'text (escape-special (ask the-node 'content))) ; does this need to be escaped?
+                             (hash-table-set! the-content-hash 'text (ask the-node 'content)) ;(escape-special (ask the-node 'content))) ; does this need to be escaped?
                              (hash-table-set! the-content-hash 'rulesets
                                               (let ((the-links (ask the-node 'links)))
                                                   (if the-links
@@ -1684,26 +1684,26 @@
                                       ((0)
                                        (cond
                                         ((= cond-type 0)
-                                            (set! func "visited"))
+                                            (set! func "not visited"))
                                         ((= cond-type 1)
-                                            (set! func "followed"))
+                                            (set! func "not followed"))
                                         ((= cond-type 2)
                                          (set! func "true")))
                                         "true")
                                       ((1)
                                        (cond
                                            ((= cond-type 0)
-                                            (set! func "not visited"))
+                                            (set! func "visited"))
                                            ((= cond-type 1)
-                                            (set! func "not followed"))
+                                            (set! func "followed"))
                                            ((= cond-type 2)
                                             (set! func "false")))
                                        "false")
                                       ((2)
-                                       (set! func "is not previous")
+                                       (set! func "is previous")
                                        "false")
                                       ((3)
-                                       (set! func "is previous")
+                                       (set! func "is not previous")
                                        "true")
                                       (else "false")
                                       ))
