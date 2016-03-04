@@ -1638,21 +1638,125 @@
     (let ((the-rules (ask the-rule-container 'rule-lst)))
         (if the-rules
             (map (lambda (this-ruleID)
-                     (build-rule-hash this-ruleID))
+                     (let ((the-rule (get 'rules this-ruleID))
+                           (the-rule-hash (make-hash-table)))
+                         (hash-table-set! the-rule-hash 'id this-ruleID)
+                         (hash-table-set! the-rule-hash 'name (ask the-rule 'name))
+                         (hash-table-set! the-rule-hash 'stopIfTrue (ask the-rule 'fall-through?))
+                         (hash-table-set! the-rule-hash 'conditionsOp (symbol->string (ask the-rule 'and-or)))
+                         (hash-table-set! the-rule-hash 'conditions (build-conditions-hashlist the-rule))
+                         (hash-table-set! the-rule-hash 'actions (build-actions-hashlist the-rule))
+                         the-rule-hash))
                  the-rules)
             '())))
 
-(define (build-rule-hash the-ruleID)
-    (let ((the-rule (get 'rules the-ruleID))
-          (the-rule-hash (make-hash-table)))
-        (hash-table-set! the-rule-hash 'id the-ruleID)
-        (hash-table-set! the-rule-hash 'name (ask the-rule 'name))
-        (hash-table-set! the-rule-hash 'stopIfTrue (ask the-rule 'fall-through?))
-        (hash-table-set! the-rule-hash 'conditionsOp (symbol->string (ask the-rule 'and-or)))
-        (hash-table-set! the-rule-hash 'conditions '())
-        (hash-table-set! the-rule-hash 'actions '())
+(define (build-conditions-hashlist the-rule)
+    (let ((the-conditions (ask the-rule 'conditions)))
+        (if the-conditions
+            (map (lambda (this-conditionID)
+                     (let* ((this-condition (get 'conditions this-conditionID))
+                            (ruleID (ask this-condition 'ruleID))
+                            (cond-type (ask this-condition 'type))
+                            (cont-type-string
+                                (case cond-type
+                                    ((0) "NodeCondition") ;; node
+                                    ((1) "LinkCondition") ;; link
+                                    ((2) "BooleanFactValue") ;; boolean fact
+                                    ((3) "IntegerFactComparison") ;; number fact
+                                    ))
+                            (target-type-symbol
+                                (case cond-type
+                                    ((0) 'node) ;; node
+                                    ((1) 'link) ;; link
+                                    ((2) 'fact) ;; boolean fact
+                                    ((3) 'fact) ;; number fact
+                                    ))
+                            (target-type-string
+                                (case cond-type
+                                    ((0) "node") ;; node
+                                    ((1) "link") ;; link
+                                    ((2) "booleanFact") ;; boolean fact
+                                    ((3) "integerFact") ;; number fact
+                                    ))
+                            (func-target-id (ask this-condition 'targetID))
+                            (func "") ; set below
+                            (negate (case (ask this-condition 'operator)
+                                      ((0)
+                                       (cond
+                                        ((= cond-type 0)
+                                            (set! func "visited"))
+                                        ((= cond-type 1)
+                                            (set! func "followed"))
+                                        ((= cond-type 2)
+                                         (set! func "true")))
+                                        "true")
+                                      ((1)
+                                       (cond
+                                           ((= cond-type 0)
+                                            (set! func "not visited"))
+                                           ((= cond-type 1)
+                                            (set! func "not followed"))
+                                           ((= cond-type 2)
+                                            (set! func "false")))
+                                       "false")
+                                      ((2)
+                                       (set! func "is not previous")
+                                       "false")
+                                      ((3)
+                                       (set! func "is previous")
+                                       "true")
+                                      (else "false")
+                                      ))
+                            (the-condition-hash (make-hash-table)))
 
-        the-rule-hash))
+                         (hash-table-set! the-condition-hash 'conditionType cont-type-string)
+                         (hash-table-set! the-condition-hash 'params
+                                          (let ((the-param-hash (make-hash-table)))
+                                              ; "target" param
+                                              (let ((target-param (make-hash-table)))
+                                                    (hash-table-set! target-param 'value func-target-id)
+                                                    (hash-table-set! target-param 'type target-type-string)
+
+                                                  (hash-table-set! the-param-hash target-type-symbol target-param))
+
+                                              ; "status"/"state"/value param
+                                              (if (not (= cond-type 3))
+                                                  (let ((status-param (make-hash-table)))
+                                                        (hash-table-set! status-param 'type "selectedListValue")
+                                                        (hash-table-set! status-param 'value func)
+
+                                                      (hash-table-set! the-param-hash (if (= cond-type 2) 'state 'status) status-param))
+                                                  ;integer fact here
+                                                  ;                                   (string-append "[" (to-string func-target-id) "]")
+                                                  ;                                   (let* ((args-lst (ask condition 'numfact-args))
+                                                  ;                                          (comparator (car args-lst))
+                                                  ;                                          (operand-type (cadr args-lst))
+                                                  ;                                          (operand-choice (caddr args-lst)))
+                                                  ;                                       (string-append "[" (to-string func-target-id) ", "
+                                                  ;                                                      "'" comparator "'" ", "
+                                                  ;                                                      "'" operand-type "'" ", "
+                                                  ;                                                      operand-choice
+                                                  ;                                                      "]"))
+                                                  )
+                                              the-param-hash))
+                         the-condition-hash))
+                 the-conditions)
+            '())))
+
+(define (build-actions-hashlist the-rule)
+    (let ((the-actions (ask the-rule 'actions)))
+        (if the-actions
+            (map (lambda (this-actionID)
+                     (let ((this-action (get 'actions this-actionID))
+                           (the-action-hash (make-hash-table)))
+                         (hash-table-set! the-action-hash 'actionType (symbol->string (ask this-action 'type)))
+                         (hash-table-set! the-action-hash 'params
+                                          (let ((the-param-hash (make-hash-table)))
+                                              the-param-hash))
+
+                         the-action-hash))
+                 the-actions)
+            '())))
 
 (define (build-fact-hash the-fact)
     (let ((the-fact-hash (make-hash-table)))
@@ -1684,6 +1788,8 @@
         the-node-hash))
 
 (define (export-hypedyn2)
+    (store-node-positions) ; store the node positions in the graph
+
     (easy-try-catch
         (lambda ()
             ;; assuming .dyn is always appended to the filename get-filename-callback returns
