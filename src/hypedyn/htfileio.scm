@@ -1726,18 +1726,44 @@
                                                         (hash-table-set! status-param 'value func)
 
                                                       (hash-table-set! the-param-hash (if (= cond-type 2) 'state 'status) status-param))
+
                                                   ;integer fact here
-                                                  ;                                   (string-append "[" (to-string func-target-id) "]")
-                                                  ;                                   (let* ((args-lst (ask condition 'numfact-args))
-                                                  ;                                          (comparator (car args-lst))
-                                                  ;                                          (operand-type (cadr args-lst))
-                                                  ;                                          (operand-choice (caddr args-lst)))
-                                                  ;                                       (string-append "[" (to-string func-target-id) ", "
-                                                  ;                                                      "'" comparator "'" ", "
-                                                  ;                                                      "'" operand-type "'" ", "
-                                                  ;                                                      operand-choice
-                                                  ;                                                      "]"))
-                                                  )
+                                                  (let* ((comparison-param (make-hash-table))
+                                                         (operator-param (make-hash-table))
+                                                         (value-param (make-hash-table))
+                                                         (args-lst (ask this-condition 'numfact-args))
+                                                         (comparator (car args-lst))
+                                                         (operand-type (cadr args-lst))
+                                                         (operand-choice (caddr args-lst)))
+                                                      ; operator
+                                                      (format #t "**** Gory details: comparator: ~a, operand-type: ~a, operand-choice: ~a  ~%~!"
+                                                              comparator operand-type operand-choice)
+
+                                                      ; comparisonValue
+                                                      (hash-table-set! comparison-param 'type "union")
+                                                      (hash-table-set! comparison-param 'value (if (equal? operand-type "Input")
+                                                                                                   "input"
+                                                                                                   "otherFact"))
+                                                      (hash-table-set! the-param-hash 'comparisonValue comparison-param)
+
+                                                      ; operator (need to do a bit of adjustment first...)
+                                                      (if (equal? comparator "=")
+                                                          (if (equal? negate "true")
+                                                              (set! comparator "!=")
+                                                              (set! comparator "==")))
+                                                      (hash-table-set! operator-param 'type "selectedListValue")
+                                                      (hash-table-set! operator-param 'value comparator)
+                                                      (hash-table-set! the-param-hash 'operator operator-param)
+
+                                                      (hash-table-set! value-param 'type (if (equal? operand-type "Input")
+                                                                                             "integer"
+                                                                                             "integerFact"))
+                                                      (hash-table-set! value-param 'value (string->number operand-choice))
+                                                      (hash-table-set! the-param-hash
+                                                                       (if (equal? operand-type "Input")
+                                                                                           'input
+                                                                                           'otherFact)
+                                                                       value-param)))
                                               the-param-hash))
                          the-condition-hash))
                  the-conditions)
