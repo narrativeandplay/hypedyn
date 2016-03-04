@@ -1688,7 +1688,7 @@
                                         ((= cond-type 1)
                                             (set! func "not followed"))
                                         ((= cond-type 2)
-                                         (set! func "true")))
+                                         (set! func "false")))
                                         "true")
                                       ((1)
                                        (cond
@@ -1697,7 +1697,7 @@
                                            ((= cond-type 1)
                                             (set! func "followed"))
                                            ((= cond-type 2)
-                                            (set! func "false")))
+                                            (set! func "true")))
                                        "false")
                                       ((2)
                                        (set! func "is previous")
@@ -1808,7 +1808,7 @@
 
                                                        (hash-table-set! value-hash 'type "selectedListValue")
                                                        (hash-table-set! value-hash 'value "true")
-                                                       (hash-table-set! the-param-hash 'node value-hash)))
+                                                       (hash-table-set! the-param-hash 'value value-hash)))
                                                   ((retract)
                                                    (let ((target-hash (make-hash-table))
                                                          (value-hash (make-hash-table)))
@@ -1818,7 +1818,7 @@
 
                                                        (hash-table-set! value-hash 'type "selectedListValue")
                                                        (hash-table-set! value-hash 'value "false")
-                                                       (hash-table-set! the-param-hash 'node value-hash)))
+                                                       (hash-table-set! the-param-hash 'value value-hash)))
                                                   ((set-value!)
                                                    (let ((target-hash (make-hash-table))
                                                          (value-hash (make-hash-table)))
@@ -1828,73 +1828,85 @@
 
                                                        (hash-table-set! value-hash 'type "string")
                                                        (hash-table-set! value-hash 'value (escape-special (list-ref expr 2)))
-                                                       (hash-table-set! the-param-hash 'node value-hash)))
+                                                       (hash-table-set! the-param-hash 'value value-hash)))
+                                                  ((replace-link-text)
+                                                   (let* ((type-hash (make-hash-table))
+                                                          (value-hash (make-hash-table))
+                                                          (type-string (list-ref expr 1)))
+                                                       (cond
+                                                           ((equal? type-string "alternative text")
+                                                            (hash-table-set! type-hash 'type "string")
+                                                            (hash-table-set! type-hash 'value (list-ref expr 2)) ; (escape-special (list-ref expr 2))) ; don't escape this?
+                                                            (hash-table-set! the-param-hash 'textInput type-hash)
 
+                                                            (hash-table-set! value-hash 'type "union")
+                                                            (hash-table-set! value-hash 'value "textInput")
+                                                            (hash-table-set! the-param-hash 'text value-hash))
+                                                           ((equal? type-string "text fact")
+                                                            (hash-table-set! type-hash 'type "stringFact")
+                                                            (hash-table-set! type-hash 'value (list-ref expr 2))
+                                                            (hash-table-set! the-param-hash 'stringFactValue type-hash)
+
+                                                            (hash-table-set! value-hash 'type "union")
+                                                            (hash-table-set! value-hash 'value "stringFactValue")
+                                                            (hash-table-set! the-param-hash 'text value-hash))
+                                                           ((equal? type-string "number fact")
+                                                            (hash-table-set! type-hash 'type "numberFact")
+                                                            (hash-table-set! type-hash 'value (list-ref expr 2))
+                                                            (hash-table-set! the-param-hash 'NumberFactValue type-hash)
+
+                                                            (hash-table-set! value-hash 'type "union")
+                                                            (hash-table-set! value-hash 'value "NumberFactValue")
+                                                            (hash-table-set! the-param-hash 'text value-hash)))))
+
+                                                  ;                                                  ((set-number-fact)
+                                                  ;                                                   ;                  (string-append "[" (to-string (list-ref expr 1)) ", "
+                                                  ;                                                   ;                                 ;; give in number form
+                                                  ;                                                   ;                                 (list-ref expr 2)
+                                                  ;                                                   ;                                 "]")
+                                                  ;
+                                                  ;                                                   (define target-factID (list-ref expr 1))
+                                                  ;                                                   (define num-fact-mode (list-ref expr 2))
+                                                  ;                                                   (define fact-value
+                                                  ;                                                       (case num-fact-mode
+                                                  ;                                                           (("Input" "Fact") (string-append "[" (to-string (list-ref expr 3)) "]" ))
+                                                  ;                                                           (("Math")
+                                                  ;                                                            ;; (list op opr1 opr1-type opr2 opr2-type)
+                                                  ;                                                            (let* ((op            (list-ref (list-ref expr 3) 0))
+                                                  ;                                                                   (operand1      (list-ref (list-ref expr 3) 1))
+                                                  ;                                                                   (operand1-type (list-ref (list-ref expr 3) 2))
+                                                  ;                                                                   (operand2      (list-ref (list-ref expr 3) 3))
+                                                  ;                                                                   (operand2-type (list-ref (list-ref expr 3) 4)))
+                                                  ;
+                                                  ;                                                                (string-append "[" (quote-nest op) ", "
+                                                  ;                                                                               operand1 ", "
+                                                  ;                                                                               (quote-nest operand1-type) ", "
+                                                  ;                                                                               operand2 ", "
+                                                  ;                                                                               (quote-nest operand2-type) "]"
+                                                  ;                                                                               ))
+                                                  ;                                                           )
+                                                  ;                                                           (("Random")
+                                                  ;                                                            ;; (list opr1 opr1-type opr2 opr2-type)
+                                                  ;                                                            (let* ((operand1      (list-ref (list-ref expr 3) 0))
+                                                  ;                                                                   (operand1-type (list-ref (list-ref expr 3) 1))
+                                                  ;                                                                   (operand2      (list-ref (list-ref expr 3) 2))
+                                                  ;                                                                   (operand2-type (list-ref (list-ref expr 3) 3)))
+                                                  ;
+                                                  ;                                                                (string-append "["
+                                                  ;                                                                               operand1 ", "
+                                                  ;                                                                               (quote-nest operand1-type) ", "
+                                                  ;                                                                               operand2 ", "
+                                                  ;                                                                               (quote-nest operand2-type) "]"
+                                                  ;                                                                               ))
+                                                  ;                                                           )
+                                                  ;                                                           ))
+                                                  ;                                                   (string-append "[" (to-string target-factID) ", "
+                                                  ;                                                                  (quote-nest num-fact-mode) ", "
+                                                  ;                                                                  fact-value
+                                                  ;                                                                  "]")
+                                                  ;                                                  )
+                                                  ;                                                  )
                                                   )
-
-;                                                  ((replace-link-text)
-;                                                   (string-append
-;                                                       "[" (to-string (list-ref expr 3)) ", "
-;                                                       (quote-nest (list-ref expr 1)) ", " ;; content_type
-;
-;                                                                                           ;; differentiate between fact text or just alt text
-;                                                       (let ((val (list-ref expr 2)))
-;                                                           (cond ((string? val)
-;                                                                  (quote-nest
-;                                                                      (escape-special val)
-;                                                                      ))
-;                                                                 ((number? val)
-;                                                                  (to-string val))))
-;                                                       "]"))
-;                                                  )
-;                                                  ((set-number-fact)
-;                                                   ;                  (string-append "[" (to-string (list-ref expr 1)) ", "
-;                                                   ;                                 ;; give in number form
-;                                                   ;                                 (list-ref expr 2)
-;                                                   ;                                 "]")
-;
-;                                                   (define target-factID (list-ref expr 1))
-;                                                   (define num-fact-mode (list-ref expr 2))
-;                                                   (define fact-value
-;                                                       (case num-fact-mode
-;                                                           (("Input" "Fact") (string-append "[" (to-string (list-ref expr 3)) "]" ))
-;                                                           (("Math")
-;                                                            ;; (list op opr1 opr1-type opr2 opr2-type)
-;                                                            (let* ((op            (list-ref (list-ref expr 3) 0))
-;                                                                   (operand1      (list-ref (list-ref expr 3) 1))
-;                                                                   (operand1-type (list-ref (list-ref expr 3) 2))
-;                                                                   (operand2      (list-ref (list-ref expr 3) 3))
-;                                                                   (operand2-type (list-ref (list-ref expr 3) 4)))
-;
-;                                                                (string-append "[" (quote-nest op) ", "
-;                                                                               operand1 ", "
-;                                                                               (quote-nest operand1-type) ", "
-;                                                                               operand2 ", "
-;                                                                               (quote-nest operand2-type) "]"
-;                                                                               ))
-;                                                           )
-;                                                           (("Random")
-;                                                            ;; (list opr1 opr1-type opr2 opr2-type)
-;                                                            (let* ((operand1      (list-ref (list-ref expr 3) 0))
-;                                                                   (operand1-type (list-ref (list-ref expr 3) 1))
-;                                                                   (operand2      (list-ref (list-ref expr 3) 2))
-;                                                                   (operand2-type (list-ref (list-ref expr 3) 3)))
-;
-;                                                                (string-append "["
-;                                                                               operand1 ", "
-;                                                                               (quote-nest operand1-type) ", "
-;                                                                               operand2 ", "
-;                                                                               (quote-nest operand2-type) "]"
-;                                                                               ))
-;                                                           )
-;                                                           ))
-;                                                   (string-append "[" (to-string target-factID) ", "
-;                                                                  (quote-nest num-fact-mode) ", "
-;                                                                  fact-value
-;                                                                  "]")
-;                                                  )
-;                                                  )
-
                                               the-param-hash))
 
                          the-action-hash))
