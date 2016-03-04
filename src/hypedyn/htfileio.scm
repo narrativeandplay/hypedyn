@@ -1244,7 +1244,7 @@
 
 ;; createAction(eventType, parentRuleID, func, args, id)
 (define (js-action-code actionID)
-  (let* ((action (get 'actions actionID))
+  (let* ((action (get 'actions actionID)) ; xxx
          (expr (ask action 'expr))
          (event-type (case (ask action 'type)
                        ((entered-node displayed-node) "enteredNode")
@@ -1605,7 +1605,7 @@
         ; content (text and links)
         (hash-table-set! the-node-hash 'content
                          (let ((the-content-hash (make-hash-table)))
-                             (hash-table-set! the-content-hash 'text (ask the-node 'content))
+                             (hash-table-set! the-content-hash 'text (escape-special (ask the-node 'content))) ; does this need to be escaped?
                              (hash-table-set! the-content-hash 'rulesets
                                               (let ((the-links (ask the-node 'links)))
                                                   (if the-links
@@ -1735,10 +1735,6 @@
                                                          (comparator (car args-lst))
                                                          (operand-type (cadr args-lst))
                                                          (operand-choice (caddr args-lst)))
-                                                      ; operator
-                                                      (format #t "**** Gory details: comparator: ~a, operand-type: ~a, operand-choice: ~a  ~%~!"
-                                                              comparator operand-type operand-choice)
-
                                                       ; comparisonValue
                                                       (hash-table-set! comparison-param 'type "union")
                                                       (hash-table-set! comparison-param 'value (if (equal? operand-type "Input")
@@ -1769,15 +1765,136 @@
                  the-conditions)
             '())))
 
-(define (build-actions-hashlist the-rule)
+(define (build-actions-hashlist the-rule) ; xxx
     (let ((the-actions (ask the-rule 'actions)))
         (if the-actions
             (map (lambda (this-actionID)
-                     (let ((this-action (get 'actions this-actionID))
-                           (the-action-hash (make-hash-table)))
-                         (hash-table-set! the-action-hash 'actionType (symbol->string (ask this-action 'type)))
+                     (let* ((this-action (get 'actions this-actionID))
+                            (expr (ask this-action 'expr))
+                            (func-symbol (car expr))
+                            (func-string (case func-symbol
+                                ((follow-link) "LinkTo")
+                                ((show-in-popup) "ShowPopupNode")
+                                ((assert retract) "UpdateBooleanFact")
+                                ((set-value!) "UpdateStringFact")
+                                ((add-anywhere-link) "EnableAnywhereLinkToHere")
+                                ((show-disabled-anywhere-link) "ShowDisabledAnywhereLink")
+                                ((replace-link-text) "UpdateText")
+                                ((set-number-fact) "UpdateIntegerFacts")))
+                            (the-action-hash (make-hash-table)))
+                         (hash-table-set! the-action-hash 'actionType func-string)
                          (hash-table-set! the-action-hash 'params
                                           (let ((the-param-hash (make-hash-table)))
+
+                                              (format #t "*********** actions expr: ~a  ~%~!" expr)
+
+                                              (case func-symbol
+                                                  ((follow-link)
+                                                   (let ((value-hash (make-hash-table)))
+                                                       (hash-table-set! value-hash 'type "node")
+                                                       (hash-table-set! value-hash 'value (list-ref expr 4))
+                                                       (hash-table-set! the-param-hash 'node value-hash)))
+                                                  ((show-in-popup)
+                                                   (let ((value-hash (make-hash-table)))
+                                                       (hash-table-set! value-hash 'type "node")
+                                                       (hash-table-set! value-hash 'value (list-ref expr 1))
+                                                       (hash-table-set! the-param-hash 'node value-hash)))
+                                                  ((assert)
+                                                   (let ((target-hash (make-hash-table))
+                                                         (value-hash (make-hash-table)))
+                                                       (hash-table-set! target-hash 'type "booleanFact")
+                                                       (hash-table-set! target-hash 'value (list-ref expr 1))
+                                                       (hash-table-set! the-param-hash 'fact target-hash)
+
+                                                       (hash-table-set! value-hash 'type "selectedListValue")
+                                                       (hash-table-set! value-hash 'value "true")
+                                                       (hash-table-set! the-param-hash 'node value-hash)))
+                                                  ((retract)
+                                                   (let ((target-hash (make-hash-table))
+                                                         (value-hash (make-hash-table)))
+                                                       (hash-table-set! target-hash 'type "booleanFact")
+                                                       (hash-table-set! target-hash 'value (list-ref expr 1))
+                                                       (hash-table-set! the-param-hash 'fact target-hash)
+
+                                                       (hash-table-set! value-hash 'type "selectedListValue")
+                                                       (hash-table-set! value-hash 'value "false")
+                                                       (hash-table-set! the-param-hash 'node value-hash)))
+                                                  ((set-value!)
+                                                   (let ((target-hash (make-hash-table))
+                                                         (value-hash (make-hash-table)))
+                                                       (hash-table-set! target-hash 'type "stringFact")
+                                                       (hash-table-set! target-hash 'value (list-ref expr 1))
+                                                       (hash-table-set! the-param-hash 'fact target-hash)
+
+                                                       (hash-table-set! value-hash 'type "string")
+                                                       (hash-table-set! value-hash 'value (escape-special (list-ref expr 2)))
+                                                       (hash-table-set! the-param-hash 'node value-hash)))
+
+                                                  )
+
+;                                                  ((replace-link-text)
+;                                                   (string-append
+;                                                       "[" (to-string (list-ref expr 3)) ", "
+;                                                       (quote-nest (list-ref expr 1)) ", " ;; content_type
+;
+;                                                                                           ;; differentiate between fact text or just alt text
+;                                                       (let ((val (list-ref expr 2)))
+;                                                           (cond ((string? val)
+;                                                                  (quote-nest
+;                                                                      (escape-special val)
+;                                                                      ))
+;                                                                 ((number? val)
+;                                                                  (to-string val))))
+;                                                       "]"))
+;                                                  )
+;                                                  ((set-number-fact)
+;                                                   ;                  (string-append "[" (to-string (list-ref expr 1)) ", "
+;                                                   ;                                 ;; give in number form
+;                                                   ;                                 (list-ref expr 2)
+;                                                   ;                                 "]")
+;
+;                                                   (define target-factID (list-ref expr 1))
+;                                                   (define num-fact-mode (list-ref expr 2))
+;                                                   (define fact-value
+;                                                       (case num-fact-mode
+;                                                           (("Input" "Fact") (string-append "[" (to-string (list-ref expr 3)) "]" ))
+;                                                           (("Math")
+;                                                            ;; (list op opr1 opr1-type opr2 opr2-type)
+;                                                            (let* ((op            (list-ref (list-ref expr 3) 0))
+;                                                                   (operand1      (list-ref (list-ref expr 3) 1))
+;                                                                   (operand1-type (list-ref (list-ref expr 3) 2))
+;                                                                   (operand2      (list-ref (list-ref expr 3) 3))
+;                                                                   (operand2-type (list-ref (list-ref expr 3) 4)))
+;
+;                                                                (string-append "[" (quote-nest op) ", "
+;                                                                               operand1 ", "
+;                                                                               (quote-nest operand1-type) ", "
+;                                                                               operand2 ", "
+;                                                                               (quote-nest operand2-type) "]"
+;                                                                               ))
+;                                                           )
+;                                                           (("Random")
+;                                                            ;; (list opr1 opr1-type opr2 opr2-type)
+;                                                            (let* ((operand1      (list-ref (list-ref expr 3) 0))
+;                                                                   (operand1-type (list-ref (list-ref expr 3) 1))
+;                                                                   (operand2      (list-ref (list-ref expr 3) 2))
+;                                                                   (operand2-type (list-ref (list-ref expr 3) 3)))
+;
+;                                                                (string-append "["
+;                                                                               operand1 ", "
+;                                                                               (quote-nest operand1-type) ", "
+;                                                                               operand2 ", "
+;                                                                               (quote-nest operand2-type) "]"
+;                                                                               ))
+;                                                           )
+;                                                           ))
+;                                                   (string-append "[" (to-string target-factID) ", "
+;                                                                  (quote-nest num-fact-mode) ", "
+;                                                                  fact-value
+;                                                                  "]")
+;                                                  )
+;                                                  )
+
                                               the-param-hash))
 
                          the-action-hash))
@@ -1806,16 +1923,16 @@
         the-fact-hash))
 
 (define (build-node-position-hash the-node)
+    (store-node-positions) ; store the node positions in the graph
+
     (let ((the-node-hash (make-hash-table)))
         (hash-table-set! the-node-hash 'id (ask the-node 'ID))
-        (hash-table-set! the-node-hash 'x (ask the-node 'get-x))
-        (hash-table-set! the-node-hash 'y (ask the-node 'get-y))
+        (hash-table-set! the-node-hash 'x (/ (ask the-node 'get-x) 1.0))
+        (hash-table-set! the-node-hash 'y (/ (ask the-node 'get-y) 1.0))
 
         the-node-hash))
 
 (define (export-hypedyn2)
-    (store-node-positions) ; store the node positions in the graph
-
     (easy-try-catch
         (lambda ()
             ;; assuming .dyn is always appended to the filename get-filename-callback returns
