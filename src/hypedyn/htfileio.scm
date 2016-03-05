@@ -1244,7 +1244,7 @@
 
 ;; createAction(eventType, parentRuleID, func, args, id)
 (define (js-action-code actionID)
-  (let* ((action (get 'actions actionID)) ; xxx
+  (let* ((action (get 'actions actionID))
          (expr (ask action 'expr))
          (event-type (case (ask action 'type)
                        ((entered-node displayed-node) "enteredNode")
@@ -1619,7 +1619,8 @@
         (hash-table-set! the-node-hash 'rules (build-rules-hashlist the-node))
 
         ; is it the start node?
-        (hash-table-set! the-node-hash 'isStart (eq? (get-start-node) (ask the-node 'ID)))
+        (hash-table-set! the-node-hash 'isStart (= (get-start-node) (ask the-node 'ID)))
+        (format #t "check start node... nodeID: ~a, start node ID: ~a (~a)~%~!" (ask the-node 'ID) (get-start-node) (= (get-start-node) (ask the-node 'ID)))
 
         the-node-hash))
 
@@ -1642,7 +1643,7 @@
                            (the-rule-hash (make-hash-table)))
                          (hash-table-set! the-rule-hash 'id this-ruleID)
                          (hash-table-set! the-rule-hash 'name (ask the-rule 'name))
-                         (hash-table-set! the-rule-hash 'stopIfTrue (ask the-rule 'fall-through?))
+                         (hash-table-set! the-rule-hash 'stopIfTrue (not (ask the-rule 'fall-through?)))
                          (hash-table-set! the-rule-hash 'conditionsOp (symbol->string (ask the-rule 'and-or)))
                          (hash-table-set! the-rule-hash 'conditions (build-conditions-hashlist the-rule))
                          (hash-table-set! the-rule-hash 'actions (build-actions-hashlist the-rule))
@@ -1754,7 +1755,7 @@
                                                       (hash-table-set! value-param 'type (if (equal? operand-type "Input")
                                                                                              "integer"
                                                                                              "integerFact"))
-                                                      (hash-table-set! value-param 'value (string->number operand-choice))
+                                                      (hash-table-set! value-param 'value (if (string? operand-choice) (string->number operand-choice) operand-choice))
                                                       (hash-table-set! the-param-hash
                                                                        (if (equal? operand-type "Input")
                                                                                            'input
@@ -1765,7 +1766,7 @@
                  the-conditions)
             '())))
 
-(define (build-actions-hashlist the-rule) ; xxx
+(define (build-actions-hashlist the-rule)
     (let ((the-actions (ask the-rule 'actions)))
         (if the-actions
             (map (lambda (this-actionID)
@@ -1786,7 +1787,7 @@
                          (hash-table-set! the-action-hash 'params
                                           (let ((the-param-hash (make-hash-table)))
 
-                                              (format #t "*********** actions expr: ~a  ~%~!" expr)
+;                                              (format #t "*********** actions expr: ~a  ~%~!" expr)
 
                                               (case func-symbol
                                                   ((follow-link)
@@ -1871,13 +1872,14 @@
 
                                                        (case num-fact-mode
                                                            (("Input" "Fact")
+                                                            (let ((the-value (list-ref expr 3)))
                                                             (hash-table-set! action-hash 'type "union")
                                                             (hash-table-set! action-hash 'value (if (equal? num-fact-mode "Input") "inputValue" "integerFactValue"))
                                                             (hash-table-set! the-param-hash 'updateValue action-hash)
 
                                                             (hash-table-set! value-hash 'type (if (equal? num-fact-mode "Input") "integer" "integerFact"))
-                                                            (hash-table-set! value-hash 'value (string->number (list-ref expr 3)))
-                                                            (hash-table-set! the-param-hash (if (equal? num-fact-mode "Input") 'inputValue 'integerFactValue) value-hash)
+                                                            (hash-table-set! value-hash 'value (if (string? the-value) (string->number (list-ref expr 3)) the-value))
+                                                            (hash-table-set! the-param-hash (if (equal? num-fact-mode "Input") 'inputValue 'integerFactValue) value-hash))
                                                            )
                                                            (("Math")
                                                             (let ((op (list-ref (list-ref expr 3) 0))
@@ -1907,7 +1909,7 @@
                                                                 (hash-table-set! operand1-type-hash 'value (if (equal? operand1-type "Input") "userOperand1" "factOperand1"))
                                                                 (hash-table-set! the-param-hash 'operand1 operand1-type-hash)
                                                                 (hash-table-set! operand1-value-hash 'type (if (equal? operand1-type "Input") "integer" "integerFact"))
-                                                                (hash-table-set! operand1-value-hash 'value (string->number operand1))
+                                                                (hash-table-set! operand1-value-hash 'value (if (string? operand1) (string->number operand1) operand1))
                                                                 (hash-table-set! the-param-hash (if (equal? operand1-type "Input") 'userOperand1 'factOperand1) operand1-value-hash)
 
                                                                 ; operand 2
@@ -1915,7 +1917,7 @@
                                                                 (hash-table-set! operand2-type-hash 'value (if (equal? operand2-type "Input") "userOperand2" "factOperand2"))
                                                                 (hash-table-set! the-param-hash 'operand2 operand2-type-hash)
                                                                 (hash-table-set! operand2-value-hash 'type (if (equal? operand2-type "Input") "integer" "integerFact"))
-                                                                (hash-table-set! operand2-value-hash 'value (string->number operand2))
+                                                                (hash-table-set! operand2-value-hash 'value (if (string? operand2) (string->number operand2) operand2))
                                                                 (hash-table-set! the-param-hash (if (equal? operand2-type "Input") 'userOperand2 'factOperand2) operand2-value-hash)
 
                                                                 )
@@ -1941,7 +1943,7 @@
                                                                 (hash-table-set! start-type-hash 'value (if (equal? operand1-type "Input") "startInput" "startFact"))
                                                                 (hash-table-set! the-param-hash 'start start-type-hash)
                                                                 (hash-table-set! start-value-hash 'type (if (equal? operand1-type "Input") "integer" "integerFact"))
-                                                                (hash-table-set! start-value-hash 'value (string->number operand1))
+                                                                (hash-table-set! start-value-hash 'value (if (string? operand1) (string->number operand1) operand1))
                                                                 (hash-table-set! the-param-hash (if (equal? operand1-type "Input") 'startInput 'startFact) start-value-hash)
 
                                                                 ; end
@@ -1949,7 +1951,7 @@
                                                                 (hash-table-set! end-type-hash 'value (if (equal? operand2-type "Input") "endInput" "endFact"))
                                                                 (hash-table-set! the-param-hash 'end end-type-hash)
                                                                 (hash-table-set! end-value-hash 'type (if (equal? operand2-type "Input") "integer" "integerFact"))
-                                                                (hash-table-set! end-value-hash 'value (string->number operand2))
+                                                                (hash-table-set! end-value-hash 'value (if (string? operand2) (string->number operand2) operand2))
                                                                 (hash-table-set! the-param-hash (if (equal? operand2-type "Input") 'endInput 'endFact) end-value-hash)
 
                                                                 )
@@ -2069,9 +2071,9 @@
                                                                       default-story-viewer))
                                                  the-plugins))
 
-                            (format #t "export-to-hypedyn2 hashtable: ~a  ~%~!" the-hash)
-                            (define jstring (json-write-string the-hash #t))
-                            (format #t "export-to-hypedyn2 json: ~a  ~%~!" jstring)
+;                            (format #t "export-to-hypedyn2 hashtable: ~a  ~%~!" the-hash)
+;                            (define jstring (json-write-string the-hash #t))
+;                            (format #t "export-to-hypedyn2 json: ~a  ~%~!" jstring)
 
                             ; write to file
                             (json-write-file the-hash exportfilename #t))))))))
