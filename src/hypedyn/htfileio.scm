@@ -1833,6 +1833,7 @@
                                                    (let* ((type-hash (make-hash-table))
                                                           (value-hash (make-hash-table))
                                                           (type-string (list-ref expr 1)))
+                                                       ; should clean this up, a lot of duplicate code
                                                        (cond
                                                            ((equal? type-string "alternative text")
                                                             (hash-table-set! type-hash 'type "string")
@@ -1851,62 +1852,86 @@
                                                             (hash-table-set! value-hash 'value "stringFactValue")
                                                             (hash-table-set! the-param-hash 'text value-hash))
                                                            ((equal? type-string "number fact")
-                                                            (hash-table-set! type-hash 'type "numberFact")
+                                                            (hash-table-set! type-hash 'type "integerFact")
                                                             (hash-table-set! type-hash 'value (list-ref expr 2))
                                                             (hash-table-set! the-param-hash 'NumberFactValue type-hash)
 
                                                             (hash-table-set! value-hash 'type "union")
                                                             (hash-table-set! value-hash 'value "NumberFactValue")
                                                             (hash-table-set! the-param-hash 'text value-hash)))))
+                                                  ((set-number-fact)
+                                                   (let* ((target-hash (make-hash-table)) ; the fact to be updated
+                                                          (action-hash (make-hash-table)) ; the type of update (value, random)
+                                                          (value-hash (make-hash-table))
+                                                          (target-factID (list-ref expr 1))
+                                                          (num-fact-mode (list-ref expr 2)))
+                                                       (hash-table-set! target-hash 'type "integerFact")
+                                                       (hash-table-set! target-hash 'value target-factID)
+                                                       (hash-table-set! the-param-hash 'fact target-hash)
 
-                                                  ;                                                  ((set-number-fact)
-                                                  ;                                                   ;                  (string-append "[" (to-string (list-ref expr 1)) ", "
-                                                  ;                                                   ;                                 ;; give in number form
-                                                  ;                                                   ;                                 (list-ref expr 2)
-                                                  ;                                                   ;                                 "]")
-                                                  ;
-                                                  ;                                                   (define target-factID (list-ref expr 1))
-                                                  ;                                                   (define num-fact-mode (list-ref expr 2))
-                                                  ;                                                   (define fact-value
-                                                  ;                                                       (case num-fact-mode
-                                                  ;                                                           (("Input" "Fact") (string-append "[" (to-string (list-ref expr 3)) "]" ))
-                                                  ;                                                           (("Math")
-                                                  ;                                                            ;; (list op opr1 opr1-type opr2 opr2-type)
-                                                  ;                                                            (let* ((op            (list-ref (list-ref expr 3) 0))
-                                                  ;                                                                   (operand1      (list-ref (list-ref expr 3) 1))
-                                                  ;                                                                   (operand1-type (list-ref (list-ref expr 3) 2))
-                                                  ;                                                                   (operand2      (list-ref (list-ref expr 3) 3))
-                                                  ;                                                                   (operand2-type (list-ref (list-ref expr 3) 4)))
-                                                  ;
-                                                  ;                                                                (string-append "[" (quote-nest op) ", "
-                                                  ;                                                                               operand1 ", "
-                                                  ;                                                                               (quote-nest operand1-type) ", "
-                                                  ;                                                                               operand2 ", "
-                                                  ;                                                                               (quote-nest operand2-type) "]"
-                                                  ;                                                                               ))
-                                                  ;                                                           )
-                                                  ;                                                           (("Random")
-                                                  ;                                                            ;; (list opr1 opr1-type opr2 opr2-type)
-                                                  ;                                                            (let* ((operand1      (list-ref (list-ref expr 3) 0))
-                                                  ;                                                                   (operand1-type (list-ref (list-ref expr 3) 1))
-                                                  ;                                                                   (operand2      (list-ref (list-ref expr 3) 2))
-                                                  ;                                                                   (operand2-type (list-ref (list-ref expr 3) 3)))
-                                                  ;
-                                                  ;                                                                (string-append "["
-                                                  ;                                                                               operand1 ", "
-                                                  ;                                                                               (quote-nest operand1-type) ", "
-                                                  ;                                                                               operand2 ", "
-                                                  ;                                                                               (quote-nest operand2-type) "]"
-                                                  ;                                                                               ))
-                                                  ;                                                           )
-                                                  ;                                                           ))
-                                                  ;                                                   (string-append "[" (to-string target-factID) ", "
-                                                  ;                                                                  (quote-nest num-fact-mode) ", "
-                                                  ;                                                                  fact-value
-                                                  ;                                                                  "]")
-                                                  ;                                                  )
-                                                  ;                                                  )
-                                                  )
+                                                       (case num-fact-mode
+                                                           (("Input" "Fact")
+                                                            (hash-table-set! action-hash 'type "union")
+                                                            (hash-table-set! action-hash 'value (if (equal? num-fact-mode "Input") "inputValue" "integerFactValue"))
+                                                            (hash-table-set! the-param-hash 'updateValue action-hash)
+
+                                                            (hash-table-set! value-hash 'type (if (equal? num-fact-mode "Input") "integer" "integerFact"))
+                                                            (hash-table-set! value-hash 'value (string->number (list-ref expr 3)))
+                                                            (hash-table-set! the-param-hash (if (equal? num-fact-mode "Input") 'inputValue 'integerFactValue) value-hash)
+                                                           )
+                                                           (("Math")
+                                                            (let ((op (list-ref (list-ref expr 3) 0))
+                                                                  (operand1 (list-ref (list-ref expr 3) 1))
+                                                                  (operand1-type (list-ref (list-ref expr 3) 2))
+                                                                  (operand2 (list-ref (list-ref expr 3) 3))
+                                                                  (operand2-type (list-ref (list-ref expr 3) 4))
+                                                                  (operator-hash (make-hash-table))
+                                                                  (operand1-type-hash (make-hash-table))
+                                                                  (operand1-value-hash (make-hash-table))
+                                                                  (operand2-type-hash (make-hash-table))
+                                                                  (operand2-value-hash (make-hash-table)))
+                                                                (hash-table-set! action-hash 'type "union")
+                                                                (hash-table-set! action-hash 'value "computation")
+                                                                (hash-table-set! the-param-hash 'updateValue action-hash)
+                                                                (hash-table-set! value-hash 'type "product")
+                                                                (hash-table-set! value-hash 'value "operand1:operator:operand2")
+                                                                (hash-table-set! the-param-hash 'computation value-hash)
+
+                                                                ; operator
+                                                                (hash-table-set! operator-hash 'type "selectedListValue")
+                                                                (hash-table-set! operator-hash 'value op)
+                                                                (hash-table-set! the-param-hash 'operator operator-hash)
+
+                                                                ; operand 1
+                                                                (hash-table-set! operand1-type-hash 'type "union")
+                                                                (hash-table-set! operand1-type-hash 'value (if (equal? operand1-type "Input") "userOperand1" "factOperand1"))
+                                                                (hash-table-set! the-param-hash 'operand1 operand1-type-hash)
+                                                                (hash-table-set! operand1-value-hash 'type (if (equal? operand1-type "Input") "integer" "integerFact"))
+                                                                (hash-table-set! operand1-value-hash 'value (string->number operand1))
+                                                                (hash-table-set! the-param-hash (if (equal? operand1-type "Input") 'userOperand1 'factOperand1) operand1-value-hash)
+
+                                                                ; operand 2
+                                                                (hash-table-set! operand2-type-hash 'type "union")
+                                                                (hash-table-set! operand2-type-hash 'value (if (equal? operand2-type "Input") "userOperand2" "factOperand2"))
+                                                                (hash-table-set! the-param-hash 'operand2 operand2-type-hash)
+                                                                (hash-table-set! operand2-value-hash 'type (if (equal? operand2-type "Input") "integer" "integerFact"))
+                                                                (hash-table-set! operand2-value-hash 'value (string->number operand2))
+                                                                (hash-table-set! the-param-hash (if (equal? operand2-type "Input") 'userOperand2 'factOperand2) operand2-value-hash)
+
+                                                                )
+                                                           )
+                                                           (("Random")
+                                                            (let ((operand1 (list-ref (list-ref expr 3) 0))
+                                                                  (operand1-type (list-ref (list-ref expr 3) 1))
+                                                                  (operand2 (list-ref (list-ref expr 3) 2))
+                                                                  (operand2-type (list-ref (list-ref expr 3) 3)))
+                                                                (hash-table-set! action-hash 'type "union")
+                                                                (hash-table-set! action-hash 'value "randomValue")
+                                                                (hash-table-set! the-param-hash 'updateValue action-hash)
+
+                                                                )
+                                                           )
+                                                           ))))
                                               the-param-hash))
 
                          the-action-hash))
