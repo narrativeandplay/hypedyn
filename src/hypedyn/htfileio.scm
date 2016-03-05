@@ -1620,7 +1620,6 @@
 
         ; is it the start node?
         (hash-table-set! the-node-hash 'isStart (= (get-start-node) (ask the-node 'ID)))
-        (format #t "check start node... nodeID: ~a, start node ID: ~a (~a)~%~!" (ask the-node 'ID) (get-start-node) (= (get-start-node) (ask the-node 'ID)))
 
         the-node-hash))
 
@@ -1786,9 +1785,6 @@
                          (hash-table-set! the-action-hash 'actionType func-string)
                          (hash-table-set! the-action-hash 'params
                                           (let ((the-param-hash (make-hash-table)))
-
-;                                              (format #t "*********** actions expr: ~a  ~%~!" expr)
-
                                               (case func-symbol
                                                   ((follow-link)
                                                    (let ((value-hash (make-hash-table)))
@@ -2070,10 +2066,6 @@
                                                                       (hash-table-set! default-story-viewer 'zoomLevel 1.0)
                                                                       default-story-viewer))
                                                  the-plugins))
-
-;                            (format #t "export-to-hypedyn2 hashtable: ~a  ~%~!" the-hash)
-;                            (define jstring (json-write-string the-hash #t))
-;                            (format #t "export-to-hypedyn2 json: ~a  ~%~!" jstring)
 
                             ; write to file
                             (json-write-file the-hash exportfilename #t))))))))
