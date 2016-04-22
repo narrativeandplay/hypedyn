@@ -1985,8 +1985,8 @@
 
     (let ((the-node-hash (make-hash-table)))
         (hash-table-set! the-node-hash 'id (ask the-node 'ID))
-        (hash-table-set! the-node-hash 'x (/ (ask the-node 'get-x) 1.0))
-        (hash-table-set! the-node-hash 'y (/ (ask the-node 'get-y) 1.0))
+        (hash-table-set! the-node-hash 'x (* (ask the-node 'get-x) 1.5))
+        (hash-table-set! the-node-hash 'y (* (ask the-node 'get-y) 1.5))
 
         the-node-hash))
 
